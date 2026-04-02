@@ -227,11 +227,9 @@ class Config {
     void setIrBtn(int val);
     void saveIR();
     void resetSystem(const char *val, uint8_t clientId);
-    void setShuffle(bool sn);
     void saveVolume();
     uint8_t setVolume(uint8_t val);
     void setTone(int8_t bass, int8_t middle, int8_t treble);
-    void setBalance(int8_t balance);
     uint8_t setLastStation(uint16_t val);
     uint8_t setCountStation(uint16_t val);
     uint8_t setLastSSID(uint8_t val);
@@ -289,40 +287,29 @@ class Config {
       const configKeyMap* entry = getKeyMapEntryForField(field);
       if (entry) prefs.getBytes(entry->key, field, entry->size);
     }
-    template <typename T>
-    void saveValue(T *field, const T &value, bool commit=true, bool force=false) {
-      // commit ignored (kept for compatibility)
-      const configKeyMap* entry = getKeyMapEntryForField(field);
-      if (entry) {
-        prefs.begin("ehradio", false);
-        T oldValue;
-        size_t existingLen = prefs.getBytesLength(entry->key);
-        size_t bytesRead = prefs.getBytes(entry->key, &oldValue, entry->size);
-        bool exists = bytesRead == entry->size;
-        bool needSave = (existingLen != entry->size) || !exists || memcmp(&oldValue, &value, entry->size) != 0;
-        if (needSave) {
-          prefs.putBytes(entry->key, &value, entry->size);
-          *field = value;
-        }
-        prefs.end();
-      }
+    bool saveRawValue(const configKeyMap* entry, const void* value, size_t size) {
+      prefs.begin("ehradio", false);
+      uint8_t oldValue[size];
+      size_t existingLen = prefs.getBytesLength(entry->key);
+      bool exists = prefs.getBytes(entry->key, oldValue, size) == size;
+      bool needSave = (existingLen != size) || !exists || memcmp(oldValue, value, size) != 0;
+      if (needSave) prefs.putBytes(entry->key, value, size);
+      prefs.end();
+      return needSave;
     }
-    void saveValue(char *field, const char *value, size_t N = 0, bool commit=true, bool force=false) {
-      // commit ignored (kept for compatibility)
+    template <typename T>
+    void saveValue(T *field, const T &value) {
+      const configKeyMap* entry = getKeyMapEntryForField(field);
+      if (entry && saveRawValue(entry, &value, entry->size)) *field = value;
+    }
+    void saveValue(char *field, const char *value) {
       const configKeyMap* entry = getKeyMapEntryForField(field);
       if (entry) {
         size_t sz = entry->size;
-        prefs.begin("ehradio", false);
-        char oldValue[sz];
-        memset(oldValue, 0, sz);
-        size_t existingLen = prefs.getBytesLength(entry->key);
-        bool exists = prefs.getBytes(entry->key, oldValue, sz) == sz;
-        bool needSave = (existingLen != sz) || !exists || strncmp(oldValue, value, sz) != 0 || force;
-        if (needSave) {
-          prefs.putBytes(entry->key, value, sz);
-          strlcpy(field, value, sz);
-        }
-        prefs.end();
+        char normalizedValue[sz];
+        memset(normalizedValue, 0, sz);
+        if (value != nullptr) strlcpy(normalizedValue, value, sz);
+        if (saveRawValue(entry, normalizedValue, sz)) strlcpy(field, normalizedValue, sz);
       }
     }
     uint32_t getChipId() {

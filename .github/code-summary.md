@@ -6,6 +6,8 @@ If any code change affects behavior, data flow, build configuration, platform ta
 
 This file exists to reduce re-analysis cost for humans and AI agents.
 
+It will get lengthy as more is added to it.
+
 ---
 
 ## Scope and Intent
@@ -31,6 +33,7 @@ Grouped (not one-by-one deep explained) areas:
 - `myoptions.h` selects hardware profile + defaults.
 - `src/core/options.h` resolves all defaults/fallbacks and feature flags.
 - `.github/workflows/build-release-firmware.yml` verifies generated contributor release artifacts and now diff-checks `web_assets/` in addition to `firmware.txt` and `releases.md`.
+- `.github/workflows/build-deploy-page.yml` deploys Pages on `release.published`, and on branch/manual runs it preserves the currently published `firmware-info.json` and manifests instead of overwriting them from `builds/*/web_assets`.
 
 ### Runtime chain
 - `src/main.cpp` bootstraps system: config -> display -> player -> network -> server/telnet/controls.
@@ -167,6 +170,12 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
 - Defines station/theme structs and config API.
 - Defines key constants for SPIFFS paths and data file locations.
 - `Config::keyMap` declaration controls Preferences key mapping.
+- `Config::saveValue(...)` API now has two simple overloads only:
+  - typed: `saveValue(T* field, const T& value)`
+  - string: `saveValue(char* field, const char* value)`
+- Legacy compatibility parameters (`commit`, `force`, and string `size_t N`) were removed.
+- String saves now normalize into a zero-filled fixed-size buffer before compare/write to avoid reading beyond short source strings.
+- Both overloads share a single internal write-if-changed path (`missing key` OR `size mismatch` OR `content changed`) before calling `prefs.putBytes(...)`.
 
 ## `src/core/config.cpp`
 - Startup/storage/file-integrity center.

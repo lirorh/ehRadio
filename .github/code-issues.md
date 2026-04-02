@@ -92,8 +92,8 @@ These macros are consumed in `src/` via `#ifdef`/`#if defined` guards (so they a
 The refactor pattern (as completed for `setSmartStart()`) is: inline the wrapper body into `commandhandler.cpp` and remove the wrapper from `config.cpp`/`config.h`. Functions that are also called from other places (`mqtt.cpp`, etc.) cannot be fully removed from `config.cpp` — those are noted separately at the bottom.
 
 - [X] **`setSmartStart()`** — inlined; commandhandler now calls `config.saveValue` directly.
-- [ ] **`setShuffle(bool)`** — 2 lines: `saveValue` + `player.next()`. Easy.
-- [ ] **`setBalance(int8_t)`** — 3 lines: `saveValue` + `player.setBalance` + `requestOnChange`. Fix the dup + cast bugs from §6.4 and §6.5 at the same time.
+- [X] **`setShuffle(bool)`** — 2 lines: `saveValue` + `player.next()`. Easy.
+- [X] **`setBalance(int8_t)`** — 3 lines: `saveValue` + `player.setBalance` + `requestOnChange`. Fix the dup + cast bugs from §6.4 and §6.5 at the same time.
 - [ ] **`enableScreensaver(bool)`** — `saveValue` + `#ifndef DSP_LCD display.putRequest(NEWMODE, PLAYER)`. Carry the `#ifndef DSP_LCD` guard into commandhandler.
 - [ ] **`setScreensaverTimeout(uint16_t)`** — `constrain(val,5,65520)` + `saveValue` + same `#ifndef DSP_LCD` guard. Note: brings its own input clamp.
 - [ ] **`setScreensaverBlank(bool)`** — same pattern as `enableScreensaver`.
@@ -115,11 +115,11 @@ The refactor pattern (as completed for `setSmartStart()`) is: inline the wrapper
 
 Just sort them a bit into categories for future maintenance.
 
-### [ ] 6.3 config.SaveValue - booleans ignored for compatibility `[LOW]`
+### [X] 6.3 config.SaveValue - booleans ignored for compatibility `[LOW]`
 
 Originally kept for compatibility with existing yoRadio functions, booleans are ignored and thus can be removed everywhere in the codebase.
 
-### [ ] 6.4 Duplicate `balance` handler in `commandhandler.cpp` `[MEDIUM]`
+### [X] 6.4 Duplicate `balance` handler in `commandhandler.cpp` `[MEDIUM]`
 
 - **Line ~30**: `if (strEquals(command, "balance")) { config.setBalance(atoi(value)); return true; }`
 - **Line ~118**: `if (strEquals(command, "balance")) { config.setBalance(static_cast<uint8_t>(atoi(value))); return true; }`
@@ -131,7 +131,7 @@ Originally kept for compatibility with existing yoRadio functions, booleans are 
 
 ### [ ] 6.5 Incorrect Casts / Type Safety Issues
 
-#### [ ] 6.5.1 `balance` command — no range clamp, implicit narrowing `[MEDIUM]`
+#### [X] 6.5.1 `balance` command — no range clamp, implicit narrowing `[MEDIUM]`
 
 - **File**: `src/core/commandhandler.cpp` line ~30
 - **Code**: `config.setBalance(atoi(value))`

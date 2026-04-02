@@ -28,7 +28,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
     if (strEquals(command, "mode"))     { config.changeMode(atoi(value)); return true; }
   #endif
   if (strEquals(command, "reset") && cid==0) { config.reset(); return true; }
-  if (strEquals(command, "balance"))  { config.setBalance(atoi(value)); return true; }
+  if (strEquals(command, "balance"))  { int b = atoi(value); b = (b < -16) ? -16 : (b > 16 ? 16 : b); config.saveValue(&config.store.balance, static_cast<int8_t>(b)); player.setBalance(static_cast<int8_t>(b)); netserver.requestOnChange(BALANCE, 0); return true; }
   if (strEquals(command, "playstation") || strEquals(command, "play")) { uint16_t id = atoi(value); uint16_t cs = config.playlistLength(); if (id < 1) id = 1; if (id > cs) id = cs; player.sendCommand({PR_PLAY, id}); return true; }
 
   if (strEquals(command, "vol")) {  int v = atoi(value); config.store.volume = v < 0 ? 0 : (v > 254 ? 254 : v); player.setVol(v); return true; }
@@ -81,42 +81,41 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   #endif
   /* Options: Locale */
   if (strEquals(command, "locale_webui")) { config.updateLocaleFileAsync(value, cid); return true; }
-  if (strEquals(command, "tz_name"))      { config.saveValue(config.store.tz_name, value, sizeof(config.store.tz_name), false); return true; }
-  if (strEquals(command, "tzposix"))      { config.saveValue(config.store.tzposix, value, sizeof(config.store.tzposix), false); network.forceTimeSync = true; network.requestTimeSync(true); return true; }
-  if (strEquals(command, "sntp2"))        { config.saveValue(config.store.sntp2, value, sizeof(config.store.sntp2), false); return true; }
-  if (strEquals(command, "sntp1"))        { config.saveValue(config.store.sntp1, value, sizeof(config.store.sntp1), false); network.forceTimeSync = true; network.requestTimeSync(true); return true; }
+  if (strEquals(command, "tz_name"))      { config.saveValue(config.store.tz_name, value); return true; }
+  if (strEquals(command, "tzposix"))      { config.saveValue(config.store.tzposix, value); network.forceTimeSync = true; network.requestTimeSync(true); return true; }
+  if (strEquals(command, "sntp2"))        { config.saveValue(config.store.sntp2, value); return true; }
+  if (strEquals(command, "sntp1"))        { config.saveValue(config.store.sntp1, value); network.forceTimeSync = true; network.requestTimeSync(true); return true; }
   if (strEquals(command, "timeinterval")) { config.saveValue(&config.store.timesyncinterval, static_cast<uint8_t>(atoi(value))); return true; }
   /* Options: Weather */
   if (strEquals(command, "wenable"))           { config.setShowweather(static_cast<bool>(atoi(value))); return true; }
-  if (strEquals(command, "wapi"))              { config.saveValue(config.store.weatherapi, value, sizeof(config.store.weatherapi), false); network.forceWeather = true; return true; }
+  if (strEquals(command, "wapi"))              { config.saveValue(config.store.weatherapi, value); network.forceWeather = true; return true; }
   if (strEquals(command, "winterval"))         { config.saveValue(&config.store.weathersyncinterval, static_cast<uint8_t>(atoi(value))); return true; }
-  if (strEquals(command, "wlat"))              { config.saveValue(config.store.weatherlat, value, sizeof(config.store.weatherlat), false); config.store.weatherelevation = 0; config.saveValue(&config.store.weatherelevation, static_cast<int16_t>(0)); network.forceWeather = true; return true; }
-  if (strEquals(command, "wlon"))              { config.saveValue(config.store.weatherlon, value, sizeof(config.store.weatherlon), false); config.store.weatherelevation = 0; config.saveValue(&config.store.weatherelevation, static_cast<int16_t>(0)); network.forceWeather = true; return true; }
+  if (strEquals(command, "wlat"))              { config.saveValue(config.store.weatherlat, value); config.store.weatherelevation = 0; config.saveValue(&config.store.weatherelevation, static_cast<int16_t>(0)); network.forceWeather = true; return true; }
+  if (strEquals(command, "wlon"))              { config.saveValue(config.store.weatherlon, value); config.store.weatherelevation = 0; config.saveValue(&config.store.weatherelevation, static_cast<int16_t>(0)); network.forceWeather = true; return true; }
   if (strEquals(command, "wtempunit"))         { config.saveValue(&config.store.weathertempimp, (atoi(value) != 0)); network.buildWeatherString(); return true; }
   if (strEquals(command, "wpressunit"))        { config.saveValue(&config.store.weatherpressimp, (atoi(value) != 0)); network.buildWeatherString(); return true; }
-  if (strEquals(command, "wspeedunit"))        { config.saveValue(config.store.weatherwindspeed, value, sizeof(config.store.weatherwindspeed), false); network.buildWeatherString(); return true; }
+  if (strEquals(command, "wspeedunit"))        { config.saveValue(config.store.weatherwindspeed, value); network.buildWeatherString(); return true; }
   if (strEquals(command, "wen_feelslike"))     { config.saveValue(&config.store.weatherfeels, (atoi(value) != 0)); network.buildWeatherString(); return true; }
   if (strEquals(command, "wen_humidity"))      { config.saveValue(&config.store.weatherhumidity, (atoi(value) != 0)); network.buildWeatherString(); return true; }
   if (strEquals(command, "wen_pressure"))      { config.saveValue(&config.store.weatherpressure, (atoi(value) != 0)); network.buildWeatherString(); return true; }
   if (strEquals(command, "wen_wind"))          { config.saveValue(&config.store.weatherwind, (atoi(value) != 0)); network.buildWeatherString(); return true; }
-  if (strEquals(command, "wlang"))             { config.saveValue(config.store.weatherlang, value, sizeof(config.store.weatherlang), false); network.forceWeather = true; return true; }
+  if (strEquals(command, "wlang"))             { config.saveValue(config.store.weatherlang, value); network.forceWeather = true; return true; }
   if (strEquals(command, "wkey"))              { config.setWeatherKey(value); return true; }
   /* Options: MQTT */
   #ifdef MQTT_ENABLE
     if (strEquals(command, "mqttenable"))       { config.saveValue(&config.store.mqttenable, static_cast<bool>(atoi(value))); mqttInit(); return true; }
-    if (strEquals(command, "mqtthost"))         { config.saveValue(config.store.mqtthost, value, sizeof(config.store.mqtthost), false); return true; }
+    if (strEquals(command, "mqtthost"))         { config.saveValue(config.store.mqtthost, value); return true; }
     if (strEquals(command, "mqttport"))         { config.saveValue(&config.store.mqttport, static_cast<uint16_t>(atoi(value))); return true; }
-    if (strEquals(command, "mqttuser"))         { config.saveValue(config.store.mqttuser, value, sizeof(config.store.mqttuser), false); return true; }
-    if (strEquals(command, "mqttpass"))         { config.saveValue(config.store.mqttpass, value, sizeof(config.store.mqttpass), false); return true; }
-    if (strEquals(command, "mqtttopic"))        { config.saveValue(config.store.mqtttopic, value, sizeof(config.store.mqtttopic), false); return true; }
+    if (strEquals(command, "mqttuser"))         { config.saveValue(config.store.mqttuser, value); return true; }
+    if (strEquals(command, "mqttpass"))         { config.saveValue(config.store.mqttpass, value); return true; }
+    if (strEquals(command, "mqtttopic"))        { config.saveValue(config.store.mqtttopic, value); return true; }
   #endif
   /* Options: Danger Zone */
 
   //<-----TODO
   if (strEquals(command, "volume"))  { player.setVol(static_cast<uint8_t>(atoi(value))); return true; }
   if (strEquals(command, "sdpos"))   { config.setSDpos(static_cast<uint32_t>(atoi(value))); return true; }
-  if (strEquals(command, "shuffle")) { config.setShuffle(strcmp(value, "true") == 0); return true; }
-  if (strEquals(command, "balance")) { config.setBalance(static_cast<uint8_t>(atoi(value))); return true; }
+  if (strEquals(command, "shuffle")) { config.saveValue(&config.store.sdshuffle, static_cast<bool>(atoi(value))); if (config.store.sdshuffle) player.next(); return true; }
   if (strEquals(command, "reboot"))  { ESP.restart(); return true; }
   if (strEquals(command, "format"))  { player.sendCommand({PR_STOP, 0}); SPIFFS.format(); ESP.restart(); return true; }
   if (strEquals(command, "submitplaylist"))  { player.sendCommand({PR_STOP, 0}); return true; }
@@ -128,9 +127,9 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (strEquals(command, "vumeter"))   { config.saveValue(&config.store.vumeter, static_cast<bool>(atoi(value))); display.putRequest(SHOWVUMETER); return true; }
   if (strEquals(command, "wifiscan"))  { config.saveValue(&config.store.wifiscanbest, static_cast<bool>(atoi(value))); return true; }
   if (strEquals(command, "ehdp"))      { config.saveValue(&config.store.ehdp, static_cast<bool>(atoi(value))); return true; }
-  if (strEquals(command, "ehdpname"))  { config.saveValue(config.store.ehdpname, value, EHDPNAME_LENGTH); network.ehDPinit(); return true; }
+  if (strEquals(command, "ehdpname"))  { config.saveValue(config.store.ehdpname, value); network.ehDPinit(); return true; }
   if (strEquals(command, "softap"))    { config.saveValue(&config.store.softapdelay, static_cast<uint8_t>(atoi(value))); return true; }
-  if (strEquals(command, "mdnsname"))  { config.saveValue(config.store.mdnsname, value, MDNS_LENGTH); return true; }
+  if (strEquals(command, "mdnsname"))  { config.saveValue(config.store.mdnsname, value); return true; }
   if (strEquals(command, "rebootmdns")) {
     // Browser-side ready polling now handles redirect after mDNS rename.
     delay(1500);

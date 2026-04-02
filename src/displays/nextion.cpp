@@ -239,7 +239,11 @@ void Nextion::loop() {
           player.sendCommand({PR_VOL, scanDigit});
         }
         if (sscanf(rxbuf, "balance=%d", &scanDigit) == 1){
-          config.setBalance((int8_t)scanDigit);
+          int b = scanDigit;
+          b = (b < -16) ? -16 : (b > 16 ? 16 : b);
+          config.saveValue(&config.store.balance, static_cast<int8_t>(b));
+          player.setBalance(static_cast<int8_t>(b));
+          netserver.requestOnChange(BALANCE, 0);
         }
         if (sscanf(rxbuf, "treble=%d", &scanDigit) == 1){
           config.setTone(config.store.bass, config.store.middle, scanDigit);

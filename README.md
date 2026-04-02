@@ -22,8 +22,11 @@ Documentation will be improved at some point... Until then, check this page and 
 
 ## ehRadio Version history
 
+### 2026.04.02
+  - I guess I am refactoring some things...
+
 ### 2026.03.30 - Feature Freeze ON
-  - not really a re-factor but the codebase is in serious need of repair
+  - not really a refactor but the codebase is in serious need of repair
     - see `.github/code-issues.md` for more info
     - please hold off on any PRs until this is finished (it could take some time)
     - the `ehRadio` branch will not be updated until finished
@@ -36,7 +39,7 @@ Documentation will be improved at some point... Until then, check this page and 
 ### 2026.03.22
   - [ehDP Library](https://github.com/trip5/ehDP) added
     - Device can be found using [eh Device Scanner](https://github.com/trip5/eh-Device-Scanner)
-  - Grabbable aand hovered items fixed in playlist editor for mobile devices
+  - Grabbable and hovered items fixed in playlist editor for mobile devices
   - Some major changes to the workflows that handle Releases and firmware generation
 
 ### 2026.03.18
@@ -64,7 +67,7 @@ Documentation will be improved at some point... Until then, check this page and 
     - configurable in WebUI
     - preferences for units can be defined in `myoptions.h` with
       - `#define WEATHER_METRIC false` (for °F, mmHg, mph)
-      - `#define WEATHER_IMPERIAL true` (for °C, hPa, km/h) (this is default)
+      - `#define WEATHER_METRIC true` (for °C, hPa, km/h) (this is default)
       - individual unit preferences can also be defined
         - `#define WEATHER_TEMPERATURE_F true` (for °F)
         - `#define WEATHER_PRESSURE_MMHG true` (for mmHg)

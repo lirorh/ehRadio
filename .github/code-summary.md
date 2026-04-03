@@ -187,7 +187,7 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
   - playlist indexing and station loading
   - locale/update helper routines
   - startup update services and online file maintenance
-  - reset section handlers (`resetSystem(...)`)
+  - reset section handlers (`defaultSettings(...)`)
 - Key interaction:
   - almost every module reads/writes through `config`.
 
@@ -576,7 +576,7 @@ This section is specifically for adding/removing settings and avoiding missed li
 1. Add macro default in `src/core/options.h` (and optionally override in `myoptions.h`).
 2. Add field in `config_t` in `src/core/config.h`.
 3. Add key mapping in `Config::keyMap` in `src/core/config.cpp`.
-4. Add reset behavior in `Config::resetSystem(...)` branch (the right group).
+4. Add reset behavior in `Config::defaultSettings(...)` branch (the right group).
 5. Add getter payload in `netserver.processQueue()`:
    - whichever `GET*` JSON block should include it (`GETSYSTEM`, `GETSCREEN`, etc.).
 6. Add command handling in `src/core/commandhandler.cpp`:
@@ -609,7 +609,7 @@ This section is specifically for adding/removing settings and avoiding missed li
 ## Why changes are often missed
 
 Frequent miss points:
-- `Config::resetSystem(...)` sections
+- `Config::defaultSettings(...)` sections
 - `Config::keyMap` update
 - `GET*` outbound payloads in `netserver`
 - DOM id mismatch vs websocket payload key

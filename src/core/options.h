@@ -61,8 +61,13 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
 #define DSP_CUSTOM      101   // your display
 
 #ifndef DSP_MODEL
-  #define DSP_MODEL  DSP_DUMMY
+  #define DSP_MODEL DSP_DUMMY
 #endif
+
+#if DSP_MODEL==DSP_DUMMY
+  #define DUMMYDISPLAY
+#endif
+
 #ifndef DSP_HSPI
   #define DSP_HSPI   false      // use HSPI for displays (miso=12, mosi=13, clk=14) instead of VSPI (by default)
 #endif

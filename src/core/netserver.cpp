@@ -24,10 +24,6 @@
 
 //#include <ESPmDNS.h>
 
-#if DSP_MODEL==DSP_DUMMY
-  #define DUMMYDISPLAY
-#endif
-
 #if USE_OTA
   #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
     #include <NetworkUdp.h>
@@ -494,13 +490,13 @@ void NetServer::processQueue() {
                                   config.store.showweather,
                                   config.store.weatherlat,
                                   config.store.weatherlon,
-                                  config.store.weathertempimp ? 1 : 0,
-                                  config.store.weatherpressimp ? 1 : 0,
+                                  config.store.weathertempimp,
+                                  config.store.weatherpressimp,
                                   config.store.weatherwindspeed,
-                                  config.store.weatherfeels ? 1 : 0,
-                                  config.store.weatherhumidity ? 1 : 0,
-                                  config.store.weatherpressure ? 1 : 0,
-                                  config.store.weatherwind ? 1 : 0,
+                                  config.store.weatherfeels,
+                                  config.store.weatherhumidity,
+                                  config.store.weatherpressure,
+                                  config.store.weatherwind,
                                   config.store.weatherapi,
                                   config.store.weatherelevation,
                                   config.store.weatherlang,
@@ -632,44 +628,9 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
     memcpy(payload, data, payloadLen);
     payload[payloadLen] = '\0';
 
-    char comnd[65], val[65];
-    if (config.parseWsCommand(payload, comnd, val, 65)) {
-      if (strcmp(comnd, "treble") == 0) {
-        int8_t valb = atoi(val);
-        config.setTone(config.store.bass, config.store.middle, valb);
-        return;
-      }
-      if (strcmp(comnd, "middle") == 0) {
-        int8_t valb = atoi(val);
-        config.setTone(config.store.bass, valb, config.store.treble);
-        return;
-      }
-      if (strcmp(comnd, "bass") == 0) {
-        int8_t valb = atoi(val);
-        config.setTone(valb, config.store.middle, config.store.treble);
-        return;
-      }
-      if (strcmp(comnd, "submitplaylistdone") == 0) {
-        #ifdef MQTT_ENABLE
-          if (config.store.mqttenable) mqttplaylistticker.attach(5, mqttplaylistSend);
-        #endif
-        // Check if the currently playing station still exists in the updated playlist
-        uint16_t lastStn = config.lastStation();
-        uint16_t newLength = config.playlistLength();
-        if (lastStn > newLength) {
-          // Station number exceeds new playlist length, stop and reset to station 1
-          config.setLastStation(newLength > 0 ? 1 : 0);
-          config.loadStation(newLength > 0 ? 1 : 0);
-        } else if (lastStn == 0 && newLength > 0) {
-          // No station selected, set to station 1
-          config.setLastStation(1);
-          config.loadStation(1);
-        }
-        // Otherwise, player continues with current station
-        return;
-      }
-      
-      if (cmd.exec(comnd, val, clientId)) {
+    char command[65], val[65];
+    if (config.parseWsCommand(payload, command, val, 65)) {
+      if (cmd.exec(command, val, clientId)) {
         return;
       }
     }
@@ -703,13 +664,19 @@ void NetServer::resetQueue() {
   if (nsQueue!=NULL) xQueueReset(nsQueue);
 }
 
+void NetServer::triggerMqttPlaylistSync() {
+  #ifdef MQTT_ENABLE
+    if (config.store.mqttenable) mqttplaylistticker.attach(5, mqttplaylistSend);
+  #endif
+}
+
 int freeSpace;
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   if (request->url()=="/upload") {
     if (!index) {
       if (filename!="tempwifi.csv") {
         if (SPIFFS.exists(PLAYLIST_PATH)) SPIFFS.remove(PLAYLIST_PATH);
-        if (SPIFFS.exists(INDEX_PATH)) SPIFFS.remove(PLAYLIST_PATH);
+        if (SPIFFS.exists(INDEX_PATH)) SPIFFS.remove(INDEX_PATH);
         if (SPIFFS.exists(PLAYLIST_SD_PATH)) SPIFFS.remove(PLAYLIST_SD_PATH);
         if (SPIFFS.exists(INDEX_SD_PATH)) SPIFFS.remove(INDEX_SD_PATH);
       }
@@ -821,16 +788,18 @@ void selectRadioBrowserServer() {
         rb_servers[count++] = srvr_name;
       }
     }
-    // Shuffle
-    for (size_t i = count - 1; i > 0; --i) {
-      size_t j = random(i + 1);
-      String temp = rb_servers[i];
-      rb_servers[i] = rb_servers[j];
-      rb_servers[j] = temp;
+    // Shuffle (Fisher-Yates)
+    if (count > 1) {
+      for (size_t i = count - 1; i > 0; --i) {
+        size_t j = random(i + 1);
+        String temp = rb_servers[i];
+        rb_servers[i] = rb_servers[j];
+        rb_servers[j] = temp;
+      }
     }
 
-    // Add fallback as last option after shuffled servers
-    rb_servers[count] = RADIO_BROWSER_SERVER;
+    // Add fallback as last entry after the shuffled servers
+    if (count < arr_size) rb_servers[count] = RADIO_BROWSER_SERVER;
   }
   return;
 useHostname:

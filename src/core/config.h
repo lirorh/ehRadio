@@ -215,18 +215,8 @@ class Config {
     void initPlaylistMode();
     void loadTheme();
     void reset();
-    void enableScreensaver(bool val);
-    void setScreensaverTimeout(uint16_t val);
-    void setScreensaverBlank(bool val);
-    void setScreensaverPlayingEnabled(bool val);
-    void setScreensaverPlayingTimeout(uint16_t val);
-    void setScreensaverPlayingBlank(bool val);
-    void setShowweather(bool val);
-    void setWeatherKey(const char *val);
-    void setSDpos(uint32_t val);
-    void setIrBtn(int val);
     void saveIR();
-    void resetSystem(const char *val, uint8_t clientId);
+    void defaultSettings(const char *val, uint8_t clientId);
     void saveVolume();
     uint8_t setVolume(uint8_t val);
     void setTone(int8_t bass, int8_t middle, int8_t treble);
@@ -239,6 +229,7 @@ class Config {
     void initPlaylist();
     uint16_t playlistLength();
     bool loadStation(uint16_t station);
+    uint16_t findStationByUrl(const char* url);
     char * stationByNum(uint16_t num);
     void escapeQuotes(const char* input, char* output, size_t maxLen);
     bool parseCSV(const char* line, char* name, char* url, int &ovol);
@@ -289,10 +280,18 @@ class Config {
     }
     bool saveRawValue(const configKeyMap* entry, const void* value, size_t size) {
       prefs.begin("ehradio", false);
-      uint8_t oldValue[size];
       size_t existingLen = prefs.getBytesLength(entry->key);
-      bool exists = prefs.getBytes(entry->key, oldValue, size) == size;
-      bool needSave = (existingLen != size) || !exists || memcmp(oldValue, value, size) != 0;
+      bool keyExists = (existingLen == size);
+      bool needSave;
+      if (keyExists) {
+        uint8_t oldValue[size];
+        prefs.getBytes(entry->key, oldValue, size);
+        needSave = memcmp(oldValue, value, size) != 0;
+      } else {
+        // Key not in NVS: skip write if value matches current struct field (= struct/compile-time default)
+        const void* currentField = (const uint8_t*)&store + entry->fieldOffset;
+        needSave = memcmp(currentField, value, size) != 0;
+      }
       if (needSave) prefs.putBytes(entry->key, value, size);
       prefs.end();
       return needSave;
@@ -328,6 +327,7 @@ class Config {
 
     bool _wwwFilesExist();
     void _initHW();
+    bool _readStationEntry(File& playlist, File& index, uint16_t idx, char* name, char* url, int& ovol);
     uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
     void setDefaults();
     static void doSleep();

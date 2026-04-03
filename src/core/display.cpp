@@ -109,11 +109,11 @@ void Display::init() {
   displayQueue=NULL;
   displayQueue = xQueueCreate(5, sizeof(requestParams_t));
   while(displayQueue==NULL) {;}
-  _createDspTask();
-  while(!_bootStep==0) { delay(10); }
-  //_pager.begin();
-  //_bootScreen();
   _pager = new Pager();
+  _createDspTask();
+  while(_bootStep==0) { delay(10); }
+  //_pager.begin();
+  //_bootScreen()
   _footer = new Page();
   _plwidget = new PlayListWidget();
   _nums = new NumWidget();

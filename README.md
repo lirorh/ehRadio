@@ -22,8 +22,9 @@ Documentation will be improved at some point... Until then, check this page and 
 
 ## ehRadio Version history
 
-### 2026.04.02
+### 2026.04.03
   - I guess I am refactoring some things...
+  - commandhandler especially re-arranged
 
 ### 2026.03.30 - Feature Freeze ON
   - not really a refactor but the codebase is in serious need of repair

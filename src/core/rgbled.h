@@ -2,7 +2,7 @@
 #define rgbled_h
 #pragma once
 #include <Arduino.h>
-#include "core/options.h"
+#include "options.h"
 
 void rgbled_init();
 bool rgbled_is_initialized();

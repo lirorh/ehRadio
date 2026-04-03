@@ -4,10 +4,6 @@
 #include <Ticker.h>
 #include "../displays/widgets/widgetsconfig.h"  // needed for WidgetConfig type
 
-#if DSP_MODEL==DSP_DUMMY
-#define DUMMYDISPLAY
-#endif
-
 #ifndef DUMMYDISPLAY
 class ScrollWidget;
 class PlayListWidget;

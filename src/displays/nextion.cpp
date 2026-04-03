@@ -1,9 +1,6 @@
 /* Dear Nextion User - I'm sorry.  This has probably broken beyond repair... You can try to fix it and I'd be thankful for it. Open an issue on the Repo and I'll do my best to help. -- Trip5 */
 
 #include "../core/options.h"
-#if DSP_MODEL==DSP_DUMMY
-#define DUMMYDISPLAY
-#endif
 #if NEXTION_RX!=255 && NEXTION_TX!=255
 #include "nextion.h"
 #include "../core/config.h"

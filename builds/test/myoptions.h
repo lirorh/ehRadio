@@ -34,9 +34,7 @@
   #define USE_BUILTIN_LED   false
   #define RGB_LED_PIN       42       /* for Adafruit NeoPixel */
 #elif defined(TEST_CI_VS1053)
-  #define DSP_MODEL         DSP_SH1106
-  #define I2C_SDA           42
-  #define I2C_SCL           41
+  #define DSP_MODEL         DSP_ILI9341
   #define VS_HSPI           false
   #define VS1053_CS         9
   #define VS1053_DCS        14

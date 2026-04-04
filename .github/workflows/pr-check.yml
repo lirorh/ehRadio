@@ -6,6 +6,9 @@ on:
       - dev
       - ehradio
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: read
   pull-requests: write
@@ -75,7 +78,7 @@ jobs:
               -name="cppcheck" \
               -reporter=github-pr-review \
               -filter-mode=added \
-              -fail-on-error=true
+              -fail-level=any
 
   # -------------------------------------------------------------------------
   # Job 3: Compile firmware (test builds)

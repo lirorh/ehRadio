@@ -740,11 +740,51 @@ For the queue-creation loops, the `while(x==NULL)` guards are a leftover defensi
 
 ---
 
+## 24. [X] A Workflow that checks pull-requests
+
+A workflow, test build, code-check... and a PR template.
+
+---
+
+## [ ] 25. Display conf.h Files That Lack a Battery Widget
+
+### [ ] 25.1 Only one display conf defines `batteryConf` and battery range format strings (ILI9341) `[LOW]`
+
+- **File**: All `src/displays/conf/display*conf.h`
+- **Problem**: `src/core/display.cpp` references `batteryConf`, `batteryRangeLowFmt`, `batteryRangeMidFmt`, and `batteryRangeHighFmt` inside `#if defined(BATTERY_PIN) && (BATTERY_PIN!=255)` guards. These symbols are only defined in `displayILI9341conf.h`. Any hardware combination using another display with `BATTERY_PIN` set will fail to compile. The CI test build exposed this when `TEST_CI_VS1053` used SH1106 — it was worked around by switching the test env to ILI9341, but the underlying problem remains for real users.
+- **Action**: Add `batteryConf`, `batteryRangeLowFmt`, `batteryRangeMidFmt`, and `batteryRangeHighFmt` to all display conf files that have a plausible battery use case (i.e., all non-LCD/non-dummy displays). Coordinates and glyph codes will differ per display.
+
+| Has battery widget? | Display conf file |
+|---|---|
+| [X] | `displayILI9341conf.h` |
+| [ ] | `displayGC9106conf.h` |
+| [ ] | `displayGC9A01Aconf.h` |
+| [ ] | `displayILI9225conf.h` |
+| [ ] | `displayILI9488conf.h` |
+| [ ] | `displayN5110conf.h` |
+| [ ] | `displaySH1106conf.h` |
+| [ ] | `displaySSD1305conf.h` |
+| [ ] | `displaySSD1306conf.h` |
+| [ ] | `displaySSD1306x32conf.h` |
+| [ ] | `displaySSD1322conf.h` |
+| [ ] | `displaySSD1327conf.h` |
+| [ ] | `displayST7735_144conf.h` |
+| [ ] | `displayST7735_blackconf.h` |
+| [ ] | `displayST7735_miniconf.h` |
+| [ ] | `displayST7789conf.h` |
+| [ ] | `displayST7789_76conf.h` |
+| [ ] | `displayST7789_240conf.h` |
+| [ ] | `displayST7796conf.h` |
+| [ ] | `displayST7920conf.h` |
+| N/A (LCD) | `displayLCD1602conf.h` |
+| N/A (LCD) | `displayLCD2004conf.h` |
+
+---
+
 ## 99. [ ] Stuff I found
 
 Just some notes to make while going through code...
 
   [ ] netserver.loop(); is twice in player.cpp line 241
 
-## 100. [ ] TO-DO: A Workflow that checks pull-requests
 

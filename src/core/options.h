@@ -366,8 +366,8 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
 #ifndef WIFI_ATTEMPTS
   #define WIFI_ATTEMPTS 16
 #endif
-#ifndef LOOP_TASK_STACK_SIZE      // sets the stack size for the FreeRTOS task that runs the main loop
-  #define LOOP_TASK_STACK_SIZE 8  // Compiler default is 8KB but seems safe on ESP32-S3 to increase to 16KB for audio decoding + concurrent tasks
+#ifndef LOOP_TASK_STACK_SIZE     // sets the stack size for the FreeRTOS task that runs the main loop
+  #define LOOP_TASK_STACK_SIZE 8 // Compiler default is 8KB but seems safe on ESP32-S3 to increase to 16KB for audio decoding + concurrent tasks
 #endif
 #ifndef CONFIG_ASYNC_TCP_QUEUE_SIZE
   #define CONFIG_ASYNC_TCP_QUEUE_SIZE 64 // maybe 32 for ESP32?

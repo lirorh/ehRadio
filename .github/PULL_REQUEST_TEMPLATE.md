@@ -11,11 +11,13 @@
 
 ## Checklist
 
-Before submitting, please confirm (if applicable):
+Before submitting, please confirm:
 
 **Build & Test**
 - [ ] The code compiles without errors or warnings (the automated compile check will verify this)
-- [ ] Tested on physical hardware (if possible — please describe hardware in description above)
+- [ ] Tested on physical hardware (please describe hardware in description above)
+
+Confirm (if applicable):
 
 **Code Check**
 - [ ] No `delay()` added inside WebSocket message handlers or WiFi event callbacks

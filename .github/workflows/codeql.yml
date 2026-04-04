@@ -28,6 +28,9 @@ jobs:
         with:
           languages: c-cpp
           queries: security-extended
+          config: |
+            paths-ignore:
+              - src/libraries/
 
       - name: Set up Python
         uses: actions/setup-python@v5

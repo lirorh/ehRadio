@@ -13,19 +13,19 @@ The workflow `.github/workflows/pr-check.yml` copies these files to the repo roo
 | Check | How | Blocks merge? |
 |---|---|---|
 | **Branch guard** | Fail immediately if PR targets `ehradio` and actor is not repo owner | Yes |
-| **Compile Encvironments**  | `pio run` | Yes |
+| **Compile Environments**  | `pio run` | Yes |
 | **Static analysis** (`cppcheck` via ReviewDog) | Posts inline review comments on changed lines | Yes (fails on any finding) |
 
 ### ✅ Enable in GitHub Settings (no workflow code needed)
 
+- **Branch protection rules** — Settings → Branches → Add rule for `dev`:
+  - Require status checks: `Branch check`, `Static analysis (cppcheck)`, `Compile firmware (test builds)`
+  - Block force-push
+
 - **GitHub CodeQL** — Settings → Security → Code scanning → Enable for C/C++.
   Catches buffer overflows, unsafe format strings, integer overflows, and more.
   Runs automatically on PRs once enabled. No workflow edits needed.
-
-- **Branch protection rules** — Settings → Branches → Add rule for `dev`:
-  - Require status checks: `Branch check`, `Compile firmware (test builds)`
-  - Require review from code owners
-  - Block force-push
+  Set to `security alerts: medium or higher`
 
 ---
 

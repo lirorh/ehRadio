@@ -90,7 +90,8 @@ void SDManager::listSD(File &plSDfile, File &plSDindex, const char* dirname, uin
             break;
         }
         strcpy(filePath, fileName.c_str());
-        const char* fn = strrchr(filePath, '/') + 1;
+        const char* fnSlash = strrchr(filePath, '/');
+        const char* fn = fnSlash ? fnSlash + 1 : filePath;
         if (isDir) {
             if (levels && !_checkNoMedia(filePath)) {
                 listSD(plSDfile, plSDindex, filePath, levels - 1);

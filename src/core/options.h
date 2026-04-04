@@ -381,7 +381,14 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
 #ifdef MAX_PL_READ_BYTES
   //#define MAX_PL_READ_BYTES 65536 // Makes chunked HTML transfers... possibly enable if experiencing slowdowns when sending web UI to client. Untested.
 #endif
-
+/* Below defines maximum lengths of character buffers */
+/* Notes have been made regarding old yoRadio values */
+#ifndef WEATHER_STRING_L
+  #define WEATHER_STRING_L 512 // size of weather string, formerly 254
+#endif
+#ifndef WEBSOCKET_BUFFER
+  #define WEBSOCKET_BUFFER 384 // formerly BUFLEN * 2 = 340
+#endif
 
 #ifndef CONNECT_HTTP_HTTPS_TIMEOUT
   // Connection timeout in milliseconds: HTTP, HTTPS(SSL)
@@ -461,104 +468,103 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
   #define IR_TIMEOUT 80 // kTimeout, see IRremoteESP8266 documentation
 #endif
 
-/*        THEME                                        */
-/* Over-ridden by mytheme.h - here is yoRadio defaults */
-/*        color name                R,   G,   B        */
-#ifndef COLOR_BACKGROUND
+/* ehRadio Color Theme: over-ridden by mytheme.h */
+/*        color name                R,   G,   B  */
+#ifndef COLOR_BACKGROUND // background
   #define COLOR_BACKGROUND          0,   0,   0
 #endif
-#ifndef COLOR_STATION_NAME
+#ifndef COLOR_STATION_NAME // station text color
   #define COLOR_STATION_NAME        0,   0,   0
 #endif
-#ifndef COLOR_STATION_BG
-  #define COLOR_STATION_BG        231, 211,  90
+#ifndef COLOR_STATION_BG // current station background
+  #define COLOR_STATION_BG          0, 100, 255
 #endif
-#ifndef COLOR_STATION_FILL
-  #define COLOR_STATION_FILL      231, 211,  90
+#ifndef COLOR_STATION_FILL // fill color (outside bg)
+  #define COLOR_STATION_FILL        0,  98, 250
 #endif
-#ifndef COLOR_SNG_TITLE_1
+#ifndef COLOR_SNG_TITLE_1 // first title
   #define COLOR_SNG_TITLE_1       255, 255, 255
 #endif
-#ifndef COLOR_SNG_TITLE_2
-  #define COLOR_SNG_TITLE_2       165, 162, 132
+#ifndef COLOR_SNG_TITLE_2 // second title
+  #define COLOR_SNG_TITLE_2       220, 220, 220
 #endif
-#ifndef COLOR_WEATHER
-  #define COLOR_WEATHER           255, 150,   0
+#ifndef COLOR_WEATHER // weather string
+  #define COLOR_WEATHER             0, 255,   0
 #endif
-#ifndef COLOR_VU_MAX
-  #define COLOR_VU_MAX            231, 211,  90
+#ifndef COLOR_VU_MAX // max of VU meter "FireBrick"
+  #define COLOR_VU_MAX            178,  34,  34
 #endif
-#ifndef COLOR_VU_MIN
-  #define COLOR_VU_MIN            123, 125, 123
+#ifndef COLOR_VU_MIN // min of VU meter "Green"
+  #define COLOR_VU_MIN              0, 128,   0
 #endif
-#ifndef COLOR_CLOCK
-  #define COLOR_CLOCK             231, 211,  90
+#ifndef COLOR_CLOCK // clock color
+  #define COLOR_CLOCK             255,  32,  16
 #endif
-#ifndef COLOR_CLOCK_BG
-  #define COLOR_CLOCK_BG           28,  28,  28
+#ifndef COLOR_CLOCK_BG // clock color background
+  #define COLOR_CLOCK_BG           30,   2,   2
 #endif
-#ifndef COLOR_SECONDS
-  #define COLOR_SECONDS           231, 211,  90
+#ifndef COLOR_SECONDS // seconds color (DSP_ST7789, DSP_ILI9341, DSP_ILI9225)
+  #define COLOR_SECONDS           255,  16,   4
 #endif
-#ifndef COLOR_DAY_OF_W
-  #define COLOR_DAY_OF_W          255, 255, 255
+#ifndef COLOR_DAY_OF_W // day of week color (for DSP_ST7789, DSP_ILI9341, DSP_ILI9225)
+  #define COLOR_DAY_OF_W          240, 240, 240
 #endif
-#ifndef COLOR_DATE
-  #define COLOR_DATE              165, 162, 132
+#ifndef COLOR_DATE // date color (DSP_ST7789, DSP_ILI9341, DSP_ILI9225)
+  #define COLOR_DATE              255, 255, 255
 #endif
-#ifndef COLOR_HEAP
-  #define COLOR_HEAP               41,  40,  41
+#ifndef COLOR_HEAP // heap string
+  #define COLOR_HEAP              231, 115,   0
 #endif
-#ifndef COLOR_BUFFER
-  #define COLOR_BUFFER            165, 162, 132
+#ifndef COLOR_BUFFER // buffer line
+  #define COLOR_BUFFER            220, 220,  90
 #endif
-#ifndef COLOR_IP
-  #define COLOR_IP                165, 162, 132
+#ifndef COLOR_IP // IP address
+  #define COLOR_IP                200, 20,  240
 #endif
-#ifndef COLOR_VOLUME_VALUE
-  #define COLOR_VOLUME_VALUE      165, 162, 132
+#ifndef COLOR_VOLUME_VALUE // volume number
+  #define COLOR_VOLUME_VALUE      15,  180,  15
 #endif
-#ifndef COLOR_RSSI
-  #define COLOR_RSSI              165, 162, 132
+#ifndef COLOR_RSSI // rssi
+  #define COLOR_RSSI              200,  20, 240
 #endif
-#ifndef COLOR_VOLBAR_OUT
-  #define COLOR_VOLBAR_OUT        231, 211,  90
+#ifndef COLOR_VOLBAR_OUT // border of volume bar
+  #define COLOR_VOLBAR_OUT        30,  200,  30
 #endif
-#ifndef COLOR_VOLBAR_IN
-  #define COLOR_VOLBAR_IN         231, 211,  90
+#ifndef COLOR_VOLBAR_IN // inside volume bar
+  #define COLOR_VOLBAR_IN         5,   140,   5
 #endif
-#ifndef COLOR_DIGITS
+#ifndef COLOR_DIGITS // numbers...?
   #define COLOR_DIGITS            255, 255, 255
 #endif
-#ifndef COLOR_DIVIDER
-  #define COLOR_DIVIDER           165, 162, 132
+#ifndef COLOR_DIVIDER // lines around clock
+  #define COLOR_DIVIDER           132, 132, 165
 #endif
-#ifndef COLOR_PL_CURRENT
-  #define COLOR_PL_CURRENT          0,   0,   0
+#ifndef COLOR_PL_CURRENT // playlist current item
+  #define COLOR_PL_CURRENT          0, 170, 250
 #endif
-#ifndef COLOR_PL_CURRENT_BG
-  #define COLOR_PL_CURRENT_BG     231, 211,  90
+#ifndef COLOR_PL_CURRENT_BG // playlist current item background
+  #define COLOR_PL_CURRENT_BG      30,  30,  30
 #endif
-#ifndef COLOR_PL_CURRENT_FILL
-  #define COLOR_PL_CURRENT_FILL   231, 211,  90
+#ifndef COLOR_PL_CURRENT_FILL // playlist current item fill background
+  #define COLOR_PL_CURRENT_FILL    60,  60,  60
 #endif
-#ifndef COLOR_PLAYLIST_0
-  #define COLOR_PLAYLIST_0        115, 115, 115
+#ifndef COLOR_PLAYLIST_0 // playlist string 0
+  #define COLOR_PLAYLIST_0        250, 250, 250
 #endif
-#ifndef COLOR_PLAYLIST_1
-  #define COLOR_PLAYLIST_1         89,  89,  89
+#ifndef COLOR_PLAYLIST_1 // playlist string 1
+  #define COLOR_PLAYLIST_1        230, 230, 230
 #endif
-#ifndef COLOR_PLAYLIST_2
-  #define COLOR_PLAYLIST_2         56,  56,  56
+#ifndef COLOR_PLAYLIST_2 // playlist string 2
+  #define COLOR_PLAYLIST_2        210, 210, 210
 #endif
-#ifndef COLOR_PLAYLIST_3
-  #define COLOR_PLAYLIST_3         35,  35,  35
+#ifndef COLOR_PLAYLIST_3 // playlist string 3
+  #define COLOR_PLAYLIST_3        190, 190, 190
 #endif
-#ifndef COLOR_PLAYLIST_4
-  #define COLOR_PLAYLIST_4         25,  25,  25
+#ifndef COLOR_PLAYLIST_4 // playlist string 4
+  #define COLOR_PLAYLIST_4        170, 170, 170
 #endif
-#ifndef COLOR_BITRATE
-  #define COLOR_BITRATE           231, 211,  90
+#ifndef COLOR_BITRATE // stream bitrate
+  #define COLOR_BITRATE           220, 220,  90
 #endif
 
 /*        SYSTEM DEFAULTS         */

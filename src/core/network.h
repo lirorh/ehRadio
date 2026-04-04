@@ -5,10 +5,6 @@
 #include <DNSServer.h>
 #include <ImprovWiFiLibrary.h>
 
-//#define TSYNC_DELAY 10800000    // 1000*60*60*3 = 3 hours
-// #define TSYNC_DELAY       3600000     // 1000*60*60   = 1 hour - unused
-#define WEATHER_STRING_L  254
-
 enum n_Status_e { CONNECTED, SOFT_AP, FAILED, SDREADY };
 
 class MyNetwork {

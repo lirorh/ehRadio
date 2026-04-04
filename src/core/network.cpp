@@ -657,7 +657,7 @@ bool MyNetwork::buildWeatherString() {
     
     // If no cached data or cache expired, show loading message
     if (!WeatherCache::valid) {
-      strcpy(weatherBuf, LANG::weather_loading);
+      snprintf(weatherBuf, WEATHER_STRING_L, "%s", LANG::weather_loading);
       display.putRequest(NEWWEATHER);
       return false;
     }
@@ -695,19 +695,26 @@ bool MyNetwork::buildWeatherString() {
     
     // Build weather string dynamically based on enabled fields
     char *p = weatherBuf;
-    p += sprintf(p, "%s, %.1f%s", WeatherCache::description, temp_display, tempUnit);
+    size_t remaining = WEATHER_STRING_L;
+    int written;
+    written = snprintf(p, remaining, "%s, %.1f%s", WeatherCache::description, temp_display, tempUnit);
+    if (written > 0 && (size_t)written < remaining) { p += written; remaining -= written; }
     
-    if (config.store.weatherfeels) {
-      p += sprintf(p, " \007 %s %.1f%s", LANG::weather_feelslike, feels_display, tempUnit);
+    if (config.store.weatherfeels && remaining > 1) {
+      written = snprintf(p, remaining, " \007 %s %.1f%s", LANG::weather_feelslike, feels_display, tempUnit);
+      if (written > 0 && (size_t)written < remaining) { p += written; remaining -= written; }
     }
-    if (config.store.weatherpressure) {
-      p += sprintf(p, " \007 %s %.0f %s", LANG::weather_pressure, press_display, pressUnit);
+    if (config.store.weatherpressure && remaining > 1) {
+      written = snprintf(p, remaining, " \007 %s %.0f %s", LANG::weather_pressure, press_display, pressUnit);
+      if (written > 0 && (size_t)written < remaining) { p += written; remaining -= written; }
     }
-    if (config.store.weatherhumidity) {
-      p += sprintf(p, " \007 %s %d%%", LANG::weather_humidity, WeatherCache::humidity);
+    if (config.store.weatherhumidity && remaining > 1) {
+      written = snprintf(p, remaining, " \007 %s %d%%", LANG::weather_humidity, WeatherCache::humidity);
+      if (written > 0 && (size_t)written < remaining) { p += written; remaining -= written; }
     }
-    if (config.store.weatherwind) {
-      p += sprintf(p, " \007 %s %.1f %s [%s]", LANG::weather_wind, wind_display, windUnit, LANG::wind[wind_dir_idx]);
+    if (config.store.weatherwind && remaining > 1) {
+      written = snprintf(p, remaining, " \007 %s %.1f %s [%s]", LANG::weather_wind, wind_display, windUnit, LANG::wind[wind_dir_idx]);
+      if (written > 0 && (size_t)written < remaining) { p += written; remaining -= (size_t)written; }
     }
     
     Serial.printf("Weather: %s\n", weatherBuf);

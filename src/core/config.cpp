@@ -36,6 +36,7 @@ Config config;
 bool wasUpdated(ESPFileUpdater::UpdateStatus status) { return status == ESPFileUpdater::UPDATED; }
 
 void u8fix(char *src) {
+  if (strlen(src) == 0) return;
   char last = src[strlen(src)-1]; 
   if ((uint8_t)last >= 0xC2) src[strlen(src)-1]='\0';
 }
@@ -654,7 +655,8 @@ char * Config::stationByNum(uint16_t num) {
 void Config::escapeQuotes(const char* input, char* output, size_t maxLen) {
   size_t j = 0;
   for (size_t i = 0; input[i] != '\0' && j < maxLen - 1; ++i) {
-    if (input[i] == '"' && j < maxLen - 2) {
+    if (input[i] == '"') {
+      if (j >= maxLen - 2) break; // not enough room for \ and " — truncate cleanly
       output[j++] = '\\';
       output[j++] = '"';
     } else {

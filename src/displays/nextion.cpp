@@ -156,12 +156,14 @@ void Nextion::loop() {
         continue;
       }
       if (RxTemp != '$') {
-        rxbuf[rx_pos] = RxTemp;
-        rx_pos++;
+        if (rx_pos < RXBUFLEN - 1) {
+          rxbuf[rx_pos] = RxTemp;
+          rx_pos++;
+        }
       } else {
         rxbuf[rx_pos] = '\0';
         rx_pos = 0;
-        if (sscanf(rxbuf, "page=%s", scanBuf) == 1){
+        if (sscanf(rxbuf, "page=%44s", scanBuf) == 1){
           if(strcmp(scanBuf, "player") == 0) display.putRequest(NEWMODE, PLAYER);
           if(strcmp(scanBuf, "playlist") == 0) display.putRequest(NEWMODE, STATIONS);
           if(strcmp(scanBuf, "info") == 0) {

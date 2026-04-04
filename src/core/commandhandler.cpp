@@ -163,7 +163,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   #if IR_PIN!=255
     if (cmdIs(command, "irbtn"))  { config.irindex = atoi(value); netserver.irRecordEnable = (config.irindex >= 0); config.irchck = 0; netserver.irValsToWs(); if (config.irindex < 0) config.saveIR(); return true; }
     if (cmdIs(command, "chkid"))  { config.irchck = static_cast<uint8_t>(atoi(value)); return true; }
-    if (cmdIs(command, "irclr"))  { config.ircodes.irVals[config.irindex][static_cast<uint8_t>(atoi(value))] = 0; return true; }
+    if (cmdIs(command, "irclr"))  { if (config.irindex < 0 || config.irindex >= 20) return true; int irslot = atoi(value); if (irslot < 0 || irslot > 2) return true; config.ircodes.irVals[config.irindex][irslot] = 0; return true; }
   #endif
 
   /* Curated Playlists */

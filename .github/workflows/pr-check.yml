@@ -83,8 +83,6 @@ jobs:
   # -------------------------------------------------------------------------
   # Job 3: Compile firmware (test builds)
   # Runs only for PRs targeting 'dev'.
-  # Uses builds/test/ config which enables MQTT and battery to maximize
-  # code coverage without the overhead of the full release build matrix.
   # -------------------------------------------------------------------------
   compile:
     name: Compile firmware (test builds)

@@ -240,7 +240,7 @@ void Nextion::loop() {
         if (sscanf(rxbuf, "balance=%d", &scanDigit) == 1){
           int b = scanDigit;
           b = (b < -16) ? -16 : (b > 16 ? 16 : b);
-          config.saveValue(&config.store.balance, static_cast<int8_t>(b));
+          config.saveValueButWait(&config.store.balance, static_cast<int8_t>(b), 5000);
           player.setBalance(static_cast<int8_t>(b));
           netserver.requestOnChange(BALANCE, 0);
         }

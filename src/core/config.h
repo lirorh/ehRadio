@@ -217,7 +217,7 @@ class Config {
     void reset();
     void saveIR();
     void defaultSettings(const char *val, uint8_t clientId);
-    void saveVolume();
+    void processDeferredSaves();
     uint8_t setVolume(uint8_t val);
     void setTone(int8_t bass, int8_t middle, int8_t treble);
     uint8_t setLastStation(uint16_t val);
@@ -311,6 +311,33 @@ class Config {
         if (saveRawValue(entry, normalizedValue, sz)) strlcpy(field, normalizedValue, sz);
       }
     }
+    /* Debounced save: updates the in-memory field immediately, defers the NVS write until
+       waitMs milliseconds after the last call for this field. Call processDeferredSaves()
+       from the main loop. Falls back to immediate saveValue if all slots are occupied or
+       the field has no key-map entry. Not for string/char-array fields (static_assert guards). */
+    template <typename T>
+    void saveValueButWait(T *field, const T &value, uint16_t waitMs = 2000) {
+      static_assert(sizeof(T) <= 4, "saveValueButWait: use saveValue for string/char-array fields");
+      const configKeyMap* entry = getKeyMapEntryForField(field);
+      if (!entry) { saveValue(field, value); return; }
+      *field = value;
+      for (uint8_t i = 0; i < DEFERRED_SAVE_SLOTS; ++i) {
+        if (_deferredSaves[i].entry == entry) {
+          memcpy(_deferredSaves[i].data, &value, sizeof(T));
+          _deferredSaves[i].dueMs = millis() + waitMs;
+          return;
+        }
+      }
+      for (uint8_t i = 0; i < DEFERRED_SAVE_SLOTS; ++i) {
+        if (_deferredSaves[i].entry == nullptr) {
+          memcpy(_deferredSaves[i].data, &value, sizeof(T));
+          _deferredSaves[i].dueMs = millis() + waitMs;
+          _deferredSaves[i].entry = entry; /* written last — acts as a release signal to processDeferredSaves */
+          return;
+        }
+      }
+      saveValue(field, value); /* all slots occupied — fall back to immediate write */
+    }
     uint32_t getChipId() {
       uint32_t chipId = 0;
       for(int i=0; i<17; i=i+8) {
@@ -324,6 +351,14 @@ class Config {
     bool _rtcFound = false;
     FS* _SDplaylistFS = nullptr;
     Ticker   _sleepTimer;
+
+    static constexpr uint8_t DEFERRED_SAVE_SLOTS = 8;
+    struct DeferredSave {
+      const configKeyMap* volatile entry = nullptr; /* volatile: written by WebSocket task, read by main loop */
+      uint8_t data[4] = {};
+      uint32_t dueMs = 0;
+    };
+    DeferredSave _deferredSaves[DEFERRED_SAVE_SLOTS];
 
     bool _wwwFilesExist();
     void _initHW();

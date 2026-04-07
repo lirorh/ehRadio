@@ -22,9 +22,10 @@ Documentation will be improved at some point... Until then, check this page and 
 
 ## ehRadio Version history
 
-### 2026.04.03
+### 2026.04.07
   - I guess I am refactoring some things...
-  - commandhandler especially re-arranged
+  - commandhandler re-arranged
+  - more aggressive re-connect on buggy streams
 
 ### 2026.03.30 - Feature Freeze ON
   - not really a refactor but the codebase is in serious need of repair

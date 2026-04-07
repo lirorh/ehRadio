@@ -521,7 +521,9 @@ ESP32 devices run indefinitely without rebooting (under normal conditions). Any 
 - **Impact**: A one-time leak of one `ESPFileUpdater` object per boot-services invocation. Not recurring, but confirms the design does not account for ownership transfer through `void*` task parameters.
 - **Action**: At the end of `startupServicesAsync`, before `vTaskDelete(NULL)`, add `delete (ESPFileUpdater*)param;`. In the `!wwwFilesExist` path, add `delete updater;` after `getRequiredFiles()` returns.
 
-### [ ] 17.2 `MyNetwork::setWifiParams()` — `weatherBuf` reassigned without `free()` `[MEDIUM]`
+Trip5 Note: Doesn't getRequiredFiles() always result in a reboot?  (Fixing maybe unnecessary)
+
+### [X] 17.2 `MyNetwork::setWifiParams()` — `weatherBuf` reassigned without `free()` `[MEDIUM]`
 
 - **File**: `src/core/network.cpp`, around line 491.
 - **Code**:
@@ -684,9 +686,9 @@ For the queue-creation loops, the `while(x==NULL)` guards are a leftover defensi
 
 ---
 
-## [ ] 21. NVS Write Endurance
+## [X] 21. NVS Write Endurance
 
-### [ ] 21.1 High-frequency NVS writes from volume/brightness sliders `[MEDIUM]`
+### [X] 21.1 High-frequency NVS writes from volume/brightness sliders `[MEDIUM]`
 
 - **Context**: ESP32 NVS is backed by flash, which has a write endurance of approximately 100,000 erase cycles per sector. The `saveValue()` implementation in `config.h` calls `prefs.begin() / prefs.putBytes() / prefs.end()` which triggers a full NVS commit on every call. The NVS library does do some wear-levelling across allocated pages, but writes are still finite.
 - **High-frequency callers**:

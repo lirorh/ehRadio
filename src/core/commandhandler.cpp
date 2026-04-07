@@ -20,7 +20,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (cmdIs(command, "voldown", "volumedown", "volm")) { player.stepVol(false); return true; }
   if (cmdIs(command, "volup",   "volumeup",   "volp")) { player.stepVol(true);  return true; }
   if (cmdIs(command, "newmode"))     { config.newConfigMode = atoi(value); netserver.requestOnChange(CHANGEMODE, cid); return true; }
-  if (cmdIs(command, "balance"))     { int b = atoi(value); b = (b < -16) ? -16 : (b > 16 ? 16 : b); config.saveValue(&config.store.balance, static_cast<int8_t>(b)); player.setBalance(static_cast<int8_t>(b)); netserver.requestOnChange(BALANCE, 0); return true; }
+  if (cmdIs(command, "balance"))     { int b = atoi(value); b = (b < -16) ? -16 : (b > 16 ? 16 : b); config.saveValueButWait(&config.store.balance, static_cast<int8_t>(b), 5000); player.setBalance(static_cast<int8_t>(b)); netserver.requestOnChange(BALANCE, 0); return true; }
   if (cmdIs(command, "treble"))      { int v = atoi(value); v = (v < -16) ? -16 : (v > 16 ? 16 : v); config.setTone(config.store.bass, config.store.middle, (int8_t)v); return true; }
   if (cmdIs(command, "middle"))      { int v = atoi(value); v = (v < -16) ? -16 : (v > 16 ? 16 : v); config.setTone(config.store.bass, (int8_t)v, config.store.treble); return true; }
   if (cmdIs(command, "bass"))        { int v = atoi(value); v = (v < -16) ? -16 : (v > 16 ? 16 : v); config.setTone((int8_t)v, config.store.middle, config.store.treble); return true; }
@@ -98,7 +98,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (cmdIs(command, "volumepage"))    { config.saveValue(&config.store.volumepage, static_cast<bool>(atoi(value))); display.putRequest(NEWMODE, PLAYER); return true; }
   if (cmdIs(command, "brightness"))    { if (!config.store.dspon) netserver.requestOnChange(DSPON, 0); int bri=atoi(value); config.store.brightness = (uint8_t)(bri < 0 ? 0 : (bri > 100 ? 100 : bri)); config.setBrightness(true); return true; }
   if (cmdIs(command, "screenon"))      { config.setDspOn(static_cast<bool>(atoi(value))); return true; }
-  if (cmdIs(command, "contrast"))      { int con=atoi(value); config.saveValue(&config.store.contrast, (uint8_t)(con < 0 ? 0 : (con > 100 ? 100 : con))); display.setContrast(); return true; }
+  if (cmdIs(command, "contrast"))      { int con=atoi(value); config.saveValueButWait(&config.store.contrast, (uint8_t)(con < 0 ? 0 : (con > 100 ? 100 : con)), 4000); display.setContrast(); return true; }
   /* De-deplicated helper for screensaver / No-op for LCDs */
   auto screensaverHelper = []() {
     #ifndef DSP_LCD

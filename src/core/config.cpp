@@ -477,8 +477,14 @@ void Config::saveIR() {
   #endif
 }
 
-void Config::saveVolume() {
-  saveValue(&store.volume, store.volume);
+void Config::processDeferredSaves() {
+  for (uint8_t i = 0; i < DEFERRED_SAVE_SLOTS; ++i) {
+    if (_deferredSaves[i].entry != nullptr && (int32_t)(millis() - _deferredSaves[i].dueMs) >= 0) {
+      const configKeyMap* e = _deferredSaves[i].entry;
+      saveRawValue(e, _deferredSaves[i].data, e->size);
+      _deferredSaves[i].entry = nullptr;
+    }
+  }
 }
 
 uint8_t Config::setVolume(uint8_t val) {
@@ -489,9 +495,9 @@ uint8_t Config::setVolume(uint8_t val) {
 }
 
 void Config::setTone(int8_t bass, int8_t middle, int8_t treble) {
-  saveValue(&store.bass, bass);
-  saveValue(&store.middle, middle);
-  saveValue(&store.treble, treble);
+  saveValueButWait(&store.bass, bass, 5000);
+  saveValueButWait(&store.middle, middle, 5000);
+  saveValueButWait(&store.treble, treble, 5000);
   player.setTone(store.bass, store.middle, store.treble);
   netserver.requestOnChange(EQUALIZER, 0);
 }
@@ -793,7 +799,7 @@ void Config::setBrightness(bool dosave) {
     analogWrite(BRIGHTNESS_PIN, map(store.brightness, 0, 100, 0, 255));
     if (!store.dspon) store.dspon = true;
     if (dosave) {
-      saveValue(&store.brightness, store.brightness);
+      saveValueButWait(&store.brightness, store.brightness, 4000);
       saveValue(&store.dspon, store.dspon);
     }
   #endif
@@ -804,7 +810,7 @@ void Config::setBrightness(bool dosave) {
     nextion.putcmd(cmd);
     if (!store.dspon) store.dspon = true;
     if (dosave) {
-      saveValue(&store.brightness, store.brightness);
+      saveValueButWait(&store.brightness, store.brightness, 4000);
       saveValue(&store.dspon, store.dspon);
     }
   #endif

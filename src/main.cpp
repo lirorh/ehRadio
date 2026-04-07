@@ -122,6 +122,7 @@ void loop() {
 
   if (network.status == CONNECTED || network.status==SDREADY) {
     player.loop();
+    config.processDeferredSaves();
   }
   loopControls();
   netserver.loop();

@@ -57,8 +57,6 @@ class Player: public Audio {
     plStatus_e status() { return _status; }
     void setResumeFilePos(uint32_t pos) { _resumeFilePos = pos; }
   private:
-    uint32_t    _volTicks = 0;       /* delayed volume save  */
-    bool        _volTimer = false;   /* delayed volume save  */
     uint32_t    _resumeFilePos = 0;
     plStatus_e  _status = STOPPED;
     char        _plError[PLERR_LN];

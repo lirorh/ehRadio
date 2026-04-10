@@ -1,11 +1,11 @@
 #include "options.h"
 #include <stdarg.h>
-#include "config.h"
-#include "player.h"
-#include "network.h"
 #include "battery.h"
-#include "telnet.h"
+#include "config.h"
 #include "netserver.h" // For launchPlaybackTask
+#include "network.h"
+#include "player.h"
+#include "telnet.h"
 
 Telnet telnet;
 

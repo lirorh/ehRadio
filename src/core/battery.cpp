@@ -4,14 +4,14 @@
  */
 
 #include "battery.h"
-#include "common.h"
-#include "display.h"
-#include "config.h"
-#include "telnet.h"
-#include "netserver.h"
-#include <stdarg.h>
 
 #if (defined(BATTERY_PIN) && (BATTERY_PIN!=255)) || (defined(BATTERY_CHARGE_PIN) && (BATTERY_CHARGE_PIN!=255))
+#include <stdarg.h>
+#include "common.h"
+#include "config.h"
+#include "display.h"
+#include "netserver.h"
+#include "telnet.h"
 
 static bool _battery_inited = false;   // ADC available
 static bool _charge_pin_present = false; // Charge-status pin available

@@ -1,11 +1,11 @@
-#include <Arduino.h>
 #include "options.h"
-#include "controls.h"
+#include <Arduino.h>
 #include "config.h"
-#include "player.h"
+#include "controls.h"
 #include "display.h"
-#include "network.h"
 #include "netserver.h"
+#include "network.h"
+#include "player.h"
 #include "../pluginsManager/pluginsManager.h"
 
 long encOldPosition  = 0;

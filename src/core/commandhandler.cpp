@@ -1,14 +1,14 @@
-#include <Arduino.h>
 #include "options.h"
+#include <Arduino.h>
+#include "battery.h"
 #include "commandhandler.h"
-#include "player.h"
-#include "display.h"
-#include "netserver.h"
 #include "config.h"
 #include "controls.h"
-#include "network.h"
+#include "display.h"
 #include "mqtt.h"
-#include "battery.h"
+#include "netserver.h"
+#include "network.h"
+#include "player.h"
 
 CommandHandler cmd;
 

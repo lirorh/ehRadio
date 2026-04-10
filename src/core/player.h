@@ -29,7 +29,7 @@ enum plStatus_e : uint8_t{ PLAYING = 1, STOPPED = 2 };
 
 class Player: public Audio {
   public:
-    bool lockOutput = true;
+    volatile bool lockOutput = true;  // volatile: written from WiFi callbacks, read from audio callbacks
     bool resumeAfterUrl = false;
     uint32_t sd_min, sd_max;
     bool remoteStationName = false;

@@ -13,7 +13,7 @@ class MyNetwork {
 // Ensure DNSServer full definition is available
     struct tm timeinfo = {0};
     bool firstRun = true, forceTimeSync = true, forceWeather = true;
-    bool lostPlaying = false, beginReconnect = false;
+    volatile bool lostPlaying = false, beginReconnect = false;  // volatile: accessed from multiple tasks/cores (WiFi callbacks, player loop, retry task)
     //uint8_t tsFailCnt, wsFailCnt;
     Ticker ctimer;
     char *weatherBuf = nullptr;

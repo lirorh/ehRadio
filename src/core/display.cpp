@@ -1,25 +1,27 @@
+#include "options.h"
+#include <time.h>
 #include <Arduino.h>
 #include <Ticker.h>
-#include "options.h"
 #include <WiFi.h>
-#include <time.h>
 #include "config.h"
 #include "display.h"
-#include "player.h"
-#include "network.h"
-#include "netserver.h"
-#include "../pluginsManager/pluginsManager.h"
-#include "../displays/dspcore.h"
-#include "../displays/widgets/widgets.h"
-#include "../displays/widgets/pages.h"
 #include "locale.h"
+#include "netserver.h"
+#include "network.h"
+#include "player.h"
+#include "../displays/dspcore.h"
+#include "../displays/widgets/pages.h"
+#include "../displays/widgets/widgets.h"
+#include "../pluginsManager/pluginsManager.h"
 #if defined(BATTERY_PIN) && (BATTERY_PIN!=255)
   #include "battery.h"
+#endif
+#ifdef USE_NEXTION
+  #include "../displays/nextion.h"
 #endif
 
 Display display;
 #ifdef USE_NEXTION
-  #include "../displays/nextion.h"
   Nextion nextion;
 #endif
 

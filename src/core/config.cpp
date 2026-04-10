@@ -1,13 +1,18 @@
 #include "options.h"
+#include <cstddef>
+#include <ESPFileUpdater.h>
+#include <nvs_flash.h>
+#ifndef ARDUINO_ESP32C3_DEV
+  #include <driver/rtc_io.h>
+#endif
 #include "config.h"
-
-#include "display.h"
-#include "player.h"
-#include "network.h"
-#include "netserver.h"
 #include "controls.h"
-#include "telnet.h"
+#include "display.h"
+#include "netserver.h"
+#include "network.h"
+#include "player.h"
 #include "rtcsupport.h"
+#include "telnet.h"
 #include "../displays/tools/utf8_common.h"
 #ifdef USE_SD
   #include "sdmanager.h"
@@ -15,9 +20,6 @@
 #ifdef USE_NEXTION
   #include "../displays/nextion.h"
 #endif
-#include <cstddef>
-#include <ESPFileUpdater.h>
-#include <nvs_flash.h>
 
 
 // List of required web asset files
@@ -172,6 +174,14 @@ void Config::changeMode(int newmode) {
       ESP.restart();
     }
     if (!sdman.ready && newmode!=PM_WEB) {
+      #if SD_CARD_DETECT_PIN!=255
+        if (digitalRead(SD_CARD_DETECT_PIN)==HIGH) {
+          Serial.println("##[ERROR]#\tSD card not inserted");
+          netserver.requestOnChange(GETPLAYERMODE, 0);
+          sdman.stop();
+          return;
+        }
+      #endif
       if (!sdman.start()) {
         Serial.println("##[ERROR]#\tSD Not Found");
         netserver.requestOnChange(GETPLAYERMODE, 0);
@@ -249,6 +259,14 @@ void Config::initPlaylistMode() {
   uint16_t cs = playlistLength();
   #ifdef USE_SD
     if (getMode()==PM_SDCARD) {
+      #if SD_CARD_DETECT_PIN!=255
+        if (digitalRead(SD_CARD_DETECT_PIN)==HIGH) {
+          store.play_mode=PM_WEB;
+          Serial.println("SD card not inserted");
+          changeMode(PM_WEB);
+          _lastStation = store.lastStation;
+        } else
+      #endif
       if (!sdman.start()) {
         store.play_mode=PM_WEB;
         Serial.println("SD Mount Failed");
@@ -308,6 +326,9 @@ void Config::_initHW() {
   #if BRIGHTNESS_PIN!=255
     pinMode(BRIGHTNESS_PIN, OUTPUT);
     setBrightness(false);
+  #endif
+  #if SD_CARD_DETECT_PIN!=255
+    pinMode(SD_CARD_DETECT_PIN, INPUT_PULLUP);
   #endif
 }
 
@@ -838,29 +859,39 @@ void Config::setDspOn(bool dspon, bool saveval) {
   }
 }
 
-void Config::doSleep() {
+static void sleepCore() {
   if (BRIGHTNESS_PIN!=255) analogWrite(BRIGHTNESS_PIN, 0);
   display.deepsleep();
   #ifdef USE_NEXTION
     nextion.sleep();
   #endif
-  #ifndef ARDUINO_ESP32C3_DEV
-    if (WAKE_PIN!=255) esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKE_PIN, LOW);
-    esp_sleep_enable_timer_wakeup(config.sleepfor * 60 * 1000000ULL);
-    esp_deep_sleep_start();
+  #if defined(ARDUINO_ESP32C3_DEV)
+    if (WAKE_PIN!=255) esp_deep_sleep_enable_gpio_wakeup((1ULL << WAKE_PIN), WAKE_PIN_STATE ? ESP_GPIO_WAKEUP_GPIO_HIGH : ESP_GPIO_WAKEUP_GPIO_LOW);
+  #else
+    if (WAKE_PIN!=255) {
+      // Digital GPIO pull resistors power off during deep sleep — configure the RTC domain pull instead
+      if (WAKE_PIN_STATE == HIGH) {
+        rtc_gpio_pulldown_en((gpio_num_t)WAKE_PIN);
+        rtc_gpio_pullup_dis((gpio_num_t)WAKE_PIN);
+      } else {
+        rtc_gpio_pullup_en((gpio_num_t)WAKE_PIN);
+        rtc_gpio_pulldown_dis((gpio_num_t)WAKE_PIN);
+
+      }
+      esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKE_PIN, WAKE_PIN_STATE);
+    }
   #endif
 }
 
+void Config::doSleep() {
+  sleepCore();
+  esp_sleep_enable_timer_wakeup(config.sleepfor * 60 * 1000000ULL);
+  esp_deep_sleep_start();
+}
+
 void Config::doSleepW() {
-  if (BRIGHTNESS_PIN!=255) analogWrite(BRIGHTNESS_PIN, 0);
-  display.deepsleep();
-  #ifdef USE_NEXTION
-    nextion.sleep();
-  #endif
-  #ifndef ARDUINO_ESP32C3_DEV
-    if (WAKE_PIN!=255) esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKE_PIN, LOW);
-    esp_deep_sleep_start();
-  #endif
+  sleepCore();
+  esp_deep_sleep_start();
 }
 
 void Config::sleepForAfter(uint16_t sf, uint16_t sa) {

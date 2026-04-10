@@ -1,21 +1,21 @@
 #include "options.h"
-#include <ESPmDNS.h>
 #include <time.h>
-#include "rtcsupport.h"
-#include "network.h"
-#include "display.h"
-#include "config.h"
-#include "telnet.h"
-#include "netserver.h"
-#include "player.h"
-#include "mqtt.h"
-#include "../pluginsManager/pluginsManager.h"
-#include <DNSServer.h>
-#include "locale.h"
-#include <ImprovWiFiLibrary.h>
 #include <ArduinoJson.h>
-#include <ESPFileUpdater.h>
+#include <DNSServer.h>
 #include <ehDP.h>
+#include <ESPFileUpdater.h>
+#include <ESPmDNS.h>
+#include <ImprovWiFiLibrary.h>
+#include "config.h"
+#include "display.h"
+#include "locale.h"
+#include "mqtt.h"
+#include "netserver.h"
+#include "network.h"
+#include "player.h"
+#include "rtcsupport.h"
+#include "telnet.h"
+#include "../pluginsManager/pluginsManager.h"
 
 #ifndef WIFI_ATTEMPTS
   #define WIFI_ATTEMPTS  16
@@ -114,6 +114,10 @@ void ticks() {
     }
     #ifdef USE_SD
       if (display.mode()!=SDCHANGE) player.sendCommand({PR_CHECKSD, 0});
+      #if SD_AUTOPLAY && SD_CARD_DETECT_PIN!=255
+        if (config.getMode()!=PM_SDCARD && digitalRead(SD_CARD_DETECT_PIN)==LOW)
+          config.changeMode(PM_SDCARD);
+      #endif
     #endif
     player.sendCommand({PR_VUTONUS, 0});
   }

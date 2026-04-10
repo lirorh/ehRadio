@@ -1,29 +1,27 @@
 #include "options.h"
 #include <Arduino.h>
-#include <SPIFFS.h>
-#include <Update.h>
-#include <ESPmDNS.h>
-#include <esp_task_wdt.h>
-#include "config.h"
-#include "netserver.h"
 #include <ArduinoJson.h>
 #include <ESPFileUpdater.h>
+#include <ESPmDNS.h>
+#include <esp_task_wdt.h>
+#include <freertos/FreeRTOS.h>
+#include <SPIFFS.h>
+#include <Update.h>
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
+#include "battery.h"
+#include "commandhandler.h"
 #include "config.h"
+#include "controls.h"
+#include "display.h"
+#include "locale.h"
+#include "mqtt.h"
+#include "netserver.h"
+#include "network.h"
 #include "player.h"
 #include "telnet.h"
-#include "display.h"
-#include "options.h"
-#include "core/battery.h"
-#include "network.h"
-#include "mqtt.h"
-#include "controls.h"
-#include "commandhandler.h"
 #include "../displays/dspcore.h"
 #include "../displays/widgets/widgetsconfig.h" //BitrateFormat
-#include "locale.h"
-
-//#include <ESPmDNS.h>
-
 #if USE_OTA
   #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
     #include <NetworkUdp.h>
@@ -32,10 +30,6 @@
   #endif
   #include <ArduinoOTA.h>
 #endif
-
-#include <WiFiClient.h>
-#include <WiFiClientSecure.h>
-#include <freertos/FreeRTOS.h>
 #ifdef USE_SD
   #include "sdmanager.h"
 #endif
@@ -73,7 +67,7 @@ AsyncWebSocket websocket("/ws");
 bool  shouldReboot  = false;
 #ifdef MQTT_ENABLE
   Ticker mqttplaylistticker;
-  bool  mqttplaylistblock = false;
+  volatile bool mqttplaylistblock = false;  // volatile: written from Ticker callback, read from AsyncWebServer task
   void mqttplaylistSend() {
     if (config.store.mqttenable) {
       mqttplaylistblock = true;

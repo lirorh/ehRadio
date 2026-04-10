@@ -1,9 +1,9 @@
 #include "options.h"
 #ifdef MQTT_ENABLE // ============================== Everything ignored if not defined ==============================
 
+#include <WiFi.h>
 #include "config.h"
 #include "mqtt.h"
-#include <WiFi.h>
 #include "player.h"
 
 AsyncMqttClient mqttClient;

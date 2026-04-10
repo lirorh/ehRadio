@@ -5,8 +5,8 @@
 
 #ifndef battery_h
 #define battery_h
-#include <Arduino.h>
 #include "options.h"
+#include <Arduino.h>
 
 struct BatteryStatus {
   uint16_t voltage_mv;    // Battery voltage in millivolts

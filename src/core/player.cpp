@@ -245,7 +245,6 @@ void Player::_play(uint16_t stationId) {
   display.putRequest(NEWSTATION);
   netserver.requestOnChange(STATION, 0);
   netserver.loop();
-  netserver.loop();
   bool isConnected = false;
   if (config.getMode()==PM_SDCARD && SDC_CS!=255) {
     isConnected=connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min);

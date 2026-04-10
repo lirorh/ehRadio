@@ -22,12 +22,15 @@ SDManager sdman(FSImplPtr(new VFSImpl()));
 
 bool SDManager::start() {
   ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
+  if (ready) return ready;
   vTaskDelay(10);
-  if (!ready) ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
+  ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
+  if (ready) return ready;
   vTaskDelay(20);
-  if (!ready) ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
+  ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
+  if (ready) return ready;
   vTaskDelay(50);
-  if (!ready) ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
+  ready = begin(SDC_CS, SDREALSPI, SDSPISPEED);
   return ready;
 }
 

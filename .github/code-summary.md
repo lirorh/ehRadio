@@ -2,7 +2,7 @@
 
 ## Mandatory Maintenance Directive
 
-If any code change affects behavior, data flow, build configuration, platform targets, WebUI functionality, stored settings, networking, display logic, localization, update flow, or dependency usage, this file **must** be updated in the same change set.
+If a change affects code interactions (how files/modules interact), storage keys, WebUI contracts, locale/build/dependency behavior, or other external contracts,`.github/code-summary.md` MUST be updated in the same change set; bug fixes that restore expected behavior are exempt unless they also change code interactions or external behavior/contracts.
 
 This file exists to reduce re-analysis cost for humans and AI agents.
 
@@ -161,6 +161,21 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
 
 ## Core Folder Per-File Map (`src/core`)
 
+### Module Convention
+All modules in `src/core/` follow the **class + global instance** pattern:
+- The header declares a `class Foo` with the full public interface and private members/methods.
+- The `.cpp` defines all `Foo::` methods and declares the single global instance: `Foo foo;`
+- The header provides `extern Foo foo;` so callers can use `foo.method()`.
+- Hardware-conditional modules use a real class in the `#if` branch and a no-op stub class in the `#else` branch; `extern Foo foo;` is placed after the guard.
+- **C-style free-function modules are not acceptable in `src/core/`.**
+
+### Naming Style
+- **camelCase** for all identifiers: private members, local variables, private methods (e.g. `inferredCharging`, `lastVoltageMv`, `readAndUpdate`).
+- No underscore-prefixed names (e.g. `_myVar`, `_myMethod`) — use plain camelCase instead.
+- Public API methods follow existing verb-noun camelCase: `init()`, `getStatus()`, `setEncAcceleration()`.
+- File-scope `static const` constants also use camelCase (e.g. `pctSampleMax`, `emaAlphaQ`).
+- `ALL_CAPS` applies only to `#define` macros and hardware pin constants inherited from the config cascade.
+
 ## `src/core/common.h`
 - Shared enums and structs used across modules (display modes, requests, control events, etc.).
 - Coupling:
@@ -292,7 +307,11 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
 - Critical coupling file for setting changes.
 
 ## `src/core/controls.h` / `controls.cpp`
-- `controls.h` declares controls init/loop and helper functions for encoders/IR/touch.
+- `controls.h` declares `class Controls` with public interface: `init()`, `loop()`, `setEncAcceleration()`, `setIRTolerance()`, `flipTS()`, `controlsEvent()`.
+- `extern Controls controls;` provides the global instance; callers use `controls.init()`, `controls.loop()`, etc.
+- All internal helpers (`onBtnClick`, `encodersLoop`, `irLoop`, etc.) are private class methods.
+- Static trampoline methods (`_btnClickCb`, etc.) used for `OneButton` callbacks (function-pointer API; cannot capture `this`).
+- `readEncoderISR` / `readEncoder2ISR` remain free functions with `IRAM_ATTR` (ISR constraint; access file-scope `encoder`/`encoder2` directly).
 - Physical controls integration:
   - OneButton
   - rotary encoders
@@ -312,6 +331,9 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
 
 ## `src/core/mqtt.h` / `mqtt.cpp`
 - MQTT integration if `MQTT_ENABLE` compile flag exists.
+- `mqtt.h` declares `class Mqtt` with `init()`, `loop()`, `publishStatus()`, `publishVolume()`, `publishPlaylist()`.
+- `extern Mqtt mqtt;` (inside `#ifdef MQTT_ENABLE`) provides the global instance.
+- Private static callback methods (`_connectCb`, `_onConnect`, `_onDisconnect`, `_onMessage`) used for AsyncMqttClient API (static required by library callback interface).
 - Responsibilities:
   - connection lifecycle
   - subscribe to `.../command`
@@ -321,7 +343,9 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
   - mirrors subset of telnet/commandhandler behavior.
 
 ## `src/core/battery.h` / `battery.cpp`
-- `battery.h` declares battery status struct and API.
+- `battery.h` declares `class Battery` (real class under hardware guard; no-op stub in `#else`); `extern Battery battery;` provides the global instance.
+- Public interface: `init()`, `bootStatus()`, `isInitialized()`, `getStatus()`, `formatStatusLine()`, `loop()`, `recalcNow()`, `calibrate()`.
+- All ADC/inference state and helpers are private members/methods.
 - Battery monitoring/calibration/inference implementation.
 - Responsibilities:
   - ADC sampling and filtering
@@ -332,6 +356,8 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
   - triggers display and websocket updates
 
 ## `src/core/rgbled.h` / `rgbled.cpp`
+- `rgbled.h` declares `class RgbLed` (real class under `RGB_LED_PIN` guard; no-op stub in `#else`); `extern RgbLed rgbled;` provides the global instance.
+- Public interface: `init()`, `isInitialized()`, `set()`, `playing()`, `stopped()`, `trackChange()`, `loop()`.
 - Optional RGB LED state machine:
   - playing/stopped colors
   - track-change flashing

@@ -305,14 +305,14 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       // Battery status commands
       if (strcmp(str, "cli.batt now") == 0 || strcmp(str, "batt now") == 0 || strcmp(str, "battery now") == 0) {
         // Force an immediate ADC read so CLI reports the latest values.
-        battery_recalc_now();
+        battery.recalcNow();
       }
       if (strcmp(str, "cli.batt") == 0 || strcmp(str, "batt") == 0 || strcmp(str, "battery") == 0 ||
           strcmp(str, "cli.batt now") == 0 || strcmp(str, "batt now") == 0 || strcmp(str, "battery now") == 0) {
-        // If 'now' was requested we already did battery_recalc_now(), otherwise we use cached readings.
-        BatteryStatus b = battery_get_status();
+        // If 'now' was requested we already did battery.recalcNow(), otherwise we use cached readings.
+        BatteryStatus b = battery.getStatus();
         char status_line[256];  // Increased buffer for extended charging info with peak/trough/rate
-        battery_format_status_line(b, status_line, sizeof(status_line), true);
+        battery.formatStatusLine(b, status_line, sizeof(status_line), true);
         printf(clientId, "%s\r\n", status_line);
         goto show_prompt;
       }
@@ -331,7 +331,7 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
           printf(clientId, "##CLI.CALIB#: measured voltage %dmV out of valid range (2500-4500mV)\r\n", meas_mv);
           goto show_prompt;
         }
-        BatteryStatus b = battery_get_status();
+        BatteryStatus b = battery.getStatus();
         if (!b.valid) {
           printf(clientId, "##CLI.CALIB#: battery not detected\r\n");
           goto show_prompt;
@@ -364,14 +364,14 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
         // Persist to config and save
         config.saveValue(&config.store.battery_adc_ref_mv, newref);
         // Recalculate immediately so 'batt' reflects saved value
-        battery_recalc_now();
-        BatteryStatus nb = battery_get_status();
+        battery.recalcNow();
+        BatteryStatus nb = battery.getStatus();
         printf(clientId, "##CLI.CALIB#: Saved BATTERY_ADC_REF_MV=%u to prefs; new firmware Volt=%dmV, %d%%\r\n", newref, nb.voltage_mv, nb.percentage);
         goto show_prompt;
       }
   
       if (strcmp(str, "calbatt") == 0 || strcmp(str, "cal.batt") == 0) {
-        BatteryStatus b = battery_get_status();
+        BatteryStatus b = battery.getStatus();
         uint32_t saved = (uint32_t)config.store.battery_adc_ref_mv;
         uint32_t effective = saved ? saved : (uint32_t)BATTERY_ADC_REF_MV;
         if (!b.valid) {

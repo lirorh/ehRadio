@@ -178,7 +178,7 @@ void MyNetwork::WiFiReconnected(WiFiEvent_t event, WiFiEventInfo_t info) {
     }
   }
   #ifdef MQTT_ENABLE
-    if (config.store.mqttenable) connectToMqtt();
+    if (config.store.mqttenable) mqtt.connect();
   #endif
 }
 

@@ -4144,7 +4144,7 @@ bool Audio::connecttohost(const char* host, const char* user, const char* pwd) {
     _client->setTimeout(m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
 
     AUDIO_INFO("connect to: \"%s\" on port %d path \"/%s\"", h_host + hostwoext_begin, port, h_host + pos_slash + 1);
-    res = _client->connect(h_host + hostwoext_begin, port);
+    res = _client->connect(h_host + hostwoext_begin, port, m_f_ssl ? 10000 : 5000);  // Connection timeout: 5s HTTP, 10s HTTPS
 
     if(pos_slash > 0) h_host[pos_slash] = '/';
     if(pos_colon > 0) h_host[pos_colon] = ':';
@@ -4266,7 +4266,7 @@ bool Audio::httpPrint(const char* host) {
          if(m_f_ssl) { _client = static_cast<WiFiClient*>(&clientsecure); if(m_f_ssl && port == 80) port = 443;}
          else        { _client = static_cast<WiFiClient*>(&client); }
         AUDIO_INFO("The host has disconnected, reconnecting");
-        if(!_client->connect(hostwoext, port)) {
+        if(!_client->connect(hostwoext, port, m_f_ssl ? 10000 : 5000)) {  // Connection timeout: 5s HTTP, 10s HTTPS
             log_e("connection lost");
             stopSong();
             return false;
@@ -4379,7 +4379,7 @@ log_e("%s", rqh);
     if(m_f_ssl) { _client = static_cast<WiFiClient*>(&clientsecure); if(m_f_ssl && port == 80) port = 443;}
     else        { _client = static_cast<WiFiClient*>(&client); }
     AUDIO_INFO("The host has disconnected, reconnecting");
-    if(!_client->connect(hostwoext, port)) {
+    if(!_client->connect(hostwoext, port, m_f_ssl ? 10000 : 5000)) {  // Connection timeout: 5s HTTP, 10s HTTPS
         log_e("connection lost");
         stopSong();
         return false;
@@ -4584,7 +4584,7 @@ bool Audio::connecttospeech(const char* speech, const char* lang) {
 
     _client = static_cast<WiFiClient*>(&client);
     AUDIO_INFO("connect to \"%s\"", host);
-    if(!_client->connect(host, 80)) {
+    if(!_client->connect(host, 80, 5000)) {  // Connection timeout: 5s for HTTP
         log_e("Connection failed");
         xSemaphoreGiveRecursive(mutex_playAudioData);
         return false;

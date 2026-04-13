@@ -61,7 +61,7 @@ void TouchScreen::init(uint16_t w, uint16_t h) {
 #endif
 #if TS_MODEL==TS_MODEL_FT6336
   ts.begin();
-  ts.setRotation(config.store.fliptouch?0:2);
+  ts.setRotation(config.store.fliptouch?2:0);
 #endif
   _width  = w;
   _height = h;
@@ -101,6 +101,9 @@ void TouchScreen::flip() {
 #endif
 #if TS_MODEL==TS_MODEL_GT911
   ts.setRotation(config.store.fliptouch?0:2);
+#endif
+#if TS_MODEL==TS_MODEL_FT6336
+  ts.setRotation(config.store.fliptouch?2:0);
 #endif
 }
 
@@ -149,7 +152,7 @@ void TouchScreen::loop() {
               int16_t xDelta = map(abs(touchVol - touchX), 0, _width, 0, TS_STEPS);
               display.putRequest(NEWMODE, VOL);
               if (xDelta>1) {
-                controlsEvent((touchVol - touchX)<0);
+                controls.controlsEvent((touchVol - touchX)<0);
                 touchVol = touchX;
               }
             }
@@ -162,7 +165,7 @@ void TouchScreen::loop() {
               int16_t yDelta = map(abs(touchStation - touchY), 0, _height, 0, TS_STEPS);
               display.putRequest(NEWMODE, STATIONS);
               if (yDelta>1) {
-                controlsEvent((touchStation - touchY)<0);
+                controls.controlsEvent((touchStation - touchY)<0);
                 touchStation = touchY;
               }
             }
@@ -183,7 +186,7 @@ void TouchScreen::loop() {
       if (direct == TDS_REQUEST) {
         uint32_t pressTicks = millis()-touchLongPress;
         if (pressTicks < BTN_PRESS_TICKS*2) {
-          if (pressTicks > 50) onBtnClick(EVT_BTNCENTER);
+          if (pressTicks > 50) controls.onBtnClick(EVT_BTNCENTER);
         } else {
           display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
         }

@@ -87,8 +87,8 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
   if (cmdIs(command, "rebootmdns"))  { delay(1500); ESP.restart(); return true; }
 
   /* Options: Battery */
-  if (cmdIs(command, "battref"))     { if (battery_calibrate(atoi(value))) netserver.requestOnChange(GETBATTERY, cid); return true; }
-  if (cmdIs(command, "battrecalc"))  { battery_recalc_now(); netserver.requestOnChange(GETBATTERY, cid); return true; }
+  if (cmdIs(command, "battref"))     { if (battery.calibrate(atoi(value))) netserver.requestOnChange(GETBATTERY, cid); return true; }
+  if (cmdIs(command, "battrecalc"))  { battery.recalcNow(); netserver.requestOnChange(GETBATTERY, cid); return true; }
 
   /* Options: Screen */
   if (cmdIs(command, "flipscreen"))    { config.saveValue(&config.store.flipscreen, static_cast<bool>(atoi(value))); display.flip(); display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER); return true; }
@@ -114,11 +114,11 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
 
   /* Options: Controls */
   if (cmdIs(command, "volsteps"))          { config.saveValue(&config.store.volsteps, static_cast<uint8_t>(atoi(value))); return true; }
-  if (cmdIs(command, "fliptouch"))         { config.saveValue(&config.store.fliptouch, static_cast<bool>(atoi(value))); flipTS(); return true; }
+  if (cmdIs(command, "fliptouch"))         { config.saveValue(&config.store.fliptouch, static_cast<bool>(atoi(value))); controls.flipTS(); return true; }
   if (cmdIs(command, "dbgtouch"))          { config.saveValue(&config.store.dbgtouch, static_cast<bool>(atoi(value))); return true; }
-  if (cmdIs(command, "encacc"))            { setEncAcceleration(static_cast<uint16_t>(atoi(value))); return true; }
+  if (cmdIs(command, "encacc"))            { controls.setEncAcceleration(static_cast<uint16_t>(atoi(value))); return true; }
   if (cmdIs(command, "oneclickswitching")) { config.saveValue(&config.store.skipPlaylistUpDown, static_cast<bool>(atoi(value))); return true; }
-  if (cmdIs(command, "irtlp"))             { setIRTolerance(static_cast<uint8_t>(atoi(value))); return true; }
+  if (cmdIs(command, "irtlp"))             { controls.setIRTolerance(static_cast<uint8_t>(atoi(value))); return true; }
 
   /* Options: Locale */
   if (cmdIs(command, "locale_webui")) { config.updateLocaleFileAsync(value, cid); return true; }
@@ -146,7 +146,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid) {
 
   /* Options: MQTT */
   #ifdef MQTT_ENABLE
-    if (cmdIs(command, "mqttenable")) { config.saveValue(&config.store.mqttenable, static_cast<bool>(atoi(value))); mqttInit(); return true; }
+    if (cmdIs(command, "mqttenable")) { config.saveValue(&config.store.mqttenable, static_cast<bool>(atoi(value))); mqtt.init(); return true; }
     if (cmdIs(command, "mqtthost"))   { config.saveValue(config.store.mqtthost, value); return true; }
     if (cmdIs(command, "mqttport"))   { config.saveValue(&config.store.mqttport, static_cast<uint16_t>(atoi(value))); return true; }
     if (cmdIs(command, "mqttuser"))   { config.saveValue(config.store.mqttuser, value); return true; }

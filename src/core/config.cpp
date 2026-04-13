@@ -466,10 +466,11 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
   if (strcmp(val, "controls") == 0) {
     saveValue(&store.volsteps, (uint8_t)VOLUME_STEPS);
     saveValue(&store.fliptouch, (bool)TOUCH_FLIP);
+    controls.flipTS();
     saveValue(&store.dbgtouch, (bool)TOUCH_DEBUG);
     saveValue(&store.skipPlaylistUpDown, (bool)ONE_CLICK_SWITCH);
-    setEncAcceleration(ROTARY_ACCEL);
-    setIRTolerance(IR_TOLERANCE);
+    controls.setEncAcceleration(ROTARY_ACCEL);
+    controls.setIRTolerance(IR_TOLERANCE);
     netserver.requestOnChange(GETCONTROLS, clientId);
     return;
   }

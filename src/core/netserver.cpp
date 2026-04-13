@@ -72,7 +72,7 @@ bool  shouldReboot  = false;
     if (config.store.mqttenable) {
       mqttplaylistblock = true;
       mqttplaylistticker.detach();
-      mqttPublishPlaylist();
+      mqtt.publishPlaylist();
       mqttplaylistblock = false;
     }
   }
@@ -395,7 +395,7 @@ void NetServer::processQueue() {
           String act = F("\"group_wifi\",");
           if (network.status == CONNECTED) {
                                                                 act += F("\"group_system\",");
-            if (battery_is_initialized() || dbgact)             act += F("\"group_battery\",");
+            if (battery.isInitialized() || dbgact)             act += F("\"group_battery\",");
                                                               #ifdef MQTT_ENABLE
                                                                 act += F("\"group_mqtt\",");
                                                               #endif
@@ -527,8 +527,8 @@ void NetServer::processQueue() {
       case SDSHUFFLE:     snprintf(wsbuf, sizeof(wsbuf), "{\"shuffle\": %d}", config.store.sdshuffle); break;
       case BITRATE:       snprintf(wsbuf, sizeof(wsbuf), "{\"payload\":[{\"id\":\"bitrate\", \"value\": %d}, {\"id\":\"fmt\", \"value\": \"%s\"}]}", config.station.bitrate, getFormat(config.configFmt)); break;
       case GETBATTERY: {
-        BatteryStatus bat = battery_get_status();
-        if (!bat.valid && !battery_is_initialized()) {
+        BatteryStatus bat = battery.getStatus();
+        if (!bat.valid && !battery.isInitialized()) {
           /* Still send battref even if battery not detected so UI shows calibration value */
           uint32_t battref = config.store.battery_adc_ref_mv ? config.store.battery_adc_ref_mv : (uint32_t)BATTERY_ADC_REF_MV;
           snprintf(wsbuf, sizeof(wsbuf), "{\"payload\":[{\"id\":\"battery\", \"value\": \"\"}, {\"id\":\"battref\", \"value\": %u}]}", battref);
@@ -563,8 +563,8 @@ void NetServer::processQueue() {
       if (clientId == 0) { websocket.textAll(wsbuf); } else { websocket.text(clientId, wsbuf); }
       #ifdef MQTT_ENABLE
         if (config.store.mqttenable) {
-          if (clientId == 0 && (request.type == STATION || request.type == ITEM || request.type == TITLE || request.type == MODE)) mqttPublishStatus();
-          if (clientId == 0 && request.type == VOLUME) mqttPublishVolume();
+          if (clientId == 0 && (request.type == STATION || request.type == ITEM || request.type == TITLE || request.type == MODE)) mqtt.publishStatus();
+          if (clientId == 0 && request.type == VOLUME) mqtt.publishVolume();
         }
       #endif
     }

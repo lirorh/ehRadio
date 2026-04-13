@@ -25,7 +25,7 @@ Add `(ALL FIXED)` to title/section after issues are resolved.
 - [ ] 13. Stability / Architecture Risks
 - [X] 14. Dead / Redundant Includes (`netserver.cpp`)
 - [X] 15. Include Path Convention Inconsistency
-- [ ] 16. C-style modules in `src/core/` — refactor to class + global instance
+- [X] 16. C-style modules in `src/core/` — refactor to class + global instance
 - [ ] 17. Memory Leaks and Heap Fragmentation
 - [X] 18. Race Conditions and Concurrency Hazards
 - [ ] 19. Blocking Operations on Real-Time / Non-Background Contexts
@@ -38,6 +38,9 @@ Add `(ALL FIXED)` to title/section after issues are resolved.
 - [ ] 26. ESP32-S3 Migration — Dropping Original ESP32 Support
 - [ ] 27. `main.cpp` — Non-Boot Code That Belongs in Its Own Files
 - [ ] 28. Plugin System — Dead Infrastructure, Remove Entirely
+- [ ] 29. Audio Library Migration / De-Forking
+- ... Below is not part of the audit but worth consideration (or fixing)
+- [ ] 97. Speed / Responsiveness Improvements
 - [ ] 98. Documentation Needs Serious Work
 - [ ] 99. Issues Found Randomly or Outside Above Issues
 
@@ -642,7 +645,7 @@ Notable cases:
 
 ---
 
-## [ ] 16. C-style modules in `src/core/` — should be refactored to class + global instance `[LOW]`
+## [X] 16. C-style modules in `src/core/` — should be refactored to class + global instance `[LOW]`
 
 A repo-wide audit of all `src/core/` module pairs confirms that **four modules** use the C-style pattern (free functions + file-static state) rather than the standard codebase convention of a C++ class with a single `extern` global instance. All other core modules (`Config`, `Player`, `Display`, `MyNetwork`, `NetServer`, `Telnet`, `CommandHandler`, `SDManager`, `RTC`, `TouchScreen`) already follow the class pattern.
 
@@ -653,6 +656,8 @@ The established codebase pattern is:
 - Callers use `config.saveValue(...)`, `netserver.requestOnChange(...)`, `player.setVol(...)`, etc.
 
 None of these four refactors are urgent — each module is functionally correct as-is. The §8 MQTT/telnet consolidation does **not** depend on any of them. These are purely long-term consistency items.
+
+When completed, the code-summary.md file should be updated to reflect that C-style modules are not acceptable... all files should adhere to class + global instance standards.
 
 **Scope summary**:
 
@@ -665,7 +670,7 @@ None of these four refactors are urgent — each module is functionally correct 
 
 ---
 
-### [ ] 16.1 `battery.cpp` / `battery.h` `[LOW]`
+### [X] 16.1 `battery.cpp` / `battery.h` `[LOW]`
 
 **Suggested refactor** (future, not urgent):
 1. Define `class Battery` in `battery.h` with public methods mirroring current free functions (`init()`, `loop()`, `recalcNow()`, `calibrate(int meas_mv)`, `getStatus()`, `isInitialized()`, `formatStatusLine(...)`, `bootStatus()`).
@@ -679,7 +684,7 @@ None of these four refactors are urgent — each module is functionally correct 
 
 ---
 
-### [ ] 16.2 `rgbled.cpp` / `rgbled.h` `[LOW]`
+### [X] 16.2 `rgbled.cpp` / `rgbled.h` `[LOW]`
 
 **Suggested refactor** (future, not urgent):
 1. Define `class RgbLed` in `rgbled.h` with public methods: `init()`, `isInitialized()`, `set(uint8_t r, uint8_t g, uint8_t b)`, `playing()`, `stopped()`, `trackChange()`, `loop()`.
@@ -694,7 +699,7 @@ None of these four refactors are urgent — each module is functionally correct 
 
 ---
 
-### [ ] 16.3 `controls.cpp` / `controls.h` `[LOW]`
+### [X] 16.3 `controls.cpp` / `controls.h` `[LOW]`
 
 **Suggested refactor** (future, not urgent):
 1. Define `class Controls` in `controls.h` with public methods mirroring the current free functions.
@@ -710,7 +715,7 @@ None of these four refactors are urgent — each module is functionally correct 
 
 ---
 
-### [ ] 16.4 `mqtt.cpp` / `mqtt.h` `[LOW]`
+### [X] 16.4 `mqtt.cpp` / `mqtt.h` `[LOW]`
 
 **Suggested refactor** (future, not urgent):
 1. Define `class Mqtt` in `mqtt.h` (inside `#ifdef MQTT_ENABLE`) with public methods: `init()`, `connect()`, `publishStatus()`, `publishPlaylist()`, `publishVolume()`.
@@ -1411,6 +1416,36 @@ No equivalent idle-deep-sleep timer exists anywhere in the main codebase. `displ
 
 ---
 
+## [ ] 29. Audio Library Migration / De-Forking `[MEDIUM]`
+
+The vendored audio folders are no longer simple upstream copies. `src/libraries/I2S_Audio` and `src/libraries/VS1053_Audio` were both reshaped so `src/core/player.h` can compile against a single local `Audio` API, and `Player` currently inherits from that API directly. That local compatibility layer is now the main obstacle to updating from upstream.
+
+Current upstream projects have diverged in two different directions:
+- `schreibfaul1/ESP32-audioI2S` continued evolving around the software/I2S path and, in current master, has moved to a newer event/callback model, `NetworkClient` transport, PSRAM-heavy internals, and newer C++/toolchain assumptions.
+- `schreibfaul1/ESP32-vs1053_ext` / `nstepanets/ESP32-vs1053_ext` remain a separate hardware-decoder lineage with a `VS1053` class and `vs1053_*` callbacks, not the generic `Audio` contract ehRadio now uses.
+
+This means a direct drop-in upgrade is unrealistic. The real assignment is:
+
+1. Freeze and document the ehRadio audio contract: constructors, `begin()`, `setPinout()`, `setBalance()`, `setTone()`, `setVolume()`, `connecttohost()`, `connecttoFS()`, `loop()`, `isRunning()`, `getFilePos()`, `stopSong()`, `setDefaults()`, `eofHeader`, and the existing `audio_*` metadata/EOF callbacks.
+2. Move that compatibility layer out of the vendored libraries into ehRadio-owned wrappers/shims so `Player` stops inheriting directly from upstream classes.
+3. Rebase the I2S path toward the closest upstream 3.x generation first, not straight to current `ESP32-audioI2S` master.
+4. Rebase the VS1053 path against `nstepanets/ESP32-vs1053_ext`, preserving the shim instead of continuing to rename upstream internals into the ehRadio `Audio` shape.
+5. Treat `ES8311_Audio` as a small helper that can be refreshed independently or left vendored initially.
+
+Detailed forensic notes, including upstream-version comparisons and a staged migration plan, are in `src/libraries/libraries-note.md`.
+
+Do not attempt backend rebases, callback-model changes, and PlatformIO / Arduino-ESP32 v3 migration in one PR.
+
+---
+
+## [ ] 97. Speed / Responsiveness Improvements
+
+It appears to have a gap in time between selecting a station and playing the station... is there something blocking here or is it memory-deallocation or something else?  Can we improve on this?
+
+Leaving this as Section 97 because improvments probably shouldn't be considered until existing problems are at least mostly addressed... at which point, we can delete the entire above list and do a seperate audit for this goal.
+
+---
+
 ## [ ] 98. Documentation Needs Serious Work
 
 Like really, really badly.  For now, a lot of options are only listed in `options.h` and yoRadio documentation was already outdated at fork date.
@@ -1423,5 +1458,6 @@ Just some notes to make while going through code...
 
   [X] netserver.loop(); was twice in player.cpp line ~247-248 — removed duplicate
   [X] optionschecker.h should have more guardrails and re-ordered according to options.h (and optionschecker.h removed)
-
+  [ ] the plugin for deepsleep has idletimer... an interesting idea - might be worth mixing with screensaver options
+  [ ] the home assistant plugin is kind of functional but ugly... there might be some better implementataions on Github that we can refer users to.
 

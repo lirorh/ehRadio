@@ -676,12 +676,12 @@ void Display::_setRSSI(int rssi) {
 #if defined(BATTERY_PIN) && (BATTERY_PIN!=255)
   void Display::_updateBattery() {
     if(_battery) {
-      BatteryStatus bat = battery_get_status();
-      if(!bat.valid && battery_is_initialized()) {
-        battery_recalc_now();
-        bat = battery_get_status();
+      BatteryStatus bat = battery.getStatus();
+      if(!bat.valid && battery.isInitialized()) {
+        battery.recalcNow();
+        bat = battery.getStatus();
       }
-      if(battery_is_initialized() || bat.valid) {
+      if(battery.isInitialized() || bat.valid) {
         const char *baseFmt;
         if(bat.percentage < 25) baseFmt = batteryRangeLowFmt;
         else if(bat.percentage < 75) baseFmt = batteryRangeMidFmt;

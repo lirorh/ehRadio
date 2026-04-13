@@ -25,7 +25,6 @@
 #define REAL_PLAYL   config.getMode()==PM_WEB?PLAYLIST_PATH:PLAYLIST_SD_PATH
 #define REAL_INDEX   config.getMode()==PM_WEB?INDEX_PATH:INDEX_SD_PATH
 
-#define MAX_PLAY_MODE   1
 #define WEATHERKEY_LENGTH 58
 #define MDNS_LENGTH 24
 #define EHDPNAME_LENGTH 24
@@ -34,6 +33,7 @@
   #define ESP_ARDUINO_3 1
 #endif
 
+#define MAX_PLAY_MODE 1
 enum playMode_e      : uint8_t  { PM_WEB=0, PM_SDCARD=1 };
 
 void u8fix(char *src);

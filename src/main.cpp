@@ -50,23 +50,23 @@ void setup() {
   #endif
 
   if (REAL_LEDBUILTIN!=255) pinMode(REAL_LEDBUILTIN, OUTPUT);
-  rgbled_init();
+  rgbled.init();
   // Initialize battery monitoring
-  battery_init();
+  battery.init();
 
   if (ehradio_on_setup) ehradio_on_setup();
   pm.on_setup();
   config.init();
   display.init();
   player.init();
-  battery_boot_status();
-  if (rgbled_is_initialized()) {
-    if (player.isRunning()) rgbled_playing(); else rgbled_stopped();
+  battery.bootStatus();
+  if (rgbled.isInitialized()) {
+    if (player.isRunning()) rgbled.playing(); else rgbled.stopped();
   }
   network.begin();
   if (network.status != CONNECTED && network.status!=SDREADY) {
     netserver.begin();
-    initControls();
+    controls.init();
     display.putRequest(DSP_START);
     while(!display.ready()) delay(10);
     netserver.setBootReady(true);
@@ -79,11 +79,11 @@ void setup() {
   config.initPlaylistMode();
   netserver.begin();
   telnet.begin();
-  initControls();
+  controls.init();
   display.putRequest(DSP_START);
   while(!display.ready()) delay(10);
   #ifdef MQTT_ENABLE
-    if (config.store.mqttenable) mqttInit();
+    if (config.store.mqttenable) mqtt.init();
   #endif
   #if LED_INVERT
     if (REAL_LEDBUILTIN!=255) digitalWrite(REAL_LEDBUILTIN, true);
@@ -110,8 +110,8 @@ void loop() {
     telnet.loop();
   }
   
-  rgbled_loop();
-  battery_loop();
+  rgbled.loop();
+  battery.loop();
   /* Check battery status and apply dimming/deepsleep policy if needed */
   #if BRIGHTNESS_PIN!=255
     battery_dim_loop();
@@ -121,7 +121,7 @@ void loop() {
     player.loop();
     config.processDeferredSaves();
   }
-  loopControls();
+  controls.loop();
   netserver.loop();
 }
 
@@ -197,7 +197,7 @@ void loop() {
    When plugin is available (DOWN_LEVEL/DOWN_INTERVAL) we call brightnessOn(); otherwise use config.setBrightness(false). */
 #if BRIGHTNESS_PIN!=255
 void battery_dim_loop() {
-  BatteryStatus bat = battery_get_status();
+  BatteryStatus bat = battery.getStatus();
 
   /* Decide charging based on explicit detection or the existing inference logic only. */
   bool is_charging_present = bat.charging || bat.charging_inferred;
@@ -222,7 +222,7 @@ void battery_dim_loop() {
       display.deepsleep();
       // Re-check battery status immediately before sleep to avoid race condition
       // (charging may have started during shutdown sequence)
-      BatteryStatus final_check = battery_get_status();
+      BatteryStatus final_check = battery.getStatus();
       if (final_check.charging) {
         Serial.println("##[BATTERY]#: Charging detected before sleep - aborting deep sleep");
         battery_critical_handled = false;
@@ -288,28 +288,22 @@ void battery_dim_loop() {
 }
 #endif
 
-// Call rgbled loop from main loop too (no-op if not enabled)
-void rgbled_loop_caller() {
-  rgbled_loop();
-}
-
 void ehradio_on_setup() {
-  rgbled_init();
   brightnessOn();
 }
 
 void player_on_track_change() {
-  rgbled_trackchange();
+  rgbled.trackChange();
   brightnessOn();
 }
 
 void player_on_start_play() {
-  rgbled_playing();
+  rgbled.playing();
   brightnessOn();
 }
 
 void player_on_stop_play() {
-  rgbled_stopped();
+  rgbled.stopped();
   brightnessOn();
 }
 

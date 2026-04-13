@@ -6,39 +6,34 @@
 #include "mqtt.h"
 #include "player.h"
 
-AsyncMqttClient mqttClient;
-TimerHandle_t mqttReconnectTimer;
-char topic[100], status[BUFLEN+50];
+void Mqtt::zeroBuf() { memset(topic, 0, sizeof(topic)); memset(status, 0, sizeof(status)); }
 
-void connectToMqtt() {
-  //config.waitConnection();
-  mqttClient.connect();
-}
+void Mqtt::_connectCb() { mqtt.connect(); }
 
-void mqttInit() {
-  mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
-  mqttClient.onConnect(onMqttConnect);
-  mqttClient.onDisconnect(onMqttDisconnect);
-  mqttClient.onMessage(onMqttMessage);
+void Mqtt::connect() { mqttClient.connect(); }
+
+void Mqtt::init() {
+  mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(_connectCb));
+  mqttClient.onConnect(_onConnect);
+  mqttClient.onDisconnect(_onDisconnect);
+  mqttClient.onMessage(_onMessage);
   if (strlen(config.store.mqttuser)>0) mqttClient.setCredentials(config.store.mqttuser, config.store.mqttpass);
   mqttClient.setServer(config.store.mqtthost, config.store.mqttport);
-  connectToMqtt();
+  connect();
 }
 
-void zeroBuffer() { memset(topic, 0, sizeof(topic)); memset(status, 0, sizeof(status)); }
-
-void onMqttConnect(bool sessionPresent) {
-  zeroBuffer();
-  sprintf(topic, "%s%s", config.store.mqtttopic, "command");
-  mqttClient.subscribe(topic, 2);
-  mqttPublishStatus();
-  mqttPublishVolume();
-  mqttPublishPlaylist();
+void Mqtt::_onConnect(bool sessionPresent) {
+  mqtt.zeroBuf();
+  sprintf(mqtt.topic, "%s%s", config.store.mqtttopic, "command");
+  mqtt.mqttClient.subscribe(mqtt.topic, 2);
+  mqtt.publishStatus();
+  mqtt.publishVolume();
+  mqtt.publishPlaylist();
 }
 
-void mqttPublishStatus() {
+void Mqtt::publishStatus() {
   if (mqttClient.connected()) {
-    zeroBuffer();
+    zeroBuf();
     sprintf(topic, "%s%s", config.store.mqtttopic, "status");
     char name[BUFLEN/2];
     char title[BUFLEN/2];
@@ -49,18 +44,18 @@ void mqttPublishStatus() {
   }
 }
 
-void mqttPublishPlaylist() {
+void Mqtt::publishPlaylist() {
   if (mqttClient.connected()) {
-    zeroBuffer();
+    zeroBuf();
     sprintf(topic, "%s%s", config.store.mqtttopic, "playlist");
     sprintf(status, "http://%s%s", WiFi.localIP().toString().c_str(), PLAYLIST_PATH);
     mqttClient.publish(topic, 0, true, status);
   }
 }
 
-void mqttPublishVolume() {
+void Mqtt::publishVolume() {
   if (mqttClient.connected()) {
-    zeroBuffer();
+    zeroBuf();
     char vol[5];
     memset(vol, 0, 5);
     sprintf(topic, "%s%s", config.store.mqtttopic, "volume");
@@ -69,13 +64,13 @@ void mqttPublishVolume() {
   }
 }
 
-void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+void Mqtt::_onDisconnect(AsyncMqttClientDisconnectReason reason) {
   if (WiFi.isConnected()) {
-    xTimerStart(mqttReconnectTimer, 0);
+    xTimerStart(mqtt.mqttReconnectTimer, 0);
   }
 }
 
-void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+void Mqtt::_onMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
   if (len == 0) return;
   if (len<20) {
     char buf[len+1];
@@ -130,5 +125,7 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     return;
   }*/
 }
+
+Mqtt mqtt;
 
 #endif //  #ifdef MQTT_ENABLE

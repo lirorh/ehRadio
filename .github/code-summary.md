@@ -34,6 +34,7 @@ Grouped (not one-by-one deep explained) areas:
 - `src/core/options.h` resolves all defaults/fallbacks and feature flags.
 - `.github/workflows/build-release-firmware.yml` verifies generated contributor release artifacts and now diff-checks `web_assets/` in addition to `firmware.txt` and `releases.md`.
 - `.github/workflows/build-deploy-page.yml` deploys Pages on `release.published`, and on branch/manual runs it preserves the currently published `firmware-info.json` and manifests instead of overwriting them from `builds/*/web_assets`.
+- `.github/workflows/update-timezones.json-automatically.yml` checks out using `DEPLOY_KEY` and pushes over SSH to `dev`, enabling ruleset bypass configured for Deploy keys.
 
 ### Runtime chain
 - `src/main.cpp` bootstraps system: config -> display -> player -> network -> server/telnet/controls.

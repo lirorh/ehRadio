@@ -30,6 +30,7 @@ Documentation will be improved at some point... Until then, check this page and 
     - logging uses formatting functions to be more readable
     - logging is sent to serial and telnet simultaneously
     - Telnet will show errors for commands that are blocked
+  - Home Assistant custom component fixed
 
 ### 2026.04.09 - Feature Freeze ON
   - Fixes worth a release even if still in repairs:

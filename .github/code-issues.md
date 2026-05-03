@@ -1800,6 +1800,6 @@ Just some notes to make while going through code...
   [X] netserver.loop(); was twice in player.cpp line ~247-248 — removed duplicate
   [X] optionschecker.h should have more guardrails and re-ordered according to options.h (and optionschecker.h removed)
   [ ] the plugin for deepsleep has idletimer... an interesting idea - might be worth mixing with screensaver options
-  PRIORITY [ ] the home assistant plugin is kind of functional but ugly... there might be some better implementations on Github that we can refer users to.
+  [X] the home assistant plugin is kind of functional but ugly... Nothing online to "borrow" and not a good way to use HA builtin integratins so the one we're using has been repaired
   [ ] inside display.cpp is: #ifndef NETSERVER_LOOP1    netserver.loop();    #endif which seems to bypass network handling if the display is too busy? (undocumented, only in display.cpp)
   PRIORITY [ ] html files for playback could use media session api to allow phones more control

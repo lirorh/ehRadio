@@ -11,6 +11,7 @@
 #include "common.h"
 #include "config.h"
 #include "display.h"
+#include "logging.h"
 #include "netserver.h"
 #include "telnet.h"
 
@@ -29,9 +30,12 @@ void Battery::dbgPrintf(const char* fmt, ...) {
   va_list ap; va_start(ap, fmt);
   vsnprintf(dbgBuf, sizeof(dbgBuf), fmt, ap);
   va_end(ap);
-  /* Do not append CRLF here: callers often include their own trailing "\r\n".
-     Print the buffer verbatim to avoid producing an extra blank line. */
-  telnet.printf("%s", dbgBuf);
+  // Callers may include trailing CR/LF in format strings; strip them before FUNCTIONLOG.
+  size_t len = strlen(dbgBuf);
+  while (len > 0 && (dbgBuf[len - 1] == '\r' || dbgBuf[len - 1] == '\n')) {
+    dbgBuf[--len] = '\0';
+  }
+  FUNCTIONLOG("Battery", "%s", dbgBuf);
   #else
   (void)fmt;
   #endif
@@ -94,8 +98,7 @@ uint32_t Battery::calculateVoltage(uint16_t adc_avg) {
   // Validate ADC reference is in reasonable range (2000-4000mV)
   if (adc_ref < 2000 || adc_ref > 4000) {
     #ifdef BATTERY_DEBUG
-      Serial.printf("##[BATTERY WARNING]#: Invalid ADC ref %umV, using default %dmV\r\n", 
-                    (unsigned)adc_ref, BATTERY_ADC_REF_MV);
+      FUNCTIONLOG("Battery", "Invalid ADC ref %umV, using default %dmV", (unsigned)adc_ref, BATTERY_ADC_REF_MV);
     #endif
     adc_ref = BATTERY_ADC_REF_MV;
   }
@@ -120,7 +123,7 @@ uint8_t Battery::calculatePct(uint32_t voltage_mv) {
     // User-defined curves - can't check at compile time, but warn if mismatch at runtime
     #ifdef BATTERY_DEBUG
       if (points != points_pct) {
-        Serial.printf("##[BATTERY]#: Curve size mismatch (%d vs %d) - using available range\r\n", points, points_pct);
+        FUNCTIONLOG("Battery", "Curve size mismatch (%d vs %d) - using available range", points, points_pct);
       }
     #endif
   #else
@@ -190,14 +193,14 @@ void Battery::handleCandidateExpiry(bool charging) {
         chargingCandidateStartPct = -1;
         battStatus.discharging_inferred = false;
         #ifdef BATTERY_DEBUG
-          telnet.printf("##[BATTERY]#: Charging inferred (time-gated, latest %d%%, delta %d%%)\r\n", latest, pct_diff_window);
+          FUNCTIONLOG("Battery", "Charging inferred (time-gated, latest %d%%, delta %d%%)", latest, pct_diff_window);
         #endif
       } else {
         // Expired without confirmation
         chargingCandidate = false;
         chargingCandidateStartPct = -1;
         #ifdef BATTERY_DEBUG
-          telnet.printf("##[BATTERY]#: Charging candidate expired without confirmation (latest %d%%, window_min %d%%, delta %d%% over %lums)\r\n", latest, window_min, pct_diff_window, dt);
+          FUNCTIONLOG("Battery", "Charging candidate expired without confirmation (latest %d%%, window_min %d%%, delta %d%% over %lums)", latest, window_min, pct_diff_window, dt);
         #endif
       }
     }
@@ -220,14 +223,14 @@ void Battery::handleCandidateExpiry(bool charging) {
         battStatus.charging = false;
         troughPct = battStatus.percentage; // Start remembering trough on confirmed discharging
         #ifdef BATTERY_DEBUG
-          telnet.printf("##[BATTERY]#: Discharging inferred (time-gated, latest %d%%, delta %d%%)\r\n", latest, pct_diff_window);
+          FUNCTIONLOG("Battery", "Discharging inferred (time-gated, latest %d%%, delta %d%%)", latest, pct_diff_window);
         #endif
       } else {
         // Expired without confirmation
         dischargingCandidate = false;
         dischargingCandidateStartPct = -1;
         #ifdef BATTERY_DEBUG
-          telnet.printf("##[BATTERY]#: Discharging candidate expired without confirmation (latest %d%%, window_max %d%%, delta %d%% over %lums)\r\n", latest, window_max, pct_diff_window, dt);
+          FUNCTIONLOG("Battery", "Discharging candidate expired without confirmation (latest %d%%, window_max %d%%, delta %d%% over %lums)", latest, window_max, pct_diff_window, dt);
         #endif
       }
     }
@@ -251,15 +254,15 @@ void Battery::init() {
   presentMinMv = (uint32_t)BATTERY_PRESENT_MIN_MV;
   presentMaxMv = (uint32_t)BATTERY_PRESENT_MAX_MV;
   if (presentMinMv < 2500) {
-    Serial.printf("##[BATTERY WARNING]#: BATTERY_PRESENT_MIN_MV too low (%u), clamping to 2500mV\r\n", (unsigned)presentMinMv);
+    FUNCTIONLOG("Battery", "BATTERY_PRESENT_MIN_MV too low (%u), clamping to 2500mV", (unsigned)presentMinMv);
     presentMinMv = 2500;
   }
   if (presentMaxMv > 5000) {
-    Serial.printf("##[BATTERY WARNING]#: BATTERY_PRESENT_MAX_MV too high (%u), clamping to 5000mV\r\n", (unsigned)presentMaxMv);
+    FUNCTIONLOG("Battery", "BATTERY_PRESENT_MAX_MV too high (%u), clamping to 5000mV", (unsigned)presentMaxMv);
     presentMaxMv = 5000;
   }
   if (presentMinMv >= presentMaxMv) {
-    Serial.printf("##[BATTERY WARNING]#: BATTERY_PRESENT_MIN_MV >= MAX (%u >= %u), resetting to 3000/4200\r\n", (unsigned)presentMinMv, (unsigned)presentMaxMv);
+    FUNCTIONLOG("Battery", "BATTERY_PRESENT_MIN_MV >= MAX (%u >= %u), resetting to 3000/4200", (unsigned)presentMinMv, (unsigned)presentMaxMv);
     presentMinMv = 3000;
     presentMaxMv = 4200;
   }
@@ -308,14 +311,14 @@ void Battery::bootStatus() {
 
         // Print combined boot status with charging state if available
         if (battStatus.charging) {
-          Serial.printf("##[BOOT]#\tbattery\t\tADC:%d, %dmV, %d%%, Charging\r\n", adc_sample, voltage_mv, percentage);
+          BOOTLOG("battery\t\tADC:%d, %dmV, %d%%, Charging", adc_sample, voltage_mv, percentage);
         } else {
-          Serial.printf("##[BOOT]#\tbattery\t\tADC:%d, %dmV, %d%%\r\n", adc_sample, voltage_mv, percentage);
+          BOOTLOG("battery\t\tADC:%d, %dmV, %d%%", adc_sample, voltage_mv, percentage);
         }
         // Update display immediately
         display.putRequest(DSPBATTERY, 0);
       } else {
-        Serial.println("##[BOOT]#\tbattery\t\tnot detected");
+        BOOTLOG("battery\t\tnot detected");
         battStatus.valid = false;
         battStatus.present = false;
         battStatus.percentage = 0;
@@ -410,7 +413,7 @@ void Battery::readAndUpdate() {
       dischargingCandidate = false;
       battStatus.voltage_rate_valid = false; // percent rate removed
       #ifdef BATTERY_DEBUG
-        telnet.printf("##[BATTERY WARNING]#: No battery detected, %dmV out of range\r\n", raw_voltage_mv);
+        FUNCTIONLOG("Battery", "No battery detected, %dmV out of range", raw_voltage_mv);
       #endif
 
       emaVoltageMv = 0; // reset EMA when battery absent
@@ -455,13 +458,11 @@ void Battery::readAndUpdate() {
 
     // Print low battery warnings on state change
     if (crit_batt && !lastCritBattery) {
-      telnet.printf("##[BATTERY WARNING]#: CRITICAL BATTERY! %d%% remaining (%dmV)\r\n", 
-                    battStatus.percentage, voltage_mv);
+      FUNCTIONLOG("Battery", "CRITICAL BATTERY! %d%% remaining (%dmV)", battStatus.percentage, voltage_mv);
     } else if (low_batt && !lastLowBattery && !crit_batt) {
-      telnet.printf("##[BATTERY WARNING]#: Low battery! %d%% remaining (%dmV)\r\n", 
-                    battStatus.percentage, voltage_mv);
+      FUNCTIONLOG("Battery", "Low battery! %d%% remaining (%dmV)", battStatus.percentage, voltage_mv);
     } else if (!low_batt && lastLowBattery) {
-      telnet.printf("##[BATTERY]#: Battery level normal (%d%%)\r\n", battStatus.percentage);
+      FUNCTIONLOG("Battery", "Battery level normal (%d%%)", battStatus.percentage);
     }
 
     // Note: Don't update lastLowBattery and lastCritBattery here - 
@@ -525,9 +526,9 @@ void Battery::readAndUpdate() {
     bool charging = (digitalRead(BATTERY_CHARGE_PIN) == LOW); // active LOW
     battStatus.charging = charging;
     if (charging && !lastCharging) {
-      telnet.printf("##[BATTERY]#: Charging started\r\n");
+      FUNCTIONLOG("Battery", "Charging started");
     } else if (!charging && lastCharging) {
-      telnet.printf("##[BATTERY]#: Charging stopped\r\n");
+      FUNCTIONLOG("Battery", "Charging stopped");
     }
   } else if (rate_calculated) {
     // No charge pin: infer charging/discharging state from voltage rate
@@ -552,7 +553,7 @@ void Battery::readAndUpdate() {
         chargingCandidate = false;
         battStatus.charging = false;
         #ifdef BATTERY_DEBUG
-          telnet.printf("##[BATTERY]#: Discharging inferred (immediate, %d%% change)\r\n", (int)(battStatus.percentage - lastPct));
+          FUNCTIONLOG("Battery", "Discharging inferred (immediate, %d%% change)", (int)(battStatus.percentage - lastPct));
         #endif
       } else if (sudden_spike_pct) {
         inferredCharging = true;
@@ -562,7 +563,7 @@ void Battery::readAndUpdate() {
         peakPct = battStatus.percentage;
         battStatus.discharging_inferred = false;
         #ifdef BATTERY_DEBUG
-          telnet.printf("##[BATTERY]#: Charging inferred (immediate, %d%% change)\r\n", (int)(battStatus.percentage - lastPct));
+          FUNCTIONLOG("Battery", "Charging inferred (immediate, %d%% change)", (int)(battStatus.percentage - lastPct));
         #endif
       }
       
@@ -589,13 +590,13 @@ void Battery::readAndUpdate() {
               // Start discharging candidate based on percent delta
               chargingCandidate = false;
               if (!dischargingCandidate) {
-                startDischargingCandidate(now, "##[BATTERY]#: Discharging candidate started (candidate, start %d%%, pct-diff %+d%%)\r\n", pct_diff_now);
+                startDischargingCandidate(now, "Discharging candidate started (candidate, start %d%%, pct-diff %+d%%)", pct_diff_now);
               }
             } else {
               // Start charging candidate based on percent delta
               dischargingCandidate = false;
               if (!chargingCandidate) {
-                startChargingCandidate(now, "##[BATTERY]#: Charging candidate started (candidate, start %d%%, pct-diff %+d%%)\r\n", pct_diff_now);
+                startChargingCandidate(now, "Charging candidate started (candidate, start %d%%, pct-diff %+d%%)", pct_diff_now);
               }
             }
           }
@@ -635,7 +636,7 @@ void Battery::readAndUpdate() {
         peakPct = -1;  // Clear peak when charging stops
 
         if (!dischargingCandidate) {
-          startDischargingCandidate(now, "##[BATTERY]#: Discharging candidate started on charging drop (start %d%%, pct-diff %+d%%)\r\n", pct_diff_now);
+          startDischargingCandidate(now, "Discharging candidate started on charging drop (start %d%%, pct-diff %+d%%)", pct_diff_now);
         }
 
       } else if (sudden_drop_pct || discharging_rate) {
@@ -651,7 +652,7 @@ void Battery::readAndUpdate() {
           peakPct = -1;  // Clear peak when charging stops
           troughPct = battStatus.percentage; // Start remembering trough
           #ifdef BATTERY_DEBUG
-            telnet.printf("##[BATTERY]#: Charging cleared -> Discharging inferred (immediate, %+d%% change)\r\n", pct_diff_now);
+            FUNCTIONLOG("Battery", "Charging cleared -> Discharging inferred (immediate, %+d%% change)", pct_diff_now);
           #endif
         } else {
           // Clear charging inference only
@@ -667,11 +668,11 @@ void Battery::readAndUpdate() {
             battStatus.charging = false;
             battStatus.discharging_inferred = false;
             if (!dischargingCandidate) {
-              startDischargingCandidate(now, "##[BATTERY]#: Discharging candidate started on charging clear (start %d%%, pct-diff %+d%%)\r\n", pct_diff_now);
+              startDischargingCandidate(now, "Discharging candidate started on charging clear (start %d%%, pct-diff %+d%%)", pct_diff_now);
             }
           } else {
             #ifdef BATTERY_DEBUG
-              telnet.printf("##[BATTERY]#: Charging cleared (pct %+d%% change)\r\n", pct_diff_now);
+              FUNCTIONLOG("Battery", "Charging cleared (pct %+d%% change)", pct_diff_now);
             #endif
           }
         }
@@ -683,7 +684,7 @@ void Battery::readAndUpdate() {
         battStatus.discharging_inferred = false;
         peakPct = -1;  // Clear peak when charging stops
         #ifdef BATTERY_DEBUG
-          telnet.printf("##[BATTERY]#: Charging inference cleared (now %d%%)\r\n", battStatus.percentage);
+          FUNCTIONLOG("Battery", "Charging inference cleared (now %d%%)", battStatus.percentage);
         #endif
       } else {
         // Still charging; update peak if a new peak is observed
@@ -715,7 +716,7 @@ void Battery::readAndUpdate() {
         troughPct = -1;  // Clear trough when discharging stops
 
         if (!chargingCandidate) {
-              startChargingCandidate(now, "##[BATTERY]#: Charging candidate started on discharging rise (start %d%%, pct-diff %+d%%)\r\n", pct_diff_now);
+              startChargingCandidate(now, "Charging candidate started on discharging rise (start %d%%, pct-diff %+d%%)", pct_diff_now);
         }
 
       } else if (sudden_spike_pct || charging_rate) {
@@ -731,7 +732,7 @@ void Battery::readAndUpdate() {
           troughPct = -1;  // Clear trough when discharging stops
           peakPct = battStatus.percentage; // Start remembering peak
           #ifdef BATTERY_DEBUG
-            telnet.printf("##[BATTERY]#: Discharging cleared -> Charging inferred (immediate, %+d%% change)\r\n", pct_diff_now);
+            FUNCTIONLOG("Battery", "Discharging cleared -> Charging inferred (immediate, %+d%% change)", pct_diff_now);
           #endif
         } else {
           // Clear discharging inference only
@@ -747,11 +748,11 @@ void Battery::readAndUpdate() {
             battStatus.charging = false;
             battStatus.discharging_inferred = false;
             if (!chargingCandidate) {
-              startChargingCandidate(now, "##[BATTERY]#: Charging candidate started on discharging clear (start %d%%, pct-diff %+d%%)\r\n", pct_diff_now);
+              startChargingCandidate(now, "Charging candidate started on discharging clear (start %d%%, pct-diff %+d%%)", pct_diff_now);
             }
           } else {
             #ifdef BATTERY_DEBUG
-              telnet.printf("##[BATTERY]#: Discharging cleared (pct %+d%% change)\r\n", pct_diff_now);
+              FUNCTIONLOG("Battery", "Discharging cleared (pct %+d%% change)", pct_diff_now);
             #endif
           }
         }
@@ -786,7 +787,7 @@ void Battery::readAndUpdate() {
   #ifdef BATTERY_DEBUG
     char status_line[256];  // Increased buffer for extended charging info with peak/trough/rate
     formatStatusLine(battStatus, status_line, sizeof(status_line), false);
-    telnet.printf("%s\r\n", status_line);
+    FUNCTIONLOG("Battery", "%s", status_line);
 
   #endif
 } 
@@ -803,9 +804,9 @@ void Battery::loop() {
     if (charging != lastCharging) {
       battStatus.charging = charging;
       if (charging) {
-        telnet.printf("##[BATTERY]#: Charging started (charge-pin only)\r\n");
+        FUNCTIONLOG("Battery", "Charging started (charge-pin only)");
       } else {
-        telnet.printf("##[BATTERY]#: Charging stopped (charge-pin only)\r\n");
+        FUNCTIONLOG("Battery", "Charging stopped (charge-pin only)");
       }
       display.putRequest(DSPBATTERY, 0);
       lastCharging = charging;

@@ -21,7 +21,7 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 - [ ] 5. Dead / Unreachable Code
 - [X] 6. Commandhandler Issues
 - [X] 7. Unhandled or Mis-handled Web UI Commands
-- [ ] 8. Unified Command Dispatch — Route MQTT, Telnet, and URL Parameters Through `commandhandler.cpp`
+- [X] 8. Unified Command Dispatch — Route MQTT, Telnet, and URL Parameters Through `commandhandler.cpp`
 - [X] 9. Logic / Correctness Bugs
 - [ ] 10. `BUFLEN` — Multi-Purpose Magic Number
 - [X] 11. Unsafe String Handling / Buffer Overflow Risks
@@ -42,9 +42,10 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 - [ ] 26. ESP32-S3 Migration — Dropping Original ESP32 Support
 - [ ] 27. `main.cpp` — Non-Boot Code That Belongs in Its Own Files
 - [ ] 28. Plugin System — Dead Infrastructure, Remove Entirely
-- [ ] 29. Audio Library Migration / De-Forking
+- PRIORITY [ ] 29. Audio Library Migration / De-Forking
 - [ ] 30. Can Display Be Improved?
 - ... Below is not part of the audit but worth consideration (or fixing)
+- [ ] 96. Unified & Standardized Logging
 - [ ] 97. Speed / Responsiveness Improvements
 - [ ] 98. Documentation Needs Serious Work
 - [ ] 99. Issues Found Randomly or Outside Above Issues
@@ -230,7 +231,7 @@ Originally kept for compatibility with existing yoRadio functions, booleans are 
 
 ---
 
-## [ ] 8. Unified Command Dispatch — Route MQTT, Telnet, and URL Parameters Through `commandhandler.cpp` `[MEDIUM]`
+## [X] 8. Unified Command Dispatch — Route MQTT, Telnet, and URL Parameters Through `commandhandler.cpp` `[MEDIUM]`
 
 Today there are **four separate, independent command dispatch tables** that must all be updated when a command changes:
 
@@ -241,37 +242,39 @@ Today there are **four separate, independent command dispatch tables** that must
 
 Adding or fixing a command currently means updating up to four files. The refactor goal is to make `commandhandler.cpp` the **single source of truth** for all command logic, with MQTT, Telnet, and HTTP GET routing through it via thin parser shims. This is also the prerequisite for §6.1 (moving `config.cpp` wrappers into `commandhandler`) to have full system-wide effect.
 
-### [ ] 8.1 Route MQTT Through `commandhandler` `[MEDIUM]`
+### [X] 8.1 Route MQTT Through `commandhandler` `[MEDIUM]`
 
-**Current state**: `onMqttMessage()` in `mqtt.cpp` manually handles: `prev`, `next`, `toggle`, `stop`, `start`/`play`, `boot`/`reboot`, `voldown`/`volm`, `volup`/`volp`, `turnoff`, `turnon`, `vol N`, `play N`, and raw URL strings (`burl`). All other `commandhandler.cpp` commands are unreachable via MQTT.
+**Current state (implemented)**: `mqtt.cpp` now parses payloads (`key=value`, `key value`, `key(value)`, plus raw URL payloads), normalizes aliases, and dispatches through `cmd.exec(..., CommandSource::Mqtt)`. Manual per-command branching in MQTT was removed.
 
-**Strategy**:
-1. Add a `burl` command to `commandhandler.cpp` that loads a URL directly into `player.burl` and sends `PR_BURL` — currently only reachable via raw MQTT long-payload path.
-2. Keep `turnoff` / `turnon` as thin wrappers in `onMqttMessage()` (they combine `setDspOn` + `smartstart` logic that has no single commandhandler equivalent), or add them to commandhandler.
-3. For short payloads (`len < 20`), parse `"key value"` or `"key=value"` format, split into `cmd`/`val`, and call `cmd.exec(cmd, val, 0)`.
-4. Replace the remaining manual handlers with the `cmd.exec()` call once all equivalents are confirmed present in `commandhandler`.
+**Implementation notes**:
+1. Added `burl`/`playurl` command handling in `commandhandler.cpp` for direct URL playback (`player.burl` + `PR_BURL`).
+2. Added `turnon`/`turnoff` handlers in `commandhandler.cpp`; MQTT now reuses these instead of local logic.
+3. Added source-aware command policy in `commandhandler` with explicit MQTT rejection logging.
+4. Adopted expanded non-WebUI MQTT blocklist: `get*`, `curated_import`, `loadindex`, `loadplaylist`, `newmode`, `locale_webui`, and IR recorder commands.
 
 **Commands to block from MQTT dispatch** (do not forward to `cmd.exec()`):
 
 | Command | Reason to block |
 |---|---|
 | `get*` family (`getsystem`, `getscreen`, `getlocale`, `getcontrols`, `getweather`, `getmqtt`, `getactive`, `getbattery`, `getindex`) | These trigger `netserver.requestOnChange()` which broadcasts JSON over WebSocket to a web client. Via MQTT the response is silently lost — wasted work always. |
-| `rebootmdns` | Restarts after a short delay and no longer calls `websocket.text(cid, ...)` (the old cid misrouting issue is fixed). |
+| `rebootmdns` | Optional policy block (not part of the selected expanded blocklist for this pass). |
 | `newmode` | Sets `config.newConfigMode` and triggers `requestOnChange(CHANGEMODE)` — an interactive WebUI display-flow command with no meaning over MQTT. |
 
 **Commands that need care but are otherwise safe**:
 
 | Command | Note |
 |---|---|
-| `reboot`, `format`, `clearspiffs` | Destructive. Consider gating behind `#ifdef MQTT_ALLOW_DANGEROUS_COMMANDS` (opt-in at build time). Currently `reboot` is already handled inline in `onMqttMessage()`. |
+| `reboot`, `format`, `clearspiffs` | Destructive. Kept enabled in MQTT parity mode per implementation choice for this pass. |
 | `battref` | Calibration; calls `netserver.requestOnChange(GETBATTERY, cid)` with `cid=0` — sends WebSocket feedback to client 0. The calibration save still works; only the WebSocket confirmation is misdirected. |
 | `curated_import`, `loadindex`, `loadplaylist` | Send `websocket.text(cid, ...)` inline responses. Via MQTT `cid=0` — file operations succeed but feedback is misdirected to a WebSocket client. |
 
-### [ ] 8.2 Route Telnet Through `commandhandler` `[MEDIUM]`
+### [X] 8.2 Route Telnet Through `commandhandler` `[MEDIUM]`
 
-**Current state**: `telnet.on_input()` has its own ~15-command hardcoded handler covering `prev`, `next`, `toggle`, `stop`, `start`, `vol`, `vol±`, battery commands, `date`, `audioinfo`, `smartstart`, `list`, `info`, and a few others. Commands added to `commandhandler.cpp` are not automatically accessible from telnet. This is the "duplicated command form list vs. `commandhandler.cpp`" problem noted in §13 (Stability Risks).
+**Current state (implemented)**: Telnet now uses a thin normalization parser and routes commands through `cmd.exec(..., CommandSource::Telnet)` with minimal local handling.
 
-**Strategy**: Telnet-native commands stay in `on_input()` because they produce telnet-specific formatted output (e.g., `cli.list` prints a numbered station list, `cli.info` prints status lines, `calbatt` has interactive multi-line calibration output). For everything else, fall through to `cmd.exec()` at the bottom of `on_input()` before the `show_prompt` label:
+**Implementation notes**: aggressive de-bloat pass removed the telnet-specific command table and output-driven command flows. Telnet command behavior is now near-parity with MQTT/HTTP, with alias/form normalization (`key=value`, `key value`, `key(value)`) before dispatch.
+
+**Reference pattern**:
 
 ```cpp
 // At end of on_input(), before show_prompt:
@@ -283,43 +286,43 @@ if (config.parseWsCommand(str, tcmd, tval, sizeof(tcmd))) {
 
 `parseWsCommand()` already splits `"key=value"` format used by WebSocket messages. Telnet also uses `"key value"` and `"key(value)"` forms — either extend the parser or add a simple space-split before the fallthrough.
 
-**Commands to block from telnet dispatch** (handle in `on_input()` with a CLI response instead):
+**Commands blocked from telnet dispatch** (CLI rejection message is returned):
 
 | Command | Reason |
 |---|---|
 | `get*` family | Triggers `requestOnChange()` → JSON broadcast over WebSocket. These could eventually be rerouted to print on the telnet stream, but that requires a netserver refactor. For now: block and print `##CLI.UNSUPPORTED#`. |
-| `rebootmdns` | Restarts after a short delay and no longer calls `websocket.text(cid, ...)`, so telnet/WebSocket client-id namespace confusion is removed for this command. |
+| `rebootmdns` | Optional policy block (not part of the selected expanded blocklist for this pass). |
 | `curated_import`, `loadindex`, `loadplaylist` | Same `websocket.text(cid, ...)` namespace mismatch. Block or add telnet-specific response. |
 
 - [X] `rebootmdns` websocket redirect/cid-misdirection bug fixed by removing backend redirect payloads and handling redirect timing entirely in browser-side ready polling.
 
-**⚠️ Client ID namespace collision — important hazard**:
+**Client ID namespace note (implemented mitigation)**:
 
-Telnet client IDs are `0`–`(MAX_TLN_CLIENTS-1)` (typically 0–4), assigned by telnet slot number. WebSocket client IDs are assigned by `AsyncWebSocket`, also starting from 0. Any place in `commandhandler.cpp` that calls `websocket.text(cid, ...)` with the `cid` argument will accidentally target a real WebSocket client when the caller is telnet. **Audit every `websocket.text(cid, ...)` call in `commandhandler.cpp` before routing telnet through it.** Proposed mitigation: define `#define CID_NO_WEBSOCKET 255` and pass that from the telnet shim — handlers can then check `if (cid != CID_NO_WEBSOCKET) websocket.text(cid, ...)`.
+Telnet and MQTT dispatch now call commandhandler with `cid=0` and rely on source-aware non-WebUI blocklist policy to reject WebSocket-targeted command families (`get*`, curated/task commands, locale-webui/IR UI commands). This avoids the old `websocket.text(cid, ...)` telnet-to-WebSocket slot collision without introducing a sentinel CID.
 
 **Commands immediately available once routed through `cmd.exec()`** (none of these call `websocket.text(cid,...)`):
-`balance`, `volume`, `shuffle`, `screensaver*`, `wenable`, `wapi`, `wlat`/`wlon`, `locale_webui`, `tz_name`, `tzposix`, and all other settings commands. Also `treble`/`middle`/`bass` once moved from `netserver.cpp` per §7.1.
+`balance`, `volume`, `shuffle`, `screensaver*`, `wenable`, `wapi`, `wlat`/`wlon`, `tz_name`, `tzposix`, and most other non-blocked setting commands. Also `treble`/`middle`/`bass` once moved from `netserver.cpp` per §7.1.
 
-**Payoff**: Every future command added to `commandhandler.cpp` automatically becomes available from the telnet CLI with zero additional code.
+**Payoff**: Future command behavior is centralized in `commandhandler.cpp`; telnet no longer requires a duplicate command table for parity.
 
 
 
-### [ ] 8.3 Route URL Parameters Through `commandhandler` `[LOW]`
+### [X] 8.3 Route URL Parameters Through `commandhandler` `[LOW]`
 
-**Current state**: `handleIndex()` in `netserver.cpp` already routes single-param GET requests through `cmd.exec()` (e.g., `/?vol=50`, `/?play=3`, `/?toggle=1`). However, multi-param combinations fall through to hardcoded special cases instead of iterating through all params. Two legacy cases remain (see §8.5.1 and §8.5.2).
+**Current state (implemented)**: `handleIndex()` now iterates all URL params and routes them through `cmd.exec(..., CommandSource::HttpUrl)`. `sleep+after` is merged into one dispatch value and `after` is skipped as a standalone key.
 
 **Strategy**:
 1. Add `sleep` to `commandhandler.cpp` — value is sleep minutes, `after` offset defaults to 0. Single-param `/?sleep=30` sleeps immediately; two-param `/?sleep=30&after=5` is handled by the loop executing both params.
 2. Replace the `paramsNr==1` guard in `handleIndex()` with a loop over all params, calling `cmd.exec()` for each. This makes `/?treble=3&middle=0&bass=-2` route through the existing clamped handlers and `/?sleep=30` route through the new `sleep` handler.
 3. Keep a targeted two-param carve-out only for `sleep`+`after` (since `after` is not a standalone command and needs to be passed together with `sleep` to `config.sleepForAfter()`), or extend the `sleep` handler to read `after` from a pre-scanned request context.
 4. Special-case carve-out: `reset` and `clearspiffs` still need `request->redirect("/")` after `cmd.exec()` — the loop must check for these by name after executing.
-5. Once the loop is in place, remove the hardcoded `treble`+`middle`+`bass` block (§8.5.2) and the `sleep`+`after` block (§8.5.1) — both are superseded.
+5. Hardcoded `treble`+`middle`+`bass` and `sleep`+`after` bypass blocks were removed as superseded paths.
 
-### [ ] 8.4 Move `setDspOn` and `setBrightness` to `commandhandler.cpp` `[MEDIUM]`
+### [X] 8.4 Move `setDspOn` and `setBrightness` to `commandhandler.cpp` `[MEDIUM]`
 
-Once MQTT and Telnet are routed through `commandhandler` (per §8.1 and §8.2), `setDspOn` and `setBrightness` can be moved from `config.cpp` into `commandhandler.cpp`. Both are currently too multi-path to inline cleanly, and both have non-commandhandler callers that only survive as long as MQTT/telnet have separate dispatch loops. After §8.1+§8.2 unification, their only callers will be in `commandhandler` and they can be inlined.
+**Implementation note**: practical 8.4 was completed by removing telnet/MQTT direct display mutation paths and routing those channel commands through commandhandler (`screenon`/`dspon`, `brightness`/`dim`, `turnon`/`turnoff`). Core `Config::setDspOn` / `Config::setBrightness` remain as shared runtime APIs for non-command callers (`main`, `display`, `player`), which is intentional.
 
-### [ ] 8.5 Commands with No HTML Entry Point
+### [X] 8.5 Commands with No HTML Entry Point - Consider as Fixed even if incomplete thanks to unified commandhandler
 
 These commands exist in `commandhandler.cpp` (or elsewhere in firmware) but **cannot be triggered from any `.html` file** in the WebUI. They are reachable only via MQTT, telnet, HTTP GET URL params, or are effectively inaccessible to most users.
 
@@ -330,7 +333,7 @@ These commands exist in `commandhandler.cpp` (or elsewhere in firmware) but **ca
 | [ ] | `dspon` | `commandhandler.cpp` | MQTT, telnet, HTTP `/?dspon=N` | Identical to `screenon`. Both remain in commandhandler but their HTML element is **commented out** in `options.html` line 120 with note: *"Left from yoRadio but seems to have no purpose"*. |
 | [ ] | `screenon` | `commandhandler.cpp` | MQTT, telnet | Same as `dspon`. HTML element commented out. |
 | [ ] | `clearspiffs` | `commandhandler.cpp` | MQTT, telnet, HTTP `/?clearspiffs=1` | Clears SPIFFS and resets play mode. No HTML button. Useful for factory cleanup but not exposed to users. |
-| [ ] | `sleep` | `netserver.cpp` `handleIndex()` | HTTP `/?sleep=N&after=N` **only** | Schedules sleep timer. No WebSocket handler. No HTML. |
+| [X] | `sleep` | `commandhandler.cpp` | MQTT, telnet, HTTP `/?sleep=N[&after=N]` | Schedules sleep timer through unified dispatch. Still no HTML entry point. |
 | [ ] | `playstation` | `commandhandler.cpp` (alias for `play`) | MQTT, telnet | The HTML uses `play=N` (via `websocket.send(\`play=${item}\`)`). `playstation` is a legacy alias; both spellings work. |
 
 **Notes**:
@@ -342,20 +345,20 @@ These commands exist in `commandhandler.cpp` (or elsewhere in firmware) but **ca
 - `sleep`: Expose via a WebUI sleep-timer control (options page) or remove from firmware if the feature is not intended for production use.
 - Document all MQTT/telnet-accessible commands in one place (currently they must be inferred by reading `commandhandler.cpp` and `telnet.cpp` separately).
 
-#### [ ] 8.5.1 `sleep` / `after` — HTTP GET only, no WebSocket path `[MEDIUM]`
+#### [X] 8.5.1 `sleep` / `after` — HTTP GET only, no WebSocket path `[MEDIUM]`
 
 - **Location**: `netserver.cpp` `handleIndex()`.
 - **Code**: `if (request->hasArg("sleep")) { ... config.sleepForAfter(sford, safterd); ... }`
 - **What it does**: Schedules the device to sleep for `sleep` minutes, starting `after` minutes from now.
 - **Access**: HTTP GET URL parameters only — e.g., `http://device/?sleep=30&after=5`. No WebSocket equivalent, no MQTT/telnet path, no HTML entry point.
-- **Action**: Add `sleep` to `commandhandler.cpp` (per §8.3 strategy). Once the §8.3 loop is in place this hardcoded block is fully superseded and can be safely removed. Consider also exposing `sleep` via the WebUI settings page once it is in commandhandler.
+- **Status**: fixed in unified dispatch pass. `sleep` is now in `commandhandler.cpp`, telnet/MQTT can invoke it, and URL uses the commandhandler loop with merged `sleep,after` value.
 
-#### [ ] 8.5.2 HTTP GET `treble`+`middle`+`bass` multi-param route `[LOW]`
+#### [X] 8.5.2 HTTP GET `treble`+`middle`+`bass` multi-param route `[LOW]`
 
 - **Location**: `netserver.cpp` `handleIndex()`.
 - **Code**: `if (request->hasArg("treble") && request->hasArg("middle") && request->hasArg("bass")) { config.setTone(...) }`
 - **Analysis**: Legacy URL-parameter API that sets all three EQ bands at once (`http://device/?treble=3&middle=0&bass=-2`). Not used by any current JS code. No clamping applied.
-- **Action**: Once §8.3 loop is in place, each param is dispatched individually through the existing clamped commandhandler handlers. This hardcoded block is then fully superseded and can be safely removed.
+- **Status**: fixed in unified dispatch pass. `handleIndex()` now routes params through commandhandler so EQ updates reuse clamped handlers.
 
 ---
 
@@ -911,7 +914,7 @@ For the queue-creation loops, the `while(x==NULL)` guards are a leftover defensi
 ### [X] 19.4 Blocking SD card mount attempts during boot waste time when no card is present `[LOW]` (FIXED)
 
 - **Files**: `src/core/sdmanager.cpp` line ~23; `src/main.cpp` lines ~79–82; `src/core/config.cpp` line ~253.
-- **Problem — unconditional `WAITFORSD` display + log**: In `main.cpp`, the `display.putRequest(WAITFORSD, 0)` call and `Serial.print("##[BOOT]#\tSD search\t")` fire whenever `SDC_CS != 255`, regardless of whether the last saved play mode is `PM_SDCARD` or `PM_WEB`. A device running in web-radio mode with SD hardware wired up will display "INDEX SD" on every boot even though `initPlaylistMode()` immediately takes the `else` branch and does no SD work. This misleads the user and unnecessarily occupies the boot-splash text slot.
+- **Problem — unconditional `WAITFORSD` display + log**: In `main.cpp`, the `display.putRequest(WAITFORSD, 0)` call and `Serial.print("##BOOT#\tSD search\t")` fire whenever `SDC_CS != 255`, regardless of whether the last saved play mode is `PM_SDCARD` or `PM_WEB`. A device running in web-radio mode with SD hardware wired up will display "INDEX SD" on every boot even though `initPlaylistMode()` immediately takes the `else` branch and does no SD work. This misleads the user and unnecessarily occupies the boot-splash text slot.
   - **Fix Applied**: Guarded behind `config.store.play_mode == PM_SDCARD` in `main.cpp`.
 - **Problem — four unconditional `SD.begin()` SPI calls**: `SDManager::start()` attempts `SD.begin()` four times with `vTaskDelay(10)`, `vTaskDelay(20)`, `vTaskDelay(50)` between each. The delays are unconditional — they run even when the first attempt succeeds, adding a minimum 80 ms of idle delay on every successful mount. When no card is present each `SD.begin()` attempt runs the Arduino-ESP32 SD init sequence internally (CMD0/CMD8/ACMD41 retries, voltage-ramp wait), which can add 100–500 ms per attempt before returning failure. At worst this is ~2 seconds of blocking on the main task with no card inserted.
   - **Fix Applied**: `SDManager::start()` now early-returns on success; delays only occur between actual retry attempts — eliminating the minimum 80 ms idle on a successful first-attempt mount.
@@ -1421,7 +1424,7 @@ No equivalent idle-deep-sleep timer exists anywhere in the main codebase. `displ
 
 ---
 
-## [ ] 29. Audio Library Migration / De-Forking `[MEDIUM]`
+## PRIORITY [ ] 29. Audio Library Migration / De-Forking `[MEDIUM]`
 
 The vendored audio folders are no longer simple upstream copies. `src/libraries/I2S_Audio` and `src/libraries/VS1053_Audio` were both reshaped so `src/core/player.h` can compile against a single local `Audio` API, and `Player` currently inherits from that API directly. That local compatibility layer is now the main obstacle to updating from upstream.
 
@@ -1770,6 +1773,12 @@ OLED, LCD, and N5110 driver files are **untouched**.
 
 ---
 
+## [X] 96. Unified & Standardized Logging
+
+Logging is a mess... every contributer had their own way to format.  Some outputs went to Serial, some to Telnet AND Serial... why not both?  Standardize logging!
+
+---
+
 ## [ ] 97. Speed / Responsiveness Improvements
 
 It appears to have a gap in time between selecting a station and playing the station... is there something blocking here or is it memory-deallocation or something else?  Can we improve on this?
@@ -1791,6 +1800,6 @@ Just some notes to make while going through code...
   [X] netserver.loop(); was twice in player.cpp line ~247-248 — removed duplicate
   [X] optionschecker.h should have more guardrails and re-ordered according to options.h (and optionschecker.h removed)
   [ ] the plugin for deepsleep has idletimer... an interesting idea - might be worth mixing with screensaver options
-  [ ] the home assistant plugin is kind of functional but ugly... there might be some better implementataions on Github that we can refer users to.
+  PRIORITY [ ] the home assistant plugin is kind of functional but ugly... there might be some better implementations on Github that we can refer users to.
   [ ] inside display.cpp is: #ifndef NETSERVER_LOOP1    netserver.loop();    #endif which seems to bypass network handling if the display is too busy? (undocumented, only in display.cpp)
-  [ ] html files for playback could use media session api to allow phones more control
+  PRIORITY [ ] html files for playback could use media session api to allow phones more control

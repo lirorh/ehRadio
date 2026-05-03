@@ -3,6 +3,7 @@
 #include "config.h"
 #include "controls.h"
 #include "display.h"
+#include "logging.h"
 #include "netserver.h"
 #include "network.h"
 #include "player.h"
@@ -226,8 +227,9 @@ void Controls::irLoop() {
     if (irrecv.decode(&irResults)) {
       if (irResults.value<256) return;
       if (netserver.irRecordEnable) {
-        Serial.print(resultToHumanReadableBasic(&irResults));
-        Serial.println("--------------------------");
+        String irText = resultToHumanReadableBasic(&irResults);
+        FUNCTIONLOG("Controls.IR", "%s", irText.c_str());
+        FUNCTIONLOG("Controls.IR", "--------------------------");
         config.ircodes.irVals[config.irindex][config.irchck]=irResults.value;
         netserver.irToWs(typeToString(irResults.decode_type, irResults.repeat).c_str(), irResults.value);
         return;

@@ -7,6 +7,7 @@
 #include <SPIFFS.h>
 #include <Preferences.h>
 #include "locale.h"
+#include "logging.h"
 #include "../displays/widgets/widgetsconfig.h"
 
 #define ESPFILEUPDATER_USERAGENT "ehradio/" RADIOVERSION "(" GITHUBURL ")"  // used as a user-agent string for downloading with ESPFileUpdater
@@ -292,7 +293,18 @@ class Config {
         const void* currentField = (const uint8_t*)&store + entry->fieldOffset;
         needSave = memcmp(currentField, value, size) != 0;
       }
-      if (needSave) prefs.putBytes(entry->key, value, size);
+      if (needSave) {
+        prefs.putBytes(entry->key, value, size);
+        if (strcmp(entry->key, "mqttpass") == 0 || strcmp(entry->key, "weatherkey") == 0) {
+          FUNCTIONLOG("Config.key", "%s: *", entry->key);
+        } else if (size > 4) {
+          FUNCTIONLOG("Config.key", "%s: %s", entry->key, static_cast<const char*>(value));
+        } else {
+          uint32_t rawValue = 0;
+          memcpy(&rawValue, value, size);
+          FUNCTIONLOG("Config.key", "%s: %lu", entry->key, static_cast<unsigned long>(rawValue));
+        }
+      }
       prefs.end();
       return needSave;
     }

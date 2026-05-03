@@ -4,6 +4,7 @@
 #include "config.h"
 #include "controls.h"
 #include "display.h"
+#include "logging.h"
 #include "player.h"
 #include "touchscreen.h"
 
@@ -176,10 +177,7 @@ void TouchScreen::loop() {
       }
     }
     if (config.store.dbgtouch) {
-      Serial.print(", x = ");
-      Serial.print(p.x);
-      Serial.print(", y = ");
-      Serial.println(p.y);
+      FUNCTIONLOG("Touch", "x = %d, y = %d", p.x, p.y);
     }
   } else {
     if (wastouched) {/*     END TOUCH     */

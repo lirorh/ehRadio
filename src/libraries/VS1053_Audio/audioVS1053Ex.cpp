@@ -10,6 +10,7 @@
 #if I2S_DOUT==255
 
 #include "../../core/config.h"
+#include "../../core/logging.h"
 #include "audioVS1053Ex.h"
 
 //#ifdef SDFATFS_USED
@@ -394,12 +395,12 @@ void Audio::setVUmeter() {
   if(!VS_PATCH_ENABLE) return;
   uint16_t VSstatus = read_register(SCI_STATUS);
   if(VSstatus==0) {
-    Serial.println("VS1053 Error: Unable to write SCI_STATUS");
+        ERRORLOG("VS1053 Error: Unable to write SCI_STATUS");
     _vuInitalized = false;
     return;
   }
   _vuInitalized = true;
-  Serial.println("VS1053 status: OK!");
+    FUNCTIONLOG("VS1053", "status: OK!");
   write_register(SCI_STATUS, VSstatus | _BV(9));
 }
 //###################################################################

@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include "config.h"
 #include "display.h"
+#include "logging.h"
 #include "locale.h"
 #include "netserver.h"
 #include "network.h"
@@ -100,7 +101,7 @@ Display::~Display() {
 }
 
 void Display::init() {
-  Serial.print("##[BOOT]#\tdisplay.init\t");
+  BOOTLOGX("display.init\t");
   #ifdef USE_NEXTION
     nextion.begin();
   #endif
@@ -123,7 +124,7 @@ void Display::init() {
   _meta = new ScrollWidget();
   _title1 = new ScrollWidget();
   _plcurrent = new ScrollWidget();
-  Serial.println("done");
+  SERIALLOG("done");
 }
 
 uint16_t Display::width() { return dsp.width(); }

@@ -1,6 +1,7 @@
 #include "options.h"
 #include "player.h"
 #include "config.h"
+#include "logging.h"
 #include "telnet.h"
 #include "display.h"
 #include "sdmanager.h"
@@ -41,7 +42,7 @@ QueueHandle_t playerQueue;
 
 
 void Player::init() {
-  Serial.print("##[BOOT]#\tplayer.init\t");
+  BOOTLOGX("player.init\t");
   playerQueue=NULL;
   //_resumeFilePos = 0;
   playerQueue = xQueueCreate(5, sizeof(playerRequestParams_t));
@@ -82,7 +83,7 @@ void Player::init() {
   #ifdef CONNECT_HTTP_HTTPS_TIMEOUT // macro must be two numbers separated by a comma, ie: 1700, 3700
     setConnectionTimeout(CONNECT_HTTP_HTTPS_TIMEOUT);
   #endif
-  Serial.println("done");
+  SERIALLOG("done");
 }
 
 void Player::sendCommand(playerRequestParams_t request) {
@@ -103,7 +104,7 @@ void Player::setError(const char *e) {
   strlcpy(_plError, e, PLERR_LN);
   if (hasError()) {
     config.setTitle(_plError);
-    telnet.printf("##ERROR#:\t%s\r\n", e);
+    ERRORLOG("%s", e);
   }
 }
 
@@ -200,7 +201,7 @@ void Player::loop() {
   if (!isRunning() && _status==PLAYING) {
     // Stream died unexpectedly - trigger reconnection if WiFi is still up
     if (WiFi.status() == WL_CONNECTED && !network.lostPlaying) {
-      Serial.println("Stream stopped unexpectedly. Starting reconnection attempts...");
+      FUNCTIONLOG("Player", "Stream stopped unexpectedly. Starting reconnection attempts...");
       network.lostPlaying = true;
       // Launch retry task if not already running
       if (streamRetryTaskHandle == NULL) {
@@ -276,7 +277,7 @@ void Player::_play(uint16_t stationId) {
     if (player_on_start_play) player_on_start_play();
     pm.on_start_play();
   } else {
-    telnet.printf("##ERROR#:\tError connecting to %s\r\n", config.station.url);
+    ERRORLOG("Error connecting to %s", config.station.url);
     SET_PLAY_ERROR("Error connecting to %s", config.station.url);
     _stop(true);
   };
@@ -309,7 +310,7 @@ void Player::playUrl(const char* url) {
     if (player_on_start_play) player_on_start_play();
     pm.on_start_play();
   } else {
-    telnet.printf("##ERROR#:\tError connecting to %s\r\n", url);
+    ERRORLOG("Error connecting to %s", url);
     SET_PLAY_ERROR("Error connecting to %s", url);
     _stop(true);
   }

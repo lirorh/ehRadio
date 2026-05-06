@@ -22,6 +22,10 @@ Documentation will be improved at some point... Until then, check this page and 
 
 ## ehRadio Version history
 
+### 2026.05.06 Dev - Feature Freeze ON
+  - SPI Buses and devices now more flexible (not forced to use board defaults)
+    - See `options.h` and `myoptions.h` for more
+
 ### 2026.05.03 Dev - Feature Freeze ON
   - Unified `commandhandler`
     - all commands routed through the same path so websockets, Telnet, MQTT, and HTTP have (mostly) the same command set

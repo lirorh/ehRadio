@@ -652,7 +652,7 @@ void Display::loop() {
 
   dsp.loop();
 /*
-  #if I2S_DOUT==255
+  #if defined(USE_AUDIO_VS1053)
   player.computeVUlevel();
   #endif
 */

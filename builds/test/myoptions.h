@@ -24,8 +24,10 @@
   #define I2S_BCLK          11
   #define I2S_LRC           10
   #define VS1053_CS         255     // VS1053 disabled
-  #define SD_SPIPINS        21, 13, 14      /* SCK, MISO, MOSI */
-  #define SDC_CS            47
+  #define SD_SCK            21
+  #define SD_MISO           13
+  #define SD_MOSI           14
+  #define SD_CS             47
   #define ENC_BTNR          7
   #define ENC_BTNL          15
   #define ENC_BTNB          16

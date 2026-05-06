@@ -4,7 +4,7 @@
 /*        ************************************************************************      */
 /*        *        This file must be in the root folder of the sketch !!!        *      */
 /*        ************************************************************************      */
-/*        . . .  CHECK options.h for full options, examples, and over-rides  . . .      */
+/*        . . .  CHECK options.h for full options, examples, and overrides   . . .      */
 
 /* - - - = = = - - - Choose the Radio (defined by platformio.ini env) - - - = = = - - - */
 /* automatic builds define the board - - - be sure to comment all lines after debugging */
@@ -95,6 +95,35 @@
 #endif
 
 
+/* --- SPI BUS PINS --- */
+/* When using SPI Displays (always SPIA_ Bus), VS1053 can't use the same SPI Bus */
+#if defined(ESP32_S3_TRIP5_ST7735_PCM_1BUTTON)
+  #define SPIA_DEFAULT_XMISO      /* SCK/CLK 12 and MOSI/SDA 11 (no MISO) */
+  #define SPIB_SCK        21      /* Bus B pins (SD) */
+  #define SPIB_MISO       13
+  #define SPIB_MOSI       14
+#elif defined(ESP32_S3_TRIP5_SH1106_VS1053_3BUTTONS)
+  #define SPIA_DEFAULT            /* SCK 12, MISO 13, MOSI 11 */
+  #define SPIB_SCK        21      /* Bus B pins (SD) */
+  #define SPIB_MISO       2
+  #define SPIB_MOSI       1
+#elif defined(ESP32_S3_TRIP5_ILI9488_PCM_1BUTTON)
+  #define SPIA_DEFAULT_XMISO      /* SCK/CLK 12 and MOSI/SDA 11 (no MISO) */
+  #define SPIB_SCK        21      /* Bus B pins (SD) */
+  #define SPIB_MISO       2
+  #define SPIB_MOSI       1
+#elif defined(ESP32_S3_TRIP5_SH1106_PCM_REMOTE) || defined(ESP32_S3_TRIP5_SH1106_PCM_1BUTTON) || defined(ESP32_S3_TRIP5_SSD1306X32_PCM_1BUTTON)
+  #define SPIA_SCK        21      /* Bus A pins (SD) - no Bus B device, no need for default pins */
+  #define SPIA_MISO       13
+  #define SPIA_MOSI       14
+#elif defined(ESP32_S3_KASPERAITIS_ES3C28P) || defined(ESP32_S3_TRIP5_ES3C28P)
+  #define SPIA_DEFAULT_XMISO      /* SCK/CLK 12 and MOSI/SDA 11 (no MISO) */
+  #define SPIB_SCK        38      /* Bus B pins (SD) */
+  #define SPIB_MISO       39
+  #define SPIB_MOSI       40
+#endif
+
+
 /* --- DISPLAY --- */
 
 /* Display config for I2C displays */
@@ -111,11 +140,10 @@
 #endif
 
 /* Display config for SPI displays */
-/* When using SPI Displays, trying to use same SPI MOSI, SCK, MISO as VS1053 doesn't work */
 #if defined(ESP32_S3_TRIP5_ILI9488_PCM_1BUTTON)
   #define DSP_MODEL       DSP_ILI9488     /* Big Display */
   #define BIG_BOOT_LOGO
-  #define SCREEN_INVERT true
+  #define SCREEN_INVERT   true
   #define TFT_DC          10
   #define TFT_CS          9
   #define BRIGHTNESS_PIN  4
@@ -144,7 +172,6 @@
   #define TFT_RST         -1
   #define BRIGHTNESS_PIN  45
 #endif
-
 #if defined(ESP32_S3_KASPERAITIS_ES3C28P)
   #define DSP_LANGUAGE_lt_LT
   #define DSP_MODEL       DSP_ILI9341
@@ -159,12 +186,11 @@
 /* --- AUDIO DECODER --- */
 
 #if defined(ESP32_S3_TRIP5_SH1106_VS1053_3BUTTONS)
-  #define VS_HSPI         false
+  #define VS1053_SPI      'A'     /* assign VS1053 to Bus A */
   #define VS1053_CS       9
   #define VS1053_DCS      14
   #define VS1053_DREQ     10
   #define VS1053_RST      -1      /* set to -1 if connected to ESP EN pin */
-  #define I2S_DOUT        255     /* set to 255 to disable PCM */
   #define VS_PATCH_ENABLE false   /* For the 2.5V boards with wrong voltage regulator.  See here: https://github.com/e2002/yoradio/issues/108 */
                                   /* Probably works on all */
 #endif
@@ -172,14 +198,12 @@
   #define I2S_DOUT        15
   #define I2S_BCLK        7
   #define I2S_LRC         6
-  #define VS1053_CS       255     /* set to 255 to disable VS1053 */
 #endif
 #if defined(ESP32_S3_TRIP5_SH1106_PCM_REMOTE) || defined(ESP32_S3_TRIP5_SH1106_PCM_1BUTTON) ||\
     defined(ESP32_S3_TRIP5_SSD1306X32_PCM_1BUTTON)
   #define I2S_DOUT        12
   #define I2S_BCLK        11
   #define I2S_LRC         10
-  #define VS1053_CS       255     /* set to 255 to disable VS1053 */
 #endif
 #if defined(ESP32_S3_KASPERAITIS_ES3C28P) || defined(ESP32_S3_TRIP5_ES3C28P)
   #define USE_ES8311                  /* a special define for a special decoder */
@@ -202,7 +226,6 @@
     #define ES8311_MAX_I2S 180
   #endif
   #define PLAYER_FORCE_MONO true
-  #define VS1053_CS       255     /* set to 255 to disable VS1053 */
 #endif
 
 
@@ -287,18 +310,24 @@
 
 #if defined(ESP32_S3_TRIP5_ST7735_PCM_1BUTTON) || defined(ESP32_S3_TRIP5_SH1106_PCM_REMOTE) ||\
     defined(ESP32_S3_TRIP5_SH1106_PCM_1BUTTON) || defined(ESP32_S3_TRIP5_SSD1306X32_PCM_1BUTTON)
-  #define SD_SPIPINS      21, 13, 14      /* SCK, MISO, MOSI */
-  #define SDC_CS          47
+  #define SPIB_SCK        21      /* Bus B pins */
+  #define SPIB_MISO       13
+  #define SPIB_MOSI       14
+  #define SD_SPI          'B'     /* assign SD to Bus B */
+  #define SD_CS           47
 #elif defined(ESP32_S3_TRIP5_SH1106_VS1053_3BUTTONS ) || defined(ESP32_S3_TRIP5_ILI9488_PCM_1BUTTON)
-  #define SD_SPIPINS      21, 2, 1        /* SCK, MISO, MOSI */
-  #define SDC_CS          47
+  #define SPIB_SCK        21      /* Bus B pins */
+  #define SPIB_MISO       2
+  #define SPIB_MOSI       1
+  #define SD_SPI          'B'     /* assign SD to Bus B */
+  #define SD_CS           47
 #elif defined(ESP32_S3_KASPERAITIS_ES3C28P) || defined(ESP32_S3_TRIP5_ES3C28P)
-  #define SD_SPIPINS      38, 39, 40     /* SCK, MISO, MOSI */
-  #define SDC_CS          47
+  #define SPIB_SCK        38      /* Bus B pins */
+  #define SPIB_MISO       39
+  #define SPIB_MOSI       40
+  #define SD_SPI          'B'     /* assign SD to Bus B */
+  #define SD_CS           47
 #endif
-
-/* Extras: unused in all */
-//#define SD_HSPI     /* false (not needed when using custom pins) */
 
 
 /* --- Battery --- */

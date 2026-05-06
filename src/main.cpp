@@ -21,10 +21,6 @@
 
 SET_LOOP_TASK_STACK_SIZE(LOOP_TASK_STACK_SIZE * 1024);
 
-#if DSP_HSPI || TS_HSPI || VS_HSPI
-  SPIClass SPI2(HSPI);
-#endif
-
 extern __attribute__((weak)) void ehradio_on_setup();
 
 /* Prototype for battery-driven dimming handler */
@@ -73,7 +69,7 @@ void setup() {
     netserver.setBootReady(true);
     return;
   }
-  if (SDC_CS!=255 && config.store.play_mode==PM_SDCARD) {
+  if (SD_CS!=255 && config.store.play_mode==PM_SDCARD) {
     display.putRequest(WAITFORSD, 0);
     BOOTLOG("SD Search");
   }

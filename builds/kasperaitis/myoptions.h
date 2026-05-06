@@ -4,7 +4,7 @@
 /*        ************************************************************************      */
 /*        *        This file must be in the root folder of the sketch !!!        *      */
 /*        ************************************************************************      */
-/*        . . .  CHECK options.h for full options, examples, and over-rides  . . .      */
+/*        . . .  CHECK options.h for full options, examples, and overrides   . . .      */
 
 /* - - - = = = - - - Choose the Radio (defined by platformio.ini env) - - - = = = - - - */
 /* automatic builds define the board - - - be sure to comment all lines after debugging */
@@ -85,7 +85,6 @@
     #define ES8311_MAX_I2S 180
   #endif
   #define PLAYER_FORCE_MONO true  /* force mono audio for this board */
-  #define VS1053_CS       255     /* set to 255 to disable VS1053 */
 #endif
 
 
@@ -112,8 +111,10 @@
 /* --- SD CARD --- */
 
 #if defined(ESP32_S3_KASPERAITIS_ES3C28P)
-  #define SD_SPIPINS      38, 39, 40     /* SCK, MISO, MOSI */
-  #define SDC_CS          47
+  #define SD_SCK          38
+  #define SD_MISO         39
+  #define SD_MOSI         40
+  #define SD_CS           47
 #endif
 
 

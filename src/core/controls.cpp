@@ -64,14 +64,14 @@
 
 void IRAM_ATTR readEncoderISR() {
   #if ENC_BTNL!=255
-    if ((SDC_CS==255 && display.mode()==LOST) || display.mode()==UPDATING) return;
+    if ((SD_CS==255 && display.mode()==LOST) || display.mode()==UPDATING) return;
     encoder.readEncoder_ISR();
   #endif
 }
 
 void IRAM_ATTR readEncoder2ISR() {
   #if ENC2_BTNL!=255
-    if ((SDC_CS==255 && display.mode()==LOST) || display.mode()==UPDATING) return;
+    if ((SD_CS==255 && display.mode()==LOST) || display.mode()==UPDATING) return;
     encoder2.readEncoder_ISR();
   #endif
 }
@@ -123,7 +123,7 @@ void Controls::init() {
 
 void Controls::loop() {
   if (display.mode()==UPDATING || display.mode()==SDCHANGE) return;
-  if (SDC_CS==255 && display.mode()==LOST) return;
+  if (SD_CS==255 && display.mode()==LOST) return;
   if (ctrls_on_loop) ctrls_on_loop();
   #if ENC_BTNL!=255
     encoder1Loop();

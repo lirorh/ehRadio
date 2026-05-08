@@ -8,7 +8,6 @@
 #include "netserver.h"
 #include "network.h"
 #include "locale.h"
-#include "../pluginsManager/pluginsManager.h"
 #ifdef USE_ES8311
   #include "../libraries/ES8311_Audio/es8311.h"
 #endif
@@ -122,7 +121,6 @@ void Player::_stop(bool alreadyStopped) {
   if (!alreadyStopped) stopSong();
   if (!lockOutput) stopInfo();
   if (player_on_stop_play) player_on_stop_play();
-  pm.on_stop_play();
 }
 
 void Player::initHeaders(const char *file) {
@@ -152,7 +150,6 @@ void Player::loop() {
         }
         _play((uint16_t)abs(requestP.payload)); 
         if (player_on_station_change) player_on_station_change(); 
-        pm.on_station_change();
         break;
       }
       case PR_TOGGLE: {
@@ -271,7 +268,6 @@ void Player::_play(uint16_t stationId) {
       if (config.getMode()==PM_WEB) radioBrowserSendClick(config.station.url);
     #endif
     if (player_on_start_play) player_on_start_play();
-    pm.on_start_play();
   } else {
     ERRORLOG("Error connecting to %s", config.station.url);
     SET_PLAY_ERROR("Error connecting to %s", config.station.url);
@@ -304,7 +300,6 @@ void Player::playUrl(const char* url) {
       radioBrowserSendClick(url);
     #endif
     if (player_on_start_play) player_on_start_play();
-    pm.on_start_play();
   } else {
     ERRORLOG("Error connecting to %s", url);
     SET_PLAY_ERROR("Error connecting to %s", url);

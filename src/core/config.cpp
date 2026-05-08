@@ -1085,14 +1085,12 @@ void checkNewVersionFile() {
       if (newVerFile) {
         String line = newVerFile.readStringUntil('\n');
         line.trim();
-        if (line.indexOf(VERSIONSTRING) >= 0) {
-          int firstQuote = line.indexOf('"');
-          int lastQuote = line.lastIndexOf('"');
-          if (firstQuote >= 0 && lastQuote > firstQuote) {
-            String extractedVersion = line.substring(firstQuote + 1, lastQuote);
-            if (extractedVersion.length() > 0) {
-              netserver.newVersion = extractedVersion;
-            }
+        int vsPos = line.indexOf(VERSIONSTRING);
+        if (vsPos >= 0) {
+          String extractedVersion = line.substring(vsPos + strlen(VERSIONSTRING));
+          extractedVersion.trim();
+          if (extractedVersion.length() > 0) {
+            netserver.newVersion = extractedVersion;
           }
         }
         newVerFile.close();

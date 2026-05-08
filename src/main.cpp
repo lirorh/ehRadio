@@ -14,7 +14,6 @@
 #include "core/player.h"
 #include "core/rgbled.h"
 #include "core/telnet.h"
-#include "pluginsManager/pluginsManager.h"
 #ifdef USE_NEXTION
   #include "displays/nextion.h"
 #endif
@@ -52,7 +51,6 @@ void setup() {
   battery.init();
 
   if (ehradio_on_setup) ehradio_on_setup();
-  pm.on_setup();
   config.init();
   display.init();
   player.init();
@@ -95,7 +93,6 @@ void setup() {
     }
   }
   config.startupServices();
-  pm.on_end_setup();
   netserver.setBootReady(true);
 }
 

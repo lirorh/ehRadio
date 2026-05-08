@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.04.09"
+#define RADIOVERSION "2026.05.08"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -871,9 +871,7 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
   #define GITHUBURL "https://github.com/trip5/ehradio" // used by the ESPFileUpdater in BrowserClient (and in URLs below)
 #endif
 #ifdef FIRMWARE // this is the filename.bin online
-  #ifndef FIRMWARE_NAME
   // #define FIRMWARE_NAME "Trip5's Big Screen Radio" optional name of the firmware (appears only in eh Device Protocol and will appear as the filename (without .bin) by default if not defined)
-  #endif
   #ifndef FILESURL
     #define FILESURL GITHUBURL "/releases/download/" RADIOVERSION "/" // + FILE for SPIFFS files (this version)
   #endif
@@ -884,7 +882,7 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
     #define CHECKUPDATEURL GITHUBURL "/releases/latest/download/version.txt" // automatically extracted from options.h during Github workflow
   #endif
   #ifndef VERSIONSTRING
-    #define VERSIONSTRING "#define RADIOVERSION" // the file above should have a line that contains this followed by a version number
+    #define VERSIONSTRING "ehRadio Version" // the file above should have a line that starts with this followed by a version number
   #endif
   #ifndef CHECKUPDATEURL_TIME
     #define CHECKUPDATEURL_TIME "1 day"

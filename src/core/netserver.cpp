@@ -1242,12 +1242,9 @@ void checkForOnlineUpdate() {
           char c = stream->read();
           if (c == '\n') {
             if (line.startsWith(VERSIONSTRING)) {
-              int q1 = line.indexOf('"');
-              int q2 = line.indexOf('"', q1 + 1);
-              if (q1 > 0 && q2 > q1) {
-                remoteVer = line.substring(q1 + 1, q2);
-                break;
-              }
+              remoteVer = line.substring(strlen(VERSIONSTRING));
+              remoteVer.trim();
+              break;
             }
             line.clear();
           } else {

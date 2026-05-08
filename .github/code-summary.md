@@ -15,7 +15,6 @@ It will get lengthy as more is added to it.
 This document is intentionally per-file focused for:
 - `src/main.cpp`
 - `src/core/*`
-- `src/pluginsManager/*`
 - `data/www/*`
 - `src/locale/*`
 
@@ -32,7 +31,7 @@ Grouped (not one-by-one deep explained) areas:
 - `platformio.ini` selects environment, included libraries, and included source files.
 - `myoptions.h` selects hardware profile + defaults.
 - `src/core/options.h` resolves all defaults/fallbacks and feature flags.
-- `.github/workflows/build-release-firmware.yml` verifies generated contributor release artifacts and now diff-checks `web_assets/` in addition to `firmware.txt` and `releases.md`.
+- `.github/workflows/build-release-firmware.yml` verifies generated contributor release artifacts by re-running `builds/fix_releases.py` on CI and diff-checking `builds/releases/` (contains `firmware.txt`, `releases.md`, and `web_assets/`) against what was committed.
 - `.github/workflows/build-deploy-page.yml` deploys Pages on `release.published`, and on branch/manual runs it preserves the currently published `firmware-info.json` and manifests instead of overwriting them from `builds/*/web_assets`.
 - `.github/workflows/update-timezones.json-automatically.yml` checks out using `DEPLOY_KEY` and pushes over SSH to `dev`, enabling ruleset bypass configured for Deploy keys.
 
@@ -160,13 +159,12 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
 ### `src/main.cpp`
 - `setup()` major sequence:
   1. serial + LED + RGB + battery init
-  2. plugin setup hooks (`pm.on_setup()`)
-  3. `config.init()`
-  4. `display.init()`
-  5. `player.init()`
-  6. `network.begin()`
-  7. if no connectivity: start minimal server + controls + display start and return
-  8. if connectivity:
+  2. `config.init()`
+  3. `display.init()`
+  4. `player.init()`
+  5. `network.begin()`
+  6. if no connectivity: start minimal server + controls + display start and return
+  7. if connectivity:
      - `config.initPlaylistMode()`
      - `netserver.begin()`
      - `telnet.begin()`
@@ -175,8 +173,7 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
      - optional MQTT init
      - optional smart-start playback
      - `config.startupServices()`
-     - plugin end-setup hook
-    - `netserver.setBootReady(true)` only after setup work is actually complete
+     - `netserver.setBootReady(true)` only after setup work is actually complete
 - `loop()`:
   - AP mode: Improv + captive DNS
   - normal: telnet loop
@@ -207,7 +204,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 ## `src/core/common.h`
 - Shared enums and structs used across modules (display modes, requests, control events, etc.).
 - Coupling:
-  - Imported by display, controls, plugins manager, and command paths.
+  - Imported by display, controls, and command paths.
 
 ## `src/core/options.h`
 - See earlier build section.
@@ -440,18 +437,6 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 
 ## `src/core/rtcsupport.h` / `rtcsupport.cpp`
 - RTC init/get/set wrappers for DS3231/DS1307 when configured; `rtcsupport.h` has compile guards.
-
----
-
-## Plugins Manager (`src/pluginsManager`)
-
-## `src/pluginsManager/pluginsManager.h` / `pluginsManager.cpp`
-- `pluginsManager.h` defines plugin base class and hook surface (setup/start/stop/ticker/button/display queue events).
-- `pluginsManager.cpp` registers plugins and dispatches hook calls.
-
-Notes:
-- Current workspace has no `src/plugins/*` plugin implementation files.
-- Hook points are still used by core code (`pm.on_*` calls).
 
 ---
 

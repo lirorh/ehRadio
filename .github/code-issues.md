@@ -33,6 +33,9 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 - [X] 16. Plugin System — Dead Infrastructure, Remove Entirely
 - [ ] 17. Can Display Be Improved?
 - ... Below is not part of the audit but worth consideration (or fixing)
+- [ ] 94. Telnet and MQTT and HTTP could be a bit more interactive
+- [ ] 95. Core-pinned Tasks Need Fixing?
+- [ ] 96. options.h generator / checker
 - [ ] 97. Speed / Responsiveness Improvements
 - [ ] 98. Documentation Needs Serious Work
 - [ ] 99. Issues Found Randomly or Outside Above Issues
@@ -398,7 +401,7 @@ These macros are consumed in `src/` via `#ifdef`/`#if defined` guards (so they a
 | [X] | `RGB_LED_PIN` | `rgbled.cpp` — `#if defined(RGB_LED_PIN) && (RGB_LED_PIN!=255)` guards the entire NeoPixel module | None for `RGB_LED_PIN` itself; `RGB_LED_ORDER` falls back inside `rgbled.cpp`; `NUM_RGB_LEDS` is hardcoded as `1` in `rgbled.cpp` | Undefined = NeoPixel disabled. The `=255 means disabled` convention used for all other pin macros (MUTE_PIN, BRIGHTNESS_PIN, etc.) is not applied here — no options.h entry at all. |
 | [X] | `MAX_PL_READ_BYTES` | `netserver.cpp` line ~312 — caps playlist body size during HTTP upload | None anywhere | Undefined = no upper limit on playlist read size. Tuning parameter that should have an options.h default (e.g., something like `65536`). |
 | [X] | `PLAYLIST_DEFAULT_URL` | `config.cpp` line ~1307 — seeds default playlist on first boot | None | Undefined = no default playlist URL seeded. Silent, no fallback. Should have a commented stub in `options.h`. |
-| [ ] | `SD_SPIPINS` | `config.cpp` line ~75, `sdmanager.h/cpp` — custom SPI pin tuple for SD card | None | Paired feature with `SD_HSPI` which HAS an `options.h` fallback, but `SD_SPIPINS` itself does not. Inconsistent. \* `SD_SPIPINS` will be replaced by individual `SD_SCK`/`SD_MISO`/`SD_MOSI` macros as part of §1. |
+| [X] | `SD_SPIPINS` | `config.cpp` line ~75, `sdmanager.h/cpp` — custom SPI pin tuple for SD card | None | Paired feature with `SD_HSPI` which HAS an `options.h` fallback, but `SD_SPIPINS` itself does not. Inconsistent. \* `SD_SPIPINS` will be replaced by individual `SD_SCK`/`SD_MISO`/`SD_MOSI` macros as part of §1. |
 | [ ] | `TS_SPIPINS` | `touchscreen.cpp` lines ~27, ~46 — custom SPI pin tuple for touchscreen | None | Same asymmetry as `SD_SPIPINS` vs `SD_HSPI`. `TS_HSPI` has an `options.h` fallback; `TS_SPIPINS` does not. \* `TS_SPIPINS` will be replaced by individual `TS_SCK`/`TS_MISO`/`TS_MOSI` macros as part of §1. |
 | [X] | `DEBUG_V`, `CORS_DEBUG`, `BATTERY_DEBUG` | Various `src/core/` files | None — intentional debug flags | Same category as `ESPFILEUPDATER_DEBUG`. Three separate debug flags with no options.h entry. Should be grouped as commented-out debug stubs. |
 
@@ -508,7 +511,7 @@ Each call site below should be investigated and given either a purpose-specific 
 | Fixed | Location | Issue |
 |---|---|---|
 | [ ] | `nextion.cpp` | file starts with explicit warning comment that implementation may be broken; treat as unstable until revalidated.
-| [ ] | `telnet.cpp`| duplicated command form list vs. `commandhandler.cpp`; new settings added to one path are easily missed in the other.
+| [X] | `telnet.cpp`| duplicated command form list vs. `commandhandler.cpp`; new settings added to one path are easily missed in the other. Fixed already...
 | [ ] | `touchscreen.h`| enum member naming inconsistency `TDS_REQUEST` vs. `TSD_*` pattern.
 
 ## [ ] 7.2 Heavy async queue and task usage — ordering/race conditions are possible `[MEDIUM]`
@@ -1487,6 +1490,39 @@ OLED, LCD, and N5110 driver files are **untouched**.
 
 ---
 
+## [ ] 94. Telnet and MQTT and HTTP could be a bit more interactive
+
+There are a lot of commands.  They could be documented better... OR we could have these other 3 ways of sending commands through commandhandler give some output when sending the command "help"
+
+-- should probably note that the danger zone is completely unprotected through these methods.
+
+
+
+---
+
+## [ ] 95. Core-pinned Tasks Need Fixing?
+
+Looks like there's not enough clear division of what each of the 2 cores is supposed to do.
+
+Very likely, we need to move audio to 1 core and Network functions to the other.
+
+We also need a core-watcher to help debug how this worked out.
+
+
+---
+
+## [ ] 96. myoptions.h & platformio.ini Generator / Checker
+
+I think a total re-think oh how an myoptions.h generator works.
+
+We need more boards specs collected... but that pin-display for boards is weird and hard to code.
+
+We could have a drop-down on top that acts as a selector for collected boards pinout jpg files (almost like a slide show)
+
+Then a simple set of radio buttons and checkboxes and dropdowns that set up some basic option.h stuff
+
+---
+
 ## [ ] 97. Speed / Responsiveness Improvements
 
 It appears to have a gap in time between selecting a station and playing the station... is there something blocking here or is it memory-deallocation or something else?  Can we improve on this?
@@ -1508,6 +1544,11 @@ Just some notes to make while going through code...
   [X] netserver.loop(); was twice in player.cpp line ~247-248 — removed duplicate
   [X] optionschecker.h should have more guardrails and re-ordered according to options.h (and optionschecker.h removed)
   [ ] the plugin for deepsleep has idletimer... an interesting idea - might be worth mixing with screensaver options
-  [X] the home assistant plugin is kind of functional but ugly... Nothing online to "borrow" and not a good way to use HA builtin integratins so the one we're using has been repaired
-  [ ] inside display.cpp is: #ifndef NETSERVER_LOOP1    netserver.loop();    #endif which seems to bypass network handling if the display is too busy? (undocumented, only in display.cpp)
+  [ ] the home assistant plugin is kind of functional but ugly... Nothing online to "borrow" and not a good way to use HA builtin integratins so the one we're using has been repaired
+
+  [Audio.info]    stream ready
+[Audio.info]    StreamTitle='Merge Of Equals - Atesch (Radio Edit)
+[Audio.info]    StreamUrl='https://somafm.com/logos/512/groovesalad512.png'
+
+  [X] inside display.cpp is: #ifndef NETSERVER_LOOP1    netserver.loop();    #endif which seems to bypass network handling if the display is too busy? (undocumented, only in display.cpp)
   [X] SORRY NOPE - html files for playback could use media session api to allow phones more control - may be too difficult to implement - will require user confirmation?

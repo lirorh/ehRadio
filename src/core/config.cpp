@@ -144,15 +144,14 @@ void Config::loadPreferences() {
   // Check config_set first
   uint16_t configSetValue = 0;
   size_t configSetRead = prefs.getBytes("cfgset", &configSetValue, sizeof(configSetValue));
-  if (configSetRead != sizeof(configSetValue)) {
-    // Preferences is empty, save config_set and version
-    FUNCTIONLOG("Prefs", "Empty NVS detected, initializing config_set...");
-    saveValue(&store.config_set, store.config_set);
-  } else if (configSetValue != 4262) {
-    // config_set present but not valid, reset config
-    FUNCTIONLOG("Prefs", "Invalid config_set (%u), resetting config...", configSetValue);
+  if (configSetRead != sizeof(configSetValue) || configSetValue != 4262) {
+    if (configSetRead != sizeof(configSetValue)) {
+      FUNCTIONLOG("Prefs", "NVS Sentinel absent (NVS uninitialized or corrupt), resetting to defaults...");
+    } else {
+      FUNCTIONLOG("Prefs", "Invalid config_set (%u), resetting config...", configSetValue);
+    }
     prefs.end();
-    reset();
+    setDefaults();
     return;
   }
   // Load all fields in keyMap
@@ -377,22 +376,13 @@ void Config::loadTheme() {
   #include "../displays/tools/tftinverttitle.h"
 }
 
-void Config::reset() {
-  FUNCTIONLOG("Prefs", "Reset requested, resetting config...");
-  //prefs.begin("ehradio", false);
-  //prefs.clear();
-  //prefs.end();
-  setDefaults();
-  delay(500);
-  ESP.restart();
-}
-
 void Config::defaultSettings(const char *val, uint8_t clientId) {
   if (strcmp(val, "system") == 0) {
     saveValue(&store.smartstart, (bool)SMART_START);
     saveValue(&store.audioinfo, (bool)SHOW_AUDIO_INFO);
     saveValue(&store.vumeter, (bool)SHOW_VU_METER);
     saveValue(&store.wifiscanbest, (bool)WIFI_SCAN_BEST_RSSI);
+    saveValue(&store.autoupdate, false);
     saveValue(&store.ehdp, (bool)EHDP);
     saveValue(store.ehdpname, "");
     saveValue(&store.softapdelay, (uint8_t)SOFTAP_REBOOT_DELAY);
@@ -478,8 +468,14 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     netserver.requestOnChange(GETCONTROLS, clientId);
     return;
   }
-  if (strcmp(val, "1") == 0) {
-    config.reset();
+  if (strcmp(val, "1") == 0 || strcmp(val, "") == 0) {
+    setDefaults();
+    defaultSettings("system", clientId);
+    defaultSettings("screen", clientId);
+    defaultSettings("controls", clientId);
+    defaultSettings("locale", clientId);
+    defaultSettings("weather", clientId);
+    defaultSettings("mqtt", clientId);
     return;
   }
 }
@@ -492,6 +488,11 @@ void Config::setDefaults() {
   nvs_flash_init();
   // defaults set by struct, except one
   snprintf(store.mdnsname, MDNS_LENGTH, "ehradio-%x", getChipId());
+  // Write the sentinel immediately after erase so the next boot finds a valid cfgset
+  // and does not loop back into reset() again
+  prefs.begin("ehradio", false);
+  prefs.putBytes("cfgset", &store.config_set, sizeof(store.config_set));
+  prefs.end();
 }
 
 void Config::saveIR() {
@@ -565,7 +566,6 @@ void Config::setTitle(const char* title) {
   u8fix(config.station.title);
   strip_whitespace(config.station.title);
   netserver.requestOnChange(TITLE, 0);
-  netserver.loop();
   display.putRequest(NEWTITLE);
 }
 
@@ -1229,7 +1229,7 @@ bool Config::updateLocaleFileAsync(const char* localeCode, uint8_t clientId) {
     params->updater->setUserAgent(ESPFILEUPDATER_USERAGENT);
     params->clientId = clientId;
     strlcpy(params->localeCode, localeCode, sizeof(params->localeCode));
-    xTaskCreate(updateLocaleFileAsyncWrapper, "updateLocaleFileAsyncWrapper", 8192, params, 2, NULL);
+    xTaskCreatePinnedToCore(updateLocaleFileAsyncWrapper, "updateLocaleFileAsyncWrapper", 8192, params, LOW_TASK_PRIORITY, NULL, NETWORK_CORE);
     return true; // Task created successfully (NOT download result)
   #else
     // If not, then just need to switch
@@ -1299,7 +1299,7 @@ void Config::startupServices() {
     if (!wwwFilesExist) {
       getRequiredFiles();
     } else {
-      xTaskCreate(startupServicesAsync, "startupServicesAsync", 8192, updater, 2, NULL);
+      xTaskCreatePinnedToCore(startupServicesAsync, "startupServicesAsync", 8192, updater, LOW_TASK_PRIORITY, NULL, NETWORK_CORE);
     }
   #endif
 }

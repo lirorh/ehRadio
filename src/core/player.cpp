@@ -8,12 +8,15 @@
 #include "netserver.h"
 #include "network.h"
 #include "locale.h"
+
 #ifdef USE_ES8311
   #include "../libraries/ES8311_Audio/es8311.h"
 #endif
 #ifdef USE_NEXTION
   #include "../displays/nextion.h"
 #endif
+
+#define NETWORK_TASK_STACK_BYTES (NETWORK_TASK_STACK_SIZE * 1024)
 
 Player player;
 QueueHandle_t playerQueue;
@@ -34,7 +37,6 @@ QueueHandle_t playerQueue;
     Player::Player(): Audio(true, I2S_DAC_CHANNEL_BOTH_EN)  {}
   #endif
 #endif
-
 
 void Player::init() {
   BOOTLOGX("player.init\t");
@@ -57,6 +59,7 @@ void Player::init() {
     if (VS1053_RST>0) ResetChip();
     begin();
   #endif
+  setAudioTaskCore(AUDIO_CORE);
   #ifdef USE_ES8311
     if (es.begin(I2C_SDA, I2C_SCL, 400000UL)) es.setVolume(0); /* Start codec muted (or low) to avoid very loud output before saved volume is applied */
   #endif
@@ -198,7 +201,7 @@ void Player::loop() {
       network.lostPlaying = true;
       // Launch retry task if not already running
       if (streamRetryTaskHandle == NULL) {
-        xTaskCreatePinnedToCore(retryStreamConnection, "streamRetry", 1024 * 4, NULL, 1, &streamRetryTaskHandle, 0);
+        xTaskCreatePinnedToCore(retryStreamConnection, "streamRetry", NETWORK_TASK_STACK_BYTES, NULL, NET_TASK_PRIORITY, &streamRetryTaskHandle, NETWORK_CORE);
       }
     }
     _stop(true);
@@ -238,7 +241,6 @@ void Player::_play(uint16_t stationId) {
   display.putRequest(DBITRATE);
   display.putRequest(NEWSTATION);
   netserver.requestOnChange(STATION, 0);
-  netserver.loop();
   bool isConnected = false;
   if (config.getMode()==PM_SDCARD && SD_CS!=255) {
     isConnected=connecttoFS(sdman,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min);

@@ -20,55 +20,37 @@
   #include "../displays/nextion.h"
 #endif
 
+#define DSP_TASK_STACK_BYTES  (DSP_TASK_STACK_SIZE * 1024)
+#define SET_DSP_TASK_DELAY_TICKS    pdMS_TO_TICKS(DSP_TASK_DELAY)
+#define SET_DSQ_SEND_DELAY_TICKS    pdMS_TO_TICKS(DSQ_SEND_DELAY)
+
 Display display;
 #ifdef USE_NEXTION
   Nextion nextion;
 #endif
 
-#ifndef CORE_STACK_SIZE
-  #define CORE_STACK_SIZE  1024*4
-#endif
-#ifndef DSP_TASK_PRIORITY
-  #define DSP_TASK_PRIORITY  2
-#endif
-#ifndef DSP_TASK_CORE_ID
-  #define DSP_TASK_CORE_ID  0
-#endif
-#ifndef DSP_TASK_DELAY
-  #define DSP_TASK_DELAY pdMS_TO_TICKS(10) // cap for 50 fps
-#endif
-
-#define DSP_QUEUE_TICKS 0
-
-#ifndef DSQ_SEND_DELAY
-  #define DSQ_SEND_DELAY  pdMS_TO_TICKS(200)
-#endif
-
 QueueHandle_t displayQueue;
+
+#ifdef CORE_MONITOR
+  volatile uint32_t cmDspLoopCount = 0;
+#endif
 
 static void loopDspTask(void * pvParameters) {
   while(true) {
-  #ifndef DUMMYDISPLAY
-    if (displayQueue==NULL) break;
-
+    #ifndef DUMMYDISPLAY
+      if (displayQueue==NULL) break;
       display.loop();
-    #ifndef NETSERVER_LOOP1
-      netserver.loop();
     #endif
-
-  #else
-
-    #ifndef NETSERVER_LOOP1
-      netserver.loop();
+    #ifdef CORE_MONITOR
+      cmDspLoopCount++;
     #endif
-  #endif
-    vTaskDelay(DSP_TASK_DELAY);
+    vTaskDelay(SET_DSP_TASK_DELAY_TICKS);
   }
   vTaskDelete(NULL);
 }
 
 void Display::_createDspTask() {
-  xTaskCreatePinnedToCore(loopDspTask, "DspTask", CORE_STACK_SIZE,  NULL,  DSP_TASK_PRIORITY, NULL, DSP_TASK_CORE_ID);
+  xTaskCreatePinnedToCore(loopDspTask, "DspTask", DSP_TASK_STACK_BYTES, NULL, DSP_TASK_PRIORITY, NULL, DSP_TASK_CORE_ID);
 }
 
 #ifndef DUMMYDISPLAY // ============================== DUMMYDISPLAY Below ==============================
@@ -464,7 +446,7 @@ void Display::putRequest(displayRequestType_e type, int payload) {
   requestParams_t request;
   request.type = type;
   request.payload = payload;
-  xQueueSend(displayQueue, &request, DSQ_SEND_DELAY);
+  xQueueSend(displayQueue, &request, SET_DSQ_SEND_DELAY_TICKS);
   #ifdef USE_NEXTION
     nextion.putRequest(request);
   #endif

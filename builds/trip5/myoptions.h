@@ -305,16 +305,18 @@
 #define MQTT_ENABLE
 #define PLAYLIST_DEFAULT_URL "https://github.com/trip5/webstations/releases/latest/download/trip5-radio-playlist.csv" /* can be CSV or JSON */
 
+#define CORE_MONITOR
+
 
 /* --- SYSTEM OVERRIDES --- */
 
 #if defined(ST7735_PCM_1BUTTON) || defined(SH1106_PCM_REMOTE) ||\
     defined(SH1106_PCM_1BUTTON) || defined(SH1106_VS1053_3BUTTONS ) ||\
     defined(ILI9488_PCM_1BUTTON) || defined(ES3C28P)
-  #define LOOP_TASK_STACK_SIZE 16  /* Compiler default is 8KB but seems safe on ESP32-S3 to increase to 16KB for audio decoding + concurrent tasks / 8KB is safe when using a VS1053 decoder */
-  #define CONFIG_ASYNC_TCP_QUEUE_SIZE 64
-  #define SEARCHRESULTS_BUFFER 1024*32 // 32KB matches chunk sizes from radio-browser.info but likely only good for ESP32-S3
-  #define SEARCHRESULTS_YIELDINTERVAL 0 // With a large buffer, skipping is almost eliminated with 0
+  //#define LOOP_TASK_STACK_SIZE 16  /* Compiler default is 8KB but seems safe on ESP32-S3 to increase to 16KB for audio decoding + concurrent tasks / 8KB is safe when using a VS1053 decoder */
+  //#define CONFIG_ASYNC_TCP_QUEUE_SIZE 64
+  //#define SEARCHRESULTS_BUFFER 1024*32 // 32KB matches chunk sizes from radio-browser.info but likely only good for ESP32-S3
+  //#define SEARCHRESULTS_YIELDINTERVAL 0 // With a large buffer, skipping is almost eliminated with 0
 #endif
 
 /* --- USEFUL OPTIONS --- */

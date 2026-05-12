@@ -574,6 +574,109 @@ Purpose:
 
 ---
 
+## CPU Core Assignments & Stack Sizes
+
+The ESP32 has two hardware cores: **Core 0** (PRO_CPU) and **Core 1** (APP_CPU). The ESP32 Arduino framework runs `setup()` and `loop()` on Core 1. Audio decoding is isolated on Core 0; all other application tasks run on Core 1.
+
+### Compile-time Core Macros (`src/core/options.h`)
+
+Two macros control core assignment across the codebase:
+
+| Macro | Default | Valid override | Purpose |
+|---|---|---|---|
+| `AUDIO_CORE` | `0` | `1` | Core for audio decode task |
+| `NETWORK_CORE` | `1` | `0` | Core for netserver and all network/utility tasks |
+| `DSP_TASK_CORE_ID` | `1` | `0` | Core for the display loop task (independent of `NETWORK_CORE`) |
+
+On single-core ESP32-C3 (`CONFIG_FREERTOS_UNICORE`), all three macros are forced to `0` automatically; defining any of them manually on a unicore build is a compile-time `#error`. `CONFIG_ASYNC_TCP_RUNNING_CORE` is tied to `NETWORK_CORE` so the AsyncTCP internal event task follows automatically.
+
+### Board Stack Multiplier (`STACK_MULTIPLIER`)
+
+A board-aware multiplier scales all five user-configurable FreeRTOS task stacks automatically:
+
+| Board | `STACK_MULTIPLIER` | Effect |
+|---|---|---|
+| ESP32-S3 | 2 | All base stack sizes doubled |
+| ESP32 | 1 | Base sizes unchanged |
+| ESP32-C3 | 1 | Base sizes unchanged (C3 has *less* RAM than base ESP32) |
+
+- Defined automatically after the board guard in `src/core/options.h`. Override in `myoptions.h` with `#define STACK_MULTIPLIER 1` or `2` if needed.
+- Only values `1` and `2` are accepted — a compile-time `#error` fires otherwise.
+- Per-task manual overrides (e.g. `#define DSP_TASK_STACK_SIZE 6`) bypass the multiplier; a `#elif` range guard validates the manually-set value.
+- The multiplier applies **only** to the five configurable task stacks. Fixed-stack tasks (HTTPS workers, OTA) are unaffected.
+- `SEARCHRESULTS_BUFFER` and `CONFIG_ASYNC_TCP_QUEUE_SIZE` use separate per-board explicit values (not `STACK_MULTIPLIER`) since they scale differently.
+
+### Core 0 — Audio
+
+#### `src/libraries/I2S_Audio/Audio.cpp` + `src/libraries/VS1053_Audio/audioVS1053Ex.cpp`
+- Both audio libraries pin their `PeriodicTask` (audio decode loop) to `m_audioTaskCoreId`.
+- `src/core/player.cpp` `Player::init()` calls `setAudioTaskCore(AUDIO_CORE)` to set this explicitly (defaults to Core 0).
+
+### Core 1 — Everything Else
+
+#### `src/core/display.cpp`
+- `loopDspTask` ("DspTask") is pinned to `DSP_TASK_CORE_ID` (default `1`) via `xTaskCreatePinnedToCore`.
+- This task calls `display.loop()` only. `netserver.loop()` was moved to its own dedicated task (see `netserverLoopTask` below).
+
+#### `src/core/network.cpp`
+- `doSync` (time/weather sync task) is pinned to `NETWORK_CORE`.
+- `searchWiFi` (WiFi connection/retry loop) is pinned to `NETWORK_CORE`.
+- `retryStreamConnection` (post-disconnect reconnect) is pinned to `NETWORK_CORE`.
+
+#### `src/displays/nextion.cpp`
+- `nextionCore0` is pinned to `NETWORK_CORE` explicitly (previously used `!xPortGetCoreID()` which unsafely resolved to Core 0 at runtime — now fixed).
+
+#### `src/core/netserver.cpp` — `netserverLoopTask` + all utility tasks pinned to `NETWORK_CORE`
+- `netserverLoopTask` (started by `NetServer::startLoopTask()`, called from `main.cpp` after each `netserver.begin()`) is pinned to `NETWORK_CORE`. It is the sole caller of `netserver.loop()`.
+- All formerly scheduler-assigned (`xTaskCreate`) utility tasks are explicitly pinned to `NETWORK_CORE` via `xTaskCreatePinnedToCore`:
+  `vTaskSearchRadioBrowser`, playback task (lambda), radio-browser click task (lambda), `checkForOnlineUpdateTask` (lambda), `startOnlineUpdateTask` (lambda)
+
+#### `src/core/config.cpp`, `src/core/commandhandler.cpp` — pinned to `NETWORK_CORE`
+- `src/core/config.cpp`: `updateLocaleFileAsyncWrapper`, `startupServicesAsync`
+- `src/core/commandhandler.cpp`: `vTaskFetchCuratedIndex`, `vTaskFetchCuratedPlaylist`
+
+#### Arduino `loop()` — implicit Core 1
+- All calls from `src/main.cpp` `loop()` run on Core 1: `telnet.loop()`, `battery.loop()`, `player.loop()`, `controls.loop()`.
+- `netserver.loop()` is **not** called from `loop()` or from DspTask; it runs exclusively in `netserverLoopTask` pinned to `NETWORK_CORE`.
+
+### FreeRTOS Task Reference
+
+Stack sizes and priorities are controlled by macros in `src/core/options.h` (`/* Tweaks for Core Processes */`). Higher priority = more CPU; Arduino `loop()` runs at priority 1. Priority 0 is idle-level (starved) and is never used. Per-task local conversion macros (`_BYTES`) are defined at the top of each `.cpp` file (except `SET_LOOP_TASK_STACK_SIZE` which is an `Arduino.h` macro). Stack defaults scale with `STACK_MULTIPLIER` — values shown as ESP32/C3 (1x) / S3 (2x).
+
+| Task | File | Stack macro (default ESP32 / S3) | Priority macro (default) | Notes |
+|---|---|---|---|---|
+| `loopTask` | main.cpp | `LOOP_TASK_STACK_SIZE` KB (8 / 16) | 1 (framework) | Arduino loop(); `SET_LOOP_TASK_STACK_SIZE()` applies at boot |
+| `DspTask` | display.cpp | `DSP_TASK_STACK_SIZE` KB (4 / 8) | `DSP_TASK_PRIORITY` (2) | — |
+| `netserverLoopTask` | netserver.cpp | `NETSERVER_TASK_STACK_SIZE` KB (4 / 8) | `NETSERVER_TASK_PRIORITY` (2) | — |
+| `nextionCore0` | nextion.cpp | `NEXTION_TASK_STACK_SIZE` KB (3 / 6) | `NEXTION_TASK_PRIORITY` (2) | Nextion display only |
+| `doSync` | network.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `LOW_TASK_PRIORITY` (1) | Time/weather sync |
+| `searchWiFi` ×2 | network.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `NET_TASK_PRIORITY` (3) | — |
+| `retryStreamConnection` | network.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `NET_TASK_PRIORITY` (3) | Post-disconnect reconnect |
+| `retryStreamConnection` | player.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `NET_TASK_PRIORITY` (3) | Stream drop reconnect; was hardcoded to Core 0 (bug) |
+| `vTaskFetchCuratedIndex/Playlist` | commandhandler.cpp | 8192 fixed | `LOW_TASK_PRIORITY` (1) | HTTPS — stack hardcoded |
+| `vTaskSearchRadioBrowser` | netserver.cpp | 8192 fixed | `LOW_TASK_PRIORITY` (1) | HTTPS — stack hardcoded |
+| `playbackTask` (lambda) | netserver.cpp | 4096 http / 8192 https | `PLAYBACK_TASK_PRIORITY` (3) | Dynamic stack based on URL scheme |
+| `rbClickTask` (lambda) | netserver.cpp | 8192 fixed | `LOW_TASK_PRIORITY` (1) | HTTPS — stack hardcoded |
+| `checkForOnlineUpdateTask` (lambda) | netserver.cpp | 8192 fixed | `LOW_TASK_PRIORITY` (1) | HTTPS — stack hardcoded |
+| `startOnlineUpdateTask` (lambda) | netserver.cpp | 16384 fixed | `NET_TASK_PRIORITY` (3) | OTA — stack hardcoded |
+| `updateLocaleFileAsyncWrapper` | config.cpp | 8192 fixed | `LOW_TASK_PRIORITY` (1) | HTTPS — stack hardcoded |
+| `startupServicesAsync` | config.cpp | 8192 fixed | `LOW_TASK_PRIORITY` (1) | HTTPS — stack hardcoded |
+
+### CORE_MONITOR debug feature (opt-in)
+
+Enable by adding `#define CORE_MONITOR` to `myoptions.h`. Zero impact on binary when not defined.
+
+When active, emits a `FUNCTIONLOG("Core Monitor", ...)` line to serial+telnet every 5 seconds:
+- **Dual-core output**: `Core0(+Audio) loops/s: 82 (12.15ms/loop) | Core1(Main+Net+TCP+Disp) loops/s: 15327 (0.07ms/loop) | MaxMainLoopUs: 5197 | Heap: 163732`
+  - The labels in parentheses are built at compile time via `CORE_0` / `CORE_1` string macros defined in `options.h`. Each macro concatenates component tokens (`+Audio`, `+Net`, `+TCP`, `+Disp`) conditioned on where `AUDIO_CORE`, `NETWORK_CORE`, `CONFIG_ASYNC_TCP_RUNNING_CORE`, and `DSP_TASK_CORE_ID` are assigned. These macros are only defined when both `CORE_MONITOR` and `!CONFIG_FREERTOS_UNICORE` are true.
+- **Unicore C3 output**: `Core0 loops/5s: N (worst: N) | Core0(Main) loops/5s: N (worst: N) | MaxMainLoopUs: N | Heap: N` — `CORE_0`/`CORE_1` are not available on unicore; labels are static strings
+
+Implementation:
+- `src/core/display.cpp`: `volatile uint32_t cmDspLoopCount` incremented each `loopDspTask` iteration
+- `src/main.cpp`: `extern` reference to `cmDspLoopCount` + per-loop timing via `micros()`; worst-case counters are all-time minimums (never reset between windows)
+
+---
+
 ## Hardware-Specific Notes (High-Risk Paths)
 
 This section calls out hardware implementations that diverge from the common code path and are more likely to regress.

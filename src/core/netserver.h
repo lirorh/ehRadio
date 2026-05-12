@@ -156,6 +156,7 @@ class NetServer {
   public:
     NetServer() {};
     bool begin(bool quiet=false);
+    void startLoopTask();
     void chunkedHtmlPage(const String& contentType, AsyncWebServerRequest *request, const char * path);
     void loop();
     void irToWs(const char* protocol, uint64_t irvalue);

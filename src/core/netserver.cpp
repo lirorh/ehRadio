@@ -52,6 +52,9 @@
   #define DBGVB(...)
 #endif
 
+#define NETSERVER_TASK_STACK_BYTES  (NETSERVER_TASK_STACK_SIZE * 1024)
+#define NETSERVER_TASK_DELAY_TICKS    pdMS_TO_TICKS(NETSERVER_TASK_DELAY)
+
 // Global list for Radio-Browser servers to persist across searches
 String rb_servers[20];
 // For the search task
@@ -59,6 +62,7 @@ TaskHandle_t g_searchTaskHandle = NULL;
 // For the curated playlists task
 TaskHandle_t g_curatedTaskHandle = NULL;
 #define FS_REQUIRED_FREE_SPACE 150 // in KB - must be minimum x1.5 of the limit_per_page in search.js (100)
+#define SEARCHRESULTS_BUFFER_BYTES (SEARCHRESULTS_BUFFER * 1024)
 
 NetServer netserver;
 
@@ -127,7 +131,7 @@ void handleSearch(AsyncWebServerRequest *request) {
       return;
     }
     strcpy(search_str, searchQuery.c_str());
-    xTaskCreate(vTaskSearchRadioBrowser, "searchRadioBrowser", 8192, (void*)search_str, 1, &g_searchTaskHandle);
+    xTaskCreatePinnedToCore(vTaskSearchRadioBrowser, "searchRadioBrowser", 8192, (void*)search_str, LOW_TASK_PRIORITY, &g_searchTaskHandle, NETWORK_CORE);
     request->send(200, "application/json", "{\"status\":\"searching\"}");
   }
 }
@@ -233,6 +237,17 @@ void handleSearchPost(AsyncWebServerRequest *request) {
       }
     }
   }
+}
+
+static void netserverLoopTask(void* pvParameters) {
+  for(;;) {
+    netserver.loop();
+    vTaskDelay(NETSERVER_TASK_DELAY_TICKS);
+  }
+}
+
+void NetServer::startLoopTask() {
+  xTaskCreatePinnedToCore(netserverLoopTask, "netserverLoop", NETSERVER_TASK_STACK_BYTES, NULL, NETSERVER_TASK_PRIORITY, NULL, NETWORK_CORE);
 }
 
 bool NetServer::begin(bool quiet) {
@@ -844,7 +859,7 @@ void vTaskSearchRadioBrowser(void *pvParameters) {
   }
   ESPFileUpdater searchResultsFetch(SPIFFS);
   searchResultsFetch.setUserAgent(ESPFILEUPDATER_USERAGENT);
-  searchResultsFetch.setBuffer(SEARCHRESULTS_BUFFER);
+  searchResultsFetch.setBuffer(SEARCHRESULTS_BUFFER_BYTES);
   searchResultsFetch.setYieldInterval(SEARCHRESULTS_YIELDINTERVAL);
   const char* localPath = "/www/searchresults.json";
   bool success = false;
@@ -952,7 +967,7 @@ void vTaskFetchCuratedIndex(void *pvParameters) {
   
   ESPFileUpdater curatedFetch(SPIFFS);
   curatedFetch.setUserAgent(ESPFILEUPDATER_USERAGENT);
-  curatedFetch.setBuffer(SEARCHRESULTS_BUFFER);
+  curatedFetch.setBuffer(SEARCHRESULTS_BUFFER_BYTES);
   curatedFetch.setYieldInterval(SEARCHRESULTS_YIELDINTERVAL);
   const char* localPath = "/www/curated.json";
   
@@ -996,7 +1011,7 @@ void vTaskFetchCuratedPlaylist(void *pvParameters) {
   
   ESPFileUpdater playlistFetch(SPIFFS);
   playlistFetch.setUserAgent(ESPFILEUPDATER_USERAGENT);
-  playlistFetch.setBuffer(SEARCHRESULTS_BUFFER);
+  playlistFetch.setBuffer(SEARCHRESULTS_BUFFER_BYTES);
   playlistFetch.setYieldInterval(SEARCHRESULTS_YIELDINTERVAL);
   const char* localPath = "/www/pl_import.json";
   
@@ -1037,7 +1052,7 @@ void launchPlaybackTask(const String& url, const String& name) {
   if (url_copy) {
     // Use a larger stack for HTTPS, as it requires more memory for SSL/TLS.
     UBaseType_t stackSize = url.startsWith("https://") ? 8192 : 4096;
-    xTaskCreate(
+    xTaskCreatePinnedToCore(
         [](void* pvParameters) {
           String* urlToPlay = (String*)pvParameters;
           vTaskDelay(pdMS_TO_TICKS(100)); // A small delay can help the network stack release resources
@@ -1049,8 +1064,9 @@ void launchPlaybackTask(const String& url, const String& name) {
         "playbackTask",
         stackSize,
         (void*)url_copy,
-        1,
-        NULL
+        PLAYBACK_TASK_PRIORITY,
+        NULL,
+        NETWORK_CORE
    );
   } else {
     FUNCTIONLOG("Netserver.playback", "[Error] Failed to allocate memory for playback task URL.");
@@ -1212,13 +1228,14 @@ void processRadioBrowserClick() {
     }
     strcpy(urlCopy, pendingClickUrl);
     // Spawn the background task (allow multiple concurrent tasks for different stations)
-    xTaskCreate(
+    xTaskCreatePinnedToCore(
       vTaskRadioBrowserClick,
       "rbClickTask",
       8192,  // Stack size - HTTPS needs more memory
       (void*)urlCopy,
-      1,     // Priority
-      NULL   // No handle tracking - task cleans up itself
+      LOW_TASK_PRIORITY,     // Priority
+      NULL,  // No handle tracking - task cleans up itself
+      NETWORK_CORE
     );
   #endif // RADIO_BROWSER_SEND_CLICKS
 }
@@ -1354,11 +1371,11 @@ void handleNotFound(AsyncWebServerRequest * request) {
 
   #ifdef UPDATEURL
     if (request->method() == HTTP_GET && request->url() == "/onlineupdatecheck") {
-      xTaskCreate([](void*) { checkForOnlineUpdate(); vTaskDelete(NULL); }, "checkForOnlineUpdateTask", 8096, nullptr, 1, nullptr);
+      xTaskCreatePinnedToCore([](void*) { checkForOnlineUpdate(); vTaskDelete(NULL); }, "checkForOnlineUpdateTask", 8192, nullptr, LOW_TASK_PRIORITY, nullptr, NETWORK_CORE);
       request->send(200, "text/plain", "Update check started"); return;
     }
     if (request->method() == HTTP_GET && request->url() == "/onlineupdatestart") {
-      xTaskCreate([](void*) { startOnlineUpdate(); vTaskDelete(NULL); }, "startOnlineUpdateTask", 16384, nullptr, 3, nullptr);
+      xTaskCreatePinnedToCore([](void*) { startOnlineUpdate(); vTaskDelete(NULL); }, "startOnlineUpdateTask", 16384, nullptr, NET_TASK_PRIORITY, nullptr, NETWORK_CORE);
       request->send(200, "text/plain", "Update started"); return;
     }
   #endif

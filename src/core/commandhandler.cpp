@@ -88,7 +88,6 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
     return true;
   }
   if (cmdIs(command, "mode"))            { config.changeMode(atoi(value)); return true; }
-  if (cmdIs(command, "reset") && cid==0) { config.reset(); return true; }
   if (cmdIs(command, "submitplaylist"))  { player.sendCommand({PR_STOP, 0}); return true; }
   if (cmdIs(command, "submitplaylistdone")) {
     char currentUrl[BUFLEN];
@@ -205,7 +204,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   /* Options: Danger Zone */
   if (cmdIs(command, "reboot", "boot"))  { ESP.restart(); return true; }
   if (cmdIs(command, "format"))  { player.sendCommand({PR_STOP, 0}); SPIFFS.format(); ESP.restart(); return true; }
-  if (cmdIs(command, "reset"))   { config.defaultSettings(value, cid); return true; }
+  if (cmdIs(command, "reset"))   { config.defaultSettings(value, cid); return true; } // also used by Section resets
 
   /* IR Recorder */
   #if IR_PIN!=255
@@ -218,7 +217,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "loadindex")) {
     extern TaskHandle_t g_curatedTaskHandle;
     if (g_curatedTaskHandle == NULL) {
-      xTaskCreate(vTaskFetchCuratedIndex, "curatedIndex", 8192, NULL, 5, &g_curatedTaskHandle);
+      xTaskCreatePinnedToCore(vTaskFetchCuratedIndex, "curatedIndex", 8192, NULL, LOW_TASK_PRIORITY, &g_curatedTaskHandle, NETWORK_CORE);
     }
     return true;
   }
@@ -227,7 +226,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
     if (g_curatedTaskHandle == NULL) {
       char* filename = new char[strlen(value) + 1];
       strcpy(filename, value);
-      xTaskCreate(vTaskFetchCuratedPlaylist, "curatedPlaylist", 8192, filename, 5, &g_curatedTaskHandle);
+      xTaskCreatePinnedToCore(vTaskFetchCuratedPlaylist, "curatedPlaylist", 8192, filename, LOW_TASK_PRIORITY, &g_curatedTaskHandle, NETWORK_CORE);
     }
     return true;
   }

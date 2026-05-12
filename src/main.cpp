@@ -20,6 +20,14 @@
 
 SET_LOOP_TASK_STACK_SIZE(LOOP_TASK_STACK_SIZE * 1024);
 
+#ifdef CORE_MONITOR
+  extern volatile uint32_t cmDspLoopCount;
+  static uint32_t cmMainCount    = 0;
+  static uint32_t cmMaxMainLoop  = 0;
+  static uint32_t cmLoopStart    = 0;
+  static unsigned long cmLastPrint = 0;
+#endif
+
 extern __attribute__((weak)) void ehradio_on_setup();
 
 /* Prototype for battery-driven dimming handler */
@@ -61,6 +69,7 @@ void setup() {
   network.begin();
   if (network.status != CONNECTED && network.status!=SDREADY) {
     netserver.begin();
+    netserver.startLoopTask();
     controls.init();
     display.putRequest(DSP_START);
     while(!display.ready()) delay(10);
@@ -73,6 +82,7 @@ void setup() {
   }
   config.initPlaylistMode();
   netserver.begin();
+  netserver.startLoopTask();
   telnet.begin();
   controls.init();
   display.putRequest(DSP_START);
@@ -97,6 +107,9 @@ void setup() {
 }
 
 void loop() {
+  #ifdef CORE_MONITOR
+    cmLoopStart = micros();
+  #endif
   if (network.status == SOFT_AP) {
     network.loopImprov();
     if (network.dnsServer) network.dnsServer->processNextRequest();
@@ -116,7 +129,24 @@ void loop() {
     config.processDeferredSaves();
   }
   controls.loop();
-  netserver.loop();
+  #ifdef CORE_MONITOR
+    cmMainCount++;
+    uint32_t cmDur = micros() - cmLoopStart;
+    if (cmDur > cmMaxMainLoop) cmMaxMainLoop = cmDur;
+    if (millis() - cmLastPrint >= 5000) {
+      uint32_t d = cmDspLoopCount;  cmDspLoopCount = 0;
+      uint32_t m = cmMainCount;     cmMainCount = 0;
+      uint32_t mx = cmMaxMainLoop;  cmMaxMainLoop = 0;
+      #ifdef CONFIG_FREERTOS_UNICORE
+        FUNCTIONLOG("Core Monitor", "Core0 loops/s: %u (%.2fms/loop) | Core0(Main) loops/s: %u (%.2fms/loop) | MaxMainLoopUs: %u | Heap: %u",
+            d/5, d>0 ? 5000.0f/d : 0.0f, m/5, m>0 ? 5000.0f/m : 0.0f, mx, (unsigned)ESP.getFreeHeap());
+      #else
+        FUNCTIONLOG("Core Monitor", "Core0" CORE_0 " loops/s: %u (%.2fms/loop) | Core1" CORE_1 " loops/s: %u (%.2fms/loop) | MaxMainLoopUs: %u | Heap: %u",
+            d/5, d>0 ? 5000.0f/d : 0.0f, m/5, m>0 ? 5000.0f/m : 0.0f, mx, (unsigned)ESP.getFreeHeap());
+      #endif
+      cmLastPrint = millis();
+    }
+  #endif
 }
 
 #include "core/audiohandlers.h"

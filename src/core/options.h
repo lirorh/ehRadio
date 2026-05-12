@@ -33,6 +33,21 @@ that file if you need non-English language options.
   #error define error in platformio.ini: only ARDUINO_ESP32_DEV, ARDUINO_ESP32S3_DEV, or ARDUINO_ESP32C3_DEV boards are supported
 #endif
 
+/* Board-scaled stack size multiplier */
+/* Applied automatically to FreeRTOS task stack defaults based on board SRAM capacity */
+/* Override in myoptions.h only if needed: #define STACK_MULTIPLIER 1 to disable scaling on S3 */
+/* Note: ESP32-C3 has LESS RAM than base ESP32 and defaults to 1x — same as base ESP32 */
+#ifndef STACK_MULTIPLIER
+  #if defined(ARDUINO_ESP32S3_DEV)
+    #define STACK_MULTIPLIER 2  // ESP32-S3: double stack sizes (most SRAM available)
+  #else
+    #define STACK_MULTIPLIER 1  // ESP32 and ESP32-C3: conservative defaults
+  #endif
+#endif
+#if (STACK_MULTIPLIER != 1 && STACK_MULTIPLIER != 2)
+  #error define error in myoptions.h: STACK_MULTIPLIER must be 1 or 2
+#endif
+
 /*******************************************************
 Use this tool to setup connections:
 https://trip5.github.io/ehRadio_myoptions/generator.html
@@ -534,15 +549,6 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
   #endif
 #endif
 
-/*       LIBRARY OVERRIDES        */
-/*      DO NOT CHANGE THESE       */
-#ifndef CONFIG_ASYNC_TCP_RUNNING_CORE
-  #define CONFIG_ASYNC_TCP_RUNNING_CORE 0 // -1 = any available core
-#endif
-#ifndef CONFIG_ASYNC_TCP_USE_WDT
-  #define CONFIG_ASYNC_TCP_USE_WDT 0 // 1 = watchdog enabled (adds between 33us and 200us per event)
-#endif
-
 /*        SYSTEM OVERRIDES        */
 /*      THESE MAY BE TWEAKED      */
 #ifndef WIFI_ATTEMPTS
@@ -551,17 +557,16 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
 #if WIFI_ATTEMPTS < 1
   #error define error in myoptions.h: WIFI_ATTEMPTS must be at least 1
 #endif
-#ifndef LOOP_TASK_STACK_SIZE    // sets the stack size for the FreeRTOS task that runs the main loop
-  #define LOOP_TASK_STACK_SIZE 8 // Compiler default is 8KB but seems safe on ESP32-S3 to increase to 16KB for audio decoding + concurrent tasks
-#endif
-#if (LOOP_TASK_STACK_SIZE < 4) || (LOOP_TASK_STACK_SIZE > 64)
-  #error define error in myoptions.h: LOOP_TASK_STACK_SIZE must be between 4 and 64 (value in KB)
-#endif
-#ifndef CONFIG_ASYNC_TCP_QUEUE_SIZE
-  #define CONFIG_ASYNC_TCP_QUEUE_SIZE 64 // maybe 32 for ESP32?
-#endif
 #ifndef SEARCHRESULTS_BUFFER
-  #define SEARCHRESULTS_BUFFER 1024*4 // 32KB matches chunk sizes from radio-browser.info but likely only good for ESP32-S3
+  // Buffer for chunked HTTP transfers from radio-browser.info. Defined in KB; conversion to bytes done in netserver.cpp.
+  // ESP32-C3 has less RAM than base ESP32 — keep conservative at 4KB like base ESP32.
+  #if defined(ARDUINO_ESP32S3_DEV)
+    #define SEARCHRESULTS_BUFFER 32  // KB; matches radio-browser.info chunk size
+  #else  // ESP32 and ESP32-C3
+    #define SEARCHRESULTS_BUFFER 4   // KB
+  #endif
+#elif (SEARCHRESULTS_BUFFER < 4) || (SEARCHRESULTS_BUFFER > 64)
+  #error define error in myoptions.h: SEARCHRESULTS_BUFFER must be between 4 and 64 (value in KB)
 #endif
 #ifndef SEARCHRESULTS_YIELDINTERVAL
   #define SEARCHRESULTS_YIELDINTERVAL 0 // With a large buffer, skipping is almost eliminated with 0
@@ -584,6 +589,177 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
  // Conservative values for slower networks: 1700ms HTTP, 3700ms SSL
  // #define CONNECT_HTTP_HTTPS_TIMEOUT 1700, 3700 /* For ESP32? */
  // undefined means using library defaults (preferred)
+#endif
+
+/* ESPs have 2 cores.  Core 0 will handle audio processes, while core 1 will handle everything else, unless you use these macro overrides. */
+#if defined(CONFIG_FREERTOS_UNICORE) // will automatically activate on compiling for ESP32-C3 or other single-core ESPs
+  #ifdef AUDIO_CORE
+    #error Do not try to define AUDIO_CORE on a single-core ESP - it will be handled automatically!
+  #else
+    #define AUDIO_CORE 0
+  #endif
+#else
+  #ifndef AUDIO_CORE
+    #define AUDIO_CORE 0
+  #else
+    #if (AUDIO_CORE!=1)
+	    #error Only add #define AUDIO_CORE 1 to options.h to move Audio to CPU core 1. Leave it undefined for core 0.
+    #endif
+  #endif
+#endif
+#if defined(CONFIG_FREERTOS_UNICORE)
+  #ifdef NETWORK_CORE
+    #error Do not try to define NETWORK_CORE on a single-core ESP - it will be handled automatically!
+  #else
+    #define NETWORK_CORE 0
+  #endif
+#else
+  #ifndef NETWORK_CORE
+    #define NETWORK_CORE 1
+  #else
+    #if (NETWORK_CORE!=0)
+	    #error Only add #define NETWORK_CORE 0 to options.h to move Netserver to CPU core 0. Leave it undefined for core 1.
+    #endif
+  #endif
+#endif
+#if defined(CONFIG_FREERTOS_UNICORE)
+  #ifdef DSP_TASK_CORE_ID
+    #error Do not try to define DSP_TASK_CORE_ID on a single-core ESP - it will be handled automatically!
+  #else
+    #define DSP_TASK_CORE_ID 0
+  #endif
+#else
+  #ifndef DSP_TASK_CORE_ID
+    #define DSP_TASK_CORE_ID 1
+  #else
+    #if (DSP_TASK_CORE_ID!=0)
+	    #error Only add #define DSP_TASK_CORE_ID 0 to options.h to move Netserver to CPU core 0. Leave it undefined for core 1.
+    #endif
+  #endif
+#endif
+
+/* Tweaks for Core Processes */
+/* Stack sizes are in KB; conversion to bytes is done locally in each .cpp file via a _BYTES macro */
+/* Delay values are in ms; pdMS_TO_TICKS() conversion is done locally in each .cpp file via a SET_ macro */
+
+// Arduino loop() task (main.cpp) — SET_LOOP_TASK_STACK_SIZE() uses this directly in bytes
+#ifndef LOOP_TASK_STACK_SIZE
+  #define LOOP_TASK_STACK_SIZE (8 * STACK_MULTIPLIER)  // KB; 8 (ESP32/C3) or 16 (S3)
+#elif (LOOP_TASK_STACK_SIZE < 4) || (LOOP_TASK_STACK_SIZE > 64)
+  #error define error in myoptions.h: LOOP_TASK_STACK_SIZE must be between 4 and 64 (value in KB)
+#endif
+
+// DspTask (display.cpp): render loop task
+#ifndef DSP_TASK_STACK_SIZE
+  #define DSP_TASK_STACK_SIZE  (4 * STACK_MULTIPLIER)  // KB; 4 (ESP32/C3) or 8 (S3)
+#elif (DSP_TASK_STACK_SIZE < 2) || (DSP_TASK_STACK_SIZE > 32)
+  #error define error in myoptions.h: DSP_TASK_STACK_SIZE must be between 2 and 32 (value in KB)
+#endif
+#ifndef DSP_TASK_PRIORITY
+  #define DSP_TASK_PRIORITY    2  // 2 = above Arduino loop() (1), below audio-critical tasks (3)
+#endif
+#ifndef DSP_TASK_DELAY
+  #define DSP_TASK_DELAY       10  // ms; minimum sleep between display iterations. Actual frame rate depends on display SPI write time — typically ~50fps at slow SPI speeds, up to 100fps on faster displays
+#endif
+#ifndef DSP_QUEUE_TICKS
+  #define DSP_QUEUE_TICKS      0  // ticks; xQueueReceive timeout inside display.loop(). 0 = non-blocking poll. Higher values (e.g. 5) reduce latency when queue is empty but are rarely needed; per-display conf files may override
+#endif
+#ifndef DSQ_SEND_DELAY
+  #define DSQ_SEND_DELAY       200  // ms; xQueueSend timeout in display.putRequest(). If queue full, calling task blocks up to this long before dropping the request silently — preferable to blocking the audio task
+#endif
+
+// netserverLoopTask (netserver.cpp): runs netserver.loop() on its own pinned task
+#ifndef NETSERVER_TASK_STACK_SIZE
+  #define NETSERVER_TASK_STACK_SIZE  (4 * STACK_MULTIPLIER)  // KB; 4 (ESP32/C3) or 8 (S3)
+#elif (NETSERVER_TASK_STACK_SIZE < 2) || (NETSERVER_TASK_STACK_SIZE > 32)
+  #error define error in myoptions.h: NETSERVER_TASK_STACK_SIZE must be between 2 and 32 (value in KB)
+#endif
+#ifndef NETSERVER_TASK_PRIORITY
+  #define NETSERVER_TASK_PRIORITY    2  // 2 = above Arduino loop() (1), same tier as display
+#endif
+#ifndef NETSERVER_TASK_DELAY
+  #define NETSERVER_TASK_DELAY       1  // ms; yield between netserver.loop() iterations
+#endif
+
+// nextionCore0 (nextion.cpp): Nextion display task
+#ifndef NEXTION_TASK_STACK_SIZE
+  #define NEXTION_TASK_STACK_SIZE    (3 * STACK_MULTIPLIER)  // KB; 3 (ESP32/C3) or 6 (S3)
+#elif (NEXTION_TASK_STACK_SIZE < 2) || (NEXTION_TASK_STACK_SIZE > 16)
+  #error define error in myoptions.h: NEXTION_TASK_STACK_SIZE must be between 2 and 16 (value in KB)
+#endif
+#ifndef NEXTION_TASK_PRIORITY
+  #define NEXTION_TASK_PRIORITY      2  // 2 = same tier as display
+#endif
+
+// Network utility tasks (network.cpp, player.cpp): doSync, searchWiFi, retryStreamConnection
+#ifndef NETWORK_TASK_STACK_SIZE
+  #define NETWORK_TASK_STACK_SIZE    (4 * STACK_MULTIPLIER)  // KB; 4 (ESP32/C3) or 8 (S3)
+#elif (NETWORK_TASK_STACK_SIZE < 2) || (NETWORK_TASK_STACK_SIZE > 32)
+  #error define error in myoptions.h: NETWORK_TASK_STACK_SIZE must be between 2 and 32 (value in KB)
+#endif
+
+// Priority scale for all pinned tasks (FreeRTOS: higher number = more CPU, preempts lower tasks)
+// Arduino loop() runs at priority 1. Priority 0 = idle-level (starved by any other task — do not use).
+#ifndef PLAYBACK_TASK_PRIORITY
+  #define PLAYBACK_TASK_PRIORITY     3  // highest: stream connection / playback start
+#endif
+#ifndef NET_TASK_PRIORITY
+  #define NET_TASK_PRIORITY          3  // highest: WiFi search, stream retry, OTA download
+#endif
+#ifndef LOW_TASK_PRIORITY
+  #define LOW_TASK_PRIORITY          1  // lowest: background/deferrable tasks (round-robin with loop())
+#endif
+
+/*       LIBRARY OVERRIDES        */
+/* These are overrides for external libraries */
+#ifndef CONFIG_ASYNC_TCP_QUEUE_SIZE
+  #if defined(ARDUINO_ESP32S3_DEV)
+    #define CONFIG_ASYNC_TCP_QUEUE_SIZE 64  // ESP32-S3: larger queue for higher network throughput
+  #else
+    #define CONFIG_ASYNC_TCP_QUEUE_SIZE 32  // ESP32 and ESP32-C3
+  #endif
+#endif
+#ifndef CONFIG_ASYNC_TCP_RUNNING_CORE
+  #define CONFIG_ASYNC_TCP_RUNNING_CORE NETWORK_CORE // -1 = any available core (NETWORK_CORE is default)
+#endif
+#ifndef CONFIG_ASYNC_TCP_USE_WDT
+  #define CONFIG_ASYNC_TCP_USE_WDT 0 // 1 = watchdog enabled (adds between 33us and 200us per event)
+#endif
+
+/* Name the Cores For What They Do */
+/* Use #define CORE_MONITOR to show how busy the cores are... this gives them friendly names */
+/* Do not use any of these macros directly in myoptions.h! */
+#if (!CONFIG_FREERTOS_UNICORE && defined(CORE_MONITOR))
+  #if (AUDIO_CORE==0)
+    #define CORE_0A "+Audio"
+    #define CORE_1A ""
+  #elif (AUDIO_CORE==1)
+    #define CORE_0A ""
+    #define CORE_1A "+Audio"
+  #endif
+  #if (NETWORK_CORE==0)
+    #define CORE_0B "+Net"
+    #define CORE_1B ""
+  #elif (NETWORK_CORE==1)
+    #define CORE_0B ""
+    #define CORE_1B "+Net"
+  #endif
+  #if (CONFIG_ASYNC_TCP_RUNNING_CORE==0)
+    #define CORE_0C "+TCP"
+    #define CORE_1C ""
+  #elif (CONFIG_ASYNC_TCP_RUNNING_CORE==1)
+    #define CORE_0C ""
+    #define CORE_1C "+TCP"
+  #endif
+  #if (DSP_TASK_CORE_ID==0)
+    #define CORE_0D "+Disp"
+    #define CORE_1D ""
+  #elif (DSP_TASK_CORE_ID==1)
+    #define CORE_0D ""
+    #define CORE_1D "+Disp"
+  #endif
+  #define CORE_0 "(" CORE_0A CORE_0B CORE_0C CORE_0D ")"
+  #define CORE_1 "(Main" CORE_1A CORE_1B CORE_1C CORE_1D ")"
 #endif
 
 /*        Other settings. You can overwrite them in the myoptions.h file        */
@@ -975,6 +1151,10 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
 #ifdef CORS_DEBUG
  // This enables CORS policy: 'Access-Control-Allow-Origin' (for testing)
 #endif
+#ifdef CORE_MONITOR
+ // This shows the ESP32 CPU Core Monitor in serial and telnet (updated every 5s)
+#endif
+
 
 /*         USER DEFAULTS          */
 /*   sets defaults in config.h    */

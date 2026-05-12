@@ -17,6 +17,8 @@
 #include "rtcsupport.h"
 #include "telnet.h"
 
+#define NETWORK_TASK_STACK_BYTES (NETWORK_TASK_STACK_SIZE * 1024)
+
 #ifndef WIFI_ATTEMPTS
   #define WIFI_ATTEMPTS  16
 #endif
@@ -44,7 +46,7 @@ void ticks() {
   if (network.status == CONNECTED) {
     if (config.store.ehdp) ehdp.loop();
     if (network.forceTimeSync || network.forceWeather) {
-      xTaskCreatePinnedToCore(doSync, "doSync", 1024 * 4, NULL, 0, &syncTaskHandle, 0);
+      xTaskCreatePinnedToCore(doSync, "doSync", NETWORK_TASK_STACK_BYTES, NULL, LOW_TASK_PRIORITY, &syncTaskHandle, NETWORK_CORE);
     }
     // check at :01s mark (fix network clock not matching system clock after Daylight Savings Time changes)
     if (network.timeinfo.tm_sec == 1) {
@@ -172,7 +174,7 @@ void MyNetwork::WiFiReconnected(WiFiEvent_t event, WiFiEventInfo_t info) {
       player.sendCommand({PR_PLAY, config.lastStation()});
       // Launch retry task if not already running
       if (streamRetryTaskHandle == NULL) {
-        xTaskCreatePinnedToCore(retryStreamConnection, "streamRetry", 1024 * 4, NULL, 1, &streamRetryTaskHandle, 0);
+        xTaskCreatePinnedToCore(retryStreamConnection, "streamRetry", NETWORK_TASK_STACK_BYTES, NULL, NET_TASK_PRIORITY, &streamRetryTaskHandle, NETWORK_CORE);
       }
     }
   }
@@ -367,7 +369,7 @@ void MyNetwork::ehDPinit() {
 void searchWiFi(void * pvParameters) {
   if (!network.wifiBegin(true)) {
     delay(10000);
-    xTaskCreatePinnedToCore(searchWiFi, "searchWiFi", 1024 * 4, NULL, 0, NULL, 0);
+    xTaskCreatePinnedToCore(searchWiFi, "searchWiFi", NETWORK_TASK_STACK_BYTES, NULL, NET_TASK_PRIORITY, NULL, NETWORK_CORE);
   } else {
     network.status = CONNECTED;
     netserver.begin(true);
@@ -417,7 +419,7 @@ void MyNetwork::begin() {
     setWifiParams();
   } else {
     status = SDREADY;
-    xTaskCreatePinnedToCore(searchWiFi, "searchWiFi", 1024 * 4, NULL, 0, NULL, 0);
+    xTaskCreatePinnedToCore(searchWiFi, "searchWiFi", NETWORK_TASK_STACK_BYTES, NULL, NET_TASK_PRIORITY, NULL, NETWORK_CORE);
   }
   SERIALLOG("");
   BOOTLOG("Wifi done");

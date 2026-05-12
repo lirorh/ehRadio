@@ -218,7 +218,6 @@ class Config {
     char * ipToStr(IPAddress ip);
     void initPlaylistMode();
     void loadTheme();
-    void reset();
     void saveIR();
     void defaultSettings(const char *val, uint8_t clientId);
     void processDeferredSaves();

@@ -13,9 +13,7 @@
 #include "../core/timekeeper.h"
 #include "../core/locale.h"
 
-#ifndef CORE_STACK_SIZE
-  #define CORE_STACK_SIZE  1024*3
-#endif
+#define NEXTION_TASK_STACK_BYTES (NEXTION_TASK_STACK_SIZE * 1024)
 
 HardwareSerial hSerial(1); // use UART1
 
@@ -54,7 +52,7 @@ void Nextion::begin(bool dummy) {
   
   _displayQueue = xQueueCreate( 10, sizeof( requestParams_t ) );
   if(dummy) {
-    xTaskCreatePinnedToCore(nextionCore0, "TaskCore0", CORE_STACK_SIZE, NULL, 4, &_TaskCore0, !xPortGetCoreID());
+    xTaskCreatePinnedToCore(nextionCore0, "TaskCore0", NEXTION_TASK_STACK_BYTES, NULL, NEXTION_TASK_PRIORITY, &_TaskCore0, NETWORK_CORE);
   }
 }
 

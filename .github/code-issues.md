@@ -33,7 +33,6 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 - [X] 16. Plugin System — Dead Infrastructure, Remove Entirely
 - [ ] 17. Can Display Be Improved?
 - ... Below is not part of the audit but worth consideration (or fixing)
-- [ ] 96. Releases could use builds/[contributer name] instead of only my platformio.ini
 - [ ] 97. Speed / Responsiveness Improvements
 - [ ] 98. Documentation Needs Serious Work
 - [ ] 99. Issues Found Randomly or Outside Above Issues
@@ -1485,23 +1484,6 @@ OLED, LCD, and N5110 driver files are **untouched**.
 - **Risk:** Medium. TFT_eSPI is actively maintained and well-tested on ESP32-S3. The risk area is ehRadio's custom clipping layer in `commongfx.h` — the `writePixel` and `writeFillRect` overrides depend on Adafruit_GFX's virtual dispatch model, which differs in TFT_eSPI.
 - **Recommended pilot:** Start with ILI9341 in a separate branch. Once that display builds and runs correctly (scroll, VU, clock, playlist), extend to ST7789 and ST7796, then handle ILI9488 and ILI9225 separately.
 - **Rule #4 note:** When executed, `code-summary.md` must be updated — the display driver architecture section, all per-display `.h` file entries, and the new `tft_espi_setup.h` entry.
-
----
-
-## [ ] 96. Releases could use builds/[contributer name] instead of only my platformio.ini
-
-Right now, all releases are built from my platformio.ini file.  This is not ideal.
-
-We should have a builds/ directory with a platformio.ini file for each contributer.  This would allow each contributer to have their own build flags and settings in simple myoptions.h files.
-
-Two ways to go about this.
-
-(1) Use a "smart merge" on their files into mine. This could be complicated.
-
-(2) Get the releases to pull from multiple platformio.ini files.  This would be simpler.
-
-Caveat is that right now we need board definitions to be in the platformio.ini file.  I don't quite remember if more than the boot files and SPIFFS depend on that.
-
 
 ---
 

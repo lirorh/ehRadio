@@ -133,8 +133,8 @@ void Mqtt::publishStatus() {
   if (mqttClient.connected()) {
     zeroBuf();
     sprintf(topic, "%s%s", config.store.mqtttopic, "status");
-    char name[BUFLEN/2];
-    char title[BUFLEN/2];
+    char name[STATION_FIELD_LENGTH/2];  // intentionally half of STATION_FIELD_LENGTH for MQTT payload
+    char title[STATION_FIELD_LENGTH/2]; // intentionally half of STATION_FIELD_LENGTH for MQTT payload
     config.escapeQuotes(config.station.name, name, sizeof(name)-10);
     config.escapeQuotes(config.station.title, title, sizeof(title)-10);
     snprintf(status, sizeof(status), "{\"status\": %d, \"station\": %d, \"name\": \"%s\", \"title\": \"%s\", \"on\": %d}", player.status()==PLAYING?1:0, config.lastStation(), name, title, config.store.dspon);

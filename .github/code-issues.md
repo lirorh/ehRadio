@@ -20,15 +20,15 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 - [ ] 3. Macros Without `options.h` Fallback
 - [ ] 4. Write-Only Variables (Set But Never Read)
 - [ ] 5. Dead / Unreachable Code
-- [ ] 6. `BUFLEN` — Multi-Purpose Magic Number
+- [X] 6. `BUFLEN` — Multi-Purpose Magic Number
 - [ ] 7. Smaller SPIFFS than expected could break workflows
 - [X] 8. Memory Leaks and Heap Fragmentation
 - [X] 9. Blocking Operations on Real-Time / Non-Background Contexts
-- [ ] 10. TLS / HTTPS Security
+- [X] 10. TLS / HTTPS Security
 - [X] 11. Stack Overflow Risks in FreeRTOS Tasks
-- [ ] 12. Telnet / WiFi Scan Blocking and Credential Exposure
+- [X] 12. Telnet / WiFi Scan Blocking and Credential Exposure
 - [ ] 13. Display conf.h Files That Lack a Battery Widget
-- [ ] 14. ESP32-S3 Migration — Dropping Original ESP32 Support
+- [X] 14. ESP32-S3 Migration — Dropping Original ESP32 Support
 - [ ] 15. `main.cpp` — Non-Boot Code That Belongs in Its Own Files
 - [X] 16. Plugin System — Dead Infrastructure, Remove Entirely
 - [ ] 17. Can Display Be Improved?
@@ -433,74 +433,9 @@ These macros are consumed in `src/` via `#ifdef`/`#if defined` guards (so they a
 
 ---
 
-## [ ] 6. `BUFLEN` — Multi-Purpose Magic Number
+## [X] 6. `BUFLEN` — Multi-Purpose Magic Number (ALL FIXED)
 
-`BUFLEN = 170` is defined in `options.h` (`#define BUFLEN 170 // 170 seems safe... a lot of multipliers exist in the code...`). The comment itself is a warning sign: "a lot of multipliers exist" means 170 was already insufficient for some callers when it was written.
-
-### 6.1 Call-site inventory
-
-| Call site | File | Purpose | Notes |
-|---|---|---|---|
-| `StationInfo::name[BUFLEN]`, `::url[BUFLEN]`, `::title[BUFLEN]` | `config.h` struct | Runtime RAM fields — populated from SPIFFS playlist file | **Not NVS-stored.** Only `store.lastStation` (a `uint16_t` index) is persisted. `station.title` is from stream metadata, never saved. Changing BUFLEN just changes truncation threshold for long names/URLs. |
-| `Config::_stationBuf[BUFLEN/2]` | `config.h` | Temporary CSV row parsing buffer | Consistent with playlist tab-fragment size |
-| `sName[BUFLEN]`, `sUrl[BUFLEN]` | `config.cpp`, `telnet.cpp` | Stack temps matching struct field size | Consistent |
-| `utf8_common.h`, `utf8Latin.cpp`, `utf8Cyrillic.cpp`, `nextion.cpp` | Display tools | Transliteration output buffer | Correct to match `title` field size |
-| `audiohandlers.h` `b[BUFLEN/2]` | Audio handlers | Bitrate info string (85 bytes) | Adequate for bitrate strings |
-| `audiohandlers.h` `tmp[BUFLEN]` | Audio handlers | Station title + audio info combined | Appropriate |
-| `nomedia[BUFLEN]` | `sdmanager.cpp` | SD path building (`path + "/.nomedia"`) | Wrong semantic — SD paths can exceed 170 chars |
-| `wsbuf[BUFLEN*2]`, `payload[BUFLEN*2]`, `buf[BUFLEN*2]`, `msgBuf[BUFLEN*2]`, `varjsbuf[BUFLEN*2]` | `netserver.cpp` | WebSocket JSON payloads, URL buffers | `*2` multiplier is a code smell — see 10.2 |
-| `buf[BUFLEN]`, scratch uses | `telnet.cpp`, `netserver.cpp` | Short `snprintf` scratch buffers | Acceptable for short messages |
-| `BOOTLOG` macro | `telnet.h` | Boot log buffer with bare `sprintf` | Overflow risk — cross-ref Section 11 |
-
-### 6.2 The `*2` and `/2` multiplier smell `[MEDIUM]`
-
-Five places in `netserver.cpp` use `BUFLEN*2` (340 bytes) because 170 was insufficient for JSON payloads. The code doubled an already-arbitrary number rather than defining an appropriately-sized constant. This conflates two unrelated constraints in one macro:
-
-- **`wsbuf[BUFLEN*2]` with bare `sprintf`**: embeds `config.station.name` (up to 170 bytes) and `config.station.title` (up to 170 bytes) simultaneously into a 340-byte buffer with JSON framing overhead. At worst-case inputs, this is structurally too small. Already flagged in Section 11 as unsafe `sprintf`.
-- The multiply/divide pattern (`*2`, `/2`) makes the actual buffer sizes invisible and means any future change to `BUFLEN` for the struct silently changes all these buffers too.
-
-### 6.3 No NVS tie-in — RAM only `[correction]`
-
-`station_t` (`name`, `url`, `title`) is **not stored in NVS**. `loadStation()` reads the SPIFFS playlist file at runtime and fills `station` in RAM. `station.title` is set from audio stream metadata and is never persisted. The only NVS save is `store.lastStation` — a `uint16_t` index.
-
-Changing `BUFLEN` carries **no NVS migration risk**. The only behavioral change would be the truncation threshold for very long station names or URLs read from the playlist. Raising it does increase stack frame sizes wherever `char buf[BUFLEN]` locals are declared. The `*2` multipliers in `netserver.cpp` still exist as a sizing smell, but the cause is simpler: the JSON payload combining name + title was larger than a single BUFLEN.
-
-### 6.4 Relationship to `RXBUFLEN` / `TXBUFLEN`
-
-`RXBUFLEN = 50` and `TXBUFLEN = 255` are defined in `src/displays/nextion.h`. They are **completely unrelated** to `BUFLEN` — they are Nextion serial protocol frame sizes. The naming similarity is coincidental.
-
-### 6.5 Other buffer-size constants not derived from `BUFLEN`
-
-| Constant | Where | Value | Notes |
-|---|---|---|---|
-| `SET_PLAY_ERROR` buff size | `player.h` macro | `512 + 64` = 576 | Fixed literal; independent. Bare `sprintf` — see Section 11. |
-| `DBGVB` buf size | `netserver.cpp` macro | `200` | Fixed literal; bare `sprintf` — see Section 11. |
-| `MAX_PRINTF_LEN` | `telnet.h` | `BUFLEN + 50` = 220 | Derived from `BUFLEN`. If `BUFLEN` changes, this changes silently too. |
-| `EHDPNAME_LENGTH` | `config.h` | `24` | Named purpose-specific constant — **this is the right pattern**. |
-
-### 6.6 Recommended resolution `[LOW]`
-
-The core problem: `BUFLEN` conflates two distinct things that happen to share one numeric value:
-1. **Station field size** (`StationInfo` fields and matching transliteration buffers) — the meaningful semantic is "max station name/URL/title length".
-2. **General scratch sentinel** — arbitrary "safe size" for stack temporaries.
-
-Recommended approach: introduce `STATION_FIELD_LEN` (or similar) for category 1, making the intent explicit. Leave `BUFLEN` as-is or remove it for category 2. Replace `BUFLEN*2` and `BUFLEN/2` with purpose-named sizes or comment-justified literals. This is a **refactor, not an urgent fix** — nothing is currently broken solely because of `BUFLEN` — and unlike the previous analysis, there is **no NVS migration risk** involved.
-
-### [ ] 6.7 Replacing `BUFLEN` Usage as a Magic Number
-
-Each call site below should be investigated and given either a purpose-specific named constant or an inline literal with a justifying comment.
-
-- [ ] `StationInfo::name[BUFLEN]`, `::url[BUFLEN]`, `::title[BUFLEN]` (`config.h`) — primary semantic: "max station name/URL/title length". Candidate: introduce `STATION_FIELD_LEN 170`.
-- [ ] `Config::_stationBuf[BUFLEN/2]` (`config.h`) — name explicitly (e.g., `STATION_FIELD_LEN/2`) or justified inline literal.
-- [ ] `sName[BUFLEN]`, `sUrl[BUFLEN]` in `config.cpp`, `telnet.cpp` — stack temps matching struct field size; update to follow `STATION_FIELD_LEN` once defined.
-- [ ] Transliteration output buffers in `utf8_common.h`, `utf8Latin.cpp`, `utf8Cyrillic.cpp`, `nextion.cpp` — should match `title` field size; update to `STATION_FIELD_LEN`.
-- [ ] `b[BUFLEN/2]` in `audiohandlers.h` (bitrate string, 85 bytes) — adequate size; name it or leave as explicit literal with comment.
-- [ ] `tmp[BUFLEN]` in `audiohandlers.h` (title + audio info combined) — appropriate; update to `STATION_FIELD_LEN`.
-- [ ] `nomedia[BUFLEN]` in `sdmanager.cpp` (SD path building) — wrong semantic; SD paths can exceed 170 chars. Replace with a purpose-specific `SD_PATH_LEN` or explicit larger literal.
-- [ ] `wsbuf[BUFLEN*2]`, `payload[BUFLEN*2]`, `buf[BUFLEN*2]`, `msgBuf[BUFLEN*2]`, `varjsbuf[BUFLEN*2]` in `netserver.cpp` — the `*2` is the smell. Each should become a justified literal or purpose-named size.
-- [ ] `buf[BUFLEN]` scratch uses in `telnet.cpp`, `netserver.cpp` — evaluate each; either leave with an explicit literal + comment, or retain `BUFLEN` if it remains as a general scratch sentinel.
-- [ ] `BOOTLOG` macro buffer `buf[BUFLEN]` in `telnet.h` — also has bare `sprintf` overflow risk (cross-ref Section 11); address rename alongside `snprintf` fix.
-- [ ] `MAX_PRINTF_LEN = BUFLEN + 50` in `telnet.h` — must not silently change if `BUFLEN` changes for other reasons. Replace with explicit `220` or `STATION_FIELD_LEN + 50` with comment.
+`BUFLEN` has been retired. `STATION_FIELD_LENGTH` (170, defined in `options.h`) now explicitly names the max size for `station_t` fields (`name`, `url`, `title`) and all string buffers that match them, including transliteration output buffers in the display tools. `SD_PATH_LENGTH` (256, defined in `sdmanager.h`) replaces `BUFLEN` for SD filesystem path construction, correctly accommodating paths that exceed 170 bytes. The `BUFLEN*2` pattern in `netserver.cpp` was replaced by the existing `WEBSOCKET_BUFFER` constant (raised to 512); small IR/WiFi scratch buffers became explicit literals (80 bytes) sized to their actual content. `BUFLEN` carried no NVS migration risk as `station_t` fields are RAM-only. `RXBUFLEN`/`TXBUFLEN` in `nextion.h` are unrelated Nextion serial frame sizes and were not changed.
 
 ---
 
@@ -595,7 +530,7 @@ This means **the SPIFFS space problem is effectively an `board_esp32` (4 MB flas
 3. **Expose SPIFFS usage in the WebUI** (e.g., in options.html system group or `getsystem` response). `SPIFFS.usedBytes()` and `SPIFFS.totalBytes()` are cheap calls; including them in `GETSYSTEM` lets the user see how full the filesystem is before attempting operations.
 4. **For `board_esp32` only**: consider moving the partition table to give SPIFFS more space at the cost of one OTA slot (single-slot non-OTA partition), or move to LittleFS which has better space utilisation than SPIFFS for the same physical allocation.
 
-Trip5's idea
+Trip5's idea:
 
 Here's a hint:
 #define FS_REQUIRED_FREE_SPACE 150 // in KB - must be minimum x1.5 of the limit_per_page in search.js (100)
@@ -618,7 +553,7 @@ If we do that, we should initiate cleanup on every boot (well, initiate cleanup 
 
 ---
 
-## [ ] 10. TLS / HTTPS Security
+## [X] 10. TLS / HTTPS Security (NOT PERSUING)
 
 ### [ ] 10.1 All HTTPS connections skip certificate validation `[MEDIUM]`
 
@@ -640,9 +575,9 @@ If we do that, we should initiate cleanup on every boot (well, initiate cleanup 
 
 ---
 
-## [ ] 12. Telnet `/` WiFi Scan Blocking and Credential Exposure
+## [X] 12. Telnet `/` WiFi Scan Blocking and Credential Exposure (ALL FIXED by unified commandhandler)
 
-### [ ] 12.1 `wifi.con` telnet command prints all stored WiFi passwords in cleartext `[MEDIUM]`
+### [X] 12.1 `wifi.con` telnet command prints all stored WiFi passwords in cleartext `[MEDIUM]`
 
 - **File**: `src/core/telnet.cpp`, around line ~642.
 - **Code**: `printf(clientId, "%d: %s, %s\r\n", c, sSid, sPas);` — prints the SSID and password for every stored network.
@@ -687,131 +622,9 @@ If we do that, we should initiate cleanup on every boot (well, initiate cleanup 
 
 ---
 
-## [ ] 14. ESP32-S3 Migration — Dropping Original ESP32 Support `[LOW]` (IMPORTANT FIXED - NEEDS FURTHER CONSIDERATION & INVESTIGATION)
+## [X] 14. ESP32-S3 Migration — Dropping Original ESP32 Support `[LOW]` (NOT PERSUING)
 
-All active trip5 radio build environments in `platformio.ini` already extend `board_esp32_s3_n16r8`. The only place the original `esp32dev` board appears is the bare `board_esp32` template environment, which has no associated hardware profile and is not used for any current firmware release. This section audits what remains in the codebase that is specific to the original ESP32 (Xtensa LX6, 4 MB flash, optional WROVER PSRAM), what would change if that board were formally dropped, and where the S3 could be better exploited than it currently is.
-
-### 14.1 Code that exists solely because of ESP32 (original) limitations
-
-**SDSPISPEED branching** (`src/core/options.h` line ~179):
-```cpp
-#if defined(ARDUINO_ESP32_DEV)
-    #define SDSPISPEED 20000000  // safe for original ESP32
-#elif defined(ARDUINO_ESP32S3_DEV) ...
-    #define SDSPISPEED 40000000  // S3 known to work at this speed
-...
-```
-The 20 MHz cap exists because the original ESP32's VSPI/HSPI SPI peripheral had documented instability at higher speeds with certain SD cards. The S3 has a more robust SPI peripheral verified at 40 MHz. Removing `ARDUINO_ESP32_DEV` path collapses this to a single value.
-
-**Default I2S pin assignments** (`options.h` lines ~151–157):
-```cpp
-#define I2S_DOUT 27   // GPIO 27
-#define I2S_BCLK 26   // GPIO 26
-#define I2S_LRC  25   // GPIO 25
-```
-GPIO 25/26/27 are the original ESP32's dedicated DAC-capable lines and were the conventional I2S output pins for nearly every ESP32 audio board sold 2017–2021. No ESP32-S3 board uses these pins for I2S by default (S3 devkitc-1 default I2S is entirely different). In practice every S3 `myoptions.h` profile already overrides these values, so the defaults are effectively dead code on S3. They remain as a trap: any S3 build that forgets to define I2S pins inherits wrong defaults, which compile without warning but produce no audio.
-
-**`SD_HSPI` and `TS_HSPI` pin comments** (`options.h`):
-The comment `// use HSPI for SD (miso=12, mosi=13, clk=14)` is the original ESP32 HSPI bus. On ESP32-S3 those GPIO numbers have completely different functions. The `false` default (use VSPI/SPI2) is safe for S3 but the accompanying comment misleads anyone reading the code on S3 hardware.
-
-**`WAKE_PIN` RTC domain comment** (`options.h` line ~424):
-```
-// must be one of: 0,2,4,12,13,14,15,25,26,27,32,33,34,35,36,39
-```
-This is the list of RTC-capable GPIOs on the **original ESP32** that support `ext0` wakeup. On ESP32-S3, `esp_sleep_enable_ext0_wakeup()` is defined in the IDF but returns `ESP_ERR_NOT_SUPPORTED` at runtime — it is a no-op stub. The wakeup pin feature silently does nothing on all current S3 hardware (see §14.2).
-
-**`ESP_S3C3` macro** (`options.h` line ~318):
-```cpp
-#if defined(ARDUINO_ESP32S3_DEV) || defined(ARDUINO_ESP32C3_DEV)
-    #define ESP_S3C3 1
-```
-This sets `USE_BUILTIN_LED true` and establishes `LED_BUILTIN_S3`. The `else` branch handles original ESP32 LED behavior. This is the only `#if` in `options.h` that guards on the chip family rather than a hardware-config macro, and it would be the cleanest to collapse if ESP32 support is dropped.
-
-### 14.2 [X] `esp_sleep_enable_ext0_wakeup()` does not work on ESP32-S3 `[MEDIUM]`
-
-**Files**: `src/core/config.cpp` lines ~847, ~860; `src/main.cpp` line ~235; `builds/plugins/deepSleep/deepsleep.cpp` line ~37.
-
-**Code**:
-```cpp
-if (WAKE_PIN!=255) esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKE_PIN, LOW);
-esp_deep_sleep_start();
-```
-
-**Problem**: `esp_sleep_enable_ext0_wakeup()` is the EXT0 wakeup source which uses the RTC subsystem's ULP co-processor. On the original ESP32, this works on any of the listed RTC-domain-capable GPIOs. On ESP32-S3, Espressif removed the EXT0 source entirely — the IDF provides a stub that compiles but logs an error and returns `ESP_ERR_NOT_SUPPORTED`. The correct S3 replacement is `esp_deep_sleep_enable_gpio_wakeup((1ULL << WAKE_PIN), ESP_GPIO_WAKEUP_GPIO_LOW)`.
-
-**Current impact**: Any user with `WAKE_PIN != 255` on an S3 build thinks their hardware wake button will work after sleep. It will not. The device enters deep sleep and can only be woken by the timer (if `sleep` was invoked with a timeout). The manual wake pin is silently broken.
-
-**Fix**: Add an `#ifdef ARDUINO_ESP32S3_DEV` branch:
-```cpp
-#if defined(ARDUINO_ESP32S3_DEV)
-    if (WAKE_PIN!=255) esp_deep_sleep_enable_gpio_wakeup((1ULL << WAKE_PIN), ESP_GPIO_WAKEUP_GPIO_LOW);
-#else
-    if (WAKE_PIN!=255) esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKE_PIN, LOW);
-#endif
-```
-The same fix applies to `main.cpp` and both `deepSleep` plugin files. Update the `WAKE_PIN` comment to document S3-compatible GPIO numbers (all GPIOs below GPIO_NUM_MAX that support digital input; no special RTC domain restriction applies on S3).
-
-### 14.3 PSRAM on ESP32-WROVER vs ESP32-S3-N16R8
-
-The original ESP32-WROVER module includes 4 MB of SPI PSRAM (QSPI, 80 MHz max). The `board_esp32` environment in `platformio.ini` does **not** set `-DBOARD_HAS_PSRAM` and does not configure `board_build.arduino.memory_type = qio_opi` — meaning even a WROVER build is compiled without the PSRAM-access linker stubs. The audio libraries call `psramInit()` at runtime which will succeed if PSRAM is physically present and the bootloader initialized it, but without the proper `board_build` PSRAM configuration in `platformio.ini`, the `ps_malloc()` / `heap_caps_malloc(MALLOC_CAP_SPIRAM)` calls used by the FLAC decoder and audio ring buffer may fail silently, falling back to internal SRAM.
-
-The `board_esp32_s3_n16r8` environment correctly sets:
-```ini
-board_build.arduino.memory_type = qio_opi
-board_build.flash_mode = qio
-board_build.psram_type = opi
--DBOARD_HAS_PSRAM
-```
-This configures OPI PSRAM (Octal SPI, up to 80 MHz) for the 8 MB PSRAM found on the N16R8 module. With this configuration, `psramInit()` returns `true`, and both audio libraries:
-- Allocate the audio ring buffer from PSRAM (large buffer = smoother streaming, fewer re-buffer interruptions)
-- Enable M3U8 playlist support (`m3u8 playlists requires PSRAM enabled!` — otherwise logged and refused)
-- Enable full FLAC decoding (FLAC decoder uses `heap_caps_malloc_prefer` with `MALLOC_CAP_SPIRAM`)
-- Expand ID3 tag buffer from 1 KB to 4 KB
-
-**Without PSRAM**, the audio ring buffer falls back to internal SRAM. On original ESP32 this gives a modest ~8 KB buffer. On S3 without PSRAM configured, same. The difference in practice: FLAC streams are more likely to stutter; long M3U8 playlists (> 100 entries) are refused at runtime; very high-bitrate streams (320 kbps MP3) may underrun more frequently on slow network conditions.
-
-**Application code**: There is only one place in application code (not libraries) that checks for PSRAM: `display.cpp` line ~192:
-```cpp
-_heapbar = new SliderWidget(heapbarConf, ..., psramInit() ? 300000 : 1600 * 10);
-```
-The heap bar scale changes based on whether PSRAM is present (300 KB vs 16 KB display range). No other application code explicitly allocates from PSRAM. All PSRAM-aware allocation lives inside the audio library internals. This means the application layer is PSRAM-transparent: PSRAM being present is a pure improvement with no application-level code changes needed.
-
-### 14.4 What changes if `board_esp32` support is formally dropped
-
-Positive effects (code simplification):
-- Remove the `ARDUINO_ESP32_DEV` branch in `SDSPISPEED` — one `#if`/`#elif`/`#else` block collapses to a single `#define`.
-- Remove the inaccurate GPIO 25/26/27 I2S default pins (replace with a compile-time `#error` requiring myoptions.h to define them explicitly, which every existing S3 board profile already does).
-- Remove the misleading ESP32-specific pin numbers from `SD_HSPI` and `TS_HSPI` comments. \* The `*_HSPI` boolean flags themselves will be removed entirely as part of §1 (replaced by per-pin macros).
-- Simplify `WAKE_PIN` comment to only list S3-compatible guidance.
-- Collapse `#if defined(ARDUINO_ESP32S3_DEV) || defined(ARDUINO_ESP32C3_DEV)` / else blocks in `options.h` where the else branch was for original ESP32.
-- Accept that `BOARD_HAS_PSRAM` is always set (since all actual production S3-N16R8 builds set it) and remove the `psramInit()` runtime check in `display.cpp` in favour of a compile-time block.
-
-Neutral (no change needed):
-- FreeRTOS dual-core pinning (`DSP_TASK_CORE_ID`, `xTaskCreatePinnedToCore`) works identically on both ESP32 and S3.
-- All queue handling, async task patterns, SPIFFS APIs, NVS APIs, WiFi, AsyncWebServer — all unchanged.
-- `SEARCHRESULTS_BUFFER 1024*4` conservative default still applies to S3 but the comment saying "likely only good for ESP32-S3" confirms the intent is already S3-first.
-
-Potential concern (worth checking):
-- Some display drivers in `src/displays/` may use SPI bus initialisation that references VSPI/HSPI constants which are defined differently for S3 (or not at all). Any driver using `VSPI` or `HSPI` macro by name will fail on S3. This should be audited before formally dropping ESP32 — but the trip5 build environments already compile successfully on S3, so the active drivers are safe.
-- The `ILI9488` library uses its own SPI init path; confirm it doesn't reference VSPI/HSPI by name.
-
-### 14.5 Unexploited ESP32-S3 advantages
-
-The following S3 capabilities are currently unused by the application. These are not action items but observations for future improvement.
-
-**Native USB CDC**: The S3 has a hardware USB peripheral that can expose a CDC serial port directly. The build flags already set `ARDUINO_USB_MODE=1` (Hardware Serial/JTAG mode) rather than `0` (USB-OTG). Switching the Debug Serial output to native USB CDC (mode 0) would eliminate the need for a USB-UART bridge chip on custom boards. The current approach is fine for most boards that have an on-board UART bridge; native USB is only advantageous on custom hardware without one.
-
-**ADC2 / WiFi coexistence**: The original ESP32 has a well-known limitation — ADC2 is shared with the WiFi radio and cannot be used simultaneously. Several ESP32 battery-monitoring circuits and ADC-based light sensors ended up on ADC2 pins, causing readings to drop to 0 or become erratic when WiFi was active. The ESP32-S3 does not have this limitation; all ADC-capable GPIOs can be read freely while WiFi is running. This means ESP32-S3-only builds can safely use any ADC pin for `BATTERY_PIN` or `LIGHT_SENSOR` without the ESP32 restriction. The current `battery.cpp` and `main.cpp` code makes no attempt to warn about ADC2 pin conflicts — on S3 this is simply a non-issue.
-
-**Higher SPI clock ceiling**: The S3 SPI peripheral is rated to 80 MHz. Adafruit display drivers are typically limited to 40 MHz (`SPI_DEFAULT_FREQ`), and most TFT displays max out at 40–80 MHz depending on the panel. The current display drivers are already written for what the display supports, not for the SoC's limit, so there is no practical improvement here without changing the display libraries. The benefit is simply that the S3 does not add an extra bottleneck the way some original ESP32 SPI configurations did.
-
-**`SEARCHRESULTS_BUFFER`**: The `myoptions.h` profile already sets `SEARCHRESULTS_BUFFER 1024*32` (32 KB), which the comment notes is "likely only good for ESP32-S3". The `options.h` default is a conservative `1024*4` (4 KB) for safety. If ESP32 is dropped, this default can be raised to match the profile value without the caveat.
-
-### 14.6 Summary verdict
-
-Dropping formal `board_esp32` support carries minimal code risk and has no effect on the behaviour of any existing S3 build. The benefits are cleaner defaults, removal of three misleading pin-number comments, and elimination of a silent `WAKE_PIN` bug on S3. The only actionable bug is §14.2 (`ext0_wakeup` on S3). The PSRAM situation (§14.3) is already handled correctly for S3-N16R8 in `platformio.ini`; it is only the original ESP32-WROVER environment that is misconfigured (and it is not an active production target).
-
-**Recommended approach**: Leave `board_esp32` in `platformio.ini` as an untested legacy template (clearly commented as such). Fix the `ext0_wakeup` S3 bug unconditionally (§14.2 fix doesn't require dropping ESP32 support). Remove or correct the misleading default pin number comments in `options.h`. Do not spend effort making S3-specific improvements conditional on `ARDUINO_ESP32S3_DEV` — by the time any such feature lands, ESP32 support will already be vestigial.
+This was just an idea and abandoned... ESP32 support remains but a lot of things need testing.
 
 ---
 

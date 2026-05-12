@@ -90,8 +90,8 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "mode"))            { config.changeMode(atoi(value)); return true; }
   if (cmdIs(command, "submitplaylist"))  { player.sendCommand({PR_STOP, 0}); return true; }
   if (cmdIs(command, "submitplaylistdone")) {
-    char currentUrl[BUFLEN];
-    strncpy(currentUrl, config.station.url, BUFLEN);
+    char currentUrl[STATION_FIELD_LENGTH];
+    strncpy(currentUrl, config.station.url, STATION_FIELD_LENGTH);
     uint16_t newLen = config.playlistLength();
     uint16_t foundIdx = config.findStationByUrl(currentUrl);
     if (foundIdx > 0) {

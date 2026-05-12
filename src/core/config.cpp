@@ -562,8 +562,8 @@ static void strip_whitespace(char *s) {
 void Config::setTitle(const char* title) {
   vuThreshold = 0;
   // Keep native UTF-8 title (single source of truth for WebUI/CLI)
-  memset(config.station.title, 0, BUFLEN);
-  strlcpy(config.station.title, title, BUFLEN);
+  memset(config.station.title, 0, STATION_FIELD_LENGTH);
+  strlcpy(config.station.title, title, STATION_FIELD_LENGTH);
   u8fix(config.station.title);
   strip_whitespace(config.station.title);
   netserver.requestOnChange(TITLE, 0);
@@ -571,8 +571,8 @@ void Config::setTitle(const char* title) {
 }
 
 void Config::setStation(const char* station) {
-  memset(config.station.name, 0, BUFLEN);
-  strlcpy(config.station.name, station, BUFLEN);
+  memset(config.station.name, 0, STATION_FIELD_LENGTH);
+  strlcpy(config.station.name, station, STATION_FIELD_LENGTH);
   u8fix(config.station.name);
   strip_whitespace(config.station.name);
 }  
@@ -582,7 +582,7 @@ void Config::indexPlaylist() {
   if (!playlist) {
     return;
   }
-  char sName[BUFLEN], sUrl[BUFLEN];
+  char sName[STATION_FIELD_LENGTH], sUrl[STATION_FIELD_LENGTH];
   int sOvol;
   File index = SPIFFS.open(INDEX_PATH, "w");
   while (playlist.available()) {
@@ -618,22 +618,22 @@ uint16_t Config::playlistLength() {
 bool Config::loadStation(uint16_t ls) {
   uint16_t cs = playlistLength();
   if (cs == 0) {
-    memset(station.url, 0, BUFLEN);
-    memset(station.name, 0, BUFLEN);
-    strncpy(station.name, "ehRadio", BUFLEN);
+    memset(station.url, 0, STATION_FIELD_LENGTH);
+    memset(station.name, 0, STATION_FIELD_LENGTH);
+    strncpy(station.name, "ehRadio", STATION_FIELD_LENGTH);
     station.ovol = 0;
     return false;
   }
   if (ls > cs) ls = 1;
-  char sName[BUFLEN], sUrl[BUFLEN];
+  char sName[STATION_FIELD_LENGTH], sUrl[STATION_FIELD_LENGTH];
   int sOvol;
   File playlist = SDPLFS()->open(REAL_PLAYL, "r");
   File index = SDPLFS()->open(REAL_INDEX, "r");
   if (_readStationEntry(playlist, index, ls, sName, sUrl, sOvol)) {
-    memset(station.url, 0, BUFLEN);
-    memset(station.name, 0, BUFLEN);
-    strncpy(station.name, sName, BUFLEN);
-    strncpy(station.url, sUrl, BUFLEN);
+    memset(station.url, 0, STATION_FIELD_LENGTH);
+    memset(station.name, 0, STATION_FIELD_LENGTH);
+    strncpy(station.name, sName, STATION_FIELD_LENGTH);
+    strncpy(station.url, sUrl, STATION_FIELD_LENGTH);
     station.ovol = sOvol;
     setLastStation(ls);
   }
@@ -653,7 +653,7 @@ bool Config::_readStationEntry(File& playlist, File& index, uint16_t idx, char* 
 uint16_t Config::findStationByUrl(const char* url) {
   uint16_t cs = playlistLength();
   if (cs == 0 || url == nullptr || url[0] == '\0') return 0;
-  char sName[BUFLEN], sUrl[BUFLEN];
+  char sName[STATION_FIELD_LENGTH], sUrl[STATION_FIELD_LENGTH];
   int sOvol;
   File playlist = SDPLFS()->open(REAL_PLAYL, "r");
   File index = SDPLFS()->open(REAL_INDEX, "r");
@@ -676,11 +676,11 @@ char * Config::stationByNum(uint16_t num) {
   File index = SDPLFS()->open(REAL_INDEX, "r");
   index.seek((num - 1) * 4, SeekSet);
   uint32_t pos;
-  memset(_stationBuf, 0, BUFLEN/2);
+  memset(_stationBuf, 0, STATION_FIELD_LENGTH/2);
   index.readBytes((char *) &pos, 4);
   index.close();
   playlist.seek(pos, SeekSet);
-  strncpy(_stationBuf, playlist.readStringUntil('\t').c_str(), BUFLEN/2);
+  strncpy(_stationBuf, playlist.readStringUntil('\t').c_str(), STATION_FIELD_LENGTH/2);
   playlist.close();
   return _stationBuf;
 }

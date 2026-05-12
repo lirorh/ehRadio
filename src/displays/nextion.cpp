@@ -551,7 +551,7 @@ void Nextion::wake(void) {
   Based on: https://forum.amperka.ru/threads/%D0%94%D0%B8%D1%81%D0%BF%D0%BB%D0%B5%D0%B9-nextion-%D0%B0%D0%B7%D1%8B-arduino-esp8266.9204/page-18#post-173442
 */
 char* Nextion::utf8ToNextion(const char* str, bool uppercase) {
-  static char out[BUFLEN];
+  static char out[STATION_FIELD_LENGTH];
   memset(out, 0, sizeof(out));
   
   // Convert UTF-8 to Nextion encoding
@@ -559,7 +559,7 @@ char* Nextion::utf8ToNextion(const char* str, bool uppercase) {
   int outPos = 0;
   uint32_t codepoint = 0;
   
-  while (str[index] && outPos < BUFLEN - 1) {
+  while (str[index] && outPos < STATION_FIELD_LENGTH - 1) {
     uint8_t ch = (uint8_t)str[index];
     
     // Decode UTF-8 to codepoint

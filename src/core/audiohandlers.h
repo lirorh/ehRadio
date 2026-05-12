@@ -31,7 +31,7 @@ void audio_info(const char *info) {
   if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) {
     player.setError(info);
   }
-  char* ici; char b[BUFLEN/2]={0};  // Increased buffer to safely hold bitrate string
+  char* ici; char b[STATION_FIELD_LENGTH/2]={0};  // bitrate string buffer (half of STATION_FIELD_LENGTH)
   if ((ici = strstr(info, "BitRate: ")) != NULL) {
     strlcpy(b, ici + 9, sizeof(b));
     audio_bitrate(b);
@@ -109,12 +109,12 @@ void audio_id3album(const char *info) {
     if (strlen(config.station.title)==0) {
       config.setTitle(info);
     } else {
-      char tmp[BUFLEN];
+      char tmp[STATION_FIELD_LENGTH];
       // Prevent buffer overflow: reserve space for " - " and null terminator
       size_t title_len = strlen(config.station.title);
       size_t info_len = strlen(info);
-      if (title_len + 3 + info_len + 1 <= BUFLEN) {
-        snprintf(tmp, BUFLEN, "%s - %s", config.station.title, info);
+      if (title_len + 3 + info_len + 1 <= STATION_FIELD_LENGTH) {
+        snprintf(tmp, STATION_FIELD_LENGTH, "%s - %s", config.station.title, info);
         config.setTitle(tmp);
       } else {
         // Title + album would overflow, just use album

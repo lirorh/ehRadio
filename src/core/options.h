@@ -580,7 +580,7 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
   #define WEATHER_STRING_L 512 // size of weather string, formerly 254
 #endif
 #ifndef WEBSOCKET_BUFFER
-  #define WEBSOCKET_BUFFER 384 // formerly BUFLEN * 2 = 340
+  #define WEBSOCKET_BUFFER 512 // formerly 340
 #endif
 
 #ifndef CONNECT_HTTP_HTTPS_TIMEOUT
@@ -967,11 +967,11 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
     #undef AP_PASSWORD
   #endif
 #endif
-#ifndef BUFLEN
-  #define BUFLEN 170 // 170 seems safe... a lot of multipliers exist in the code...
+#ifndef STATION_FIELD_LENGTH
+  #define STATION_FIELD_LENGTH 170 // max length for station name, URL, and title fields
 #endif
-#if BUFLEN < 64
-  #error define error in myoptions.h: BUFLEN is too small (minimum 64, default 170)
+#if STATION_FIELD_LENGTH < 64
+  #error define error in myoptions.h: STATION_FIELD_LENGTH is too small (minimum 64, default 170)
 #endif
 
 /* This bit will actually do something but needs to be handled a different way - configurable would be better */

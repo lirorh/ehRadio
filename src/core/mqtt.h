@@ -16,7 +16,7 @@ private:
   AsyncMqttClient mqttClient;
   TimerHandle_t mqttReconnectTimer = nullptr;
   char topic[100];
-  char status[BUFLEN+50];
+  char status[STATION_FIELD_LENGTH + 50];  // holds name + title (each STATION_FIELD_LENGTH/2) plus JSON framing
   void zeroBuf();
   static void _connectCb();
   static void _onConnect(bool sessionPresent);

@@ -172,9 +172,9 @@ struct configKeyMap {
 
 struct station_t
 {
-  char name[BUFLEN];
-  char url[BUFLEN];
-  char title[BUFLEN];
+  char name[STATION_FIELD_LENGTH];
+  char url[STATION_FIELD_LENGTH];
+  char title[STATION_FIELD_LENGTH];
   uint16_t bitrate;
   int  ovol;
 };
@@ -386,7 +386,7 @@ class Config {
       uint16_t station = random(1, store.countStation);
       return station;
     }
-    char _stationBuf[BUFLEN/2];
+    char _stationBuf[STATION_FIELD_LENGTH/2];
 };
 
 extern Config config;

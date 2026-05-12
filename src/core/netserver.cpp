@@ -617,7 +617,7 @@ void NetServer::loop() {
 
 void NetServer::irToWs(const char* protocol, uint64_t irvalue) {
   #if IR_PIN!=255
-    char buf[BUFLEN] = { 0 };
+    char buf[80] = { 0 };
     snprintf(buf, sizeof(buf), "{\"ircode\": %llu, \"protocol\": \"%s\"}", irvalue, protocol);
     websocket.textAll(buf);
   #endif
@@ -625,7 +625,7 @@ void NetServer::irToWs(const char* protocol, uint64_t irvalue) {
 void NetServer::irValsToWs() {
   #if IR_PIN!=255
     if (!irRecordEnable) return;
-    char buf[BUFLEN] = { 0 };
+    char buf[80] = { 0 };
     snprintf(buf, sizeof(buf), "{\"irvals\": [%llu, %llu, %llu]}", config.ircodes.irVals[config.irindex][0], config.ircodes.irVals[config.irindex][1], config.ircodes.irVals[config.irindex][2]);
     websocket.textAll(buf);
   #endif
@@ -639,7 +639,7 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
      * NUL byte in the provided buffer. Copy into a local, NUL-terminated
      * stack buffer and parse that instead to avoid heap corruption.
      */
-    char payload[BUFLEN*2];
+    char payload[WEBSOCKET_BUFFER];
     size_t payloadLen = (len < sizeof(payload) - 1) ? len : (sizeof(payload) - 1);
     memcpy(payload, data, payloadLen);
     payload[payloadLen] = '\0';
@@ -654,7 +654,7 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
 }
 
 void NetServer::getPlaylist(uint8_t clientId) {
-  char buf[BUFLEN*2] = {0};  // Increased buffer for IPv6 or longer paths
+  char buf[WEBSOCKET_BUFFER] = {0};  // buffer for playlist URL JSON (IPv6-safe)
   snprintf(buf, sizeof(buf), "{\"file\": \"http://%s%s\"}", WiFi.localIP().toString().c_str(), PLAYLIST_PATH);
   if (clientId == 0) { websocket.textAll(buf); } else { websocket.text(clientId, buf); }
 }
@@ -1311,7 +1311,7 @@ void checkForOnlineUpdate() {
         websocket.textAll("{\"onlineupdateerror\": \"Remote RADIOVERSION not found\"}");
         return;
       }
-      char msgBuf[BUFLEN*2];
+      char msgBuf[WEBSOCKET_BUFFER];
       if (remoteVer != String(RADIOVERSION)) {
         snprintf(msgBuf, sizeof(msgBuf), "{\"onlineupdateavailable\":true,\"remoteVersion\":\"%s\"}", remoteVer.c_str());
       } else {
@@ -1474,10 +1474,10 @@ void handleNotFound(AsyncWebServerRequest * request) {
     return;
   }
   if (request->url() == "/variables.js") {
-    char varjsbuf[BUFLEN*2];
-    char escapedRadioVersion[BUFLEN];
+    char varjsbuf[WEBSOCKET_BUFFER];
+    char escapedRadioVersion[32];
     config.escapeQuotes(RADIOVERSION, escapedRadioVersion, sizeof(escapedRadioVersion));
-    char escapedGithubUrl[BUFLEN];
+    char escapedGithubUrl[128];
     config.escapeQuotes(GITHUBURL, escapedGithubUrl, sizeof(escapedGithubUrl));
     snprintf(varjsbuf, sizeof(varjsbuf),
       "var radioVersion='%s';\n"
@@ -1509,11 +1509,11 @@ void handleNotFound(AsyncWebServerRequest * request) {
     return;
   }
   if (request->url() == "/curated_variables.js") {
-    char varjsbuf[BUFLEN];
+    char varjsbuf[128];
     #ifdef CURATED_LISTS
-      char escapedName[BUFLEN];
+      char escapedName[128];
       config.escapeQuotes(CURATED_LISTS, escapedName, sizeof(escapedName));
-      char escapedLink[BUFLEN];
+      char escapedLink[128];
       config.escapeQuotes(CURATED_LISTS_LINK, escapedLink, sizeof(escapedLink));
       snprintf(varjsbuf, sizeof(varjsbuf),
         "var curatedLists=true;\n"
@@ -1553,9 +1553,9 @@ void handleIndex(AsyncWebServerRequest * request) {
     if (request->url()=="/" && request->method() == HTTP_GET) { request->send(200, "text/html", emptyfs_html); return; }
     if (request->url()=="/" && request->method() == HTTP_POST) {
       if (request->arg("ssid")!="" && request->arg("pass")!="") {
-        char buf[BUFLEN];
-        memset(buf, 0, BUFLEN);
-        snprintf(buf, BUFLEN, "%s\t%s", request->arg("ssid").c_str(), request->arg("pass").c_str());
+        char buf[80];
+        memset(buf, 0, sizeof(buf));
+        snprintf(buf, sizeof(buf), "%s\t%s", request->arg("ssid").c_str(), request->arg("pass").c_str());
         request->redirect("/");
         config.saveWifi(buf);
         return;

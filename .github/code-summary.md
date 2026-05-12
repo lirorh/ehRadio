@@ -213,6 +213,8 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 - Defines persistent struct `config_t store`.
 - Defines station/theme structs and config API.
 - Defines key constants for SPIFFS paths and data file locations.
+- `station_t` fields (`name`, `url`, `title`) are sized by `STATION_FIELD_LENGTH` (default 170, defined in `options.h`). These are RAM-only fields — not NVS-stored. `BUFLEN` has been retired; use `STATION_FIELD_LENGTH` for station metadata buffers across the codebase.
+- `SD_PATH_LENGTH` (256, defined in `sdmanager.h`) is used for SD filesystem path buffers where paths may exceed 170 bytes.
 - `Config::keyMap` declaration controls Preferences key mapping.
 - `Config::saveValue(...)` API now has two simple overloads only:
   - typed: `saveValue(T* field, const T& value)`

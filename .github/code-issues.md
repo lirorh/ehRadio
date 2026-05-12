@@ -21,11 +21,11 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 - [ ] 4. Write-Only Variables (Set But Never Read)
 - [ ] 5. Dead / Unreachable Code
 - [ ] 6. `BUFLEN` — Multi-Purpose Magic Number
-- [ ] 7. Stability / Architecture Risks
-- [ ] 8. Memory Leaks and Heap Fragmentation
-- [ ] 9. Blocking Operations on Real-Time / Non-Background Contexts
+- [ ] 7. Smaller SPIFFS than expected could break workflows
+- [X] 8. Memory Leaks and Heap Fragmentation
+- [X] 9. Blocking Operations on Real-Time / Non-Background Contexts
 - [ ] 10. TLS / HTTPS Security
-- [ ] 11. Stack Overflow Risks in FreeRTOS Tasks
+- [X] 11. Stack Overflow Risks in FreeRTOS Tasks
 - [ ] 12. Telnet / WiFi Scan Blocking and Credential Exposure
 - [ ] 13. Display conf.h Files That Lack a Battery Widget
 - [ ] 14. ESP32-S3 Migration — Dropping Original ESP32 Support
@@ -34,7 +34,7 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 - [ ] 17. Can Display Be Improved?
 - ... Below is not part of the audit but worth consideration (or fixing)
 - [ ] 94. Telnet and MQTT and HTTP could be a bit more interactive
-- [ ] 95. Core-pinned Tasks Need Fixing?
+- [X] 95. Core-pinned Tasks Need Fixing?
 - [ ] 96. options.h generator / checker
 - [ ] 97. Speed / Responsiveness Improvements
 - [ ] 98. Documentation Needs Serious Work
@@ -402,7 +402,7 @@ These macros are consumed in `src/` via `#ifdef`/`#if defined` guards (so they a
 | [X] | `MAX_PL_READ_BYTES` | `netserver.cpp` line ~312 — caps playlist body size during HTTP upload | None anywhere | Undefined = no upper limit on playlist read size. Tuning parameter that should have an options.h default (e.g., something like `65536`). |
 | [X] | `PLAYLIST_DEFAULT_URL` | `config.cpp` line ~1307 — seeds default playlist on first boot | None | Undefined = no default playlist URL seeded. Silent, no fallback. Should have a commented stub in `options.h`. |
 | [X] | `SD_SPIPINS` | `config.cpp` line ~75, `sdmanager.h/cpp` — custom SPI pin tuple for SD card | None | Paired feature with `SD_HSPI` which HAS an `options.h` fallback, but `SD_SPIPINS` itself does not. Inconsistent. \* `SD_SPIPINS` will be replaced by individual `SD_SCK`/`SD_MISO`/`SD_MOSI` macros as part of §1. |
-| [ ] | `TS_SPIPINS` | `touchscreen.cpp` lines ~27, ~46 — custom SPI pin tuple for touchscreen | None | Same asymmetry as `SD_SPIPINS` vs `SD_HSPI`. `TS_HSPI` has an `options.h` fallback; `TS_SPIPINS` does not. \* `TS_SPIPINS` will be replaced by individual `TS_SCK`/`TS_MISO`/`TS_MOSI` macros as part of §1. |
+| [X] | `TS_SPIPINS` | `touchscreen.cpp` lines ~27, ~46 — custom SPI pin tuple for touchscreen | None | Same asymmetry as `SD_SPIPINS` vs `SD_HSPI`. `TS_HSPI` has an `options.h` fallback; `TS_SPIPINS` does not. \* `TS_SPIPINS` will be replaced by individual `TS_SCK`/`TS_MISO`/`TS_MOSI` macros as part of §1. |
 | [X] | `DEBUG_V`, `CORS_DEBUG`, `BATTERY_DEBUG` | Various `src/core/` files | None — intentional debug flags | Same category as `ESPFILEUPDATER_DEBUG`. Three separate debug flags with no options.h entry. Should be grouped as commented-out debug stubs. |
 
 **Action**: Consider documenting these in `options.h` as commented-out stubs so they are discoverable. Move the `SDSPISPEED` fallback from `sdmanager.cpp` to `options.h`. Add `RGB_LED_PIN 255` default following the existing `=255 means disabled` pin convention. Add a default for `MAX_PL_READ_BYTES`. `[LOW]`.
@@ -504,74 +504,27 @@ Each call site below should be investigated and given either a purpose-specific 
 
 ---
 
-## [ ] 7. Stability / Architecture Risks
+## [ ] 7. Smaller SPIFFS than expected could break workflows
 
-## [ ] 7.1 Three issues that don't Need their own checklists (broken, commandhandler issue above, spelling)
+### [ ] 7.1 Concurrent SPIFFS writes during boot and curated import `[MEDIUM]`
 
-| Fixed | Location | Issue |
-|---|---|---|
-| [ ] | `nextion.cpp` | file starts with explicit warning comment that implementation may be broken; treat as unstable until revalidated.
-| [X] | `telnet.cpp`| duplicated command form list vs. `commandhandler.cpp`; new settings added to one path are easily missed in the other. Fixed already...
-| [ ] | `touchscreen.h`| enum member naming inconsistency `TDS_REQUEST` vs. `TSD_*` pattern.
-
-## [ ] 7.2 Heavy async queue and task usage — ordering/race conditions are possible `[MEDIUM]`
-
-The codebase runs multiple concurrent FreeRTOS tasks and uses three separate queues for inter-task communication. None of these queues, nor the shared state they protect, use mutexes. The following specific risks have been identified by code inspection.
-
-### Queue depth vs. burst injection
-
-| Queue | Declared depth | Send timeout | Sender task |
-|---|---|---|---|
-| `displayQueue` | 5 | 200 ms | Any caller of `display.putRequest()` |
-| `nsQueue` (netserver) | 20 | 300 ms | Any caller of `requestOnChange()` |
-| `playerQueue` | 5 | 1000 ms | Any caller of `player.sendCommand()` |
-
-**`GETINDEX` bursts**: `processQueue()` handles `GETINDEX` by re-enqueuing 10–12 sub-requests (`STATION`, `TITLE`, `VOLUME`, `EQUALIZER`, `BALANCE`, `BITRATE`, `MODE`, `SDINIT`, `GETPLAYERMODE`, `GETBATTERY`, and optionally `SDPOS`/`SDLEN`/`SDSHUFFLE`) in one shot. If the netserver queue already holds ~8 items, the burst will fill it completely; further `requestOnChange()` calls from anywhere (audio callbacks, player change, battery tick) arrive at a full queue and block for up to 300 ms each. This 300 ms block happens on the AsyncWebServer task (the WebSocket handler), stalling all HTTP and WebSocket event processing for as long as it takes the queue to drain.
-
-**Player queue 1-second block**: `PLQ_SEND_DELAY = 1000 ms`. A bounce sequence (stop → play → vol) from the WebUI sends three `sendCommand()` calls in rapid succession. If the player loop is busy (e.g., doing a DNS lookup or stream connect), the third call will block the WebSocket task for close to one full second. The WebSocket task does not time out on its own; this manifests as the UI appearing frozen.
-
-**Display queue drop-and-forget**: `DSQ_SEND_DELAY = 200 ms`. There is no caller that checks the return value of `xQueueSend()`. A dropped display request is silently lost — the display never updates state until the next spontaneous trigger. Worst-case during rapid station-change sequences: the "station name" display update is dropped, leaving stale text on screen indefinitely.
-
-### `g_searchTaskHandle` / `g_curatedTaskHandle` check-then-act race
-
-In `commandhandler.cpp`:
-```cpp
-extern TaskHandle_t g_curatedTaskHandle;
-if (g_curatedTaskHandle == NULL) {
-    xTaskCreate(vTaskFetchCuratedIndex, ..., &g_curatedTaskHandle);
-}
-```
-The handle variable is not `volatile`. The completed task body sets `g_curatedTaskHandle = NULL` on its own core before calling `vTaskDelete(NULL)`. On an SMP system (ESP32/S3 both have two cores), the NULL write from Core 1 (or Core 0 depending on where the task ran) is not guaranteed to be visible to Core 0 without a memory barrier or `volatile` marker, even though FreeRTOS itself provides barriers at scheduling boundaries. More concretely: two near-simultaneous WebSocket messages (e.g., from two open browser tabs) from different TCP connections can both be delivered before the first task has had a chance to fire and set the non-NULL handle. Both check `== NULL`, both pass, both call `xTaskCreate` — resulting in two concurrent curated-index download tasks overwriting the same SPIFFS file simultaneously. The `g_searchTaskHandle` pattern in `handleSearch()` has the same exposure.
-
-### Concurrent SPIFFS access during boot
+**Concurrent SPIFFS access during boot**
 
 `startupServicesAsync` (FreeRTOS task, priority 2) is launched near the end of `config.startupServices()` and downloads updated www files, writing them directly to `/www/` on SPIFFS. The task runs concurrently with `netserver.begin()` and the live `webserver.serveStatic("/", SPIFFS, "/www/")` handler that is already serving files. If a browser makes a request to `/www/script.js.gz` at the exact moment `startupServicesAsync` is in the middle of writing a new version of that file, the `serveStatic` handler opens the file, reads partial bytes (however many have been written so far), and sends a truncated or corrupted response. SPIFFS' internal per-handle mutex prevents two writes to the same file at the block level, but does not coordinate a read-during-write at the file-content level. The browser may cache the corrupted response and show a broken UI.
 
-### Curated playlist import — task/handler interleave
+**Curated playlist import — task/handler interleave**
 
 `vTaskFetchCuratedPlaylist` starts by calling `SPIFFS.remove("/www/pl_import.json")` and then writes that path. The `curated_import` command in `commandhandler.cpp` opens and reads `/www/pl_import.json`. If a user triggers `curated_import` (or the browser retries) before the download task finishes writing, the handler opens a partially-written or already-deleted file. `SPIFFS.open()` will succeed (on a newly-created file) and `file.readBytesUntil()` will return fewer bytes than expected, leading to silent import failure — no error to the user, just an empty import result.
 
-### `startupServicesAsync` task priority race
+**`startupServicesAsync` task priority race**
 
 `startupServicesAsync` runs at priority 2. `DspTask` runs at priority 2. They are equal priority on what may be the same core (the task is `xTaskCreate` without a core affinity pin, so FreeRTOS places it on whichever core has capacity). During boot, both tasks run concurrently. The display task drives `display.loop()` and `netserver.loop()` — including processing the netserver queue. If `startupServicesAsync` is writing to SPIFFS while the display task drains the netserver queue and `processQueue()` triggers `PLAYLISTSAVED` (which calls `config.indexPlaylist()` which reads SPIFFS), both call SPIFFS APIs simultaneously. SPIFFS' internal FreeRTOS mutex should serialize block operations, but the SPIFFS layer in Arduino ESP32 does not protect composite multi-block operations (like iterating a playlist file with multiple `readBytesUntil` calls) as a single atomic unit. Interleaved reads and writes during startup can corrupt the in-memory playlist index.
 
-### Worst-case scenario summary
+**Action**: Delay `netserver.begin()` until `startupServicesAsync` has finished, or restructure to update files before starting the web server. Note: `ESPFileUpdater` already uses `{path}.tmp` → rename, so mid-download partial reads are not a corruption risk — the old file remains intact until rename succeeds.
 
-The combination most likely to produce a real failure: user opens the WebUI in two browser tabs, both perform initial state fetch (`GETINDEX`), which bursts ~24 items into a 20-item queue. The queue overflows. Some items are dropped. Meanwhile `startupServicesAsync` is downloading a locale file. The player receives a `PR_PLAY` command that the audio library needs to resolve via DNS. All three tasks are blocked. `sendCommand()` blocks the WebSocket handler for 1 second. The second tab's WebSocket connection times out. The audio stream never starts. There is no error in the Serial log.
+### [ ] 7.2 SPIFFS space constraints can silently break search, curated, and update workflows `[MEDIUM]`
 
-### Suggested fixes
-
-1. **Queue overflow detection**: Check the return value of every `xQueueSend()` call. Log a warning on `pdFALSE`. Do not silently drop display/netserver/player requests.
-2. **TaskHandle guard**: Declare `g_searchTaskHandle` and `g_curatedTaskHandle` as `volatile TaskHandle_t`. Add a FreeRTOS critical-section wrapper around the NULL-check + `xTaskCreate` pair if double-spawn must be prevented absolutely.
-3. **Boot file update sequencing**: Delay `netserver.begin()` until `startupServicesAsync` has finished (or restructure to update files before starting the web server). Alternatively, write updates to a staging path and rename when complete — SPIFFS `rename()` is atomic at the file-system level.
-4. **GETINDEX flood protection**: Batch the 10+ sub-requests for `GETINDEX` into a single queue item rather than re-enqueuing each separately, or increase `nsQueue` depth.
-5. **Player queue timeout reduction**: Lower `PLQ_SEND_DELAY` from 1000 ms to something caller-appropriate (50–100 ms). A missed player command should be retried, not waited on for a second.
-
----
-
-## [ ] 7.3 SPIFFS space constraints can silently break search, curated, and update workflows `[MEDIUM]`
-
-### Partition budget for `board_esp32` (4 MB flash)
+#### Partition budget for `board_esp32` (4 MB flash)
 
 The `builds/4MBflash.csv` partition table allocates:
 - `app0` / `app1`: 1.75 MB each (OTA-capable firmware slots)
@@ -594,7 +547,7 @@ Static content that occupies SPIFFS on every boot (approximate gzipped sizes fro
 
 That leaves approximately **230–300 KB free** for dynamic operations on a plausibly-loaded device. Not enormous.
 
-### Dynamic operations and their space footprints
+#### Dynamic operations and their space footprints
 
 | Operation | Files written | Max size |
 |---|---|---|
@@ -607,7 +560,7 @@ That leaves approximately **230–300 KB free** for dynamic operations on a plau
 
 If a user has a 50 KB playlist, runs a search (100 KB result), and then starts a www update, the aggregate demand is roughly `50 + 100 + 150 = 300 KB` of simultaneous SPIFFS writes — exceeding the budget on a 448 KB partition with any baseline static content.
 
-### The `FS_REQUIRED_FREE_SPACE` guard is coarse and consistently bypassed
+#### The `FS_REQUIRED_FREE_SPACE` guard is coarse and consistently bypassed
 
 `FS_REQUIRED_FREE_SPACE = 150 KB` is checked at the start of `vTaskSearchRadioBrowser`, `vTaskFetchCuratedIndex`, and `vTaskFetchCuratedPlaylist`. It is **not** checked by:
 - The online update path (`startupServicesAsync` / `updateFile`)
@@ -617,7 +570,7 @@ If a user has a 50 KB playlist, runs a search (100 KB result), and then starts a
 
 `handleUpload` has its own guard: `freeSpace = (float)SPIFFS.totalBytes()/100*68-SPIFFS.usedBytes()` — caps the upload at 68% of total SPIFFS. On a 448 KB partition with 200 KB already used, this allows only ~105 KB upload. The cap is not communicated back to the user as an error message; the upload simply silently truncates at the cap.
 
-### Silent failure modes enumerated
+#### Silent failure modes enumerated
 
 **Search fails quietly**: The free-space check fires, `requestOnChange(SEARCH_FAILED, 0)` is sent. The WebUI receives `{"search_failed":true}` and displays a generic failure message. The user sees no indication that disk space was the cause.
 
@@ -629,154 +582,39 @@ If a user has a 50 KB playlist, runs a search (100 KB result), and then starts a
 
 **Curated import with a full SPIFFS**: `vTaskFetchCuratedPlaylist` fails its free-space check. `CURATED_FAILED` is sent. The user retries. Still fails. There is no WebUI prompt suggesting they free space first.
 
-### ESP32-S3 (16 MB flash) largely escapes this problem
+#### ESP32-S3 (16 MB flash) largely escapes this problem
 
 The `board_esp32_s3_n16r8` environment does not specify a `board_build.partitions` override. PlatformIO's default for `esp32-s3-devkitc-1` with 16 MB flash uses `default_16MB.csv`, which gives approximately 9–12 MB to SPIFFS. At that scale, the 448 KB constraint disappears entirely: a full www update, a 100 KB search result, and a 50 KB playlist together consume under 2% of available space.
 
 This means **the SPIFFS space problem is effectively an `board_esp32` (4 MB flash) problem**. Any user running an S3-N16R8 build is unlikely to ever encounter it under normal use.
 
-### Suggested fixes
+#### Suggested fixes
 
 1. **Check remaining space before every SPIFFS write**, not just before search/curated. `ESPFileUpdater`, `handleUpload`, and `updateLocaleFileAsync` all need the guard.
 2. **Return specific error to the user** when a write fails due to space: HTTP 507 Insufficient Storage for uploads; WebSocket `{"error":"spiffs_full"}` for async tasks.
 3. **Expose SPIFFS usage in the WebUI** (e.g., in options.html system group or `getsystem` response). `SPIFFS.usedBytes()` and `SPIFFS.totalBytes()` are cheap calls; including them in `GETSYSTEM` lets the user see how full the filesystem is before attempting operations.
 4. **For `board_esp32` only**: consider moving the partition table to give SPIFFS more space at the cost of one OTA slot (single-slot non-OTA partition), or move to LittleFS which has better space utilisation than SPIFFS for the same physical allocation.
 
----
+Trip5's idea
 
-## [ ] 8. Memory Leaks and Heap Fragmentation
-
-ESP32 devices run indefinitely without rebooting (under normal conditions). Any heap allocation that is not freed, or any pattern that fragments the heap over time, will eventually exhaust memory, causing allocation failures that manifest as silent playback failures, failed updates, or hard resets. This section audits all dynamic allocation patterns in the application code.
-
-### [ ] 8.1 `Config::startupServices()` — `ESPFileUpdater* updater` never freed `[MEDIUM]`
-
-- **File**: `src/core/config.cpp`, around line 1255.
-- **Code**:
-  ```cpp
-  ESPFileUpdater* updater = new ESPFileUpdater(SPIFFS);
-  ...
-  xTaskCreate(startupServicesAsync, "startupServicesAsync", 8192, updater, 2, NULL);
-  ```
-- **Task (`startupServicesAsync`)**: receives `updater` as `param`, calls `config.updateFile(param, ...)` for each file update, then calls `vTaskDelete(NULL)` — **without ever calling `delete (ESPFileUpdater*)param`**.
-- **Second path** (`!wwwFilesExist`): `updater` is allocated, then `getRequiredFiles()` is called. `getRequiredFiles()` calls `ESP.restart()` on success — but if it returns on failure the `updater` is never freed.
-- **Impact**: A one-time leak of one `ESPFileUpdater` object per boot-services invocation. Not recurring, but confirms the design does not account for ownership transfer through `void*` task parameters.
-- **Action**: At the end of `startupServicesAsync`, before `vTaskDelete(NULL)`, add `delete (ESPFileUpdater*)param;`. In the `!wwwFilesExist` path, add `delete updater;` after `getRequiredFiles()` returns.
-
-Trip5 Note: Doesn't getRequiredFiles() always result in a reboot?  (Fixing maybe unnecessary)
-
-### [X] 8.2 `MyNetwork::setWifiParams()` — `weatherBuf` reassigned without `free()` `[MEDIUM]`
-
-- **File**: `src/core/network.cpp`, around line 491.
-- **Code**:
-  ```cpp
-  weatherBuf = NULL;   // ← overwrites existing pointer without free()
-  ...
-  weatherBuf = (char *) malloc(sizeof(char) * WEATHER_STRING_L);
-  ```
-- **Problem**: If `setWifiParams()` is called more than once (e.g., during the `searchWiFi` task retry path in SD-card mode, or any future reconnect code path), the previously `malloc`'d block of `WEATHER_STRING_L` bytes is leaked.
-- **Current risk**: In typical boot flows `setWifiParams()` is called once. The `WiFiReconnected` callback does not call it again. However the design has no protection against accidental double-call leaking `WEATHER_STRING_L` bytes.
-- **Action**: Add a guard before the assignment: `if (weatherBuf) { free(weatherBuf); weatherBuf = nullptr; }`.
-
-### [ ] 8.3 `xTaskCreate` failure leaves heap allocations unclaimed `[LOW]`
-
-Four call sites allocate heap memory and pass the pointer as `pvParameters` to `xTaskCreate`, but do not free the memory if `xTaskCreate` fails (returns `errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY`). Task creation failure is unlikely in normal operation but is most likely to occur precisely when the heap is already critically fragmented.
-
-| File | Site | Allocation | Action on failure |
-|---|---|---|---|
-| `commandhandler.cpp` ~line 182 | `loadplaylist` handler | `char* filename = new char[strlen(value)+1]` | Not freed if `xTaskCreate` fails |
-| `netserver.cpp` ~line 1044 | `launchPlaybackTask()` | `String* url_copy = new String(url)` | Not freed if `xTaskCreate` fails |
-| `netserver.cpp` ~line 1219 | `processRadioBrowserClick()` | `char* urlCopy = new char[...]` | Not freed if `xTaskCreate` fails |
-| `config.cpp` ~line 1191 | `Config::updateLocaleFileAsync()` | `LocaleUpdateParams*` + inner `ESPFileUpdater*` | Neither freed if `xTaskCreate` fails |
-
-- **Action**: All four sites must check the return value of `xTaskCreate` and free the allocation when it is not `pdPASS`. Pattern:
-  ```cpp
-  if (xTaskCreate(..., (void*)ptr, ...) != pdPASS) {
-      delete[] ptr;  // or delete ptr
-      // handle error
-  }
-  ```
-
-### [ ] 8.4 `rb_servers[20]` global `String` array — recurring heap fragmentation `[LOW]`
-
-- **File**: `src/core/netserver.cpp`, line 61.
-- **Declaration**: `String rb_servers[20];`
-- **Problem**: 20 Arduino `String` objects at global scope. Each non-empty `String` holds a heap-allocated character buffer. `selectRadioBrowserServer()` rebuilds this array by repeatedly assigning new values, which frees old heap blocks and allocates new ones of varying sizes. On a long-running device, this repeated churn of differently-sized small heap blocks creates fragmentation. Fragmentation is the primary cause of allocation failures on ESP32 that don't appear immediately but develop over hours/days.
-- **Action**: Replace with a 2D `char` array: `char rb_servers[20][64]`. Server hostnames are short domain names well under 64 bytes. This eliminates all heap involvement for this array. Replace the `String` assignment and comparison operations with `strlcpy`/`strcmp`.
-
-### [ ] 8.5 Temporary `String` construction in hot/error paths — fragmentation `[LOW]`
-
-- **File**: `src/core/netserver.cpp`, lines ~1275 and ~1331.
-- **Code**:
-  ```cpp
-  websocket.textAll(String("{\"onlineupdateerror\": \"HTTP code ") + httpCode + "\"}");
-  websocket.textAll(String("{\"onlineupdateerror\": \"Update failed on end(): ") + String(Update.errorString()) + "\"}");
-  ```
-- **Problem**: Each statement constructs 2–3 temporary `String` heap objects (allocate → copy → concatenate → allocate again). These are freed immediately after the statement but each allocate+free cycle leaves behind a fragmentation scar. The success path immediately above already uses `snprintf` into a stack `char msgBuf[]` — the error paths should too.
-- **Action**: Replace with `snprintf(msgBuf, sizeof(msgBuf), ...)` matching the pattern already used for the success case.
-
-### [ ] 8.6 `MIN_MALLOC` defined but never enforced `[LOW]`
-
-- **File**: `src/core/netserver.cpp`, lines 42–43.
-- **Code**: `#define MIN_MALLOC 24112`
-- **Problem**: `MIN_MALLOC` is defined (with a `#ifndef` guard suggesting it is user-overridable), but no code anywhere checks `ESP.getFreeHeap() < MIN_MALLOC` before starting new background tasks or network operations. The constant was presumably intended as a low-heap guard threshold but the associated check was never implemented.
-- **Action**: Either (a) implement a guard: refuse to create new background tasks (`search`, `curated`, `playback`, `rb_click`) when heap is critically low, logging a warning via `Serial.printf`; or (b) remove `MIN_MALLOC` to avoid misleading future readers into thinking a guard exists.
-
-### [ ] 8.7 No heap health monitoring or low-memory recovery path `[MEDIUM]`
-
-- The device has no autonomous mechanism to detect gradual heap exhaustion. When the heap fragments below the threshold needed for a new WiFi/TCP connection or audio stream buffer, the symptom is silent failure (station won't play, updates time out) rather than a recoverable logged event.
-- `xPortGetFreeHeapSize()` is exposed in telnet `info` output (line 698) but never logged to Serial on a schedule or acted on.
-- There is no low-heap watchdog that would trigger a controlled reboot (as opposed to a crash/WDT reset with no log).
-- **Suggested actions**:
-  1. Add a periodic heap log in the `ticks()` ticker (e.g., every 5 minutes): `Serial.printf("[Heap] Free: %u, Min: %u\n", ESP.getFreeHeap(), ESP.getMinFreeHeap());`. Cheap and invaluable for diagnosing long-uptime degradation.
-  2. In the MQTT/WebSocket system-info broadcasts, include `freeHeap` so the WebUI can surface it.
-  3. Consider a controlled-reboot policy: if `ESP.getMinFreeHeap()` (the all-time minimum across the session) drops below a configurable threshold (e.g., `LOW_HEAP_REBOOT_THRESHOLD`), reboot at the next station-change boundary rather than waiting for a crash.
-  4. Implement the `MIN_MALLOC` guard from §8.6 as the first concrete step.
+Here's a hint:
+#define FS_REQUIRED_FREE_SPACE 150 // in KB - must be minimum x1.5 of the limit_per_page in search.js (100)
+We should be able to make limit_per_page dynamic through a variables.js setting...
+get an estimate of free space and if it's 150+ KB send 100 .. if it's less then... do some math.  100KB gets 65 results... etc.
+The problem with this, make it toooo dynamic and it interferes with pages... so... maybe do it once after boot is complete and rb_Servers, timezones.json is updated...then that number is put into a global variable
+If we do that, we should initiate cleanup on every boot (well, initiate cleanup if free space is under 300KB maybe?)
 
 ---
 
-## [ ] 9. Blocking Operations on Real-Time / Non-Background Contexts
+## [X] 8. Memory Leaks and Heap Fragmentation (ALL FIXED)
 
-### [ ] 9.1 `rebootmdns` executes `delay(1500)` on the calling task `[MEDIUM]`
+**Resolution (2026-05)**: All §8 sub-issues addressed. §8.1 ESPFileUpdater leak: `delete (ESPFileUpdater*)param` added before `vTaskDelete(NULL)`; done in prior session. §8.2 weatherBuf double-malloc: free guard added; done in prior session. §8.3 xTaskCreate failure handling: all four sites (`loadplaylist`, `launchPlaybackTask`, `processRadioBrowserClick`, `updateLocaleFileAsync`) now check return value and free allocations on failure. §8.4 `rb_servers` String→char: `String rb_servers[20]` replaced with `char rb_servers[20][64]`; all 17+ usage sites updated to `strlcpy`/`strcmp`. §8.5 temporary String in error paths: both `websocket.textAll(String(...) + ...)` hotspot expressions replaced with `snprintf(msgBuf, ...)`. §8.6 `MIN_MALLOC` guard: `MIN_MALLOC` moved to `options.h` (user-overridable, included everywhere); heap guard added at all five background-task spawn sites (`handleSearch`, `launchPlaybackTask`, `processRadioBrowserClick`, `loadindex`, `loadplaylist`). §8.7 heap monitoring: periodic `FUNCTIONLOG("Heap", ...)` every 300 ticks (~5 min) in `ticks()` — visible via serial/telnet.
 
-- **File**: `src/core/commandhandler.cpp`, line ~87.
-- **Code**: `if (cmdIs(command, "rebootmdns")) { delay(1500); ESP.restart(); return true; }`
-- **Problem**: This command is called directly from `cmd.exec()`, which runs on the AsyncWebServer task (the WebSocket message handler). A `delay(1500)` on that task stalls all WebSocket and HTTP event handling for 1.5 seconds, triggers AsyncWebServer internal timeouts, and may feed the watchdog unevenly. The `clearspiffs` handler in `handleIndex()` has the same pattern with `delay(100)` before restart.
-- **Action**: Use a `Ticker.once()` to schedule the restart, mirroring the `improvRebootTicker` pattern already used in `onImprovCustomConnect()`. Return immediately from the command handler. The `clearspiffs` handler should do the same.
+---
 
-### [ ] 9.2 Blocking WiFi scan on the main loop during boot `[LOW]`
+## [X] 9. Blocking Operations on Real-Time / Non-Background Contexts (ALL FIXED)
 
-- **File**: `src/core/network.cpp`, line ~215.
-- **Code**: `int n = WiFi.scanNetworks();` — called synchronously inside `wifiBegin()`, which is called from `network.begin()` on the main Arduino task during boot.
-- **Problem**: `WiFi.scanNetworks()` is a blocking call that can take 2–5 seconds. During this time the main task is fully blocked — the watchdog timer is fed by the idle task, but no `loop()` processing, display updates, or serial I/O occurs. On slow RF environments it can take longer.
-- **Telnet context**: `telnet.cpp` line ~621 calls `WiFi.scanNetworks()` directly in `on_input()`, blocking the telnet task for the full scan duration.
-- **Action**: Use `WiFi.scanNetworks(true)` (async mode, returns immediately with `WIFI_SCAN_RUNNING`) and poll `WiFi.scanComplete()` in combination with `WiFi.scanResults()`. If blocking is required at boot for correctness, at least call `esp_task_wdt_reset()` during the wait. Add a scan timeout.
-
-### [ ] 9.3 Busy-wait spin loops without watchdog care `[LOW]`
-
-Two spin loops use `delay()` to yield but have no timeout guard:
-- `src/core/netserver.cpp` line ~247: `while(nsQueue==NULL) {;}` — pure busy-spin, no delay, no WDT reset, no timeout.
-- `src/core/display.cpp` line ~111: `while(displayQueue==NULL) {;}` — same.
-- `src/core/config.cpp` line ~193: `while(display.mode()!=SDCHANGE) delay(10);` — has a yield but no maximum iteration count; would spin forever if the display task fails to transition.
-- `src/core/controls.cpp` line ~185: `while(display.mode() != STATIONS) {delay(10);}` — same problem; no bail-out.
-
-For the queue-creation loops, the `while(x==NULL)` guards are a leftover defensive pattern; if `xQueueCreate` returns NULL, the queue is already broken and a restart is the appropriate response, not an infinite spin. For the mode-transition loops, a timeout (e.g., 2 seconds of total wait) should terminate with a fallback.
-- **Action**: Replace the `while(nsQueue==NULL)` and `while(displayQueue==NULL)` spins with an assertion or immediate restart. Replace the mode-transition waits with a timeout + fallback:
-  ```cpp
-  uint32_t tStart = millis();
-  while (display.mode() != STATIONS && millis() - tStart < 2000) { delay(10); }
-  ```
-
-### [X] 9.4 Blocking SD card mount attempts during boot waste time when no card is present `[LOW]` (FIXED)
-
-- **Files**: `src/core/sdmanager.cpp` line ~23; `src/main.cpp` lines ~79–82; `src/core/config.cpp` line ~253.
-- **Problem — unconditional `WAITFORSD` display + log**: In `main.cpp`, the `display.putRequest(WAITFORSD, 0)` call and `Serial.print("##BOOT#\tSD search\t")` fire whenever `SDC_CS != 255`, regardless of whether the last saved play mode is `PM_SDCARD` or `PM_WEB`. A device running in web-radio mode with SD hardware wired up will display "INDEX SD" on every boot even though `initPlaylistMode()` immediately takes the `else` branch and does no SD work. This misleads the user and unnecessarily occupies the boot-splash text slot.
-  - **Fix Applied**: Guarded behind `config.store.play_mode == PM_SDCARD` in `main.cpp`.
-- **Problem — four unconditional `SD.begin()` SPI calls**: `SDManager::start()` attempts `SD.begin()` four times with `vTaskDelay(10)`, `vTaskDelay(20)`, `vTaskDelay(50)` between each. The delays are unconditional — they run even when the first attempt succeeds, adding a minimum 80 ms of idle delay on every successful mount. When no card is present each `SD.begin()` attempt runs the Arduino-ESP32 SD init sequence internally (CMD0/CMD8/ACMD41 retries, voltage-ramp wait), which can add 100–500 ms per attempt before returning failure. At worst this is ~2 seconds of blocking on the main task with no card inserted.
-  - **Fix Applied**: `SDManager::start()` now early-returns on success; delays only occur between actual retry attempts — eliminating the minimum 80 ms idle on a successful first-attempt mount.
-- **Problem — no card-detect (CD) pin option**: Many SD card slot footprints expose a mechanical CD (card-detect) switch pin that reads LOW when a card is seated and HIGH when the slot is empty. No define or check existed; the firmware had no way to skip the SPI init sequence entirely when the pin reveals the slot is empty.
-  - **Fix Applied**: `SD_CARD_DETECT_PIN` define added to `options.h` (default 255 = disabled). When set, initialized as `INPUT_PULLUP` in `Config::_initHW()`. Combined with `SD_AUTOPLAY` (default `false`), the `ticks()` `divrssi` block in `network.cpp` polls the pin every ~2 s and calls `config.changeMode(PM_SDCARD)` on insertion. `SD_AUTOPLAY` requires both this pin and a deliberate `#define SD_AUTOPLAY true` in `myoptions.h` to have any runtime effect.
-  - **Fix Applied**: `initPlaylistMode()` and `changeMode()` now short-circuit on `SD_CARD_DETECT_PIN` before calling `sdman.start()`. When the pin reads HIGH (slot empty), the boot path falls back to `PM_WEB` immediately and manual mode switches to SD abort without incurring the SPI retry sequence.
-- **Context — SD is always re-initialized on mode switch anyway**: `Config::changeMode()` already calls `sdman.start()` whenever `!sdman.ready && newmode!=PM_WEB`. There is therefore **no correctness requirement** to initialize the SD card at boot at all — `initPlaylistMode()` should only mount the card when booting directly into `PM_SDCARD`. The current code already does this for the actual `sdman.start()` call; the `WAITFORSD` splash and serial log were the only parts firing unconditionally (now fixed).
+**Resolution (2026-05)**: All four sub-issues resolved. §9.1 (`rebootmdns` `delay(1500)`): the `rebootmdns` command handler was deleted entirely; `mdnsname` now calls `NetServer::restartMdns()` which runs `MDNS.end()` + `MDNS.begin()` at runtime — no delay, no reboot; WebUI renamed case to `restartmdns` and polls the new `.local` host via `redirectWhenReady` (8 s timeout). §9.2 (blocking WiFi scan during boot): closed/accepted as-is — `wifiscanbest` is opt-in and the one-time boot scan (2–5 s) has no correctness risk; restructuring `wifiBegin()` into a polling state machine is unjustified complexity. §9.3 (spin loops): `while(nsQueue==NULL)` and `while(displayQueue==NULL)` replaced with `if(NULL){ log_e(); ESP.restart(); }` fail-fast; mode-transition waits in `config.cpp` and `controls.cpp` now carry 2 s `millis()` timeouts. §9.4 (SD card blocking): resolved in a prior session.
 
 ---
 
@@ -796,32 +634,9 @@ For the queue-creation loops, the `while(x==NULL)` guards are a leftover defensi
 
 ---
 
-## [ ] 11. Stack Overflow Risks in FreeRTOS Tasks
+## [X] 11. Stack Overflow Risks in FreeRTOS Tasks
 
-### [ ] 11.1 `DspTask` stack is a fixed 4KB — no high-watermark monitoring `[LOW]`
-
-- **File**: `src/core/display.cpp`, line ~27 and ~69.
-- **Code**: `#define CORE_STACK_SIZE 1024*4` → `xTaskCreatePinnedToCore(loopDspTask, "DspTask", CORE_STACK_SIZE, ...)`
-- **Problem**: The display task runs a substantial rendering loop, calls widget draw functions, and on displays backed by Adafruit/TFT_eSPI libraries can invoke moderately deep call stacks. 4KB is tight; a stack overflow on FreeRTOS produces a watchdog reset or heap corruption (the stack grows into adjacent heap). There is no runtime check of the high-water mark.
-- **Affected tasks and their declared sizes**:
-
-| Task | Stack | Where |
-|---|---|---|
-| `DspTask` | 4096 | `display.cpp` |
-| `searchRadioBrowser` | 8192 | `netserver.cpp` |
-| `curatedIndex` | 8192 | `commandhandler.cpp` |
-| `curatedPlaylist` | 8192 | `commandhandler.cpp` |
-| `playbackTask` (HTTP) | 4096 | `netserver.cpp` |
-| `playbackTask` (HTTPS) | 8192 | `netserver.cpp` |
-| `rbClickTask` | 8192 | `netserver.cpp` |
-| `startupServicesAsync` | 8192 | `config.cpp` |
-| `updateLocaleFileAsync` | 8192 | `config.cpp` |
-| `doSync` | 4096 | `network.cpp` |
-| `retryStreamConnection` | 4096 | `network.cpp` |
-| `checkForOnlineUpdateTask` | 8096 | `netserver.cpp` |
-| `startOnlineUpdateTask` | 16384 | `netserver.cpp` |
-
-- **Action**: Add `uxTaskGetStackHighWaterMark(NULL)` logging to each long-lived task at a low-frequency checkpoint (e.g., once per minute or triggered by telnet `info`). The DspTask is the most suspect — consider raising to 8KB. If `uxTaskGetStackHighWaterMark()` returns < 512 bytes in testing, that task's stack needs expanding.
+**Resolution (2026-05)**: Stack sizes are inherited from yoRadio defaults; not validated on ESP32/C3 (no hardware available). S3 field data via `CORE_MONITOR` showed healthy margins on all tasks. All task stacks scale with `STACK_MULTIPLIER` (×2 on S3, ×1 on ESP32/C3); `STACK_MULTIPLIER` and `MIN_MALLOC` are documented in `options.h` as overridable in `myoptions.h`. `CORE_MONITOR` provides continuous HWM logging for long-lived tasks and one-shot HWM from every short-lived task before `vTaskDelete` — the tooling is there if a real overflow is ever reported.
 
 ---
 
@@ -1500,13 +1315,9 @@ There are a lot of commands.  They could be documented better... OR we could hav
 
 ---
 
-## [ ] 95. Core-pinned Tasks Need Fixing?
+## [X] 95. Core-pinned Tasks Need Fixing?
 
-Looks like there's not enough clear division of what each of the 2 cores is supposed to do.
-
-Very likely, we need to move audio to 1 core and Network functions to the other.
-
-We also need a core-watcher to help debug how this worked out.
+**Resolution (2026-05)**: `AUDIO_CORE`/`NETWORK_CORE`/`DSP_TASK_CORE_ID` macros established; audio pinned to Core 0, network/display/netserver to Core 1. `netserverLoopTask` pinned to Core 1. `STACK_MULTIPLIER=2` for S3 doubles all long-lived task stacks. Core-watcher implemented via `#define CORE_MONITOR` — logs Core 0/Core 1 loop rates, max main-loop µs, heap, and per-task HWM every 5 s; all short-lived tasks emit a one-shot HWM before `vTaskDelete`. S3 field data confirmed correct core assignments and healthy task margins under load. Closing.
 
 
 ---

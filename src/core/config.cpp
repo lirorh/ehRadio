@@ -203,7 +203,8 @@ void Config::changeMode(int newmode) {
     if (getMode()==PM_SDCARD) {
       if (pir) player.sendCommand({PR_STOP, 0});
       display.putRequest(NEWMODE, SDCHANGE);
-      while(display.mode()!=SDCHANGE)
+      unsigned long _modeWaitStart = millis();
+      while(display.mode()!=SDCHANGE && millis()-_modeWaitStart<2000)
         delay(10);
       delay(50);
     }
@@ -1201,6 +1202,9 @@ void updateLocaleFileAsyncWrapper(void* param) {
   }
   delete params->updater;
   delete params;
+  #ifdef CORE_MONITOR
+    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+  #endif
   vTaskDelete(NULL);
 }
 
@@ -1229,7 +1233,11 @@ bool Config::updateLocaleFileAsync(const char* localeCode, uint8_t clientId) {
     params->updater->setUserAgent(ESPFILEUPDATER_USERAGENT);
     params->clientId = clientId;
     strlcpy(params->localeCode, localeCode, sizeof(params->localeCode));
-    xTaskCreatePinnedToCore(updateLocaleFileAsyncWrapper, "updateLocaleFileAsyncWrapper", 8192, params, LOW_TASK_PRIORITY, NULL, NETWORK_CORE);
+    if (xTaskCreatePinnedToCore(updateLocaleFileAsyncWrapper, "updateLocaleFileAsyncWrapper", 8192, params, LOW_TASK_PRIORITY, NULL, NETWORK_CORE) != pdPASS) {
+      delete params->updater;
+      delete params;
+      return false;
+    }
     return true; // Task created successfully (NOT download result)
   #else
     // If not, then just need to switch
@@ -1286,6 +1294,10 @@ void startupServicesAsync(void* param) {
   config.updateFile(param, "/www/timezones.json.gz", TIMEZONES_JSON_URL, TIMEZONES_JSON_CHECKTIME, "Timezones database file");
   config.updateFile(param, "/www/rb_srvrs.json", RADIO_BROWSER_SERVERS_URL, RB_SERVERS_CHECKTIME, "Radio Browser servers list");
   cleanStaleSearchResults();
+  #ifdef CORE_MONITOR
+    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+  #endif
+  delete (ESPFileUpdater*)param;
   vTaskDelete(NULL);
 }
 
@@ -1298,6 +1310,7 @@ void Config::startupServices() {
     updater->setUserAgent(ESPFILEUPDATER_USERAGENT);
     if (!wwwFilesExist) {
       getRequiredFiles();
+      delete updater;
     } else {
       xTaskCreatePinnedToCore(startupServicesAsync, "startupServicesAsync", 8192, updater, LOW_TASK_PRIORITY, NULL, NETWORK_CORE);
     }

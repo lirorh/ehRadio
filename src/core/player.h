@@ -11,10 +11,6 @@
   #define MQTT_BURL_SIZE  512
 #endif
 
-#ifndef PLQ_SEND_DELAY
-	#define PLQ_SEND_DELAY pdMS_TO_TICKS(1000)
-#endif
-
 #define PLERR_LN        64
 #define SET_PLAY_ERROR(...) {char buff[576]; snprintf(buff, sizeof(buff), __VA_ARGS__); setError(buff);}
 

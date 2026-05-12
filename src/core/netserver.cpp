@@ -34,17 +34,6 @@
 #ifdef USE_SD
   #include "sdmanager.h"
 #endif
-#ifndef MIN_MALLOC
-  #define MIN_MALLOC 24112
-#endif
-#ifndef NSQ_SEND_DELAY
-  //#define NSQ_SEND_DELAY       portMAX_DELAY
-  #define NSQ_SEND_DELAY       pdMS_TO_TICKS(300)
-#endif
-#ifndef NS_QUEUE_TICKS
-  //#define NS_QUEUE_TICKS pdMS_TO_TICKS(2)
-  #define NS_QUEUE_TICKS 0
-#endif
 
 #ifdef DEBUG_V
   #define DBGVB(...) { char buf[200]; snprintf(buf, sizeof(buf), __VA_ARGS__); FUNCTIONLOG("Netserver.debug", "%s", buf); }
@@ -52,15 +41,14 @@
   #define DBGVB(...)
 #endif
 
-#define NETSERVER_TASK_STACK_BYTES  (NETSERVER_TASK_STACK_SIZE * 1024)
-#define NETSERVER_TASK_DELAY_TICKS    pdMS_TO_TICKS(NETSERVER_TASK_DELAY)
-
 // Global list for Radio-Browser servers to persist across searches
-String rb_servers[20];
+char rb_servers[20][64];
 // For the search task
-TaskHandle_t g_searchTaskHandle = NULL;
+volatile TaskHandle_t g_searchTaskHandle = NULL;
 // For the curated playlists task
-TaskHandle_t g_curatedTaskHandle = NULL;
+volatile TaskHandle_t g_curatedTaskHandle = NULL;
+TaskHandle_t nsTaskHandle = NULL;
+portMUX_TYPE taskSpawnMux = portMUX_INITIALIZER_UNLOCKED;
 #define FS_REQUIRED_FREE_SPACE 150 // in KB - must be minimum x1.5 of the limit_per_page in search.js (100)
 #define SEARCHRESULTS_BUFFER_BYTES (SEARCHRESULTS_BUFFER * 1024)
 
@@ -124,6 +112,10 @@ void handleSearch(AsyncWebServerRequest *request) {
       request->send(429, "text/plain", "Search task is already running.");
       return;
     }
+    if (ESP.getFreeHeap() <= MIN_MALLOC) {
+      request->send(503, "text/plain", "Insufficient heap for search task.");
+      return;
+    }
     String searchQuery = request->getParam("search")->value();
     char* search_str = new (std::nothrow) char[searchQuery.length() + 1];
     if (!search_str) {
@@ -131,7 +123,15 @@ void handleSearch(AsyncWebServerRequest *request) {
       return;
     }
     strcpy(search_str, searchQuery.c_str());
-    xTaskCreatePinnedToCore(vTaskSearchRadioBrowser, "searchRadioBrowser", 8192, (void*)search_str, LOW_TASK_PRIORITY, &g_searchTaskHandle, NETWORK_CORE);
+    taskENTER_CRITICAL(&taskSpawnMux);
+    if (g_searchTaskHandle == NULL) {
+      if (xTaskCreatePinnedToCore(vTaskSearchRadioBrowser, "searchRadioBrowser", 8192, (void*)search_str, LOW_TASK_PRIORITY, (TaskHandle_t*)&g_searchTaskHandle, NETWORK_CORE) != pdPASS) {
+        delete[] search_str;
+      }
+    } else {
+      delete[] search_str;
+    }
+    taskEXIT_CRITICAL(&taskSpawnMux);
     request->send(200, "application/json", "{\"status\":\"searching\"}");
   }
 }
@@ -242,19 +242,28 @@ void handleSearchPost(AsyncWebServerRequest *request) {
 static void netserverLoopTask(void* pvParameters) {
   for(;;) {
     netserver.loop();
-    vTaskDelay(NETSERVER_TASK_DELAY_TICKS);
+    vTaskDelay(pdMS_TO_TICKS(NETSERVER_TASK_DELAY));
   }
 }
 
 void NetServer::startLoopTask() {
-  xTaskCreatePinnedToCore(netserverLoopTask, "netserverLoop", NETSERVER_TASK_STACK_BYTES, NULL, NETSERVER_TASK_PRIORITY, NULL, NETWORK_CORE);
+  xTaskCreatePinnedToCore(netserverLoopTask, "netserverLoop", (NETSERVER_TASK_STACK_SIZE * 1024), NULL, NETSERVER_TASK_PRIORITY, &nsTaskHandle, NETWORK_CORE);
+}
+
+void NetServer::restartMdns() {
+  if (strlen(config.store.mdnsname) == 0) return;
+  MDNS.end();
+  MDNS.begin(config.store.mdnsname);
+  #if USE_OTA
+    ArduinoOTA.setHostname(config.store.mdnsname);
+  #endif
 }
 
 bool NetServer::begin(bool quiet) {
   if (network.status==SDREADY) return true;
   if (!quiet) BOOTLOGX("netserver.begin\t");
-  nsQueue = xQueueCreate(20, sizeof(nsRequestParams_t));
-  while(nsQueue==NULL) {;}
+  nsQueue = xQueueCreate(64, sizeof(nsRequestParams_t));
+  if (nsQueue==NULL) { log_e("[netserver] nsQueue alloc failed — rebooting"); ESP.restart(); }
 
   webserver.on("/", HTTP_ANY, handleIndex);
   webserver.on("/ready", HTTP_GET, handleReady);
@@ -371,10 +380,6 @@ void NetServer::chunkedHtmlPage(const String& contentType, AsyncWebServerRequest
   #define SHOW_WEATHER  false
 #endif
 
-#ifndef NS_QUEUE_TICKS
-  #define NS_QUEUE_TICKS 0
-#endif
-
 const char *getFormat(BitrateFormat _format) {
   switch (_format) {
     case BF_MP3:  return "MP3";
@@ -390,7 +395,7 @@ const char *getFormat(BitrateFormat _format) {
 void NetServer::processQueue() {
   if (nsQueue==NULL) return;
   nsRequestParams_t request;
-  if (xQueueReceive(nsQueue, &request, NS_QUEUE_TICKS)) {
+  if (xQueueReceive(nsQueue, &request, pdMS_TO_TICKS(NS_QUEUE_DELAY))) {
     char wsbuf[WEBSOCKET_BUFFER] = {0};
     uint8_t clientId = request.clientId;
     switch (request.type) {
@@ -668,7 +673,9 @@ void NetServer::requestOnChange(requestType_e request, uint8_t clientId) {
   nsRequestParams_t nsrequest;
   nsrequest.type = request;
   nsrequest.clientId = clientId;
-  xQueueSend(nsQueue, &nsrequest, NSQ_SEND_DELAY);
+  if (xQueueSend(nsQueue, &nsrequest, pdMS_TO_TICKS(NSQ_SEND_DELAY)) != pdTRUE) {
+    FUNCTIONLOG("Queue", "nsQueue overflow, dropped req=%d", request);
+  }
 }
 
 void NetServer::resetQueue() {
@@ -765,7 +772,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 // Helper to select and randomize radio-browser servers
 void selectRadioBrowserServer() {
   size_t arr_size = sizeof(rb_servers) / sizeof(rb_servers[0]);
-  for (size_t i = 0; i < arr_size; ++i) rb_servers[i] = "";
+  for (size_t i = 0; i < arr_size; ++i) rb_servers[i][0] = '\0';
   File serversFile = SPIFFS.open("/www/rb_srvrs.json", "r");
   if (!serversFile) {
     FUNCTIONLOG("Search", "[Error] Failed to open /www/rb_srvrs.json.");
@@ -789,33 +796,34 @@ void selectRadioBrowserServer() {
       const char* srvr_name = server_obj["name"];
       bool duplicate = false;
       for (size_t j = 0; j < count; ++j) {
-        if (rb_servers[j] == srvr_name) {
+        if (strcmp(rb_servers[j], srvr_name) == 0) {
           duplicate = true;
           break;
         }
       }
       if (!duplicate && count < arr_size) {
-        rb_servers[count++] = srvr_name;
+        strlcpy(rb_servers[count++], srvr_name, sizeof(rb_servers[0]));
       }
     }
     // Shuffle (Fisher-Yates)
     if (count > 1) {
       for (size_t i = count - 1; i > 0; --i) {
         size_t j = random(i + 1);
-        String temp = rb_servers[i];
-        rb_servers[i] = rb_servers[j];
-        rb_servers[j] = temp;
+        char temp[64];
+        strlcpy(temp, rb_servers[i], sizeof(temp));
+        strlcpy(rb_servers[i], rb_servers[j], sizeof(rb_servers[0]));
+        strlcpy(rb_servers[j], temp, sizeof(rb_servers[0]));
       }
     }
 
     // Add fallback as last entry after the shuffled servers
-    if (count < arr_size) rb_servers[count] = RADIO_BROWSER_SERVER;
+    if (count < arr_size) strlcpy(rb_servers[count], RADIO_BROWSER_SERVER, sizeof(rb_servers[0]));
   }
   return;
 useHostname:
   // Use hostname instead of IP to ensure proper Host header and HTTPS support
   FUNCTIONLOG("Search", "Using fallback: %s.", RADIO_BROWSER_SERVER);
-  rb_servers[0] = RADIO_BROWSER_SERVER;
+  strlcpy(rb_servers[0], RADIO_BROWSER_SERVER, sizeof(rb_servers[0]));
 }
 
 void vTaskSearchRadioBrowser(void *pvParameters) {
@@ -836,7 +844,7 @@ void vTaskSearchRadioBrowser(void *pvParameters) {
   size_t arr_size = sizeof(rb_servers) / sizeof(rb_servers[0]);
   int server_count = 0;
   for (size_t i = 0; i < arr_size; ++i) {
-    if (rb_servers[i].length() > 0) server_count++;
+    if (rb_servers[i][0] != '\0') server_count++;
   }
   // If the list is empty, it's the first run or all servers failed previously. Let's (re)populate it.
   if (server_count == 0) {
@@ -845,7 +853,7 @@ void vTaskSearchRadioBrowser(void *pvParameters) {
     // Recount after filling
     server_count = 0;
     for (size_t i = 0; i < arr_size; ++i) {
-      if (rb_servers[i].length() > 0) server_count++;
+      if (rb_servers[i][0] != '\0') server_count++;
     }
   }
   // If still no servers, then the API source is likely down or unreachable.
@@ -866,14 +874,14 @@ void vTaskSearchRadioBrowser(void *pvParameters) {
   bool server_retried = false;
   bool json_valid = false;
   for (size_t i = 0; i < arr_size; ++i) {
-    if (rb_servers[i].length() == 0) continue;
-    String server = rb_servers[i];
+    if (rb_servers[i][0] == '\0') continue;
+    const char* server = rb_servers[i];
     // Compose the URL using the full search string
-    String url = "https://" + server + "/json/stations/search?" + String(search_str);
+    String url = String("https://") + server + "/json/stations/search?" + search_str;
     FUNCTIONLOG("Search", "Attempting to download from: %s", url.c_str());
     auto status = searchResultsFetch.checkAndUpdate(localPath, url, ESPFILEUPDATER_VERBOSE);
     if (status == ESPFileUpdater::UPDATED) {
-      FUNCTIONLOG("Search", "Successfully downloaded from %s", server.c_str());
+      FUNCTIONLOG("Search", "Successfully downloaded from %s", server);
       // Check if the downloaded file ends with ']' (an incomplete .json will not)
       File jsonFile = SPIFFS.open(localPath, "r");
       if (jsonFile) {
@@ -928,13 +936,13 @@ void vTaskSearchRadioBrowser(void *pvParameters) {
         success = true;
         break;
       } else {
-        FUNCTIONLOG("Search", "[Error] Invalid JSON from %s. Removing from list.", server.c_str());
-        rb_servers[i] = "";
+        FUNCTIONLOG("Search", "[Error] Invalid JSON from %s. Removing from list.", server);
+        rb_servers[i][0] = '\0';
         server_retried = false;
       }
     } else {
-      FUNCTIONLOG("Search", "[Error] Failed to download from %s. Removing from persistent list.", server.c_str());
-      rb_servers[i] = "";
+      FUNCTIONLOG("Search", "[Error] Failed to download from %s. Removing from persistent list.", server);
+      rb_servers[i][0] = '\0';
       server_retried = false;
     }
   }
@@ -948,6 +956,9 @@ void vTaskSearchRadioBrowser(void *pvParameters) {
   delete[] search_str;
   search_str = nullptr;
   g_searchTaskHandle = NULL;
+  #ifdef CORE_MONITOR
+    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+  #endif
   vTaskDelete(NULL);
 }
 
@@ -990,6 +1001,9 @@ void vTaskFetchCuratedIndex(void *pvParameters) {
   #endif
   
   g_curatedTaskHandle = NULL;
+  #ifdef CORE_MONITOR
+    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+  #endif
   vTaskDelete(NULL);
 }
 
@@ -1035,6 +1049,9 @@ void vTaskFetchCuratedPlaylist(void *pvParameters) {
   
   delete[] filename;
   g_curatedTaskHandle = NULL;
+  #ifdef CORE_MONITOR
+    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+  #endif
   vTaskDelete(NULL);
 }
 
@@ -1047,18 +1064,25 @@ void launchPlaybackTask(const String& url, const String& name) {
   player.sendCommand({PR_STOP, 0}); // Stop any current playback first
   display.putRequest(NEWSTATION, 0);
   FUNCTIONLOG("Netserver.playback", "Creating a dedicated task for playback.");
+  if (ESP.getFreeHeap() <= MIN_MALLOC) {
+    FUNCTIONLOG("Heap", "low heap (%u), refusing playback task spawn", ESP.getFreeHeap());
+    return;
+  }
   // Use a lambda to capture the URL and pass it to the task
   String* url_copy = new String(url);
   if (url_copy) {
     // Use a larger stack for HTTPS, as it requires more memory for SSL/TLS.
     UBaseType_t stackSize = url.startsWith("https://") ? 8192 : 4096;
-    xTaskCreatePinnedToCore(
+    if (xTaskCreatePinnedToCore(
         [](void* pvParameters) {
           String* urlToPlay = (String*)pvParameters;
           vTaskDelay(pdMS_TO_TICKS(100)); // A small delay can help the network stack release resources
           FUNCTIONLOG("PlaybackTask", "Starting playback for URL: %s. Free heap: %u", urlToPlay->c_str(), ESP.getFreeHeap());
           player.playUrl(urlToPlay->c_str());
           delete urlToPlay; // Free the string
+          #ifdef CORE_MONITOR
+            FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+          #endif
           vTaskDelete(NULL);
         },
         "playbackTask",
@@ -1067,7 +1091,10 @@ void launchPlaybackTask(const String& url, const String& name) {
         PLAYBACK_TASK_PRIORITY,
         NULL,
         NETWORK_CORE
-   );
+    ) != pdPASS) {
+      delete url_copy;
+      FUNCTIONLOG("Netserver.playback", "[Error] xTaskCreate failed for playbackTask.");
+    }
   } else {
     FUNCTIONLOG("Netserver.playback", "[Error] Failed to allocate memory for playback task URL.");
   }
@@ -1208,6 +1235,9 @@ void radioBrowserSendClick(const char* stationUrl) {
       FUNCTIONLOG("RB Click", "Click not confirmed");
     }
     delete[] stationUrl;
+    #ifdef CORE_MONITOR
+      FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+    #endif
     vTaskDelete(NULL);
   }
 #endif
@@ -1220,6 +1250,10 @@ void processRadioBrowserClick() {
       return; // Still waiting
     }
     clickDelayActive = false;
+    if (ESP.getFreeHeap() <= MIN_MALLOC) {
+      FUNCTIONLOG("Heap", "low heap (%u), refusing rb click task spawn", ESP.getFreeHeap());
+      return;
+    }
     // Copy URL to pass to task (task will delete it)
     char* urlCopy = new char[strlen(pendingClickUrl) + 1];
     if (urlCopy == nullptr) {
@@ -1228,7 +1262,7 @@ void processRadioBrowserClick() {
     }
     strcpy(urlCopy, pendingClickUrl);
     // Spawn the background task (allow multiple concurrent tasks for different stations)
-    xTaskCreatePinnedToCore(
+    if (xTaskCreatePinnedToCore(
       vTaskRadioBrowserClick,
       "rbClickTask",
       8192,  // Stack size - HTTPS needs more memory
@@ -1236,7 +1270,10 @@ void processRadioBrowserClick() {
       LOW_TASK_PRIORITY,     // Priority
       NULL,  // No handle tracking - task cleans up itself
       NETWORK_CORE
-    );
+    ) != pdPASS) {
+      delete[] urlCopy;
+      FUNCTIONLOG("RB Click", "[Error] xTaskCreate failed for rbClickTask.");
+    }
   #endif // RADIO_BROWSER_SEND_CLICKS
 }
 
@@ -1282,7 +1319,9 @@ void checkForOnlineUpdate() {
       }
       websocket.textAll(msgBuf);
     } else {
-      websocket.textAll(String("{\"onlineupdateerror\": \"HTTP code ") + httpCode + "\"}");
+      char msgBuf[96];
+      snprintf(msgBuf, sizeof(msgBuf), "{\"onlineupdateerror\": \"HTTP code %d\"}", httpCode);
+      websocket.textAll(msgBuf);
       http.end();
     }
   #endif //#ifdef UPDATEURL
@@ -1338,7 +1377,9 @@ void startOnlineUpdate() {
             delay(1000);
             ESP.restart();
           } else {
-            websocket.textAll(String("{\"onlineupdateerror\": \"Update failed on end(): ") + String(Update.errorString()) + "\"}");
+            char msgBuf[96];
+            snprintf(msgBuf, sizeof(msgBuf), "{\"onlineupdateerror\": \"Update failed on end(): %s\"}", Update.errorString());
+            websocket.textAll(msgBuf);
           }
         } else {
          websocket.textAll("{\"onlineupdateerror\": \"Cannot begin update (reboot then try again)\"}");
@@ -1371,7 +1412,13 @@ void handleNotFound(AsyncWebServerRequest * request) {
 
   #ifdef UPDATEURL
     if (request->method() == HTTP_GET && request->url() == "/onlineupdatecheck") {
-      xTaskCreatePinnedToCore([](void*) { checkForOnlineUpdate(); vTaskDelete(NULL); }, "checkForOnlineUpdateTask", 8192, nullptr, LOW_TASK_PRIORITY, nullptr, NETWORK_CORE);
+      xTaskCreatePinnedToCore([](void*) {
+        checkForOnlineUpdate();
+        #ifdef CORE_MONITOR
+          FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+        #endif
+        vTaskDelete(NULL);
+      }, "checkForOnlineUpdateTask", 8192, nullptr, LOW_TASK_PRIORITY, nullptr, NETWORK_CORE);
       request->send(200, "text/plain", "Update check started"); return;
     }
     if (request->method() == HTTP_GET && request->url() == "/onlineupdatestart") {

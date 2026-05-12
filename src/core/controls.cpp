@@ -175,7 +175,8 @@ void Controls::loop() {
             return;
           }
           display.putRequest(NEWMODE, STATIONS);
-          while(display.mode() != STATIONS) {delay(10);}
+          unsigned long _modeWaitStart = millis();
+          while(display.mode() != STATIONS && millis()-_modeWaitStart<2000) {delay(10);}
         }
         controlsEvent(encoderDelta > 0, encoderDelta);
       }

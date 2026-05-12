@@ -45,6 +45,7 @@ void doSync(void * pvParameters);
 bool getWeather(char *wstr);
 
 extern MyNetwork network;
+extern TaskHandle_t syncTaskHandle;
 extern TaskHandle_t streamRetryTaskHandle;
 
 extern __attribute__((weak)) void network_on_connect();

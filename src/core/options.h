@@ -641,6 +641,8 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
 /* Tweaks for Core Processes */
 /* Stack sizes are in KB; conversion to bytes is done locally in each .cpp file via a _BYTES macro */
 /* Delay values are in ms; pdMS_TO_TICKS() conversion is done locally in each .cpp file via a SET_ macro */
+/* The straight number without multiplier is from yoRadio ESP32 defaults - ESP32-S3 uses the multiplier */
+/* If working on an ESP32 or ESP32-C3 be warned that these numbers are actually untested and feedback is welcome! */
 
 // Arduino loop() task (main.cpp) — SET_LOOP_TASK_STACK_SIZE() uses this directly in bytes
 #ifndef LOOP_TASK_STACK_SIZE
@@ -667,6 +669,15 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
 #ifndef DSQ_SEND_DELAY
   #define DSQ_SEND_DELAY       200  // ms; xQueueSend timeout in display.putRequest(). If queue full, calling task blocks up to this long before dropping the request silently — preferable to blocking the audio task
 #endif
+#ifndef PLQ_SEND_DELAY
+  #define PLQ_SEND_DELAY       100  // ms; xQueueSend timeout in player.sendCommand(). Short timeout prevents blocking audio decode while still absorbing brief queue pressure
+#endif
+
+#if defined(ARDUINO_ESP32S3_DEV)  // Minimum allocation bytes; min free heap before spawning a background task (search, curated, playback, rb_click)
+  #define MIN_MALLOC 24112 // ESP32-S3: known to be good, generous
+#else
+  #define MIN_MALLOC 12056 // ESP32 and ESP32-C3: tight...? good luck!
+#endif
 
 // netserverLoopTask (netserver.cpp): runs netserver.loop() on its own pinned task
 #ifndef NETSERVER_TASK_STACK_SIZE
@@ -679,6 +690,12 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
 #endif
 #ifndef NETSERVER_TASK_DELAY
   #define NETSERVER_TASK_DELAY       1  // ms; yield between netserver.loop() iterations
+#endif
+#ifndef NSQ_SEND_DELAY
+  #define NSQ_SEND_DELAY           300  // ms; xQueueSend timeout for nsQueue (requestOnChange). Use portMAX_DELAY to block indefinitely
+#endif
+#ifndef NS_QUEUE_DELAY
+  #define NS_QUEUE_DELAY             0  // ms; xQueueReceive timeout for nsQueue (processQueue). 0 = non-blocking poll
 #endif
 
 // nextionCore0 (nextion.cpp): Nextion display task
@@ -816,9 +833,6 @@ https://trip5.github.io/ehRadio_myoptions/generator.html
 #endif
 #ifndef CLOCKFONT_MONO
   #define CLOCKFONT_MONO true // monospace clock font
-#endif
-#ifndef MAX_AUDIO_SOCKET_TIMEOUT
-  #define MAX_AUDIO_SOCKET_TIMEOUT false // max audio socket timeout?
 #endif
 #ifndef BITRATE_FULL
   #define BITRATE_FULL true // display bitrate badge

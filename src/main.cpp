@@ -22,6 +22,8 @@ SET_LOOP_TASK_STACK_SIZE(LOOP_TASK_STACK_SIZE * 1024);
 
 #ifdef CORE_MONITOR
   extern volatile uint32_t cmDspLoopCount;
+  extern TaskHandle_t dspTaskHandle;
+  extern TaskHandle_t nsTaskHandle;
   static uint32_t cmMainCount    = 0;
   static uint32_t cmMaxMainLoop  = 0;
   static uint32_t cmLoopStart    = 0;
@@ -144,6 +146,10 @@ void loop() {
         FUNCTIONLOG("Core Monitor", "Core0" CORE_0 " loops/s: %u (%.2fms/loop) | Core1" CORE_1 " loops/s: %u (%.2fms/loop) | MaxMainLoopUs: %u | Heap: %u",
             d/5, d>0 ? 5000.0f/d : 0.0f, m/5, m>0 ? 5000.0f/m : 0.0f, mx, (unsigned)ESP.getFreeHeap());
       #endif
+      FUNCTIONLOG("Core Monitor", "HWM: Loop=%u Disp=%u nsLoop=%u",
+          (unsigned)uxTaskGetStackHighWaterMark(NULL),
+          (unsigned)(dspTaskHandle ? uxTaskGetStackHighWaterMark(dspTaskHandle) : 0),
+          (unsigned)(nsTaskHandle  ? uxTaskGetStackHighWaterMark(nsTaskHandle)  : 0));
       cmLastPrint = millis();
     }
   #endif

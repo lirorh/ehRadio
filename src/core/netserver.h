@@ -157,6 +157,7 @@ class NetServer {
     NetServer() {};
     bool begin(bool quiet=false);
     void startLoopTask();
+    void restartMdns();
     void chunkedHtmlPage(const String& contentType, AsyncWebServerRequest *request, const char * path);
     void loop();
     void irToWs(const char* protocol, uint64_t irvalue);
@@ -184,5 +185,6 @@ class NetServer {
 
 extern NetServer netserver;
 extern AsyncWebSocket websocket;
+extern TaskHandle_t nsTaskHandle;
 
 #endif

@@ -130,8 +130,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "ehdp"))        { config.saveValue(&config.store.ehdp, static_cast<bool>(atoi(value))); return true; }
   if (cmdIs(command, "ehdpname"))    { config.saveValue(config.store.ehdpname, value); network.ehDPinit(); return true; }
   if (cmdIs(command, "softap"))      { config.saveValue(&config.store.softapdelay, static_cast<uint8_t>(atoi(value))); return true; }
-  if (cmdIs(command, "mdnsname"))    { config.saveValue(config.store.mdnsname, value); return true; }
-  if (cmdIs(command, "rebootmdns"))  { delay(1500); ESP.restart(); return true; }
+  if (cmdIs(command, "mdnsname"))    { config.saveValue(config.store.mdnsname, value); netserver.restartMdns(); return true; }
 
   /* Options: Battery */
   if (cmdIs(command, "battref"))     { if (battery.calibrate(atoi(value))) netserver.requestOnChange(GETBATTERY, cid); return true; }
@@ -215,18 +214,32 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
 
   /* Curated Playlists */
   if (cmdIs(command, "loadindex")) {
-    extern TaskHandle_t g_curatedTaskHandle;
-    if (g_curatedTaskHandle == NULL) {
-      xTaskCreatePinnedToCore(vTaskFetchCuratedIndex, "curatedIndex", 8192, NULL, LOW_TASK_PRIORITY, &g_curatedTaskHandle, NETWORK_CORE);
+    extern volatile TaskHandle_t g_curatedTaskHandle;
+    extern portMUX_TYPE taskSpawnMux;
+    if (ESP.getFreeHeap() > MIN_MALLOC) {
+      taskENTER_CRITICAL(&taskSpawnMux);
+      if (g_curatedTaskHandle == NULL) {
+        xTaskCreatePinnedToCore(vTaskFetchCuratedIndex, "curatedIndex", 8192, NULL, LOW_TASK_PRIORITY, (TaskHandle_t*)&g_curatedTaskHandle, NETWORK_CORE);
+      }
+      taskEXIT_CRITICAL(&taskSpawnMux);
     }
     return true;
   }
   if (cmdIs(command, "loadplaylist")) {
-    extern TaskHandle_t g_curatedTaskHandle;
-    if (g_curatedTaskHandle == NULL) {
-      char* filename = new char[strlen(value) + 1];
-      strcpy(filename, value);
-      xTaskCreatePinnedToCore(vTaskFetchCuratedPlaylist, "curatedPlaylist", 8192, filename, LOW_TASK_PRIORITY, &g_curatedTaskHandle, NETWORK_CORE);
+    extern volatile TaskHandle_t g_curatedTaskHandle;
+    extern portMUX_TYPE taskSpawnMux;
+    if (ESP.getFreeHeap() > MIN_MALLOC) {
+      taskENTER_CRITICAL(&taskSpawnMux);
+      if (g_curatedTaskHandle == NULL) {
+        char* filename = new char[strlen(value) + 1];
+        if (filename) {
+          strcpy(filename, value);
+          if (xTaskCreatePinnedToCore(vTaskFetchCuratedPlaylist, "curatedPlaylist", 8192, filename, LOW_TASK_PRIORITY, (TaskHandle_t*)&g_curatedTaskHandle, NETWORK_CORE) != pdPASS) {
+            delete[] filename;
+          }
+        }
+      }
+      taskEXIT_CRITICAL(&taskSpawnMux);
     }
     return true;
   }

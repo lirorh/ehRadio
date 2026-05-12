@@ -20,10 +20,6 @@
   #include "../displays/nextion.h"
 #endif
 
-#define DSP_TASK_STACK_BYTES  (DSP_TASK_STACK_SIZE * 1024)
-#define SET_DSP_TASK_DELAY_TICKS    pdMS_TO_TICKS(DSP_TASK_DELAY)
-#define SET_DSQ_SEND_DELAY_TICKS    pdMS_TO_TICKS(DSQ_SEND_DELAY)
-
 Display display;
 #ifdef USE_NEXTION
   Nextion nextion;
@@ -35,6 +31,8 @@ QueueHandle_t displayQueue;
   volatile uint32_t cmDspLoopCount = 0;
 #endif
 
+TaskHandle_t dspTaskHandle = NULL;
+
 static void loopDspTask(void * pvParameters) {
   while(true) {
     #ifndef DUMMYDISPLAY
@@ -44,13 +42,13 @@ static void loopDspTask(void * pvParameters) {
     #ifdef CORE_MONITOR
       cmDspLoopCount++;
     #endif
-    vTaskDelay(SET_DSP_TASK_DELAY_TICKS);
+    vTaskDelay(pdMS_TO_TICKS(DSP_TASK_DELAY));
   }
   vTaskDelete(NULL);
 }
 
 void Display::_createDspTask() {
-  xTaskCreatePinnedToCore(loopDspTask, "DspTask", DSP_TASK_STACK_BYTES, NULL, DSP_TASK_PRIORITY, NULL, DSP_TASK_CORE_ID);
+  xTaskCreatePinnedToCore(loopDspTask, "DspTask", (DSP_TASK_STACK_SIZE * 1024), NULL, DSP_TASK_PRIORITY, &dspTaskHandle, DSP_TASK_CORE_ID);
 }
 
 #ifndef DUMMYDISPLAY // ============================== DUMMYDISPLAY Below ==============================
@@ -92,7 +90,7 @@ void Display::init() {
   dsp.initDisplay();
   displayQueue=NULL;
   displayQueue = xQueueCreate(5, sizeof(requestParams_t));
-  while(displayQueue==NULL) {;}
+  if (displayQueue==NULL) { log_e("[display] displayQueue alloc failed — rebooting"); ESP.restart(); }
   _pager = new Pager();
   _createDspTask();
   while(_bootStep==0) { delay(10); }
@@ -446,7 +444,7 @@ void Display::putRequest(displayRequestType_e type, int payload) {
   requestParams_t request;
   request.type = type;
   request.payload = payload;
-  xQueueSend(displayQueue, &request, SET_DSQ_SEND_DELAY_TICKS);
+  xQueueSend(displayQueue, &request, pdMS_TO_TICKS(DSQ_SEND_DELAY));
   #ifdef USE_NEXTION
     nextion.putRequest(request);
   #endif

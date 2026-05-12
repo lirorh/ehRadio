@@ -459,7 +459,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - `/ready` probes now use a short client-side fetch timeout so reboot/reset flows do not stall waiting on a dead device connection during restart.
   - reboot and update redirect calls now explicitly apply a 1-second post-ready grace in JavaScript before navigation.
   - manual upload completion now uses a 60 second fallback, while OTA still uses 180 seconds; both can redirect early as soon as `/ready` reports true.
-  - mDNS rename (`rebootmdns`) now reuses the same reboot status screen as a normal reboot, then uses browser-side ready polling against the new `.local` host; backend no longer sends WebSocket redirect JSON before reboot.
+  - mDNS rename (`restartmdns`) calls `MDNS.end()` + `MDNS.begin()` at runtime via `NetServer::restartMdns()` — no reboot. Browser-side: sends `mdnsname=`, swaps the button row for a status message, then polls the new `.local` host with `redirectWhenReady` (8s timeout, 500ms post-ready grace). If mdnsValue is empty, saves silently without redirect.
 
 ## `data/www/options.js`
 - Settings page behavior.

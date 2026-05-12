@@ -86,7 +86,9 @@ void Player::init() {
 
 void Player::sendCommand(playerRequestParams_t request) {
   if (playerQueue==NULL) return;
-  xQueueSend(playerQueue, &request, PLQ_SEND_DELAY);
+  if (xQueueSend(playerQueue, &request, pdMS_TO_TICKS(PLQ_SEND_DELAY)) != pdTRUE) {
+    FUNCTIONLOG("Queue", "playerQueue overflow, dropped cmd=%d", request.type);
+  }
 }
 
 void Player::resetQueue() {

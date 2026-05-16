@@ -15,7 +15,9 @@
 #include "network.h"
 #include "player.h"
 #include "rtcsupport.h"
+#include "startup.h"
 #include "telnet.h"
+#include "utility.h"
 
 #define NETWORK_TASK_STACK_BYTES (NETWORK_TASK_STACK_SIZE * 1024)
 
@@ -32,6 +34,7 @@ bool getWeather(char *wstr);
 void doSync(void * pvParameters);
 void retryStreamConnection(void * pvParameters);
 static bool onImprovCustomConnect(const char* ssid, const char* password);
+static bool shouldClearWeatherCacheOnFailure();
 
 EhDP ehdp;
 
@@ -135,7 +138,7 @@ void retryStreamConnection(void * pvParameters) {
     if (network.lostPlaying && WiFi.status() == WL_CONNECTED && !player.isRunning()) {
       attemptCount++;
       SERIALLOG("Stream reconnect attempt %d/%d", attemptCount, maxAttempts);
-      player.sendCommand({PR_PLAY, config.lastStation()});
+      player.resumeLastWebSource();
       delay(3000);  // Give it a moment to try connecting
       // Check if it worked
       if (player.isRunning()) {
@@ -173,7 +176,7 @@ void MyNetwork::WiFiReconnected(WiFiEvent_t event, WiFiEventInfo_t info) {
   } else {
     display.putRequest(NEWMODE, PLAYER);
     if (network.lostPlaying) {
-      player.sendCommand({PR_PLAY, config.lastStation()});
+      player.resumeLastWebSource();
       // Launch retry task if not already running
       if (streamRetryTaskHandle == NULL) {
         xTaskCreatePinnedToCore(retryStreamConnection, "streamRetry", NETWORK_TASK_STACK_BYTES, NULL, NET_TASK_PRIORITY, &streamRetryTaskHandle, NETWORK_CORE);
@@ -284,7 +287,7 @@ bool MyNetwork::wifiBegin(bool silent) {
       while (WiFi.status() != WL_CONNECTED) {
         if (!silent) SERIALLOGDOT();
         delay(500);
-        if (REAL_LEDBUILTIN!=255 && !silent) digitalWrite(REAL_LEDBUILTIN, !digitalRead(REAL_LEDBUILTIN));
+        if (LED_PIN!=255 && !silent) digitalWrite(LED_PIN, !digitalRead(LED_PIN));
         errcnt++;
         if (errcnt > WIFI_ATTEMPTS) {
           break;  // Failed, try next match
@@ -316,7 +319,7 @@ bool MyNetwork::wifiBegin(bool silent) {
       if (!silent) SERIALLOGDOT();
       delay(500);
       network.loopImprov();
-      if (REAL_LEDBUILTIN!=255 && !silent) digitalWrite(REAL_LEDBUILTIN, !digitalRead(REAL_LEDBUILTIN));
+      if (LED_PIN!=255 && !silent) digitalWrite(LED_PIN, !digitalRead(LED_PIN));
       errcnt++;
       if (errcnt > WIFI_ATTEMPTS) {
         errcnt = 0;
@@ -403,7 +406,7 @@ void MyNetwork::begin() {
     improv->setCustomConnectWiFi(onImprovCustomConnect);
   }
 
-  config.initNetwork();
+  startup.initNetwork();
   ctimer.detach();
   if (config.ssidsCount == 0 || DBGAP) {
     raiseSoftAP();
@@ -426,7 +429,7 @@ void MyNetwork::begin() {
   SERIALLOG("");
   BOOTLOG("Wifi done");
   ehDPinit();
-  if (REAL_LEDBUILTIN!=255) digitalWrite(REAL_LEDBUILTIN, LOW);
+  if (LED_PIN!=255) digitalWrite(LED_PIN, LOW);
   
   #if RTCSUPPORTED
     if (config.isRTCFound()) {
@@ -436,7 +439,6 @@ void MyNetwork::begin() {
     }
   #endif
   ctimer.attach(1, ticks);
-  if (network_on_connect) network_on_connect();
 }
 
 void MyNetwork::loopImprov() {
@@ -466,7 +468,7 @@ static bool onImprovCustomConnect(const char* ssid, const char* password) {
   }
 
   // CONNECTION SUCCESSFUL - Proceed with saving logic
-  if (config.addSsid(ssid, password)) {
+  if (utility.addSsid(ssid, password)) {
     // Update the URL immediately before returning success to browser
     IPAddress ip = WiFi.localIP();
     char deviceUrl[64];
@@ -491,7 +493,6 @@ void MyNetwork::setWifiParams() {
   WiFi.onEvent(WiFiReconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
   WiFi.onEvent(WiFiLostConnection, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
   weatherBuf=NULL;
-  trueWeather = false;
   #if (DSP_MODEL!=DSP_DUMMY || defined(USE_NEXTION)) && !defined(HIDE_WEATHER)
     if (weatherBuf) { free(weatherBuf); weatherBuf = nullptr; }
     weatherBuf = (char *) malloc(sizeof(char) * WEATHER_STRING_L);
@@ -580,7 +581,9 @@ void doSync(void * pvParameters) {
   if (network.weatherBuf && config.store.showweather && network.forceWeather) {
     // Fetch weather without interrupting display (keep showing cached data)
     network.forceWeather = false;
-    network.trueWeather=getWeather(network.weatherBuf);
+    if (!getWeather(network.weatherBuf) && shouldClearWeatherCacheOnFailure()) {
+      network.buildWeatherString();
+    }
   }
   vTaskDelete(NULL);
 }
@@ -630,8 +633,7 @@ const char* getWMODescription(int code) {
 // Weather data cache (stores raw metric data from last API fetch)
 namespace WeatherCache {
   bool valid = false;
-  bool is_openmeteo = false;  // Track API type for icon mapping
-  unsigned long fetch_time = 0;  // Timestamp when data was fetched
+  bool failedLastRefresh = false;
   float temp_c = 0;
   float feels_like_c = 0;
   int humidity = 0;
@@ -643,21 +645,34 @@ namespace WeatherCache {
   int wmo_code = 0;    // For OpenMeteo
 }
 
+static void markWeatherFetchSuccess() {
+  WeatherCache::valid = true;
+  WeatherCache::failedLastRefresh = false;
+}
+
+static bool shouldClearWeatherCacheOnFailure() {
+  if (!WeatherCache::valid) {
+    FUNCTIONLOG("Weather", "Refresh failed with no cached weather available");
+    return true;
+  }
+
+  if (!WeatherCache::failedLastRefresh) {
+    WeatherCache::failedLastRefresh = true;
+    FUNCTIONLOG("Weather", "Refresh failed, keeping cached weather until the next interval");
+    return false;
+  }
+
+  WeatherCache::valid = false;
+  WeatherCache::failedLastRefresh = false;
+  FUNCTIONLOG("Weather", "Refresh failed twice, clearing cached weather");
+  return true;
+}
+
 // Build weather display string from cached data (no API refetch)
 bool MyNetwork::buildWeatherString() {
   #if (DSP_MODEL!=DSP_DUMMY || defined(USE_NEXTION)) && !defined(HIDE_WEATHER)
     if (!weatherBuf) return false;
-    
-    // Check if cached data is stale (older than 2x the sync interval)
-    if (WeatherCache::valid) {
-      unsigned long cache_age = (millis() - WeatherCache::fetch_time) / 1000;  // Age in seconds
-      unsigned long max_age = (unsigned long)config.store.weathersyncinterval * 60 * 2;  // 2x sync interval
-      if (cache_age > max_age) {
-        FUNCTIONLOG("Weather", "Cache expired (age: %lu sec, max: %lu sec)", cache_age, max_age);
-        WeatherCache::valid = false;
-      }
-    }
-    
+
     // If no cached data or cache expired, show loading message
     if (!WeatherCache::valid) {
       snprintf(weatherBuf, WEATHER_STRING_L, "%s", LANG::weather_loading);
@@ -789,9 +804,7 @@ bool getWeather_OpenMeteo(char *wstr) {
     const char* description = getWMODescription(wmo_code);
     
     // Cache raw weather data for later string rebuilding
-    WeatherCache::valid = true;
-    WeatherCache::is_openmeteo = false;  // Now uses same conversion logic as OpenWeather
-    WeatherCache::fetch_time = millis();  // Record fetch timestamp
+    markWeatherFetchSuccess();
     WeatherCache::temp_c = temp_c;
     WeatherCache::feels_like_c = feels_like_c;
     WeatherCache::humidity = humidity;
@@ -903,9 +916,7 @@ bool getWeather_OpenWeather25(char *wstr) {
     int wind_deg = doc["wind"]["deg"];
     
     // Cache raw weather data for later string rebuilding
-    WeatherCache::valid = true;
-    WeatherCache::is_openmeteo = false;
-    WeatherCache::fetch_time = millis();  // Record fetch timestamp
+    markWeatherFetchSuccess();
     WeatherCache::temp_c = temp_c;
     WeatherCache::feels_like_c = feels_like_c;
     WeatherCache::humidity = humidity;
@@ -1085,9 +1096,7 @@ bool getWeather_OpenWeather30(char *wstr) {
                   pressure_sea_hpa, pressure_hpa, elevation);
     
     // Cache raw weather data for later string rebuilding
-    WeatherCache::valid = true;
-    WeatherCache::is_openmeteo = false;
-    WeatherCache::fetch_time = millis();  // Record fetch timestamp
+    markWeatherFetchSuccess();
     WeatherCache::temp_c = temp_c;
     WeatherCache::feels_like_c = feels_like_c;
     WeatherCache::humidity = humidity;

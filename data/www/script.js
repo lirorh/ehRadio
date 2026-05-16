@@ -377,6 +377,9 @@ function setupElement(id,value){
         element.dispatchEvent(event);
       }
     }
+    if(typeof window.afterSetupElement === 'function') {
+      window.afterSetupElement(id, value, element);
+    }
   }
 }
 /***--- playlist ---***/

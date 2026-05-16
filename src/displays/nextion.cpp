@@ -12,6 +12,7 @@
 #include "../core/network.h"
 #include "../core/timekeeper.h"
 #include "../core/locale.h"
+#include "../core/utility.h"
 
 #define NEXTION_TASK_STACK_BYTES (NEXTION_TASK_STACK_SIZE * 1024)
 
@@ -213,14 +214,14 @@ void Nextion::loop() {
           if(strcmp(scanBuf, "up") == 0) {
             display.resetQueue();
             int p = display.currentPlItem - 1;
-            if (p < 1) p = config.playlistLength();
+            if (p < 1) p = utility.playlistLength();
             display.currentPlItem = p;
             display.putRequest(DRAWPLAYLIST, p);
           }
           if(strcmp(scanBuf, "dn") == 0) {
             display.resetQueue();
             int p = display.currentPlItem + 1;
-            if (p > config.playlistLength()) p = 1;
+            if (p > utility.playlistLength()) p = 1;
             display.currentPlItem = p;
             display.putRequest(DRAWPLAYLIST, p);
           }
@@ -283,7 +284,7 @@ void Nextion::loop() {
           wifisettings+=(String(scanBuf)+"\n");
         }
         if (sscanf(rxbuf, "wifidone=%d", &scanDigit) == 1){
-          config.saveWifi(wifisettings.c_str());
+          utility.saveWifi(wifisettings.c_str());
         }
       }
     }
@@ -443,47 +444,37 @@ void Nextion::printPLitem(uint8_t pos, const char* item){
 }
 
 uint8_t Nextion::_fillPlMenu(int from, uint8_t count) {
-  int     ls      = from;
-  uint8_t c       = 0;
-  bool    finded  = false;
-  if (config.playlistLength() == 0) {
+  uint16_t stationsCount = utility.playlistLength();
+  if (stationsCount == 0) {
     return 0;
   }
-  File playlist = config.SDPLFS()->open(REAL_PLAYL, "r");
-  File index = config.SDPLFS()->open(REAL_INDEX, "r");
-  while (true) {
-    if (ls < 1) {
-      ls++;
+
+  for (uint8_t c = 0; c < count; ++c) {
+    int stationId = from + c;
+    if (stationId < 1 || stationId > stationsCount) {
       printPLitem(c, "");
-      c++;
       continue;
     }
-    if (!finded) {
-      index.seek((ls - 1) * 4, SeekSet);
-      uint32_t pos;
-      index.readBytes((char *) &pos, 4);
-      finded = true;
-      index.close();
-      playlist.seek(pos, SeekSet);
+
+    const char* stationName = utility.stationByNum((uint16_t)stationId);
+    if (config.store.numplaylist && stationName[0] != '\0') {
+      String label = String(stationId) + " " + stationName;
+      printPLitem(c, label.c_str());
+    } else {
+      printPLitem(c, stationName);
     }
-    bool pla = true;
-    while (pla) {
-      pla = playlist.available();
-      String stationName = playlist.readStringUntil('\n');
-      stationName = stationName.substring(0, stationName.indexOf('\t'));
-      if(config.store.numplaylist && stationName.length()>0) stationName = String(from+c)+" "+stationName;
-      printPLitem(c, stationName.c_str());
-      c++;
-      if (c >= count) break;
-    }
-    break;
   }
-  playlist.close();
-  return c;
+
+  return count;
 }
 
 void Nextion::drawPlaylist(uint16_t currentPlItem){
   mode=STATIONS;
+  uint16_t count = utility.playlistLength();
+  if (count == 0) currentPlItem = 0;
+  else if (currentPlItem < 1) currentPlItem = 1;
+  else if (currentPlItem > count) currentPlItem = count;
+
   uint8_t lastPos = _fillPlMenu(currentPlItem - 3, 7);
   if(lastPos<7){
     for(int i=0;i<7-lastPos;i++){
@@ -494,7 +485,7 @@ void Nextion::drawPlaylist(uint16_t currentPlItem){
 }
 
 void Nextion::drawNextStationNum(uint16_t num) {//dialog
-  putcmd("dialog.title.txt", utf8ToNextion(config.stationByNum(num), true));
+  putcmd("dialog.title.txt", utf8ToNextion(utility.stationByNum(num), true));
   putcmd("dialog.text.txt", num, true);
   _volDelay = millis();
 }

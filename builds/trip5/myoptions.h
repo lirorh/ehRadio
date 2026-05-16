@@ -25,7 +25,7 @@
 
 /* --- FIRMWARE FILENAME & BOARD --- */
 
-//  This block is here to assist in debugging... and to show the format of this section which is processed by fix_web_assets_and_releases.py to create Releases
+//  This shows the format of this section which is processed by fix_web_assets_and_releases.py to create Releases
 //
 //  filename used for OTA update                 ESP Board family (all boards in the same family will share bootloader, partitions)      * If any of these 3 fields are missing
 //  prefix is contributor/builds folder name + _  |                ESP chip family (used by flasher)                                     * (or not formatted exactly like this),
@@ -59,16 +59,12 @@
 /* --- LED --- */
 
 #if defined(SH1106_PCM_REMOTE)
-  #define USE_BUILTIN_LED     false
-  #define LED_BUILTIN_S3      8
-  #define LED_INVERT          true
+  #define LED_PIN        8
+  #define LED_INVERT     true
 #elif defined(ES3C28P)
-  #define USE_BUILTIN_LED     false
-  #define RGB_LED_PIN         42       /* for Adafruit NeoPixel */
+  #define RGB_LED_PIN         42       /* for NeoPixel */
 #else
   /* LED config for all others - keep LEDs off */
-  #define USE_BUILTIN_LED     false
-  #define LED_BUILTIN_S3      255
 #endif
 
 
@@ -115,13 +111,12 @@
 #if defined(ILI9488_PCM_1BUTTON)
   #define DSP_MODEL       DSP_ILI9488     /* Big Display */
   #define BIG_BOOT_LOGO
-  #define SCREEN_INVERT   true
+  #define DSP_INVERT_QUIRK     true
   #define TFT_DC          10
   #define TFT_CS          9
   #define BRIGHTNESS_PIN  4
   #define TFT_RST         -1      /* set to -1 if connected to ESP EN pin */
-  #define DOWN_LEVEL      63      /* Maleksm's mod: brightness level 0 to 255, default 2 */
-  #define DOWN_INTERVAL   120     /* Maleksm's mod: seconds to dim, default 60 = 60 seconds */
+  #define DSP_DIMMING_ENABLED true
   /* modify src\displays\displayILI9488.cpp -- in section DspCore::initDisplay and add setRotation(3); to do 180 degree rotation */
 #elif defined(ST7735_PCM_1BUTTON)
   #define DSP_MODEL       DSP_ST7735          /* Red board / 1.8" Black Tab, if problems try one of DTYPE */
@@ -134,13 +129,15 @@
   #define TFT_CS          9
   #define BRIGHTNESS_PIN  4       /* Red Smaller TFT doesn't have brightness control so leave commented? use unused pin? or 255? */
   #define TFT_RST         -1      /* set to -1 if connected to ESP EN pin */
+  #define DSP_DIMMING_ENABLED false
 #elif defined(ES3C28P)
   #define DSP_MODEL       DSP_ILI9341
-  #define SCREEN_INVERT   true
   #define TFT_CS          10
   #define TFT_DC          46
   #define TFT_RST         -1
   #define BRIGHTNESS_PIN  45
+#define DSP_INVERT_QUIRK     true
+  #define DSP_DIMMING_ENABLED true
 #endif
 
 
@@ -170,9 +167,8 @@
   #define I2S_DIN         6       /* mic in */
   #define I2S_LRC         7
   #define I2S_DOUT        8       /* speaker out */
-  #define PA_ENABLE       1       /* enable on-board power amp */
-  #define I2C_SCL         15
-  #define I2C_SDA         16
+  //#define I2C_SCL         15
+  //#define I2C_SDA         16
   /* Audio amplifier control (IO1 low -> enable). 
      Default: write MUTE_VAL (HIGH) while stopped, write !MUTE_VAL while playing.
      Set MUTE_PIN to enable control (for FM8002/ES8311, etc). */
@@ -212,9 +208,9 @@
   #define VOLUME_STEPS 2
   #define BTN_UP          17      /* Prev, Move Up */
   #define BTN_DOWN        16      /* Next, Move Down */
-  #define BTN_CENTER      18      /* ENTER, Play/pause  */
-  #define BTN_LEFT        7       /* VolDown, Prev */
-  #define BTN_RIGHT       15      /* VolUp, Next */
+  #define BTN_PLAY      18      /* ENTER, Play/pause  */
+  #define BTN_PREV        7       /* VolDown, Prev */
+  #define BTN_NEXT       15      /* VolUp, Next */
   #define WAKE_PIN        18      /* Wake from Deepsleep (actually using existing pins kind of disables sleep) */
 #elif defined(ST7735_PCM_1BUTTON) || defined(ILI9488_PCM_1BUTTON)
   #define ONE_CLICK_SWITCH true
@@ -245,7 +241,7 @@
 #endif
 
 /* Extras: unused in all */
-//#define ENC_INTERNALPULLUP  true
+//#define ENC_PULLUP  true
 //#define ENC_HALFQUARD       falsedisplayILI9488
 
 /* 2nd Rotary Encoder: ?? None yet */
@@ -253,7 +249,7 @@
 //#define ENC2_BTNL       39
 //#define ENC2_BTNB       38
 /* Extras: unused */
-//#define ENC2_INTERNALPULLUP     true
+//#define ENC2_PULLUP     true
 //#define ENC2_HALFQUARD          false
 
 

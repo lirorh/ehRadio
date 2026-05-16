@@ -17,7 +17,6 @@ class MyNetwork {
     //uint8_t tsFailCnt, wsFailCnt;
     Ticker ctimer;
     char *weatherBuf = nullptr;
-    bool trueWeather = false;
     DNSServer* dnsServer = nullptr;
     ImprovWiFi *improv = nullptr;
   public:
@@ -47,7 +46,5 @@ bool getWeather(char *wstr);
 extern MyNetwork network;
 extern TaskHandle_t syncTaskHandle;
 extern TaskHandle_t streamRetryTaskHandle;
-
-extern __attribute__((weak)) void network_on_connect();
 
 #endif

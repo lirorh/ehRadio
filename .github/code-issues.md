@@ -17,8 +17,8 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 
 - [X] 1. All Pins Defined by options.h
 - [ ] 2. Audio Library Migration / De-Forking
-- [ ] 3. Macros Without `options.h` Fallback
-- [ ] 4. Write-Only Variables (Set But Never Read)
+- [X] 3. Macros Without `options.h` Fallback
+- [X] 4. Write-Only Variables (Set But Never Read)
 - [ ] 5. Dead / Unreachable Code
 - [X] 6. `BUFLEN` — Multi-Purpose Magic Number
 - [ ] 7. Smaller SPIFFS than expected could break workflows
@@ -29,7 +29,7 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 - [X] 12. Telnet / WiFi Scan Blocking and Credential Exposure
 - [ ] 13. Display conf.h Files That Lack a Battery Widget
 - [X] 14. ESP32-S3 Migration — Dropping Original ESP32 Support
-- [ ] 15. `main.cpp` — Non-Boot Code That Belongs in Its Own Files
+- [X] 15. `main.cpp` — Non-Boot Code That Belongs in Its Own Files
 - [X] 16. Plugin System — Dead Infrastructure, Remove Entirely
 - [ ] 17. Can Display Be Improved?
 - ... Below is not part of the audit but worth consideration (or fixing)
@@ -58,7 +58,7 @@ The vendored audio folders `src/libraries/I2S_Audio/` and `src/libraries/VS1053_
 
 The three upstream library folders to use (do not delete these):
 - `src/libraries/ESP32-audioI2S (schreibfaul1 3.1.0)/` — target for I2S and ES8311 environments
-- `src/libraries/ESP32-audioI2S (schreibfaul1 3.4.5)/` — deferred; requires larger API rewrite (see §2.9)
+- `src/libraries/ESP32-audioI2S (schreibfaul1 3.4.5)/` — deferred; requires larger API rewrite (see §2.10)
 - `src/libraries/ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/` — target for VS1053 environments
 
 ---
@@ -78,19 +78,19 @@ The three upstream library folders to use (do not delete these):
 - Callbacks: renamed from `vs1053_*` → `audio_*` (to match I2S naming)
 - Constructor: changed from 7-param `(cs, dcs, dreq, spi_num, mosi, miso, sclk)` to `(cs, dcs, dreq, SPIClass*)`
 - API additions over upstream: `setBalance(int8_t)`, `setTone(int8_t, int8_t, int8_t)` (3-param overload), `forceMono(bool)`, `eofHeader` (public bool field), `setDefaults()` made public, `connecttoSD()` added
-- Bridge stubs at bottom of `.cpp`: 16 `vs1053_*` → `audio_*` bridge functions (added to enable future upstream swap without changing callers)
+- Callback model today: the local fork already exposes normalized `audio_*` callbacks directly; the live tree does **not** currently contain a separate `vs1053_*` bridge-stub block that can simply be moved out during E2
 - Compiled by: all VS1053 `platformio.ini` environments via `+<libraries/VS1053_Audio/*>` in `build_src_filter`
 
 ---
 
 ### 2.3 The ehRadio Audio Contract
 
-This is the complete API surface that `src/core/player.cpp` and `src/core/audiohandlers.h` depend on. Every item must work on both I2S and VS1053 paths after migration.
+This is the live API surface that `src/core/player.cpp`, `src/displays/*`, and the app-owned callback sink in `src/core/audiohandlers.h` depend on today. `Player` still inherits the local vendor class directly (`class Player : public Audio`), so `AudioEncoderShim` needs to preserve this contract while moving ownership into ehRadio-owned code.
 
 **Constructor / hardware init:**
-- I2S: `AudioEncoderShim()` — no params (uses `I2S_NUM_0`); internal DAC path: `AudioEncoderShim(true, I2S_DAC_CHANNEL_BOTH_EN)` if `I2S_INTERNAL` defined
-- VS1053: `AudioEncoderShim(SPIClass*)` — wraps board SPI instance; will change to pin-based after Issue 1 is done
-- I2S: `setPinout(BCLK, LRC, DOUT, DIN, MCLK)` — called during player init
+- I2S / ES8311: `AudioEncoderShim()` — no params; the internal DAC path is now selected by `USE_AUDIO_ESP32_DAC` (not the older `I2S_INTERNAL` wording)
+- VS1053: current local path still uses `AudioEncoderShim(SPIClass*)`; E2 will replace that with the upstream 7-parameter constructor using the existing named-bus/pin macros from `options.h`
+- I2S: current player init calls `setPinout(BCLK, LRC, DOUT, DIN, MCLK)`; upstream I2S 3.1.0 does not expose the same 5-argument shape, so the shim needs an overload/adaptation here
 - VS1053: `begin()` — called during player init
 
 **Playback control:**
@@ -117,32 +117,37 @@ This is the complete API surface that `src/core/player.cpp` and `src/core/audioh
 - `setFilePos(uint32_t)` → `bool`
 - `setAudioPlayPosition(uint16_t sec)` → `bool`
 
-**Callbacks — implemented in `src/core/audiohandlers.h`:**
+**VU / compatibility surface:**
+- `get_VUlevel(uint16_t dimension)` — used by widget and Nextion VU rendering on both local decoder paths today
+- `computeVUlevel()` / `computeVUlevel(int16_t sample[2])` — local-library-specific; VS1053 parity remains an E2 decision (see §2.8)
 
-| Callback | I2S 3.1.0 fires? | VS1053 upstream fires? | Notes |
-|---|---|---|---|
-| `audio_info(const char*)` | ✅ native | ✅ via bridge | Bitrate format strings parsed here |
-| `audio_bitrate(const char*)` | ✅ native | ✅ via bridge | |
-| `audio_showstation(const char*)` | ✅ native | ✅ via bridge | |
-| `audio_showstreamtitle(const char*)` | ✅ native | ✅ via bridge | |
-| `audio_eof_mp3(const char*)` | ✅ native | ✅ via bridge | Calls `player.next()` |
-| `audio_eof_stream(const char*)` | ✅ native | ✅ via bridge | Stop + resume |
-| `audio_id3data(const char*)` | ✅ native | ✅ via bridge | Also used to recover artist/album/title in I2S bridge |
-| `audio_id3image(File&, size_t, size_t)` | ✅ native | ✅ via bridge | |
-| `audio_id3lyrics(File&, size_t, size_t)` | ✅ native | ✅ via bridge | |
-| `audio_commercial(const char*)` | ✅ native | ✅ via bridge | |
-| `audio_icyurl(const char*)` | ✅ native | ✅ via bridge | |
-| `audio_icydescription(const char*)` | ✅ native | ✅ via bridge | |
-| `audio_icylogo(const char*)` | ✅ native | ✅ via bridge | |
-| `audio_lasthost(const char*)` | ✅ native | ✅ via bridge | |
-| `audio_eof_speech(const char*)` | ✅ native | ✅ via bridge | |
-| `audio_showstreaminfo(const char*)` | ❌ not present | ✅ via bridge | Logged only; no display use |
-| `audio_id3artist(const char*)` | ❌ **MISSING** | ❌ not present | Sets station from ID3 in SD mode → I2S bridge must recover from `audio_id3data("Artist: x")` |
-| `audio_id3album(const char*)` | ❌ **MISSING** | ❌ not present | Appended to title → I2S bridge must recover from `audio_id3data("Album: x")` |
-| `audio_id3title(const char*)` | ❌ **MISSING** | ❌ not present | Sets title in SD mode → I2S bridge must recover from `audio_id3data("Title: x")` |
-| `audio_beginSDread(const char*)` | ❌ **MISSING** | ❌ not present | Clears title at SD read start → I2S bridge fires from `AudioEncoderShim::connecttoFS()` override |
-| `audio_progress(uint32_t cur, uint32_t total)` | ❌ **MISSING** | ❌ not present | Updates `sd_min`/`sd_max`/`SDLEN` display → I2S bridge fires periodically from `AudioEncoderShim::loop()` |
-| `audio_error(const char*)` | ❌ **MISSING** | ❌ not present | I2S 3.1.0 routes errors through `audio_info` → check for "Error" prefix in `audio_info` handler (already partially done) |
+**Actively defined app callbacks in `src/core/audiohandlers.h`:**
+- `audio_info(const char*)`
+- `audio_bitrate(const char*)`
+- `audio_showstation(const char*)`
+- `audio_showstreamtitle(const char*)`
+- `audio_error(const char*)`
+- `audio_id3artist(const char*)`
+- `audio_id3album(const char*)`
+- `audio_id3title(const char*)`
+- `audio_beginSDread()`
+- `audio_id3data(const char*)`
+- `audio_eof_mp3(const char*)`
+- `audio_eof_stream(const char*)`
+- `audio_progress(uint32_t cur, uint32_t total)`
+
+**Declared by the decoder library APIs but not currently implemented by ehRadio app code:**
+- `audio_showstreaminfo(const char*)`
+- `audio_eof_speech(const char*)`
+- `audio_commercial(const char*)`
+- `audio_icyurl(const char*)`
+- `audio_icylogo(const char*)`
+- `audio_icydescription(const char*)`
+- `audio_lasthost(const char*)`
+- `audio_id3image(File&, size_t, size_t)`
+- `audio_id3lyrics(File&, size_t, size_t)`
+
+These optional callbacks can still be bridged in E2 for parity, but Issue 2 should not claim they are app-implemented today.
 
 ---
 
@@ -151,82 +156,59 @@ This is the complete API surface that `src/core/player.cpp` and `src/core/audioh
 **File:** `src/core/audioencodershim.h`
 *(Previously prototyped as `audiobackend.h` during exploratory work — that version has been reverted; use `audioencodershim.h` going forward.)*
 
-This is the single ehRadio-owned file that isolates `Player` from vendor library internals. When the backend changes (I2S ↔ VS1053 ↔ future library version), only this file and its companion bridge files change.
+This is the single ehRadio-owned file that isolates `Player` from vendor library internals. When the backend changes (I2S ↔ VS1053 ↔ future library version), only this file and the ehRadio-owned callback sink should change.
 
 ```
 player.h:  class Player : public AudioEncoderShim
                                │
                                ▼
 audioencodershim.h:   #if I2S path
-                        #include upstream ESP32-audioI2S 3.1.0 / Audio.h
                         class AudioEncoderShim : public Audio  { ... }
                       #else VS1053 path
-                        #include upstream vs1053_ext-master / vs1053_ext.h
                         class AudioEncoderShim : public VS1053 { ... }
                       #endif
                                │
-               ┌───────────────┴───────────────┐
-               ▼                               ▼
-  audiobridge_i2s.cpp               audiobridge_vs1053.cpp
-  (I2S callback recovery)            (16 vs1053_* → audio_* stubs)
+                               ▼
+ehRadio-owned callback sink / bridge layer:
+  current:  src/core/audiohandlers.h
+            compiled once via trailing include in src/main.cpp
+  optional normalization during Issue 2:
+            src/core/audiohandlers.cpp + declarations in audiohandlers.h
 ```
 
 **`audioencodershim.h` — I2S path responsibilities:**
-- `#include "../libraries/ESP32-audioI2S (schreibfaul1 3.1.0)/src/Audio.h"`
-- `class AudioEncoderShim : public Audio`
-- Constructor: `AudioEncoderShim() : Audio(I2S_NUM_0) {}` (drop internal DAC boolean params — upstream 3.1.0 uses `Audio(uint8_t i2sPort)`)
-- Expose `bool eofHeader = false;` as a public field (upstream does not have this)
+- E1: inherit the current local `Audio` class without behaviour change
+- E3: switch `#include` to upstream `ESP32-audioI2S (schreibfaul1 3.1.0)/src/Audio.h`
+- Preserve `bool eofHeader = false;` as a public field
 - Override `connecttoFS()` to fire `audio_beginSDread()` and reset `eofHeader` before delegating to `Audio::connecttoFS()`
 - Override `loop()` to call `Audio::loop()` then periodically fire `audio_progress()` using `getFilePos()` / `getFileSize()`
-- `setDefaults()` is `private` in upstream 3.1.0 — do NOT expose it externally; add a public no-op `void setDefaults() {}` in the shim if `player.cpp` calls it
-- `bool connecttoSD(const char* path, int32_t pos=-1) { return connecttoFS(SD, path, pos); }`
+- Add a public no-op `void setDefaults() {}` if current call sites still require it
+- Provide `bool connecttoSD(const char* path, int32_t pos=-1) { return connecttoFS(SD, path, pos); }`
+- Provide a shim overload/adaptation for the current 5-argument `setPinout(BCLK, LRC, DOUT, DIN, MCLK)` call used by `player.cpp`
 
 **`audioencodershim.h` — VS1053 path responsibilities:**
-- `#include "../libraries/ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/src/vs1053_ext.h"`
-- `class AudioEncoderShim : public VS1053`
-- Constructor: `explicit AudioEncoderShim(SPIClass* spi)` → maps to `VS1053(VS1053_CS, VS1053_DCS, VS1053_DREQ, VS1053_SPI_BUS, VS1053_MOSI, VS1053_MISO, VS1053_SCLK)` — **requires Issue 1 to be completed first**
+- E1: inherit the current local `Audio` class without behaviour change
+- E2: switch `#include` to upstream `ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/src/vs1053_ext.h` and inherit `VS1053`
 - Add `bool eofHeader = false;` as a public field
-- Add `void setBalance(int8_t bal=0) {}` — stub (VS1053 channel balance via SCI registers is complex; start as no-op)
-- Add `void forceMono(bool m) {}` — stub (no-op)
-- Add `void setDefaults() {}` — stub (upstream `VS1053::setDefaults()` is private; this is a no-op shim)
-- Add `void setTone(int8_t lp, int8_t bp, int8_t hp)` — map to upstream `VS1053::setTone(uint8_t* rtone)`:
-  `uint8_t rtone[4] = { (uint8_t)(lp > 0 ? lp : 0), 0, (uint8_t)(hp > 0 ? hp : 0), 0 }; VS1053::setTone(rtone);`
-- Add `bool connecttoSD(const char* path, int32_t pos=-1) { return connecttoFS(SD, path, pos); }`
+- Add stubs/adapters for `setBalance(int8_t)`, `forceMono(bool)`, `setDefaults()`, `connecttoSD(...)`, and `setTone(int8_t, int8_t, int8_t)`
+- Decide in E2 whether to keep the current VU API surface via shim helpers (`computeVUlevel()` / `get_VUlevel(uint16_t)`) or update display code instead (see §2.8)
+- Map the current named-bus/pin macros from `options.h` to the upstream 7-parameter constructor inside the shim; do not move that compatibility logic back into vendored source
 
 ---
 
-### 2.5 Bridge Code — All in `audiohandlers.h`, No Separate Files Needed
+### 2.5 Bridge Code — Keep It in ehRadio-Owned Callback Code
 
-`audiohandlers.h` is included in exactly one translation unit (`player.cpp`), so it can define function bodies without ODR violations. **No separate `audiobridge_*.cpp` files are needed** — all bridge logic lives in `audiohandlers.h` using compile-time guards.
+`audiohandlers.h` is currently included in exactly one translation unit via the trailing include at the bottom of `main.cpp`, so it acts as an implementation header today. Issue 2 should keep bridge code in that ehRadio-owned callback sink, not in vendored library source.
 
-**VS1053 bridge stubs** — add at the bottom of `audiohandlers.h` inside `#if defined(USE_AUDIO_VS1053)`:
+**No separate `audiobridge_*.cpp` files are required.** If Issue 2 normalizes the current implementation-header pattern, prefer a normal `src/core/audiohandlers.cpp` plus declarations in `audiohandlers.h` over introducing multiple bridge-only translation units.
 
-These 16 stubs are currently at the bottom of `src/libraries/VS1053_Audio/audioVS1053Ex.cpp`. When the VS1053 local library is replaced by upstream (Step E2), move them here and remove them from the local library file.
-
-```cpp
-#if defined(USE_AUDIO_VS1053)
-void vs1053_info(const char* c)                                { if(audio_info) audio_info(c); }
-void vs1053_showstreamtitle(const char* c)                     { if(audio_showstreamtitle) audio_showstreamtitle(c); }
-void vs1053_showstation(const char* c)                         { if(audio_showstation) audio_showstation(c); }
-void vs1053_showstreaminfo(const char* c)                      { if(audio_showstreaminfo) audio_showstreaminfo(c); }
-void vs1053_id3data(const char* c)                             { if(audio_id3data) audio_id3data(c); }
-void vs1053_id3image(File& f, const size_t p, const size_t s)  { if(audio_id3image) audio_id3image(f, p, s); }
-void vs1053_id3lyrics(File& f, const size_t p, const size_t s) { if(audio_id3lyrics) audio_id3lyrics(f, p, s); }
-void vs1053_eof_mp3(const char* c)                             { if(audio_eof_mp3) audio_eof_mp3(c); }
-void vs1053_eof_speech(const char* c)                          { if(audio_eof_speech) audio_eof_speech(c); }
-void vs1053_bitrate(const char* c)                             { if(audio_bitrate) audio_bitrate(c); }
-void vs1053_commercial(const char* c)                          { if(audio_commercial) audio_commercial(c); }
-void vs1053_icyurl(const char* c)                              { if(audio_icyurl) audio_icyurl(c); }
-void vs1053_icylogo(const char* c)                             { if(audio_icylogo) audio_icylogo(c); }
-void vs1053_icydescription(const char* c)                      { if(audio_icydescription) audio_icydescription(c); }
-void vs1053_lasthost(const char* c)                            { if(audio_lasthost) audio_lasthost(c); }
-void vs1053_eof_stream(const char* c)                          { if(audio_eof_stream) audio_eof_stream(c); }
-#endif
-```
+**VS1053 bridge stubs** — add the `vs1053_*` → `audio_*` forwarding stubs in the ehRadio-owned callback implementation during E2. Do **not** document them as something to "move" out of the current local VS1053 fork; the live fork already normalized its callback surface and does not expose a separate `vs1053_*` stub block to harvest.
 
 **I2S callback recovery** — extend the existing `audio_id3data` handler in `audiohandlers.h`:
 
-Upstream I2S 3.1.0 does not fire `audio_id3artist`, `audio_id3album`, or `audio_id3title` as separate weak functions. Instead it passes them through `audio_id3data` as prefixed strings. The existing `audio_id3artist`, `audio_id3album`, `audio_id3title`, `audio_beginSDread`, and `audio_progress` handlers are **already implemented** in `audiohandlers.h` — they just need to be invoked. The only change needed is ~4 lines added to the existing `audio_id3data` body:
+Upstream I2S 3.1.0 does not fire `audio_id3artist`, `audio_id3album`, or `audio_id3title` as separate weak functions. Instead it passes them through `audio_id3data` as prefixed strings. The app handlers for `audio_id3artist`, `audio_id3album`, and `audio_id3title` already live in `audiohandlers.h`; dispatch them from `audio_id3data` by prefix. `audio_beginSDread()` and `audio_progress()` remain method-triggered events supplied by shim overrides, not string-parsing callbacks.
+
+The only code change needed in the callback sink is ~4 lines added to the existing `audio_id3data` body:
 
 ```cpp
 void audio_id3data(const char *info) {
@@ -242,13 +224,13 @@ void audio_id3data(const char *info) {
 }
 ```
 
-`audio_beginSDread` and `audio_progress` cannot be recovered this way because they fire on *method calls*, not library callbacks. They are triggered by `AudioEncoderShim` method overrides (`connecttoFS()` override fires `audio_beginSDread`; `loop()` override fires `audio_progress` periodically). See §2.4.
+`audio_beginSDread()` and `audio_progress()` cannot be recovered this way because they fire on *method calls*, not library callbacks. They are triggered by `AudioEncoderShim` method overrides (`connecttoFS()` override fires `audio_beginSDread()`; `loop()` override fires `audio_progress()` periodically). See §2.4.
 
 ---
 
 ### 2.6 `platformio.ini` Changes Required
 
-No new files need to be added to `build_src_filter` — bridge code lives in `audiohandlers.h`. Only the library source folder references change.
+No new bridge files need to be added to `build_src_filter`. If the callback sink stays as `audiohandlers.h` or is normalized to `src/core/audiohandlers.cpp`, source filters do not change for that ownership cleanup because `src/core/*` is already part of the build. Only the library source folder references change.
 
 For each VS1053 environment:
 ```ini
@@ -272,25 +254,18 @@ For each I2S / ES8311 environment:
 
 ---
 
-### 2.7 Dependency: Issue 1 (All Pins Defined by options.h)
+### 2.7 Dependency Status: Issue 1 Already Resolved
 
 The upstream `VS1053` constructor requires 7 explicit parameters:
 ```cpp
 VS1053(uint8_t cs, uint8_t dcs, uint8_t dreq, uint8_t spi_bus, uint8_t mosi, uint8_t miso, uint8_t sclk);
 ```
 
-`options.h` currently defines `VS1053_CS`, `VS1053_DCS`, `VS1053_DREQ`, and a single `VS_HSPI` boolean (`false` = VSPI/FSPI default pins, `true` = HSPI pins). The individual SPI pin macros (`VS1053_MOSI`, `VS1053_MISO`, `VS1053_SCLK`) and a numeric SPI bus identifier macro (`VS1053_SPI_BUS`) do **not** exist. `AudioEncoderShim` cannot fill in the 7-param constructor without these.
+This is no longer blocked on missing pin definitions. `options.h` already resolves `VS1053_CS`, `VS1053_DCS`, `VS1053_DREQ`, `VS1053_SCK`, `VS1053_MISO`, `VS1053_MOSI`, and `VS1053_SPIBUS`, with `VS1053_SPI` selecting the named bus.
 
-Expected fallback defaults once Issue 1 adds them:
+What E2 still needs is a small shim-local mapping from the current named-bus identity to the upstream numeric `spi_bus` constructor argument. Do this inside `AudioEncoderShim`; do **not** reopen `options.h` just to recreate the older `VS1053_SPI_BUS` plan.
 
-| Macro | `VS_HSPI false` default | `VS_HSPI true` default |
-|---|---|---|
-| `VS1053_MOSI` | 23 (ESP32 VSPI) / 11 (S3 FSPI) | 13 (HSPI) |
-| `VS1053_MISO` | 19 (ESP32 VSPI) / 13 (S3 FSPI) | 12 (HSPI) |
-| `VS1053_SCLK` | 18 (ESP32 VSPI) / 12 (S3 FSPI) | 14 (HSPI) |
-| `VS1053_SPI_BUS` | 3 (VSPI/ESP32) or 0 (FSPI/S3) | 2 (HSPI) |
-
-**Issue 1 must be resolved before Step E2 below can be completed for the VS1053 path.**
+**Issue 1 is therefore not a blocker for Issue 2 anymore.** E2 still has constructor adaptation work, but not an unresolved pin-definition dependency.
 
 ---
 
@@ -313,7 +288,7 @@ The VU reading API changed between the local lib and the upstream:
 | Read VU | `get_VUlevel(uint16_t dimension)` → scaled 0..dimension | `getVUlevel()` → packed uint16_t, MSB=right 0..255, LSB=left 0..255 |
 | Loop update | `computeVUlevel()` — reads chip, writes `config.vuThreshold` (auto-calibration) | no equivalent; data fetched inside `getVUlevel()` |
 
-Currently `display.cpp` line 656 calls `player.computeVUlevel()` but it is **commented out** inside a `/* ... */` block — VU meter may already be non-functional on VS1053 hardware. Confirm actual state on hardware before Step E2.
+Currently `display.cpp` still contains a `player.computeVUlevel()` call, but it is **commented out** inside a `/* ... */` block — VU meter may already be non-functional on VS1053 hardware. Confirm actual state on hardware before Step E2.
 
 **Action required in Step E2 (decide at that time):**
 - Option A: Add `computeVUlevel()` and `get_VUlevel(uint16_t dimension)` stubs to `AudioEncoderShim` (VS1053 path) that delegate to upstream `VS1053::getVUlevel()` and replicate the `config.vuThreshold` auto-calibration — preserves all existing display code
@@ -323,28 +298,31 @@ Currently `display.cpp` line 656 calls `player.computeVUlevel()` but it is **com
 
 ### 2.9 Staged Migration Plan
 
-**Pre-work — complete Issue 1 first:**
-Add explicit SPI pin macros for VS1053 to `options.h` (see §2.7 for expected defaults).
+**Pre-work — documentation/prep refresh:**
+- Keep the current named-bus / pin system from `options.h`; no new VS1053 pin macros are needed before E2
+- Decide during E1 or E2 whether to leave the callback sink as the current single-TU `audiohandlers.h` implementation or normalize it to a conventional `src/core/audiohandlers.cpp`
 
 **Step E1 — Shim isolation layer:**
 - Create `src/core/audioencodershim.h` with `class AudioEncoderShim` inheriting the appropriate local library class (still the local modified libs — no upstream switch yet)
 - Change `player.h` to `class Player : public AudioEncoderShim`
+- Preserve the current I2S `setPinout(BCLK, LRC, DOUT, DIN, MCLK)` call shape through the shim so E1 stays pure indirection
+- Optional but recommended: normalize the trailing `#include "core/audiohandlers.h"` pattern into a normal `src/core/audiohandlers.cpp` at the same time if you want to retire the implementation-header pattern early
 - Build and hardware-test all three environments (VS1053, I2S, ES8311)
 - This step is pure indirection — no behaviour change
 
 **Step E2 — VS1053 path to upstream:**
 1. Update `audioencodershim.h` VS1053 path: change `#include` to upstream `vs1053_ext.h`
 2. Change `class AudioEncoderShim : public Audio` → `class AudioEncoderShim : public VS1053`
-3. Adapt constructor using `VS1053_CS/DCS/DREQ + VS1053_MOSI/MISO/SCLK + VS1053_SPI_BUS` (from Issue 1) — `VS1053_SPIBUS` macro in `options.h` and its `SPIClass*` plumbing in `player.cpp`/`config.cpp` can be removed at this step since the upstream constructor takes bus number + pins directly.
-4. Add VS1053 API surface stubs to `AudioEncoderShim` (see §2.4)
-5. Move the 16 `vs1053_*` bridge stubs from the bottom of local `audioVS1053Ex.cpp` into the `#if defined(USE_AUDIO_VS1053)` block at the bottom of `audiohandlers.h` (see §2.5)
+3. Adapt the constructor using the current `VS1053_CS/DCS/DREQ + VS1053_SCK/MISO/MOSI` macros plus a shim-local mapping from the current named-bus macros to the upstream numeric `spi_bus` argument
+4. Add VS1053 API surface stubs to `AudioEncoderShim` (including the VU compatibility decision from §2.8)
+5. Add the `vs1053_*` → `audio_*` forwarding stubs in the ehRadio-owned callback implementation (`audiohandlers.h` initially, or `audiohandlers.cpp` if normalized during the same step)
 6. Update `platformio.ini` VS1053 `build_src_filter` entries (Rule #3 — requires explicit confirmation)
 7. Build and hardware-test VS1053 environment
 
 **Step E3 — I2S path to upstream 3.1.0:**
 1. Update `audioencodershim.h` I2S path: change `#include` to upstream `Audio.h`
 2. Fix constructor: upstream 3.1.0 uses `Audio(uint8_t i2sPort)` — drop boolean/DAC params from `AudioEncoderShim()`
-3. Add I2S API surface overrides to `AudioEncoderShim` (see §2.4): `eofHeader` field, `connecttoFS()` override, `loop()` override, `connecttoSD()` alias, `setDefaults()` no-op
+3. Add I2S API surface overrides to `AudioEncoderShim` (see §2.4): `eofHeader` field, `connecttoFS()` override, `loop()` override, `connecttoSD()` alias, `setDefaults()` no-op, and a shim overload/adaptation for the current 5-argument `setPinout(...)` call
 4. Add ~4 lines to the existing `audio_id3data` body in `audiohandlers.h` to dispatch `audio_id3artist`/`album`/`title` from prefixed strings (see §2.5)
 5. Update `platformio.ini` I2S/ES8311 `build_src_filter` entries (Rule #3 — requires explicit confirmation)
 6. Build and hardware-test I2S and ES8311 environments
@@ -362,7 +340,7 @@ The 3.4.5 snapshot is a substantially larger migration than the version number i
 
 - Uses `#include <NetworkClient.h>` **unconditionally** (no `#if v3` guard) — requires Arduino-ESP32 v3 toolchain
 - Uses `std::span`, `psram_unique_ptr.hpp`, `std::deque`, restructured event system — requires modern C++ and toolchain alignment
-- The `audio_*` **weak callback system is removed entirely** — events use a completely different dispatch model; `audio_info`, `audio_showstreamtitle`, etc. do not exist as weak functions in 3.4.5
+- Metadata/info callbacks move to `Audio::audio_info_callback(msg_t)` event dispatch; only the PCM-processing weak hooks remain, so `audio_info`, `audio_showstreamtitle`, etc. no longer exist as the primary integration surface in 3.4.5
 - The class interface is restructured; `setTone`, `setBalance`, `forceMono` signatures have changed
 
 3.4.5 cannot be dropped on top of the 3.1.0 shim architecture. It requires a separate full analysis pass. **Do not attempt until Steps E1–E4 are complete and hardware-tested.**
@@ -378,48 +356,37 @@ The 3.4.5 snapshot is a substantially larger migration than the version number i
 
 Do not attempt E2, E3, and E4 in a single PR. Each step is a distinct hardware-testable increment.
 
+---
+
 ### 2.12 Note that Github can be used for libraries
 
-; Git repository with specific tag
+Instead of just using platformio libraries, it is possible to use a Github repository with specific tag
   https://github.com/gioblu/PJON.git#v2.0
 
 ---
 
-## [ ] 3. Macros Without `options.h` Fallback
+### 2.13 Note regarding hiccups on I2S
 
-These macros are consumed in `src/` via `#ifdef`/`#if defined` guards (so they are safe when undefined), but they have **no fallback default in `options.h`**. This is inconsistent with how most settings are managed and makes them invisible to someone reading `options.h` for the full feature list.
+This issue may self-rectify as the library is replaced, but if it comes up again, it was noted that after fixing core assignments that I2S decoder devices skip ever-so-slightly when reloading the webpage of the WebUI.  (Running Audio on Core 0, everything else on Core 1)
 
-| Fixed | Macro | Consumed in | Fallback location | Notes |
-|---|---|---|---|---|
-| [X] | `BIG_BOOT_LOGO` | `displayILI9488.h`, `displayST7796.h`, conf files | None — `#ifdef` only | Safe: undefined = no big logo. But undocumented in `options.h`. |
-| [ ] | `DOWN_LEVEL` | `main.cpp` (heavily, with `#ifdef`) | None — optional feature | Safe: undefined = feature disabled. Only present in ILI9488 board profile. |
-| [ ] | `DOWN_INTERVAL` | `main.cpp` (heavily, with `#ifdef`) | None — optional feature | Same as `DOWN_LEVEL`. |
-| [X] | `FIRMWARE_NAME` | `network.cpp` lines ~337–346 via `#ifdef` | None | Safe: undefined = no firmware name in eHDP discovery. But boards built without a profile won't get a name, and there's no documented way to add one without knowing this macro exists. |
-| [x] | `SDSPISPEED` | `sdmanager.cpp` | Fallback defined **inside `sdmanager.cpp`** itself (`#ifndef SDSPISPEED #define SDSPISPEED 20000000`), NOT in `options.h` | Inconsistent pattern. Works fine, but breaks the convention that `options.h` is the canonical fallback location. |
-| [X] | `ESPFILEUPDATER_DEBUG` | `config.h` line ~13 via `#ifdef` | None — intentional debug flag | Safe but worth noting in `options.h` as a commented-out debug option. |
-| [X] | `MQTT_ENABLE` | `mqtt.h`, `mqtt.cpp`, `netserver.cpp`, `player.cpp`, `commandhandler.cpp`, `main.cpp` — guards the entire MQTT subsystem | None — opt-in feature | Undefined = MQTT disabled. No `#ifndef MQTT_ENABLE` entry in `options.h`. Should appear as a commented-out stub so it's discoverable without consulting board profiles or README. |
-| [X] | `RGB_LED_PIN` | `rgbled.cpp` — `#if defined(RGB_LED_PIN) && (RGB_LED_PIN!=255)` guards the entire NeoPixel module | None for `RGB_LED_PIN` itself; `RGB_LED_ORDER` falls back inside `rgbled.cpp`; `NUM_RGB_LEDS` is hardcoded as `1` in `rgbled.cpp` | Undefined = NeoPixel disabled. The `=255 means disabled` convention used for all other pin macros (MUTE_PIN, BRIGHTNESS_PIN, etc.) is not applied here — no options.h entry at all. |
-| [X] | `MAX_PL_READ_BYTES` | `netserver.cpp` line ~312 — caps playlist body size during HTTP upload | None anywhere | Undefined = no upper limit on playlist read size. Tuning parameter that should have an options.h default (e.g., something like `65536`). |
-| [X] | `PLAYLIST_DEFAULT_URL` | `config.cpp` line ~1307 — seeds default playlist on first boot | None | Undefined = no default playlist URL seeded. Silent, no fallback. Should have a commented stub in `options.h`. |
-| [X] | `SD_SPIPINS` | `config.cpp` line ~75, `sdmanager.h/cpp` — custom SPI pin tuple for SD card | None | Paired feature with `SD_HSPI` which HAS an `options.h` fallback, but `SD_SPIPINS` itself does not. Inconsistent. \* `SD_SPIPINS` will be replaced by individual `SD_SCK`/`SD_MISO`/`SD_MOSI` macros as part of §1. |
-| [X] | `TS_SPIPINS` | `touchscreen.cpp` lines ~27, ~46 — custom SPI pin tuple for touchscreen | None | Same asymmetry as `SD_SPIPINS` vs `SD_HSPI`. `TS_HSPI` has an `options.h` fallback; `TS_SPIPINS` does not. \* `TS_SPIPINS` will be replaced by individual `TS_SCK`/`TS_MISO`/`TS_MOSI` macros as part of §1. |
-| [X] | `DEBUG_V`, `CORS_DEBUG`, `BATTERY_DEBUG` | Various `src/core/` files | None — intentional debug flags | Same category as `ESPFILEUPDATER_DEBUG`. Three separate debug flags with no options.h entry. Should be grouped as commented-out debug stubs. |
+The root cause is that Audio::loop() — which feeds the HTTP TCP ring buffer — runs on Core 1 inside the main loop(). WebSocket connect/disconnect bursts during a page reload can stall Core 1 for 100–200ms, starving the ring buffer that the Core 0 audio decode task is draining. The skip is the decode task hitting the bottom of that buffer.
 
-**Action**: Consider documenting these in `options.h` as commented-out stubs so they are discoverable. Move the `SDSPISPEED` fallback from `sdmanager.cpp` to `options.h`. Add `RGB_LED_PIN 255` default following the existing `=255 means disabled` pin convention. Add a default for `MAX_PL_READ_BYTES`. `[LOW]`.
+When replacing the audio library, look for: (a) an exposed ring buffer size define (e.g. AUDIO_RINGBUFFER_SIZE or similar) — increasing it gives more headroom to absorb Core 1 stalls; and (b) whether the library supports running its HTTP feed loop as a separate pinned FreeRTOS task at elevated priority, independent of the main loop(). If the new library supports the latter, pinning the feed task to Core 1 at priority 4 (above NETSERVER_TASK_PRIORITY) would prevent WebSocket traffic from preempting it.
+
 
 ---
 
-## [ ] 4. Write-Only Variables (Set But Never Read)
+## [X] 3. Macros Without `options.h` Fallback (ALL FIXED)
 
-### [ ] 4.1 `network.trueWeather` `[MEDIUM]`
+**Resolution (2026-05)**: The remaining legacy compile-time backlight-down path was replaced by `DIMMING_ENABLED`, `DIMMING_TIMEOUT`, and `DIMMING_BRIGHTNESS` defaults in `options.h`, persisted screen settings, and WebUI-backed runtime control. Screen dimming now follows the same fallback/default model as the rest of the screen settings, with no remaining `src/` consumers of the old board-only path.
 
-- **Declaration**: `bool trueWeather;` in `src/core/network.h` line ~24
-- **Written**: `config.cpp` (3 assignments), `network.cpp` `getWeather()` return value stored here (2 assignments including the return)
-- **Read**: **Zero occurrences anywhere in `src/`**
-- **Analysis**: `getWeather()` returns a `bool` indicating whether real weather data was received. The caller stores this in `trueWeather`, but no code path ever checks `trueWeather`. The variable appears intended to track "we have real data vs. placeholder" but the consuming logic was never written (or was removed). The indicator is silently discarded every time.
-- **Action**: Either add consuming logic that uses `trueWeather` (e.g., suppress stale display when false), or remove the variable and ignore the return value explicitly at the call sites.
+---
 
-- Trip5 note: This is supposed to track if weather info held in cache is valid.  Is it seriously not being checked anywhere?  It's supposed to be refreshed according to config.store... weather interval?
+## [X] 4. Write-Only Variables (Set But Never Read) (ALL FIXED)
+
+### [X] 4.1 `network.trueWeather` `[MEDIUM]`
+
+**Resolution (2026-05)**: `network.trueWeather` was removed. Weather cache validity now lives entirely inside the internal `WeatherCache` state in `network.cpp`, which keeps the last good weather through one failed scheduled refresh and clears it on the second consecutive failure. Changing the API key remains lazy: it redraws using cached weather if available and waits for the normal weather interval before fetching again.
 
 ---
 
@@ -628,166 +595,15 @@ This was just an idea and abandoned... ESP32 support remains but a lot of things
 
 ---
 
-## [ ] 15. `main.cpp` — Non-Boot Code That Belongs in Its Own Files `[MEDIUM]`
+## [X] 15. `main.cpp` — Non-Boot Code That Belongs in Its Own Files (ALL FIXED)
 
-`main.cpp` should contain only `setup()`, `loop()`, and minimal glue. Currently it hosts ~200 lines of substantive implementation code across three distinct functional areas. This inflates the file size, mixes responsibilities, and makes the code harder to locate during maintenance.
-
----
-
-### 15.1 Inventory of misplaced code
-
-**Block A — BacklightDown plugin (~75 lines, lines ~119–192)**
-
-Guarded by `#if (BRIGHTNESS_PIN!=255) && (defined(DOWN_LEVEL) || defined(DOWN_INTERVAL))`. Contains:
-
-- `Ticker backlightTicker`, `Ticker rampTicker` and `uint8_t current_brightness` globals
-- Constants `brightness_down_level` and `Out_Interval` (derived from `DOWN_LEVEL`/`DOWN_INTERVAL`)
-- `stepBacklight()` — Ticker ISR-style callback that ramps brightness down
-- `backlightDown()` — Ticker callback that triggers the ramp
-- `brightnessOn()` (or a no-op stub when `BRIGHTNESS_PIN==255`) — public API for "restore and restart timer"
-- `ctrls_on_loop()` — named weak-callback called from `controls.cpp` line 133; restores backlight on non-PLAYER mode transitions
-
-This was derived from the legacy `builds/plugins/backlightcontrols.ino` plugin and then extended inline in `main.cpp` across three iterated versions. An object-oriented example in `builds/plugins/backlightControls/backlightcontrols.cpp/.h` already exists but is a simplified version (no ramp, no battery integration).
-
-**Block B — `battery_dim_loop()` and its state variables (~100 lines, lines ~30–45 and ~199–289)**
-
-Guarded by `#if BRIGHTNESS_PIN!=255`. Contains:
-
-- Five file-static state variables (`battery_low_handled`, `battery_critical_handled`, `battery_critical_skipped`, `battery_saved_brightness`, `battery_saved_valid`) declared at the top of `main.cpp`
-- Forward declaration of `battery_dim_loop()` at line 30 (needed because `loop()` calls it before its definition)
-- The full `battery_dim_loop()` function body: reads `BatteryStatus`, handles critical/low/recovery cases, calls `brightnessOn()` or `config.setBrightness()`, sends deep-sleep command
-
-This logic bridges `battery.h` (status) and the backlight (Block A), so it's tightly coupled to Block A and belongs in the same file.
-
-**Block C — Glue callback implementations (~25 lines, lines ~292–315)**
-
-These are named weak-symbol overrides. All have their forward declarations in core headers:
-- `ehradio_on_setup()` — declared weak in `main.cpp` line 27, defined at line 296; calls `rgbled_init()` + `brightnessOn()`
-- `player_on_track_change()` — weak in `player.h` line 73, called from `display.cpp` line 774; calls `rgbled_trackchange()` + `brightnessOn()`
-- `player_on_start_play()` — weak in `player.h` line 71, called from `player.cpp` lines 279/312; calls `rgbled_playing()` + `brightnessOn()`
-- `player_on_stop_play()` — weak in `player.h` line 72, called from `player.cpp` line 127; calls `rgbled_stopped()` + `brightnessOn()`
-- `rgbled_loop_caller()` — one-liner wrapper; no external weak declaration found; currently only defined here
-
-All five call `brightnessOn()` from Block A, which is why they ended up in `main.cpp` alongside it rather than in their natural homes.
-
----
-
-### 15.2 Proposed target: `src/core/backlightcontrols.cpp` / `src/core/backlightcontrols.h`
-
-Move all three blocks into a new `backlightcontrols.cpp` / `backlightcontrols.h` pair in `src/core/`. This keeps the backlight/battery/callback glue together in one file, follows the naming convention already established by `builds/plugins/backlightControls/`, and mirrors how `rgbled.cpp` / `rgbled.h` is handled (optional hardware feature with a stub path).
-
-**What stays in `main.cpp` after the move:**
-- All `#include` directives (add `#include "core/backlightcontrols.h"`)
-- `SET_LOOP_TASK_STACK_SIZE` macro
-- `#if DSP_HSPI || TS_HSPI || VS_HSPI` / `SPIClass SPI2(HSPI)` global (see §15.4)
-- The `extern __attribute__((weak)) void ehradio_on_setup()` forward declaration (stays — consumed in `setup()`)
-- `setup()` (~50 lines)
-- `loop()` (~20 lines)
-- `#include "core/audiohandlers.h"` (intentionally after `loop()` by design)
-
-**Header (`backlightcontrols.h`) declares:**
-```cpp
-void brightnessOn();        // public API used by callbacks and battery_dim_loop; no-op stub when BRIGHTNESS_PIN==255
-void battery_dim_loop();    // called from loop() in main.cpp; #if BRIGHTNESS_PIN!=255 gated
-```
-Both are already called from `main.cpp`; declaring them in the header removes the forward declarations from `main.cpp`.
-
-**Dependencies of Block A + B + C** (already included by every other `src/core/` file):
-- `<Arduino.h>`, `<Ticker.h>`
-- `"options.h"`, `"config.h"`, `"network.h"`, `"display.h"`, `"battery.h"`, `"player.h"`, `"rgbled.h"`
-
-No circular include risk: `backlightcontrols.h` does not need to include any of the above in the header itself (just the two `void` function declarations). All heavy includes go in `backlightcontrols.cpp`.
-
----
-
-### 15.3 Migration notes / gotchas
-
-**Weak symbol mechanics**: The definitions of `ehradio_on_setup()`, `player_on_*`, and `ctrls_on_loop()` are found by the linker at link time, not at include time. Moving the strong definitions from `main.cpp` to `backlightcontrols.cpp` requires no change to the forward declarations in `player.h` and `controls.h` — the linker finds them automatically. The `extern __attribute__((weak)) void ehradio_on_setup()` declaration in `main.cpp` stays; the definition moves to `backlightcontrols.cpp`.
-
-**`battery_dim_loop()` forward declaration**: Line 30 of `main.cpp` forward-declares `battery_dim_loop()` because `loop()` calls it before the function is defined. After the move, replace this prototype with `#include "core/backlightcontrols.h"`.
-
-**`#include <Ticker.h>`**: Currently included inside the conditional block in `main.cpp`. This must move to `backlightcontrols.cpp`. It is not needed in the header (Ticker objects are file-static).
-
-**`brightnessOn()` no-op stub**: The `#else` branch at the end of Block A defines `void brightnessOn() { }`. This must be preserved in `backlightcontrols.cpp` under the same `#else` guard so that the callbacks compile when `BRIGHTNESS_PIN==255`.
-
-**`ctrls_on_loop()` naming**: The function is already declared as `extern __attribute__((weak)) void ctrls_on_loop()` in `controls.h` (line 31). The strong definition in `backlightcontrols.cpp` overrides it. No changes needed in `controls.h` or `controls.cpp`.
-
-**`rgbled_loop_caller()`**: This one-line wrapper has no external weak declaration and is not called from any discovered location outside `main.cpp`. Verify before moving — it may be dead code that can be removed entirely rather than migrated (cross-check with §4's write-only variable audit pattern).
-
----
-
-### 15.4 Minor leftover: `SPI2` global `[LOW]`
-
-```cpp
-#if DSP_HSPI || TS_HSPI || VS_HSPI
-  SPIClass SPI2(HSPI);
-#endif
-```
-
-This hardware global is declared in `main.cpp` but consumed by display drivers in `src/displays/`. It belongs closer to its users — ideally in a `src/core/spiinit.cpp` or in the display driver that owns the HSPI bus. However this is low-priority and its current location is not harmful: a global declared in `main.cpp` is still a valid TU-global accessible via `extern SPIClass SPI2` from any display driver. Leave this for a later refactor once the larger Block A/B/C move is validated.
-
-\* **§29 note**: The `SPI2(HSPI)` global and the `*_HSPI` boolean flags are scheduled for full removal in §1 Phase 4, replaced by per-device `SPIClass` instances initialized with explicit pin macros inside each owning module. When §29 is implemented, this leftover becomes moot.
-
----
-
-### 15.5 What `main.cpp` looks like after the refactor
-
-```cpp
-#include "core/options.h"
-#include <Arduino.h>
-#include <DNSServer.h>
-#include <esp_sleep.h>
-#include <esp_system.h>
-#include "core/battery.h"
-#include "core/backlightcontrols.h"   // ← new; replaces battery_dim_loop() forward decl
-#include "core/config.h"
-#include "core/controls.h"
-#include "core/display.h"
-#include "core/mqtt.h"
-#include "core/netserver.h"
-#include "core/network.h"
-#include "core/player.h"
-#include "core/rgbled.h"
-#include "core/telnet.h"
-#include "pluginsManager/pluginsManager.h"
-#ifdef USE_NEXTION
-  #include "displays/nextion.h"
-#endif
-
-SET_LOOP_TASK_STACK_SIZE(LOOP_TASK_STACK_SIZE * 1024);
-
-#if DSP_HSPI || TS_HSPI || VS_HSPI
-  SPIClass SPI2(HSPI);
-#endif
-
-extern __attribute__((weak)) void ehradio_on_setup();
-
-void setup() { ... }   // ~50 lines, unchanged
-void loop()  { ... }   // ~20 lines, unchanged
-
-#include "core/audiohandlers.h"
-```
-
-No function bodies remain in `main.cpp` other than `setup()` and `loop()`. Total line count drops from ~315 to roughly ~100–110 lines.
-
----
-
-### 15.6 Summary
-
-| Block | Lines | Proposed destination | Feasibility |
-|---|---|---|---|
-| BacklightDown plugin (Ticker, `brightnessOn`, `ctrls_on_loop`) | ~75 | `src/core/backlightcontrols.cpp/.h` | ✅ Straightforward |
-| `battery_dim_loop()` + state vars | ~100 | `src/core/backlightcontrols.cpp/.h` | ✅ Straightforward, coupled to Block A |
-| `ehradio_on_setup`, `player_on_*`, `rgbled_loop_caller` | ~25 | `src/core/backlightcontrols.cpp/.h` | ✅ Weak-symbol mechanics are fully transparent to linker |
-| `SPI2` global | ~3 | Leave in `main.cpp` for now | Low priority; no real harm in current location |
-
-**Rule #4 note**: When this refactor is executed, `code-summary.md` must be updated — specifically the `src/main.cpp` boot-flow section and a new entry for `src/core/backlightcontrols.cpp/.h`.
+**Resolution (2026-05)**: `main.cpp` has been reduced to startup and loop orchestration plus the current single-translation-unit `#include "core/audiohandlers.h"` pattern. The old inline BacklightDown ownership moved into `src/core/backlightcontrols.cpp/.h`, the battery-driven dim/sleep policy moved into `Battery::applyPowerPolicy()`, and the former player/display/control backlight-RGB weak hooks were replaced with explicit calls in the owning modules. The same cleanup direction also removed the old plugin-style glue from the live architecture, so `main.cpp` is no longer carrying plugin or callback ownership beyond normal boot/runtime sequencing.
 
 ---
 
 ## [X] 16. Plugin System — Dead Infrastructure, Removed (ALL FIXED)
 
-**Resolution (2026-05)**: All `pm.on_*()` calls and plugin manager includes removed from `main.cpp`, `display.cpp`, `controls.cpp`, `network.cpp`, and `player.cpp` (13 call sites total). `pm_result` guard and variable removed from `display.cpp` (display queue switch block now unconditional). `src/pluginsManager/` and `src/plugins/` folders retained for reference but excluded from all builds.
+**Resolution (2026-05)**: All `pm.on_*()` calls and plugin manager includes removed from `main.cpp`, `display.cpp`, `controls.cpp`, `network.cpp`, and `player.cpp` (13 call sites total). `pm_result` guard and variable removed from `display.cpp` (display queue switch block now unconditional). The old `src/pluginsManager/` and `src/plugins/` folders have since been removed from the tree entirely.
 
 ---
 
@@ -1168,11 +984,6 @@ Just some notes to make while going through code...
   [X] netserver.loop(); was twice in player.cpp line ~247-248 — removed duplicate
   [X] optionschecker.h should have more guardrails and re-ordered according to options.h (and optionschecker.h removed)
   [ ] the plugin for deepsleep has idletimer... an interesting idea - might be worth mixing with screensaver options
-  [ ] the home assistant plugin is kind of functional but ugly... Nothing online to "borrow" and not a good way to use HA builtin integratins so the one we're using has been repaired
-
-  [Audio.info]    stream ready
-[Audio.info]    StreamTitle='Merge Of Equals - Atesch (Radio Edit)
-[Audio.info]    StreamUrl='https://somafm.com/logos/512/groovesalad512.png'
-
+  [X] the home assistant plugin is kind of functional but ugly... Nothing online to "borrow" and not a good way to use HA builtin integratins so the one we're using has been repaired
   [X] inside display.cpp is: #ifndef NETSERVER_LOOP1    netserver.loop();    #endif which seems to bypass network handling if the display is too busy? (undocumented, only in display.cpp)
   [X] SORRY NOPE - html files for playback could use media session api to allow phones more control - may be too difficult to implement - will require user confirmation?

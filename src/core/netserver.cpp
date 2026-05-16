@@ -21,6 +21,7 @@
 #include "network.h"
 #include "player.h"
 #include "telnet.h"
+#include "utility.h"
 #include "../displays/dspcore.h"
 #include "../displays/widgets/widgetsconfig.h" //BitrateFormat
 #if USE_OTA
@@ -35,10 +36,10 @@
   #include "sdmanager.h"
 #endif
 
-#ifdef DEBUG_V
-  #define DBGVB(...) { char buf[200]; snprintf(buf, sizeof(buf), __VA_ARGS__); FUNCTIONLOG("Netserver.debug", "%s", buf); }
+#ifdef NETSERVER_DEBUG
+  #define NETSERVERLOG(...) { char buf[200]; snprintf(buf, sizeof(buf), __VA_ARGS__); FUNCTIONLOG("Netserver.debug", "%s", buf); }
 #else
-  #define DBGVB(...)
+  #define NETSERVERLOG(...)
 #endif
 
 // Global list for Radio-Browser servers to persist across searches
@@ -175,43 +176,26 @@ void handleSearchPost(AsyncWebServerRequest *request) {
   sName.trim();
   sUrl.trim();
   if (sName.length() >= sizeof(config.station.name)) sName = sName.substring(0, sizeof(config.station.name) - 1);
-  if (sUrl.length() >= sizeof(config.station.url)) sUrl = sUrl.substring(0, sizeof(config.station.url) - 1);
+  if (sUrl.length() > MQTT_URL_SIZE) sUrl = sUrl.substring(0, MQTT_URL_SIZE);
   player.sendCommand({PR_STOP, 0}); // Stop current playback
   
   // Check for duplicate URL in playlist (for both preview and add)
-  bool found = false;
-  int foundIdx = 0;
-  auto normalizeUrl = [](const String& url) -> String {
-      String u = url;
-      u.trim();
-      if (u.startsWith("http://")) u = u.substring(7);
-      else if (u.startsWith("https://")) u = u.substring(8);
-      u.trim();
-      return u;
-      };
-  String normNewUrl = normalizeUrl(sUrl);
-  uint16_t cs = config.playlistLength();
-  for (int i = 1; i <= cs; ++i) {
-    config.loadStation(i);
-    String existingUrl = String(config.station.url);
-    String normExistingUrl = normalizeUrl(existingUrl);
-    if (normExistingUrl.equalsIgnoreCase(normNewUrl)) {
-      found = true;
-      foundIdx = i;
-      break;
-    }
-    // Reset watchdog every 5 iterations to prevent timeout
-    if (i % 5 == 0) esp_task_wdt_reset();
-  }
+  uint16_t cs = utility.playlistLength();
+  uint16_t foundIdx = utility.findStationByUrl(sUrl.c_str());
+  bool found = foundIdx > 0;
   
   if (!addtoplaylist) { // This is a preview
     if (found) { // URL exists in playlist, play that station
       player.sendCommand({PR_PLAY, (uint16_t)foundIdx});
       request->send(200, "text/plain", "EXISTING");
     } else { // URL not in playlist, preview in slot 0
-      config.loadStation(0); // Load into temporary station slot
-      launchPlaybackTask(sUrl, sName);
-      netserver.requestOnChange(GETINDEX, 0);
+      config.setStation(sName.c_str());
+      display.putRequest(NEWSTATION);
+      netserver.requestOnChange(STATIONNAME, 0);
+      if (!player.queueResolvedUrl(sUrl.c_str())) {
+        request->send(400, "text/plain", "Invalid url");
+        return;
+      }
       request->send(200, "text/plain", "PREVIEW");
     }
   } else { // This is add to playlist
@@ -226,9 +210,9 @@ void handleSearchPost(AsyncWebServerRequest *request) {
         playlistfile.close();
         esp_task_wdt_reset(); // Reset watchdog before heavy operations
         uint16_t newIdx = cs + 1;
-        config.indexPlaylist();
+        utility.indexPlaylist();
         esp_task_wdt_reset(); // Reset watchdog between operations
-        config.initPlaylist();
+        utility.initPlaylist();
         player.sendCommand({PR_PLAY, newIdx});
         netserver.requestOnChange(PLAYLISTSAVED, 0);
         request->send(200, "text/plain", "ADDED");
@@ -353,7 +337,7 @@ size_t NetServer::chunkedHtmlPageCallback(uint8_t* buffer, size_t maxLen, size_t
     if (maxLen>MAX_PL_READ_BYTES) maxLen=MAX_PL_READ_BYTES;
   #endif
   size_t canread = (needread > maxLen) ? maxLen : needread;
-  DBGVB("[%s] seek to %d in %s and read %d bytes with maxLen=%d", __func__, index, netserver.chunkedPathBuffer, canread, maxLen);
+  NETSERVERLOG("[%s] seek to %d in %s and read %d bytes with maxLen=%d", __func__, index, netserver.chunkedPathBuffer, canread, maxLen);
   requiredfile.seek(index, SeekSet);
   requiredfile.read(buffer, canread);
   index += canread;
@@ -408,8 +392,8 @@ void NetServer::processQueue() {
           }
         #endif
         if (config.getMode()==PM_WEB) {
-          config.indexPlaylist(); 
-          config.initPlaylist(); 
+          utility.indexPlaylist(); 
+          utility.initPlaylist(); 
         }
         getPlaylist(clientId); break;
       }
@@ -434,7 +418,8 @@ void NetServer::processQueue() {
                                                               #ifndef HIDE_VU
                                                                 act += F("\"group_vu\",");
                                                               #endif
-            if (BRIGHTNESS_PIN != 255 || nxtn || dbgact)                act += F("\"group_brightness\",");
+            if (BRIGHTNESS_PIN != 255 || nxtn || dbgact)        act += F("\"group_brightness\",");
+            if (DSP_DIMMING_ENABLED || dbgact)                  act += F("\"group_dimming\",");
             if (DSP_CAN_FLIPPED || dbgact)                      act += F("\"group_tft\",");
             if (TS_MODEL != TS_MODEL_UNDEFINED || dbgact)       act += F("\"group_touch\",");
             if (DSP_MODEL == DSP_NOKIA5110)                     act += F("\"group_nokia\",");
@@ -475,7 +460,7 @@ void NetServer::processQueue() {
                                   config.store.autoupdate,
                                   config.store.mdnsname);
                                   break;
-      case GETSCREEN:     snprintf(wsbuf, sizeof(wsbuf), "{\"flip\":%d,\"inv\":%d,\"nump\":%d,\"tsf\":%d,\"tsd\":%d,\"dspon\":%d,\"br\":%d,\"con\":%d,\"scre\":%d,\"scrt\":%d,\"scrb\":%d,\"scrpe\":%d,\"scrpt\":%d,\"scrpb\":%d,\"volumepage\":%d,\"clock12\":%d}",
+      case GETSCREEN:     snprintf(wsbuf, sizeof(wsbuf), "{\"flip\":%d,\"inv\":%d,\"nump\":%d,\"tsf\":%d,\"tsd\":%d,\"dspon\":%d,\"br\":%d,\"con\":%d,\"scre\":%d,\"scrt\":%d,\"scrb\":%d,\"scrpe\":%d,\"scrpt\":%d,\"scrpb\":%d,\"dimmingenabled\":%d,\"dimmingtimeout\":%d,\"dimmingbrightness\":%d,\"volumepage\":%d,\"clock12\":%d}",
                                   config.store.flipscreen,
                                   config.store.invertdisplay,
                                   config.store.numplaylist,
@@ -490,6 +475,9 @@ void NetServer::processQueue() {
                                   config.store.screensaverPlayingEnabled,
                                   config.store.screensaverPlayingTimeout,
                                   config.store.screensaverPlayingBlank,
+                                  config.store.dimmingEnabled,
+                                  config.store.dimmingTimeout,
+                                  config.store.dimmingBrightness,
                                   config.store.volumepage,
                                   config.store.clock12);
                                   break;
@@ -577,11 +565,17 @@ void NetServer::processQueue() {
       case CURATED_INDEX_DONE: snprintf(wsbuf, sizeof(wsbuf), "{\"curated_index_done\":true}"); break;
       case CURATED_PLAYLIST_DONE: snprintf(wsbuf, sizeof(wsbuf), "{\"curated_playlist_done\":true}"); break;
       case CURATED_FAILED: snprintf(wsbuf, sizeof(wsbuf), "{\"curated_failed\":true}"); break;
+      case ARTWORK:       break;
       #ifdef USE_SD
         case CHANGEMODE:    config.changeMode(config.newConfigMode); return; break;
       #endif
       default:          break;
     }
+    #ifdef MQTT_ENABLE
+      if (config.store.mqttenable && clientId == 0 && request.type == ARTWORK) {
+        mqtt.publishStatus();
+      }
+    #endif
     if (strlen(wsbuf) > 0) {
       if (clientId == 0) { websocket.textAll(wsbuf); } else { websocket.text(clientId, wsbuf); }
       #ifdef MQTT_ENABLE
@@ -603,7 +597,7 @@ void NetServer::loop() {
   }
   websocket.cleanupClients();
   switch (importRequest) {
-    case IMWIFI:  config.importWifi(); importRequest = IMDONE; break;
+    case IMWIFI:  utility.importWifi(); importRequest = IMDONE; break;
     default:      break;
   }
   processQueue();
@@ -645,7 +639,7 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
     payload[payloadLen] = '\0';
 
     char command[65], val[65];
-    if (config.parseWsCommand(payload, command, val, 65)) {
+    if (utility.parseWsCommand(payload, command, val, 65)) {
       if (cmd.exec(command, val, clientId, CommandSource::WebSocket)) {
         return;
       }
@@ -735,7 +729,7 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
       }
     }
   } else { // "/webboard"
-    DBGVB("File: %s, size:%u bytes, index: %u, final: %s\n", filename.c_str(), len, index, final?"true":"false");
+    NETSERVERLOG("File: %s, size:%u bytes, index: %u, final: %s\n", filename.c_str(), len, index, final?"true":"false");
     if (!index) {
       String spath = "/www/";
       if (filename=="playlist.csv" || filename=="wifi.csv") spath = "/data/";
@@ -747,7 +741,7 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
     if (final) {
       request->_tempFile.close();
       if (filename=="playlist.csv") {
-        config.indexPlaylist();
+        utility.indexPlaylist();
         netserver.requestOnChange(PLAYLISTSAVED, 0);
       }
     }
@@ -1372,7 +1366,7 @@ void startOnlineUpdate() {
           }
           if (Update.end(true)) { // end(true) will finish and commit the update
             FUNCTIONLOG("Online Update", "Update successful, rebooting...");
-            config.deleteMainwwwFile();
+            utility.deleteMainwwwFile();
             websocket.textAll("{\"onlineupdatestatus\": \"Update successful, rebooting...\"}");
             delay(1000);
             ESP.restart();
@@ -1428,7 +1422,7 @@ void handleNotFound(AsyncWebServerRequest * request) {
   #endif
 
   if (request->method() == HTTP_GET) {
-    DBGVB("[%s] client ip=%s request of %s", __func__, request->client()->remoteIP().toString().c_str(), request->url().c_str());
+    NETSERVERLOG("[%s] client ip=%s request of %s", __func__, request->client()->remoteIP().toString().c_str(), request->url().c_str());
     if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 || 
         strcmp(request->url().c_str(), SSIDS_PATH) == 0 || 
         strcmp(request->url().c_str(), INDEX_PATH) == 0 || 
@@ -1476,9 +1470,9 @@ void handleNotFound(AsyncWebServerRequest * request) {
   if (request->url() == "/variables.js") {
     char varjsbuf[WEBSOCKET_BUFFER];
     char escapedRadioVersion[32];
-    config.escapeQuotes(RADIOVERSION, escapedRadioVersion, sizeof(escapedRadioVersion));
+    utility.escapeQuotes(RADIOVERSION, escapedRadioVersion, sizeof(escapedRadioVersion));
     char escapedGithubUrl[128];
-    config.escapeQuotes(GITHUBURL, escapedGithubUrl, sizeof(escapedGithubUrl));
+    utility.escapeQuotes(GITHUBURL, escapedGithubUrl, sizeof(escapedGithubUrl));
     snprintf(varjsbuf, sizeof(varjsbuf),
       "var radioVersion='%s';\n"
       "var htmlLocale='%s';\n"
@@ -1512,9 +1506,9 @@ void handleNotFound(AsyncWebServerRequest * request) {
     char varjsbuf[128];
     #ifdef CURATED_LISTS
       char escapedName[128];
-      config.escapeQuotes(CURATED_LISTS, escapedName, sizeof(escapedName));
+      utility.escapeQuotes(CURATED_LISTS, escapedName, sizeof(escapedName));
       char escapedLink[128];
-      config.escapeQuotes(CURATED_LISTS_LINK, escapedLink, sizeof(escapedLink));
+      utility.escapeQuotes(CURATED_LISTS_LINK, escapedLink, sizeof(escapedLink));
       snprintf(varjsbuf, sizeof(varjsbuf),
         "var curatedLists=true;\n"
         "var curatedName=\"%s\";\n"
@@ -1557,7 +1551,7 @@ void handleIndex(AsyncWebServerRequest * request) {
         memset(buf, 0, sizeof(buf));
         snprintf(buf, sizeof(buf), "%s\t%s", request->arg("ssid").c_str(), request->arg("pass").c_str());
         request->redirect("/");
-        config.saveWifi(buf);
+        utility.saveWifi(buf);
         return;
       }
       request->redirect("/"); 

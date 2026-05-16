@@ -169,8 +169,8 @@ At some point, schreibfaul1 began work on the [ESP32-vs1053_ext](https://github.
 on Github [October 13, 2017](https://github.com/schreibfaul1/ESP32-vs1053_ext/tree/651dcce0f7d617a81153bc9a078ee8542db200f1), crediting Edzelf's ESP32-Radio as inspiration.
 Further work has been done by [nstepanets](https://github.com/nstepanets/ESP32-vs1053_ext) who took over [October 25, 2025](https://github.com/nstepanets/ESP32-vs1053_ext/tree/bddf3137ec361a6b13d0a1687d3065561d507b8c).
 
-schreibfaul1 began work on [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) library, making his first version available on Github [October 28, 2018](https://github.com/schreibfaul1/ESP32-audioI2S/tree/dc87801a7b1b369925080276cedd5a019715470a).
-`Edzelf likely adapted his ESP32Radio-V2 radio from that project and work continues on that library today.
+schreibfaul1 also created the [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) library, making his first version available on Github [October 28, 2018](https://github.com/schreibfaul1/ESP32-audioI2S/tree/dc87801a7b1b369925080276cedd5a019715470a).
+Work continues on that library today. Coming full circle, Edzelf likely adapted this library when working on ESP32Radio-V2 radio.
 
 It is hard to say definitively, but more than likely all of these projects have inspired each other in various ways.  The DNA of all these projects are still evident in ёRadio and ehRadio.
 
@@ -195,10 +195,12 @@ That PR started [June 13, 2025](https://github.com/e2002/yoradio/pull/184) was a
 
 In retrospect, proposing thousands of lines of changes was rude and unrealistic.  After some thought, ehRadio was officially forked August 10, 2025.
 
-As of 2026.05.08, ehRadio currently uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.512m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
+As of 2026.05.08, ehRadio uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.512m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
 likely mostly from schreibfaul1's library [3.1.0 January 7, 2025](https://github.com/schreibfaul1/ESP32-audioI2S/releases/tag/3.1.0).
 ehRadio also currently uses the `ESP32-vs1053_ext` library from Maleksm's ёRadio mod v0.9.512m, likely mostly from schreibfaul1's [final version](https://github.com/schreibfaul1/ESP32-vs1053_ext).
-These libraries are so intertwined with the codebase that it may be impossible to migrate to newer versions, but... I am trying. That is the main reason for the "feature freeze" that began 2026.03.30.
+These libraries are so intertwined with the codebase that it may be impossible to migrate to newer versions, but... I will try.
+
+For that and other major needed changes to the codebase, I maintain [code-issues.md](/.github/code-issues.md), which may be a messy file to look at, depending on how these efforts are going.
 
 I will add a note here that although I do use AI-assisted coding, I am not a "vibe-coder" by any measure.
 
@@ -210,7 +212,7 @@ I will add a note here that although I do use AI-assisted coding, I am not a "vi
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.05.12 dev | HTML myoptions.h generator (not here yet), optimization to cpu cores/stack sizes, core monitor added, ... |
+| 2026.05.16 dev | This readme, HTML myoptions.h generator (not here yet), cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
 | 2026.05.08 | SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
 | 2026.04.09 | major and minor changes to structure, aggressive reconnect to wi-fi |
 | 2026.03.30 | feature freeze begins, OTA page reload graceful, 3 javascript files combined to 1 (`script2.js`) |
@@ -229,3 +231,10 @@ I will add a note here that although I do use AI-assisted coding, I am not a "vi
 ### Old Readme
 
 A full history of ёRadio from v0.4.177 to v0.9.533 and to ehRadio 2026.05.08 can be seen in the [old Readme](README.old.md).
+
+### Credit
+
+Thanks to:
+  - [Kasperaitis](https://github.com/kasperaitis) - for work initiating locales (WebUI and display language, display fonts, etc.) and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
+  - [e2002](https://github.com/e2002) - for [ёRadio](https://github.com/e2002/yoradio/)
+

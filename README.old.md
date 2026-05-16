@@ -525,11 +525,9 @@ Documentation will be improved at some point... Until then, check this page and 
 - Added some of Maleksm's additions and changes from v0.9.434m (04.04.25) (with some changes)
   - includes improved decoding for VS1053 and PCM decoder and various codecs
   - ESP8266 support completely removed
-  - includes BacklightDown plugin (tweaked to be non-blocking)
-    - dims the display after awhile
-    - `#define BRIGHTNESS_PIN` must be in your `myoptions.h`
-    - `#define DOWN_LEVEL 2` (brightness level 0 to 255, default 2 )
-    - `#define DOWN_INTERVAL 60` (seconds to dim, default 60 = 60 seconds)
+  - includes idle screen dimming
+    - dims the display after inactivity when `BRIGHTNESS_PIN` is set in `myoptions.h`
+    - brightness, dimmed brightness, and timeout are now regular screen settings instead of extra board-only tuning macros
   - use `#define HIDE_VOLPAGE` to hide the separate page showing volume (uses the progress bar instead)
 
 
@@ -1100,7 +1098,7 @@ or -> **!!! a [full update](#update-over-web-interface) with Sketch data upload 
 - added SD Card support (more info in [connection table](#connection-tables) and [examples/myoptions.h](https://github.com/e2002/yoradio/blob/main/examples/myoptions.h))
 - added MODE button to switch SD/WEB modes (more info in [Controls.md](https://github.com/e2002/yoradio/blob/main/Controls.md))
 - asterisk on the remote control now switches SD/WEB modes
-- double click BTN_CENTER and ENC_BTNB now toggles SD/WEB modes
+- double click BTN_PLAY and ENC_BTNB now toggles SD/WEB modes
 - bug fixes
 
 #### v0.8.173
@@ -1149,7 +1147,7 @@ or -> **!!! a [full update](#update-over-web-interface) with Sketch data upload 
 
 #### v0.8.01b
 - fix INITR_MINI160x80 compiling error
-- fix ENC_INTERNALPULLUP description in examples/myoptions.h
+- fix ENC_PULLUP description in examples/myoptions.h
 
 #### v0.8.00b
 - rewritten the display engine
@@ -1433,7 +1431,7 @@ _will have to be configured again through the web interface. Please understand a
 
 #### v0.4.292
 - added support for IR control
-- new options in options.h (ENC_INTERNALPULLUP, ENC_HALFQUARD, BTN_INTERNALPULLUP, VOL_STEP) _//Thanks for [Buska1968](https://4pda.to/forum/index.php?s=&showtopic=1010378&view=findpost&p=113385448)_
+- new options in options.h (ENC_PULLUP, ENC_HALFQUARD, BTN_INTERNALPULLUP, VOL_STEP) _//Thanks for [Buska1968](https://4pda.to/forum/index.php?s=&showtopic=1010378&view=findpost&p=113385448)_
 - compilation error for module SSD1306 with arduino-esp32 version newest than 2.0.0
 - fix compiler warnings in options.h
 - fix some compiler warnings

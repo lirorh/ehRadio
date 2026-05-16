@@ -317,6 +317,36 @@ void Telnet::print(uint8_t id, const char *buf) {
   }
 }
 
+void Telnet::logLine(const char *buf) {
+  if (!buf) return;
+
+  for (int id = 0; id < MAX_TLN_CLIENTS; id++) {
+    if (clients[id] && clients[id].connected()) {
+      clients[id].print("\r");
+      clients[id].print(buf);
+      clients[id].print("\r\n");
+      clients[id].print("> ");
+    }
+  }
+}
+
+void Telnet::logRaw(const char *buf) {
+  if (!buf) return;
+
+  size_t len = strlen(buf);
+  bool endsWithNewline = (len > 0 && buf[len - 1] == '\n');
+
+  for (int id = 0; id < MAX_TLN_CLIENTS; id++) {
+    if (clients[id] && clients[id].connected()) {
+      clients[id].print("\r");
+      clients[id].print(buf);
+      if (endsWithNewline) {
+        clients[id].print("> ");
+      }
+    }
+  }
+}
+
 void Telnet::printf(const char *format, ...) {
   char buf[MAX_PRINTF_LEN];
   va_list args;

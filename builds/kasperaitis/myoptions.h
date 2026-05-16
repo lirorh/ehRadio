@@ -11,8 +11,7 @@
 #define FIRMWARE_NAME "ES3C28P" // "https://www.lcdwiki.com/2.8inch_ESP32-S3_Display"
 
 /* --- LED --- */
-#define USE_BUILTIN_LED     false
-#define RGB_LED_PIN         42       /* for Adafruit NeoPixel */
+#define RGB_LED_PIN     42      /* for NeoPixel */
 
 /* --- SPI BUS PINS --- */
 #define SPIA_DEFAULT_XMISO      /* SCK/CLK 12 and MOSI/SDA 11 (no MISO) */
@@ -23,7 +22,7 @@
 /* --- DISPLAY --- */
 #define DSP_LANGUAGE_lt_LT
 #define DSP_MODEL       DSP_ILI9341
-#define SCREEN_INVERT true
+#define SCREEN_INVERT   true
 #define TFT_CS          10
 #define TFT_DC          46
 #define TFT_RST         -1
@@ -34,10 +33,9 @@
 /* ES3C28P I2S pins (from LCDWiki / user) */
 #define I2S_MCLK        4
 #define I2S_BCLK        5
-#define I2S_DIN         6       /* mic in */
+#define I2S_DIN         6       /* mic in: unused */
 #define I2S_LRC         7
 #define I2S_DOUT        8       /* speaker out */
-#define PA_ENABLE       1       /* enable on-board power amp */
 #define I2C_SCL         15
 #define I2C_SDA         16
 /* Audio amplifier control (IO1 low -> enable). 
@@ -46,7 +44,7 @@
 #define MUTE_PIN        1
 #define MUTE_VAL        HIGH
 /* Maximum I2S value to allow when mapping to ES8311 codec (0..254). */
-#define ES8311_MAX_I2S 180
+#define ES8311_MAX_I2S  180
 #define PLAYER_FORCE_MONO true  /* force mono audio for this board */
 
 /* --- TOUCH --- */

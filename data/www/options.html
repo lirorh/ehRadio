@@ -177,6 +177,24 @@
               <input type="number" id="scrpt" data-command="screensaverplayingtimeout" value="" maxlength="3" min="1" max="1080" />
             </div>
           </div>
+          <div class="row-title group group_dimming hidden"><span data-i18n="ttl_auto_dimming">Auto Dimming</span></div>
+          <div class="flex-row group group_dimming hidden">
+            <div class="inputwrap center">
+              <span class="inputtitle" data-i18n="lbl_enable_dimming">Enable Dimming</span>
+              <div class="checkbox ssoption" id="dimmingenabled" data-command="dimmingenabled"><div class="knob"></div></div>
+            </div>
+            <div class="inputwrap center">
+              <span class="inputtitle" data-i18n="lbl_timeout_sec">Timeout (sec)</span>
+              <input type="number" id="dimmingtimeout" data-command="dimmingtimeout" value="" maxlength="3" min="5" max="65520" />
+            </div>
+          </div>
+          <div class="flex-row group group_dimming hidden">
+            <div class="inputwrap">
+              <span class="inputtitle" data-i18n="lbl_dimmed_brightness">Dimmed Brightness</span>
+              <span class="inputinfo" id="sldimbrightnessinfo">0</span>
+              <input type="range" id="dimmingbrightness" data-slaveid="sldimbrightnessinfo" data-command="dimmingbrightness" min="0" max="100" value="100">
+            </div>
+          </div>
         </section>
         <a name="controls"></a>
         <section class="group group_controls hidden" id="group_controls">

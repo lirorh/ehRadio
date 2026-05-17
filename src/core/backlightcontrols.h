@@ -5,10 +5,7 @@
 #include <Arduino.h>
 
 #if BRIGHTNESS_PIN!=255 && DSP_DIMMING_ENABLED
-  #include <Ticker.h>
-#endif
-
-#if BRIGHTNESS_PIN!=255 && DSP_DIMMING_ENABLED
+#include <Ticker.h>
 
 class BacklightControls {
 public:

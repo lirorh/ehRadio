@@ -138,7 +138,7 @@ void updateLocaleFileAsyncWrapper(void* param) {
   delete params->updater;
   delete params;
   #ifdef CORE_MONITOR
-    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL) * 4);
+    FUNCTIONLOG("Core.HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL) * 4);
   #endif
   vTaskDelete(NULL);
 }

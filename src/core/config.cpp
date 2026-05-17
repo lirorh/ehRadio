@@ -33,7 +33,7 @@ const char* const Config::wwwFiles[] = {"curated.js", "dragpl.js", "locale.js", 
                                         "player.html"}; // keep main page at end (deleted when upgraded, last to be downloaded, so user sees emptyfs_html with wait message)
 const size_t Config::wwwFilesCount = sizeof(Config::wwwFiles) / sizeof(Config::wwwFiles[0]);
 
-const char* const Config::dataFiles[] = {"playlist.csv", "wifi.csv", "ehradio.ver", "laststation.url"};
+const char* const Config::dataFiles[] = {PLAYLIST_FILE, SSIDS_FILE, VERSION_FILE, LASTSTATION_URL_FILE};
 const size_t Config::dataFilesCount = sizeof(Config::dataFiles) / sizeof(Config::dataFiles[0]);
 
 #if defined(SPI_BUS_SECONDARY)

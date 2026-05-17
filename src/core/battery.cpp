@@ -29,18 +29,18 @@ static const uint32_t dividerRatioX100 = (uint32_t)(BATTERY_DIVIDER_RATIO * 100.
 // Debug helper (wrap telnet printf to avoid code duplication)
 void Battery::dbgPrintf(const char* fmt, ...) {
   #ifdef BATTERY_DEBUG
-  char dbgBuf[160];
-  va_list ap; va_start(ap, fmt);
-  vsnprintf(dbgBuf, sizeof(dbgBuf), fmt, ap);
-  va_end(ap);
-  // Callers may include trailing CR/LF in format strings; strip them before FUNCTIONLOG.
-  size_t len = strlen(dbgBuf);
-  while (len > 0 && (dbgBuf[len - 1] == '\r' || dbgBuf[len - 1] == '\n')) {
-    dbgBuf[--len] = '\0';
-  }
-  FUNCTIONLOG("Battery", "%s", dbgBuf);
+    char dbgBuf[160];
+    va_list ap; va_start(ap, fmt);
+    vsnprintf(dbgBuf, sizeof(dbgBuf), fmt, ap);
+    va_end(ap);
+    // Callers may include trailing CR/LF in format strings; strip them before FUNCTIONLOG.
+    size_t len = strlen(dbgBuf);
+    while (len > 0 && (dbgBuf[len - 1] == '\r' || dbgBuf[len - 1] == '\n')) {
+      dbgBuf[--len] = '\0';
+    }
+    FUNCTIONLOG("Battery", "%s", dbgBuf);
   #else
-  (void)fmt;
+    (void)fmt;
   #endif
 }
 
@@ -791,14 +791,12 @@ void Battery::readAndUpdate() {
     char status_line[256];  // Increased buffer for extended charging info with peak/trough/rate
     formatStatusLine(battStatus, status_line, sizeof(status_line), false);
     FUNCTIONLOG("Battery", "%s", status_line);
-
   #endif
 } 
 
 void Battery::loop() {
   // If neither ADC nor charge pin is present, nothing to do
   if (!inited && !chargePinPresent) return;
-
   unsigned long now = millis();
 
   // If no ADC but charge pin is present, just poll the charge pin for changes
@@ -816,11 +814,9 @@ void Battery::loop() {
     }
     return;
   }
-  
   // Update at configured interval
   if (now - lastRead < BATTERY_UPDATE_INTERVAL) return;
   lastRead = now;
-  
   readAndUpdate();
 } 
 

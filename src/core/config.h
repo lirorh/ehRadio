@@ -13,26 +13,32 @@
 #include "logging.h"
 #include "../displays/widgets/widgetsconfig.h"
 
-#define ESPFILEUPDATER_USERAGENT "ehradio/" RADIOVERSION "(" GITHUBURL ")"  // used as a user-agent string for downloading with ESPFileUpdater
-#ifdef ESPFILEUPDATER_DEBUG
-  #define ESPFILEUPDATER_VERBOSE true
-#else
-  #define ESPFILEUPDATER_VERBOSE false
-#endif
+#define PLAYLIST_FILE        "playlist.csv"
+#define SSIDS_FILE           "wifi.csv"
+#define VERSION_FILE         "ehradio.ver"
+#define LASTSTATION_URL_FILE "laststation.url"
+#define TMP_FILE             "tmpfile.txt"
+#define INDEX_FILE           "index.dat"
+#define PLAYLIST_SD_FILE     "playlistsd.csv"
+#define INDEX_SD_FILE        "indexsd.dat"
 
-#define PLAYLIST_PATH     "/data/playlist.csv"
-#define SSIDS_PATH        "/data/wifi.csv"
-#define TMP_PATH          "/data/tmpfile.txt"
-#define INDEX_PATH        "/data/index.dat"
-#define LASTSTATION_URL_PATH "/data/laststation.url"
-#define PLAYLIST_SD_PATH  "/data/playlistsd.csv"
-#define INDEX_SD_PATH     "/data/indexsd.dat"
+#define PLAYLIST_PATH        "/data/" PLAYLIST_FILE
+#define SSIDS_PATH           "/data/" SSIDS_FILE
+#define VERSION_PATH         "/data/" VERSION_FILE
+#define LASTSTATION_URL_PATH "/data/" LASTSTATION_URL_FILE
+#define TMP_PATH             "/data/" TMP_FILE
+#define INDEX_PATH           "/data/" INDEX_FILE
+#define PLAYLIST_SD_PATH     "/data/" PLAYLIST_SD_FILE
+#define INDEX_SD_PATH        "/data/" INDEX_SD_FILE
+
 #define REAL_PLAYL   config.getMode()==PM_WEB?PLAYLIST_PATH:PLAYLIST_SD_PATH
 #define REAL_INDEX   config.getMode()==PM_WEB?INDEX_PATH:INDEX_SD_PATH
 
-#define WEATHERKEY_LENGTH 58
-#define MDNS_LENGTH 24
-#define EHDPNAME_LENGTH 24
+#define WEATHERKEY_LENGTH 64
+#define MDNS_LENGTH 32
+#define EHDPNAME_LENGTH 32
+
+#define ESPFILEUPDATER_USERAGENT "ehradio/" RADIOVERSION "(" GITHUBURL ")"  // used as a user-agent string for downloading with ESPFileUpdater
 
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
   #define ESP_ARDUINO_3 1

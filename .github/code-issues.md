@@ -15,42 +15,21 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 
 ## Overview of Issues
 
-- [X] 1. All Pins Defined by options.h
-- [ ] 2. Audio Library Migration / De-Forking
-- [X] 3. Macros Without `options.h` Fallback
-- [X] 4. Write-Only Variables (Set But Never Read)
-- [ ] 5. Dead / Unreachable Code
-- [X] 6. `BUFLEN` — Multi-Purpose Magic Number
-- [ ] 7. Smaller SPIFFS than expected could break workflows
-- [X] 8. Memory Leaks and Heap Fragmentation
-- [X] 9. Blocking Operations on Real-Time / Non-Background Contexts
-- [X] 10. TLS / HTTPS Security
-- [X] 11. Stack Overflow Risks in FreeRTOS Tasks
-- [X] 12. Telnet / WiFi Scan Blocking and Credential Exposure
-- [ ] 13. Display conf.h Files That Lack a Battery Widget
-- [X] 14. ESP32-S3 Migration — Dropping Original ESP32 Support
-- [X] 15. `main.cpp` — Non-Boot Code That Belongs in Its Own Files
-- [X] 16. Plugin System — Dead Infrastructure, Remove Entirely
-- [ ] 17. Can Display Be Improved?
+
+- [ ] 1. Audio Library Migration / De-Forking
+- [ ] 2. Dead / Unreachable Code
+- [ ] 3. Smaller SPIFFS than expected could break workflows
+- [ ] 4. Display conf.h Files That Lack a Battery Widget
+- [ ] 5. Can Display Be Improved?
 - ... Below is not part of the audit but worth consideration (or fixing)
-- [ ] 94. Telnet and MQTT and HTTP could be a bit more interactive
-- [X] 95. Core-pinned Tasks Need Fixing?
-- [ ] 96. options.h generator / checker
-- [ ] 97. Speed / Responsiveness Improvements
-- [ ] 98. Documentation Needs Serious Work
+
 - [ ] 99. Issues Found Randomly or Outside Above Issues
 
 ---
 
-## [X] 1. All Pins Defined by options.h — SPI Architecture Overhaul (ALL FIXED)
+## [ ] 1. Audio Library Migration / De-Forking `[MEDIUM]`
 
-**Resolution (2026-05)**: All four phases of §1.7 complete. Named bus system (`SPIA`/`SPIB`) implemented with `SPIA_DEFAULT`/`SPIA_DEFAULT_XMISO`/`SPIB_DEFAULT` shorthands. SD/TS use bus objects directly (no per-pin derivation). VS1053 still derives `VS1053_SCK/MISO/MOSI` via `VS1053_SPI` for `USE_AUDIO_VS1053` gating and `VS1053_SPIBUS` assignment. `USE_AUDIO_VS1053`/`USE_AUDIO_I2S`/`USE_AUDIO_ESP32_DAC` positive decoder identity macros replace all `I2S_DOUT==255` gate patterns. `SPI.begin()` / `SPIB.begin()` guarded with `!= 255` so I2C-only builds skip SPI init. `SPI2(HSPI)` global and all `*_HSPI` booleans removed. §1.2 VSPI shim kept intentionally. §1.4 display-on-Bus-B not implemented (displays hardcode `&SPI`).
-
----
-
-## [ ] 2. Audio Library Migration / De-Forking `[MEDIUM]`
-
-### 2.1 Background and Goal
+### 1.1 Background and Goal
 
 The vendored audio folders `src/libraries/I2S_Audio/` and `src/libraries/VS1053_Audio/` are no longer simple upstream copies. Both were reshaped to expose a unified `class Audio` API (renaming the VS1053 class and its `vs1053_*` callbacks to match the I2S naming convention) so that `src/core/player.h` could compile against one local API. `class Player : public Audio` inherited this vendor class directly.
 
@@ -58,12 +37,12 @@ The vendored audio folders `src/libraries/I2S_Audio/` and `src/libraries/VS1053_
 
 The three upstream library folders to use (do not delete these):
 - `src/libraries/ESP32-audioI2S (schreibfaul1 3.1.0)/` — target for I2S and ES8311 environments
-- `src/libraries/ESP32-audioI2S (schreibfaul1 3.4.5)/` — deferred; requires larger API rewrite (see §2.10)
+- `src/libraries/ESP32-audioI2S (schreibfaul1 3.4.5)/` — deferred; requires larger API rewrite (see §1.10)
 - `src/libraries/ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/` — target for VS1053 environments
 
 ---
 
-### 2.2 Current State of Local Libraries
+### 1.2 Current State of Local Libraries
 
 **`src/libraries/I2S_Audio/Audio.cpp`** (`I2S_Audio/Audio.h`)
 - Provenance: schreibfaul1 `ESP32-audioI2S` circa 3.1.0, locally modified Apr 2025 (labelled `3.1.0n`)
@@ -83,7 +62,7 @@ The three upstream library folders to use (do not delete these):
 
 ---
 
-### 2.3 The ehRadio Audio Contract
+### 1.3 The ehRadio Audio Contract
 
 This is the live API surface that `src/core/player.cpp`, `src/displays/*`, and the app-owned callback sink in `src/core/audiohandlers.h` depend on today. `Player` still inherits the local vendor class directly (`class Player : public Audio`), so `AudioEncoderShim` needs to preserve this contract while moving ownership into ehRadio-owned code.
 
@@ -119,7 +98,7 @@ This is the live API surface that `src/core/player.cpp`, `src/displays/*`, and t
 
 **VU / compatibility surface:**
 - `get_VUlevel(uint16_t dimension)` — used by widget and Nextion VU rendering on both local decoder paths today
-- `computeVUlevel()` / `computeVUlevel(int16_t sample[2])` — local-library-specific; VS1053 parity remains an E2 decision (see §2.8)
+- `computeVUlevel()` / `computeVUlevel(int16_t sample[2])` — local-library-specific; VS1053 parity remains an E2 decision (see §1.8)
 
 **Actively defined app callbacks in `src/core/audiohandlers.h`:**
 - `audio_info(const char*)`
@@ -151,7 +130,7 @@ These optional callbacks can still be bridged in E2 for parity, but Issue 2 shou
 
 ---
 
-### 2.4 Shim Architecture
+### 1.4 Shim Architecture
 
 **File:** `src/core/audioencodershim.h`
 *(Previously prototyped as `audiobackend.h` during exploratory work — that version has been reverted; use `audioencodershim.h` going forward.)*
@@ -191,12 +170,12 @@ ehRadio-owned callback sink / bridge layer:
 - E2: switch `#include` to upstream `ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/src/vs1053_ext.h` and inherit `VS1053`
 - Add `bool eofHeader = false;` as a public field
 - Add stubs/adapters for `setBalance(int8_t)`, `forceMono(bool)`, `setDefaults()`, `connecttoSD(...)`, and `setTone(int8_t, int8_t, int8_t)`
-- Decide in E2 whether to keep the current VU API surface via shim helpers (`computeVUlevel()` / `get_VUlevel(uint16_t)`) or update display code instead (see §2.8)
+- Decide in E2 whether to keep the current VU API surface via shim helpers (`computeVUlevel()` / `get_VUlevel(uint16_t)`) or update display code instead (see §1.8)
 - Map the current named-bus/pin macros from `options.h` to the upstream 7-parameter constructor inside the shim; do not move that compatibility logic back into vendored source
 
 ---
 
-### 2.5 Bridge Code — Keep It in ehRadio-Owned Callback Code
+### 1.5 Bridge Code — Keep It in ehRadio-Owned Callback Code
 
 `audiohandlers.h` is currently included in exactly one translation unit via the trailing include at the bottom of `main.cpp`, so it acts as an implementation header today. Issue 2 should keep bridge code in that ehRadio-owned callback sink, not in vendored library source.
 
@@ -224,11 +203,11 @@ void audio_id3data(const char *info) {
 }
 ```
 
-`audio_beginSDread()` and `audio_progress()` cannot be recovered this way because they fire on *method calls*, not library callbacks. They are triggered by `AudioEncoderShim` method overrides (`connecttoFS()` override fires `audio_beginSDread()`; `loop()` override fires `audio_progress()` periodically). See §2.4.
+`audio_beginSDread()` and `audio_progress()` cannot be recovered this way because they fire on *method calls*, not library callbacks. They are triggered by `AudioEncoderShim` method overrides (`connecttoFS()` override fires `audio_beginSDread()`; `loop()` override fires `audio_progress()` periodically). See §1.4.
 
 ---
 
-### 2.6 `platformio.ini` Changes Required
+### 1.6 `platformio.ini` Changes Required
 
 No new bridge files need to be added to `build_src_filter`. If the callback sink stays as `audiohandlers.h` or is normalized to `src/core/audiohandlers.cpp`, source filters do not change for that ownership cleanup because `src/core/*` is already part of the build. Only the library source folder references change.
 
@@ -254,7 +233,7 @@ For each I2S / ES8311 environment:
 
 ---
 
-### 2.7 Dependency Status: Issue 1 Already Resolved
+### 1.7 Dependency Status: Issue 1 Already Resolved
 
 The upstream `VS1053` constructor requires 7 explicit parameters:
 ```cpp
@@ -269,7 +248,7 @@ What E2 still needs is a small shim-local mapping from the current named-bus ide
 
 ---
 
-### 2.8 `VS_PATCH_ENABLE` and VU Meter API Gap (VS1053 only)
+### 1.8 `VS_PATCH_ENABLE` and VU Meter API Gap (VS1053 only)
 
 `VS_PATCH_ENABLE` is defined in `myoptions.h` (currently `false` for the VS1053 hardware build). If not defined by the user, **both** local and upstream VS1053 libs default it to `true` via their own `#ifndef` guard at the top of their `.cpp` files.
 
@@ -296,7 +275,7 @@ Currently `display.cpp` still contains a `player.computeVUlevel()` call, but it 
 
 ---
 
-### 2.9 Staged Migration Plan
+### 1.9 Staged Migration Plan
 
 **Pre-work — documentation/prep refresh:**
 - Keep the current named-bus / pin system from `options.h`; no new VS1053 pin macros are needed before E2
@@ -314,7 +293,7 @@ Currently `display.cpp` still contains a `player.computeVUlevel()` call, but it 
 1. Update `audioencodershim.h` VS1053 path: change `#include` to upstream `vs1053_ext.h`
 2. Change `class AudioEncoderShim : public Audio` → `class AudioEncoderShim : public VS1053`
 3. Adapt the constructor using the current `VS1053_CS/DCS/DREQ + VS1053_SCK/MISO/MOSI` macros plus a shim-local mapping from the current named-bus macros to the upstream numeric `spi_bus` argument
-4. Add VS1053 API surface stubs to `AudioEncoderShim` (including the VU compatibility decision from §2.8)
+4. Add VS1053 API surface stubs to `AudioEncoderShim` (including the VU compatibility decision from §1.8)
 5. Add the `vs1053_*` → `audio_*` forwarding stubs in the ehRadio-owned callback implementation (`audiohandlers.h` initially, or `audiohandlers.cpp` if normalized during the same step)
 6. Update `platformio.ini` VS1053 `build_src_filter` entries (Rule #3 — requires explicit confirmation)
 7. Build and hardware-test VS1053 environment
@@ -322,8 +301,8 @@ Currently `display.cpp` still contains a `player.computeVUlevel()` call, but it 
 **Step E3 — I2S path to upstream 3.1.0:**
 1. Update `audioencodershim.h` I2S path: change `#include` to upstream `Audio.h`
 2. Fix constructor: upstream 3.1.0 uses `Audio(uint8_t i2sPort)` — drop boolean/DAC params from `AudioEncoderShim()`
-3. Add I2S API surface overrides to `AudioEncoderShim` (see §2.4): `eofHeader` field, `connecttoFS()` override, `loop()` override, `connecttoSD()` alias, `setDefaults()` no-op, and a shim overload/adaptation for the current 5-argument `setPinout(...)` call
-4. Add ~4 lines to the existing `audio_id3data` body in `audiohandlers.h` to dispatch `audio_id3artist`/`album`/`title` from prefixed strings (see §2.5)
+3. Add I2S API surface overrides to `AudioEncoderShim` (see §1.4): `eofHeader` field, `connecttoFS()` override, `loop()` override, `connecttoSD()` alias, `setDefaults()` no-op, and a shim overload/adaptation for the current 5-argument `setPinout(...)` call
+4. Add ~4 lines to the existing `audio_id3data` body in `audiohandlers.h` to dispatch `audio_id3artist`/`album`/`title` from prefixed strings (see §1.5)
 5. Update `platformio.ini` I2S/ES8311 `build_src_filter` entries (Rule #3 — requires explicit confirmation)
 6. Build and hardware-test I2S and ES8311 environments
 
@@ -334,7 +313,7 @@ Currently `display.cpp` still contains a `player.computeVUlevel()` call, but it 
 
 ---
 
-### 2.10 Deferred: `ESP32-audioI2S (schreibfaul1 3.4.5)` `[LOW]`
+### 1.10 Deferred: `ESP32-audioI2S (schreibfaul1 3.4.5)` `[LOW]`
 
 The 3.4.5 snapshot is a substantially larger migration than the version number implies:
 
@@ -347,7 +326,7 @@ The 3.4.5 snapshot is a substantially larger migration than the version number i
 
 ---
 
-### 2.11 Rule Reminders for Implementation
+### 1.11 Rule Reminders for Implementation
 
 - **Rule #1**: Each of E1, E2, E3 is >50 lines and multi-file. Each step requires Plan mode confirmation before implementation begins.
 - **Rule #3**: `platformio.ini`, `myoptions.h`, `src/core/options.h` require explicit user confirmation for any edit.
@@ -358,14 +337,14 @@ Do not attempt E2, E3, and E4 in a single PR. Each step is a distinct hardware-t
 
 ---
 
-### 2.12 Note that Github can be used for libraries
+### 1.12 Note that Github can be used for libraries
 
 Instead of just using platformio libraries, it is possible to use a Github repository with specific tag
   https://github.com/gioblu/PJON.git#v2.0
 
 ---
 
-### 2.13 Note regarding hiccups on I2S
+### 1.13 Note regarding hiccups on I2S
 
 This issue may self-rectify as the library is replaced, but if it comes up again, it was noted that after fixing core assignments that I2S decoder devices skip ever-so-slightly when reloading the webpage of the WebUI.  (Running Audio on Core 0, everything else on Core 1)
 
@@ -373,42 +352,23 @@ The root cause is that Audio::loop() — which feeds the HTTP TCP ring buffer �
 
 When replacing the audio library, look for: (a) an exposed ring buffer size define (e.g. AUDIO_RINGBUFFER_SIZE or similar) — increasing it gives more headroom to absorb Core 1 stalls; and (b) whether the library supports running its HTTP feed loop as a separate pinned FreeRTOS task at elevated priority, independent of the main loop(). If the new library supports the latter, pinning the feed task to Core 1 at priority 4 (above NETSERVER_TASK_PRIORITY) would prevent WebSocket traffic from preempting it.
 
-
 ---
 
-## [X] 3. Macros Without `options.h` Fallback (ALL FIXED)
+## [ ] 2. Dead / Unreachable Code
 
-**Resolution (2026-05)**: The remaining legacy compile-time backlight-down path was replaced by `DIMMING_ENABLED`, `DIMMING_TIMEOUT`, and `DIMMING_BRIGHTNESS` defaults in `options.h`, persisted screen settings, and WebUI-backed runtime control. Screen dimming now follows the same fallback/default model as the rest of the screen settings, with no remaining `src/` consumers of the old board-only path.
-
----
-
-## [X] 4. Write-Only Variables (Set But Never Read) (ALL FIXED)
-
-### [X] 4.1 `network.trueWeather` `[MEDIUM]`
-
-**Resolution (2026-05)**: `network.trueWeather` was removed. Weather cache validity now lives entirely inside the internal `WeatherCache` state in `network.cpp`, which keeps the last good weather through one failed scheduled refresh and clears it on the second consecutive failure. Changing the API key remains lazy: it redraws using cached weather if available and waits for the normal weather interval before fetching again.
-
----
-
-## [ ] 5. Dead / Unreachable Code
-
-### [ ] 5.1 `|| true` dead branch in `player.cpp` `[LOW]`
+### [ ] 2.1 `|| true` dead branch in `player.cpp` `[LOW]`
 
 - **Line 132**: `if (strlen(file)==0 || true) return; //TODO Read TAGs`
 - **Analysis**: `|| true` permanently short-circuits to `true`. Any code below this `return` is unreachable. This appears to be an acknowledged TODO — someone commented out the tag-reading functionality with `|| true` as a temporary measure that became permanent.
 - **Action**: Either implement the tag-reading block and remove `|| true`, or remove the `|| true` and let `strlen(file)==0` be the real condition. The current state is confusing because it looks like a real condition check when it is not.
 
----
-
-## [X] 6. `BUFLEN` — Multi-Purpose Magic Number (ALL FIXED)
-
-`BUFLEN` has been retired. `STATION_FIELD_LENGTH` (170, defined in `options.h`) now explicitly names the max size for `station_t` fields (`name`, `url`, `title`) and all string buffers that match them, including transliteration output buffers in the display tools. `SD_PATH_LENGTH` (256, defined in `sdmanager.h`) replaces `BUFLEN` for SD filesystem path construction, correctly accommodating paths that exceed 170 bytes. The `BUFLEN*2` pattern in `netserver.cpp` was replaced by the existing `WEBSOCKET_BUFFER` constant (raised to 512); small IR/WiFi scratch buffers became explicit literals (80 bytes) sized to their actual content. `BUFLEN` carried no NVS migration risk as `station_t` fields are RAM-only. `RXBUFLEN`/`TXBUFLEN` in `nextion.h` are unrelated Nextion serial frame sizes and were not changed.
+Trip5 Note: This may actually get fixed as part of the de-fork.
 
 ---
 
-## [ ] 7. Smaller SPIFFS than expected could break workflows
+## [ ] 3. Smaller SPIFFS than expected could break workflows
 
-### [ ] 7.1 Concurrent SPIFFS writes during boot and curated import `[MEDIUM]`
+### [ ] 3.1 Concurrent SPIFFS writes during boot and curated import `[MEDIUM]`
 
 **Concurrent SPIFFS access during boot**
 
@@ -424,7 +384,7 @@ When replacing the audio library, look for: (a) an exposed ring buffer size defi
 
 **Action**: Delay `netserver.begin()` until `startupServicesAsync` has finished, or restructure to update files before starting the web server. Note: `ESPFileUpdater` already uses `{path}.tmp` → rename, so mid-download partial reads are not a corruption risk — the old file remains intact until rename succeeds.
 
-### [ ] 7.2 SPIFFS space constraints can silently break search, curated, and update workflows `[MEDIUM]`
+### [ ] 3.2 SPIFFS space constraints can silently break search, curated, and update workflows `[MEDIUM]`
 
 #### Partition budget for `board_esp32` (4 MB flash)
 
@@ -508,55 +468,9 @@ If we do that, we should initiate cleanup on every boot (well, initiate cleanup 
 
 ---
 
-## [X] 8. Memory Leaks and Heap Fragmentation (ALL FIXED)
+## [ ] 4. Display conf.h Files That Lack a Battery Widget
 
-**Resolution (2026-05)**: All §8 sub-issues addressed. §8.1 ESPFileUpdater leak: `delete (ESPFileUpdater*)param` added before `vTaskDelete(NULL)`; done in prior session. §8.2 weatherBuf double-malloc: free guard added; done in prior session. §8.3 xTaskCreate failure handling: all four sites (`loadplaylist`, `launchPlaybackTask`, `processRadioBrowserClick`, `updateLocaleFileAsync`) now check return value and free allocations on failure. §8.4 `rb_servers` String→char: `String rb_servers[20]` replaced with `char rb_servers[20][64]`; all 17+ usage sites updated to `strlcpy`/`strcmp`. §8.5 temporary String in error paths: both `websocket.textAll(String(...) + ...)` hotspot expressions replaced with `snprintf(msgBuf, ...)`. §8.6 `MIN_MALLOC` guard: `MIN_MALLOC` moved to `options.h` (user-overridable, included everywhere); heap guard added at all five background-task spawn sites (`handleSearch`, `launchPlaybackTask`, `processRadioBrowserClick`, `loadindex`, `loadplaylist`). §8.7 heap monitoring: periodic `FUNCTIONLOG("Heap", ...)` every 300 ticks (~5 min) in `ticks()` — visible via serial/telnet.
-
----
-
-## [X] 9. Blocking Operations on Real-Time / Non-Background Contexts (ALL FIXED)
-
-**Resolution (2026-05)**: All four sub-issues resolved. §9.1 (`rebootmdns` `delay(1500)`): the `rebootmdns` command handler was deleted entirely; `mdnsname` now calls `NetServer::restartMdns()` which runs `MDNS.end()` + `MDNS.begin()` at runtime — no delay, no reboot; WebUI renamed case to `restartmdns` and polls the new `.local` host via `redirectWhenReady` (8 s timeout). §9.2 (blocking WiFi scan during boot): closed/accepted as-is — `wifiscanbest` is opt-in and the one-time boot scan (2–5 s) has no correctness risk; restructuring `wifiBegin()` into a polling state machine is unjustified complexity. §9.3 (spin loops): `while(nsQueue==NULL)` and `while(displayQueue==NULL)` replaced with `if(NULL){ log_e(); ESP.restart(); }` fail-fast; mode-transition waits in `config.cpp` and `controls.cpp` now carry 2 s `millis()` timeouts. §9.4 (SD card blocking): resolved in a prior session.
-
----
-
-## [X] 10. TLS / HTTPS Security (NOT PERSUING)
-
-### [ ] 10.1 All HTTPS connections skip certificate validation `[MEDIUM]`
-
-- **File**: `src/core/netserver.cpp`, lines ~1073, ~1234, ~1286.
-- **Code**: `client.setInsecure(); // skip server cert validation`
-- **Applies to**: the Radio-Browser click-reporting lookup, the version-check download, and the firmware update download.
-- **Problem**: `setInsecure()` disables server-certificate verification entirely. Any attacker who can intercept traffic (e.g., a rogue AP, MITM on an unencrypted home network) can serve malicious firmware or version data. The firmware update path is the highest-risk instance: a MITM could serve a re-signed but malicious firmware binary.
-- **Context**: Embedding a bundle of CA root certificates on an ESP32 with limited flash is genuinely hard; `WiFiClientSecure::setCACert()` requires the specific root CA PEM for each target host. The `setInsecure()` choice is pragmatic, but should be documented as a known trade-off, not left as a silent comment.
-- **Action**:
-  - For the **firmware update path** specifically: embed the root CA for `UPDATEURL` (typically a GitHub or self-hosted host) and use `setCACert()`. This is the highest-value fix.
-  - For **Radio-Browser API calls**: lower risk (no privileged data), but still document the trade-off.
-  - Add `#define HTTPS_SKIP_CERT_VERIFY` as an explicit opt-out define in `options.h` (defaulting to `1` for now) so the current behaviour is acknowledged and can be disabled per-build.
-
----
-
-## [X] 11. Stack Overflow Risks in FreeRTOS Tasks
-
-**Resolution (2026-05)**: Stack sizes are inherited from yoRadio defaults; not validated on ESP32/C3 (no hardware available). S3 field data via `CORE_MONITOR` showed healthy margins on all tasks. All task stacks scale with `STACK_MULTIPLIER` (×2 on S3, ×1 on ESP32/C3); `STACK_MULTIPLIER` and `MIN_MALLOC` are documented in `options.h` as overridable in `myoptions.h`. `CORE_MONITOR` provides continuous HWM logging for long-lived tasks and one-shot HWM from every short-lived task before `vTaskDelete` — the tooling is there if a real overflow is ever reported.
-
----
-
-## [X] 12. Telnet `/` WiFi Scan Blocking and Credential Exposure (ALL FIXED by unified commandhandler)
-
-### [X] 12.1 `wifi.con` telnet command prints all stored WiFi passwords in cleartext `[MEDIUM]`
-
-- **File**: `src/core/telnet.cpp`, around line ~642.
-- **Code**: `printf(clientId, "%d: %s, %s\r\n", c, sSid, sPas);` — prints the SSID and password for every stored network.
-- **Problem**: Telnet is unencrypted (plaintext TCP). Anyone who can access the telnet port can send `wifi.con` and receive all configured WiFi passwords in cleartext on a local network. If the device is on an untrusted network or the network is monitored, this is a credential exposure. There is no authentication on the telnet interface.
-- **Separate concern**: `wifi.list` calls `WiFi.scanNetworks()` synchronously and blocks the telnet task for the duration of the scan (no timeout, no WDT reset — see §9.2).
-- **Action**: At minimum, mask the password field in the output (e.g., show `****` after the first two characters). A stronger fix would require that telnet is only accessible from localhost/loopback or add an optional PIN challenge. Document that the telnet interface should only be used on trusted networks.
-
----
-
-## [ ] 13. Display conf.h Files That Lack a Battery Widget
-
-### [ ] 13.1 Only one display conf defines `batteryConf` and battery range format strings (ILI9341) `[LOW]`
+### [ ] 4.1 Only one display conf defines `batteryConf` and battery range format strings (ILI9341) `[LOW]`
 
 - **File**: All `src/displays/conf/display*conf.h`
 - **Problem**: `src/core/display.cpp` references `batteryConf`, `batteryRangeLowFmt`, `batteryRangeMidFmt`, and `batteryRangeHighFmt` inside `#if defined(BATTERY_PIN) && (BATTERY_PIN!=255)` guards. These symbols are only defined in `displayILI9341conf.h`. Any hardware combination using another display with `BATTERY_PIN` set will fail to compile. The CI test build exposed this when `TEST_CI_VS1053` used SH1106 — it was worked around by switching the test env to ILI9341, but the underlying problem remains for real users.
@@ -589,31 +503,13 @@ If we do that, we should initiate cleanup on every boot (well, initiate cleanup 
 
 ---
 
-## [X] 14. ESP32-S3 Migration — Dropping Original ESP32 Support `[LOW]` (NOT PERSUING)
-
-This was just an idea and abandoned... ESP32 support remains but a lot of things need testing.
-
----
-
-## [X] 15. `main.cpp` — Non-Boot Code That Belongs in Its Own Files (ALL FIXED)
-
-**Resolution (2026-05)**: `main.cpp` has been reduced to startup and loop orchestration plus the current single-translation-unit `#include "core/audiohandlers.h"` pattern. The old inline BacklightDown ownership moved into `src/core/backlightcontrols.cpp/.h`, the battery-driven dim/sleep policy moved into `Battery::applyPowerPolicy()`, and the former player/display/control backlight-RGB weak hooks were replaced with explicit calls in the owning modules. The same cleanup direction also removed the old plugin-style glue from the live architecture, so `main.cpp` is no longer carrying plugin or callback ownership beyond normal boot/runtime sequencing.
-
----
-
-## [X] 16. Plugin System — Dead Infrastructure, Removed (ALL FIXED)
-
-**Resolution (2026-05)**: All `pm.on_*()` calls and plugin manager includes removed from `main.cpp`, `display.cpp`, `controls.cpp`, `network.cpp`, and `player.cpp` (13 call sites total). `pm_result` guard and variable removed from `display.cpp` (display queue switch block now unconditional). The old `src/pluginsManager/` and `src/plugins/` folders have since been removed from the tree entirely.
-
----
-
-## [ ] 17. Can Display Be Improved?
+## [ ] 5. Can Display Be Improved?
 
 This section is a deep-dive into how the display system works today, using three representative examples (ILI9488, SH1106, DSP_1602I2C), followed by a candid evaluation of what works well and what genuinely could be improved.
 
 ---
 
-### 17.1 The Compile-Time Selection Chain
+### 5.1 The Compile-Time Selection Chain
 
 Everything starts at build time. The hardware is not detected at runtime — the entire display driver is **compiled in** based on `DSP_MODEL`:
 
@@ -637,7 +533,7 @@ The `extern DspCore dsp;` in `commongfx.h` makes the singleton available globall
 
 ---
 
-### 17.2 The Three Display Classes
+### 5.2 The Three Display Classes
 
 #### Class 1: Color TFT (ILI9488, ST7735, ST7789, ILI9341, ST7796, GC9A01A, …)
 
@@ -683,7 +579,7 @@ AP mode screen: `_apScreen()` takes the `#else` branch of `#ifndef DSP_LCD` and 
 
 ---
 
-### 17.3 Data Flow: Backend → Display
+### 5.3 Data Flow: Backend → Display
 
 The complete flow for a typical event (e.g. a new track title arrives from the stream):
 
@@ -718,7 +614,7 @@ The queue has depth 5. If display processing falls behind, `xQueueSend` blocks f
 
 ---
 
-### 17.4 Widget Lifecycle in Detail
+### 5.4 Widget Lifecycle in Detail
 
 **Widget activation:** `Pager::setPage(page)` calls `page->setActive(true)` on the target page and `false` on all others. `Page::setActive(bool)` propagates to each widget via `widget->setActive(act)`. When a widget becomes active, it calls `_draw()`. When it becomes inactive, it calls `_clear()` (erases its own pixel region).
 
@@ -734,7 +630,7 @@ The queue has depth 5. If display processing falls behind, `xQueueSend` blocks f
 
 ---
 
-### 17.5 ILI9488 — The Tearing Problem Analyzed
+### 5.5 ILI9488 — The Tearing Problem Analyzed
 
 The ILI9488 is a 480×320 color TFT driven by the custom `ILI9486_SPI` library. Let us trace through what actually happens at the hardware level:
 
@@ -775,7 +671,7 @@ The `psFrameBuffer` approach mitigates this for scroll text: the full text row i
 
 ---
 
-### 17.6 SH1106 — Already Tear-Free, Minor Improvement Possible
+### 5.6 SH1106 — Already Tear-Free, Minor Improvement Possible
 
 The OLED path has structural tear immunity: all draws go to an in-memory framebuffer; `display()` pushes the entire buffer at once over I2C. The scan controller reads from SRAM on the OLED chip, which is updated atomically at the I2C transaction boundary.
 
@@ -789,7 +685,7 @@ At 128×64 the display is small enough that there is no practical need for psFra
 
 ---
 
-### 17.7 DSP_1602I2C — Nothing To Improve (Hardware-Limited)
+### 5.7 DSP_1602I2C — Nothing To Improve (Hardware-Limited)
 
 The LCD character display is already at the ceiling of what the hardware can do. Character writes are inherently atomic (one character at a time). No tearing is possible. The widget system's reuse here is clever and correct.
 
@@ -797,7 +693,7 @@ The only note: the `dsp.fillRect()` implementation for LCD (`displayLC1602.cpp`)
 
 ---
 
-### 17.8 The Dead Code After `default:` in `display.loop()`  `[LOW]`
+### 5.8 The Dead Code After `default:` in `display.loop()`  `[LOW]`
 
 In `display.cpp` inside `Display::loop()`, the following code appears inside the `switch` statement, after `default: break;`:
 
@@ -822,11 +718,11 @@ For **LCD** character displays (`DSP_1602I2C`, etc.) `dsp.loop()` is also a no-o
 
 ---
 
-### 17.9 Potential Improvements — Ordered by Impact vs. Effort — Ordered by Impact vs. Effort
+### 5.9 Potential Improvements — Ordered by Impact vs. Effort — Ordered by Impact vs. Effort
 
 | # | Improvement | Impact | Effort | Risk |
 |---|---|---|---|---|
-| A | Fix dead `uxQueueMessagesWaiting` code (§31.8) | `[LOW]` OLED queue drain only; no effect on TFT/LCD | Trivial — 2 lines | None |
+| A | Fix dead `uxQueueMessagesWaiting` code | `[LOW]` OLED queue drain only; no effect on TFT/LCD | Trivial — 2 lines | None |
 | B | Add OLED dirty-flag to skip redundant `display()` calls | `[LOW]` I2C traffic | Low — ~5 lines in commongfx.h | Minimal |
 | C | Skip `clearDsp()` on `Pager::setPage()` and rely on widget `_clear()` calls instead | `[MEDIUM]` eliminates full-screen flash on mode transitions | Medium — requires testing all mode paths | Moderate — could leave ghost pixels if any widget misses its `_clear()` |
 | D | Move `ClockWidget` large-digit draw to use psFrameBuffer (single DMA burst per digit redraw) | `[MEDIUM]` reduces clock-area tearing | Medium — ClockWidget rework | Moderate |
@@ -839,7 +735,7 @@ Items A and B are essentially free improvements. Items C through F are more invo
 
 ---
 
-### 17.10 ST7735 — Visual Quality vs ILI9341 — Resolution is the Culprit `[INFO]`
+### 5.10 ST7735 — Visual Quality vs ILI9341 — Resolution is the Culprit `[INFO]`
 
 `displayST7735.cpp` sets `DEF_SPI_FREQ = 0` and never calls `setSPISpeed` — so it runs at the `Adafruit_ST77xx` library default of **32 MHz**. Every other Adafruit-based TFT driver either uses the 40 MHz library default (ILI9341) or explicitly calls `setSPISpeed(40000000)` (ST7789, ST7796, GC9A01A). The ST7735 is the odd one out.
 
@@ -858,9 +754,9 @@ Fontsize 1 (6×8 px) is the smallest Adafruit bitmap font — no anti-aliasing, 
 
 ---
 
-### 17.11 TFT_eSPI — Potential Migration from Adafruit TFT Stack `[MEDIUM]`
+### 5.11 TFT_eSPI — Potential Migration from Adafruit TFT Stack `[MEDIUM]`
 
-TFT_eSPI (Bodmer) is a performance-optimized, Arduino-compatible TFT library targeting ESP32/S3/C3, RP2040, STM32, and ESP8266. It is based on Adafruit_GFX but is **not a drop-in replacement** — the API is similar but the configuration model is fundamentally different. This section expands on §31.9 row F.
+TFT_eSPI (Bodmer) is a performance-optimized, Arduino-compatible TFT library targeting ESP32/S3/C3, RP2040, STM32, and ESP8266. It is based on Adafruit_GFX but is **not a drop-in replacement** — the API is similar but the configuration model is fundamentally different. This section expands on §5.9 row F.
 
 ---
 
@@ -934,56 +830,9 @@ OLED, LCD, and N5110 driver files are **untouched**.
 
 ---
 
-## [ ] 94. Telnet and MQTT and HTTP could be a bit more interactive
-
-There are a lot of commands.  They could be documented better... OR we could have these other 3 ways of sending commands through commandhandler give some output when sending the command "help"
-
--- should probably note that the danger zone is completely unprotected through these methods.
-
-
-
----
-
-## [X] 95. Core-pinned Tasks Need Fixing?
-
-**Resolution (2026-05)**: `AUDIO_CORE`/`NETWORK_CORE`/`DSP_TASK_CORE_ID` macros established; audio pinned to Core 0, network/display/netserver to Core 1. `netserverLoopTask` pinned to Core 1. `STACK_MULTIPLIER=2` for S3 doubles all long-lived task stacks. Core-watcher implemented via `#define CORE_MONITOR` — logs Core 0/Core 1 loop rates, max main-loop µs, heap, and per-task HWM every 5 s; all short-lived tasks emit a one-shot HWM before `vTaskDelete`. S3 field data confirmed correct core assignments and healthy task margins under load. Closing.
-
-
----
-
-## [ ] 96. myoptions.h & platformio.ini Generator / Checker
-
-I think a total re-think oh how an myoptions.h generator works.
-
-We need more boards specs collected... but that pin-display for boards is weird and hard to code.
-
-We could have a drop-down on top that acts as a selector for collected boards pinout jpg files (almost like a slide show)
-
-Then a simple set of radio buttons and checkboxes and dropdowns that set up some basic option.h stuff
-
----
-
-## [ ] 97. Speed / Responsiveness Improvements
-
-It appears to have a gap in time between selecting a station and playing the station... is there something blocking here or is it memory-deallocation or something else?  Can we improve on this?
-
-Leaving this as Section 97 because improvments probably shouldn't be considered until existing problems are at least mostly addressed... at which point, we can delete the entire above list and do a seperate audit for this goal.
-
----
-
-## [ ] 98. Documentation Needs Serious Work
-
-Like really, really badly.  For now, a lot of options are only listed in `options.h` and yoRadio documentation was already outdated at fork date.
-
----
-
 ## [ ] 99. Issues Found Randomly or Outside Above Issues (ONGOING)
 
 Just some notes to make while going through code...
 
-  [X] netserver.loop(); was twice in player.cpp line ~247-248 — removed duplicate
-  [X] optionschecker.h should have more guardrails and re-ordered according to options.h (and optionschecker.h removed)
   [ ] the plugin for deepsleep has idletimer... an interesting idea - might be worth mixing with screensaver options
-  [X] the home assistant plugin is kind of functional but ugly... Nothing online to "borrow" and not a good way to use HA builtin integratins so the one we're using has been repaired
-  [X] inside display.cpp is: #ifndef NETSERVER_LOOP1    netserver.loop();    #endif which seems to bypass network handling if the display is too busy? (undocumented, only in display.cpp)
-  [X] SORRY NOPE - html files for playback could use media session api to allow phones more control - may be too difficult to implement - will require user confirmation?
+  [ ] Telnet and MQTT and HTTP could be a bit more interactive - like adding command "help" which shows some commands that can be used

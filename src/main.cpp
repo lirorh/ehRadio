@@ -122,13 +122,13 @@ void loop() {
       uint32_t m = cmMainCount;     cmMainCount = 0;
       uint32_t mx = cmMaxMainLoop;  cmMaxMainLoop = 0;
       #ifdef CONFIG_FREERTOS_UNICORE
-        FUNCTIONLOG("Core Monitor", "Core0 loops/s: %u (%.2fms/loop) | Core0(Main) loops/s: %u (%.2fms/loop) | MaxMainLoopUs: %u | Heap: %u",
+        FUNCTIONLOG("Core.monitor", "Core0 loops/s: %u (%.2fms/loop) | Core0(Main) loops/s: %u (%.2fms/loop) | MaxMainLoopUs: %u | Heap: %u",
             d/5, d>0 ? 5000.0f/d : 0.0f, m/5, m>0 ? 5000.0f/m : 0.0f, mx, (unsigned)ESP.getFreeHeap());
       #else
-        FUNCTIONLOG("Core Monitor", "Core0" CORE_0 " loops/s: %u (%.2fms/loop) | Core1" CORE_1 " loops/s: %u (%.2fms/loop) | MaxMainLoopUs: %u | Heap: %u",
+        FUNCTIONLOG("Core.monitor", "Core0" CORE_0 " loops/s: %u (%.2fms/loop) | Core1" CORE_1 " loops/s: %u (%.2fms/loop) | MaxMainLoopUs: %u | Heap: %u",
             d/5, d>0 ? 5000.0f/d : 0.0f, m/5, m>0 ? 5000.0f/m : 0.0f, mx, (unsigned)ESP.getFreeHeap());
       #endif
-      FUNCTIONLOG("Core Monitor", "HWM: Loop=%u Disp=%u nsLoop=%u",
+      FUNCTIONLOG("Core.monitor", "HWM: Loop=%u Disp=%u nsLoop=%u",
           (unsigned)uxTaskGetStackHighWaterMark(NULL),
           (unsigned)(dspTaskHandle ? uxTaskGetStackHighWaterMark(dspTaskHandle) : 0),
           (unsigned)(nsTaskHandle  ? uxTaskGetStackHighWaterMark(nsTaskHandle)  : 0));

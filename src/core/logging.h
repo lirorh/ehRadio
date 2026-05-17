@@ -5,9 +5,13 @@
 #include <Arduino.h>
 #include <stdio.h>
 
-#ifndef LOG_BUF_LEN
-  #define LOG_BUF_LEN 256
+#ifdef ESPFILEUPDATER_DEBUG
+  #define ESPFILEUPDATER_VERBOSE true
+#else
+  #define ESPFILEUPDATER_VERBOSE false
 #endif
+
+#define LOG_BUF_LEN 256
 
 #if defined(__GNUC__)
   #define LOG_PRINTF_ATTR(fmtIndex, firstArg) __attribute__((format(printf, fmtIndex, firstArg)))

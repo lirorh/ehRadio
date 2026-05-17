@@ -36,12 +36,6 @@
   #include "sdmanager.h"
 #endif
 
-#ifdef NETSERVER_DEBUG
-  #define NETSERVERLOG(...) { char buf[200]; snprintf(buf, sizeof(buf), __VA_ARGS__); FUNCTIONLOG("Netserver.debug", "%s", buf); }
-#else
-  #define NETSERVERLOG(...)
-#endif
-
 // Global list for Radio-Browser servers to persist across searches
 char rb_servers[20][64];
 // For the search task
@@ -337,7 +331,9 @@ size_t NetServer::chunkedHtmlPageCallback(uint8_t* buffer, size_t maxLen, size_t
     if (maxLen>MAX_PL_READ_BYTES) maxLen=MAX_PL_READ_BYTES;
   #endif
   size_t canread = (needread > maxLen) ? maxLen : needread;
-  NETSERVERLOG("[%s] seek to %d in %s and read %d bytes with maxLen=%d", __func__, index, netserver.chunkedPathBuffer, canread, maxLen);
+  #ifdef NETSERVER_DEBUG
+    FUNCTIONLOG ("Netserver.debug", "[%s] seek to %d in %s and read %d bytes with maxLen=%d", __func__, index, netserver.chunkedPathBuffer, canread, maxLen);
+  #endif
   requiredfile.seek(index, SeekSet);
   requiredfile.read(buffer, canread);
   index += canread;
@@ -729,7 +725,9 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
       }
     }
   } else { // "/webboard"
-    NETSERVERLOG("File: %s, size:%u bytes, index: %u, final: %s\n", filename.c_str(), len, index, final?"true":"false");
+    #ifdef NETSERVER_DEBUG
+      FUNCTIONLOG ("Netserver.debug", "File: %s, size:%u bytes, index: %u, final: %s\n", filename.c_str(), len, index, final?"true":"false");
+    #endif
     if (!index) {
       String spath = "/www/";
       if (filename=="playlist.csv" || filename=="wifi.csv") spath = "/data/";
@@ -951,7 +949,7 @@ void vTaskSearchRadioBrowser(void *pvParameters) {
   search_str = nullptr;
   g_searchTaskHandle = NULL;
   #ifdef CORE_MONITOR
-    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+    FUNCTIONLOG("Core.HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
   #endif
   vTaskDelete(NULL);
 }
@@ -996,7 +994,7 @@ void vTaskFetchCuratedIndex(void *pvParameters) {
   
   g_curatedTaskHandle = NULL;
   #ifdef CORE_MONITOR
-    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+    FUNCTIONLOG("Core.HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
   #endif
   vTaskDelete(NULL);
 }
@@ -1044,7 +1042,7 @@ void vTaskFetchCuratedPlaylist(void *pvParameters) {
   delete[] filename;
   g_curatedTaskHandle = NULL;
   #ifdef CORE_MONITOR
-    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+    FUNCTIONLOG("Core.HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
   #endif
   vTaskDelete(NULL);
 }
@@ -1075,7 +1073,7 @@ void launchPlaybackTask(const String& url, const String& name) {
           player.playUrl(urlToPlay->c_str());
           delete urlToPlay; // Free the string
           #ifdef CORE_MONITOR
-            FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+            FUNCTIONLOG("Core.HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
           #endif
           vTaskDelete(NULL);
         },
@@ -1230,7 +1228,7 @@ void radioBrowserSendClick(const char* stationUrl) {
     }
     delete[] stationUrl;
     #ifdef CORE_MONITOR
-      FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+      FUNCTIONLOG("Core.HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
     #endif
     vTaskDelete(NULL);
   }
@@ -1409,7 +1407,7 @@ void handleNotFound(AsyncWebServerRequest * request) {
       xTaskCreatePinnedToCore([](void*) {
         checkForOnlineUpdate();
         #ifdef CORE_MONITOR
-          FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
+          FUNCTIONLOG("Core.HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL)*4);
         #endif
         vTaskDelete(NULL);
       }, "checkForOnlineUpdateTask", 8192, nullptr, LOW_TASK_PRIORITY, nullptr, NETWORK_CORE);
@@ -1422,7 +1420,9 @@ void handleNotFound(AsyncWebServerRequest * request) {
   #endif
 
   if (request->method() == HTTP_GET) {
-    NETSERVERLOG("[%s] client ip=%s request of %s", __func__, request->client()->remoteIP().toString().c_str(), request->url().c_str());
+    #ifdef NETSERVER_DEBUG
+      FUNCTIONLOG ("Netserver.debug", "[%s] client ip=%s request of %s", __func__, request->client()->remoteIP().toString().c_str(), request->url().c_str());
+    #endif
     if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 || 
         strcmp(request->url().c_str(), SSIDS_PATH) == 0 || 
         strcmp(request->url().c_str(), INDEX_PATH) == 0 || 

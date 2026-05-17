@@ -32,10 +32,9 @@ bool requiredWebFilesExist() {
 } // namespace
 
 void Startup::checkVerAndSpiffs() {
-  const char* versionPath = "/data/ehradio.ver";
   String storedVersion = "";
-  if (SPIFFS.exists(versionPath)) {
-    File verFile = SPIFFS.open(versionPath, "r");
+  if (SPIFFS.exists(VERSION_PATH)) {
+    File verFile = SPIFFS.open(VERSION_PATH, "r");
     if (verFile) {
       storedVersion = verFile.readStringUntil('\n');
       storedVersion.trim();
@@ -45,7 +44,7 @@ void Startup::checkVerAndSpiffs() {
 
   if (storedVersion == String(RADIOVERSION)) {
     config.wwwFilesExist = requiredWebFilesExist();
-  } else if (!SPIFFS.exists(versionPath)) {
+  } else if (!SPIFFS.exists(VERSION_PATH)) {
     BOOTLOG("New install detected.");
     config.wwwFilesExist = requiredWebFilesExist();
   } else {
@@ -53,9 +52,9 @@ void Startup::checkVerAndSpiffs() {
     config.wwwFilesExist = false;
   }
 
-  if (!config.wwwFilesExist || !SPIFFS.exists(versionPath)) {
+  if (!config.wwwFilesExist || !SPIFFS.exists(VERSION_PATH)) {
     utility.cleanupSpiffs();
-    File verFile = SPIFFS.open(versionPath, "w");
+    File verFile = SPIFFS.open(VERSION_PATH, "w");
     if (verFile) {
       verFile.println(RADIOVERSION);
       verFile.close();
@@ -195,10 +194,10 @@ void Startup::getRequiredFiles() {
 
 void Startup::checkNewVersionFile() {
   #ifdef UPDATEURL
-    const char* newVersionPath = "/data/new_ver.txt";
+    const char* newVERSION_PATH = "/data/new_ver.txt";
     netserver.newVersion = String(RADIOVERSION);
-    if (SPIFFS.exists(newVersionPath)) {
-      File newVerFile = SPIFFS.open(newVersionPath, "r");
+    if (SPIFFS.exists(newVERSION_PATH)) {
+      File newVerFile = SPIFFS.open(newVERSION_PATH, "r");
       if (newVerFile) {
         String line = newVerFile.readStringUntil('\n');
         line.trim();
@@ -263,7 +262,7 @@ void Startup::startupServicesAsync(void* param) {
   utility.updateFile(param, "/www/rb_srvrs.json", RADIO_BROWSER_SERVERS_URL, RB_SERVERS_CHECKTIME, "Radio Browser servers list");
   startup.cleanStaleSearchResults();
   #ifdef CORE_MONITOR
-    FUNCTIONLOG("HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL) * 4);
+    FUNCTIONLOG("Core.HWM", "[%s] stack HWM: %u bytes", pcTaskGetName(NULL), uxTaskGetStackHighWaterMark(NULL) * 4);
   #endif
   delete (ESPFileUpdater*)param;
   vTaskDelete(NULL);

@@ -21,10 +21,6 @@
 
 #define NETWORK_TASK_STACK_BYTES (NETWORK_TASK_STACK_SIZE * 1024)
 
-#ifndef WIFI_ATTEMPTS
-  #define WIFI_ATTEMPTS  16
-#endif
-
 MyNetwork network;
 
 TaskHandle_t syncTaskHandle;

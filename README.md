@@ -14,12 +14,10 @@ ehRadio runs on an ESP32 to play Internet radio streams.
 
 An radio may be built using an ESP32, an audio decoder, a display, and some inputs.
 I prefer to build with ESP32-S3 boards but ESP32 or ESP32-C3 boards are possible, too.
-Check out the [How to Build](#how-to...) section.
 
 To develop, I prefer [VS Code](https://code.visualstudio.com/) but you may try other IDEs.
 I compiled using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well
 Some libraries may only be available from [Platformio Registry](https://registry.platformio.org/).
-The [How to Compile](#how-to...) section has some tips.
 
 ehRadio is a fork of [ёRadio](https://github.com/e2002/yoradio/) / yoRadio v0.9.533.
 Read the [A History of ESP Radios](#a-history-of-esp-radios).
@@ -133,18 +131,27 @@ especially in terms of how they are used and how they are built.
 
 </td></tr></table>
 
-## Who's reading?
+---
 
-Click for Users...
+## Tools
 
-Click for Builders...
+[Online Flasher](https://trip5.github.io/ehRadio/firmware.html)
 
-If you're reading this then thanks for reading... I'm in the middle of editing it.  ^^
+[myoptions Generator](https://trip5.github.io/ehRadio/myoptions/generator.html)
 
-## Users
+Many more tools are available in the codebase as well.
 
-## Builders
+---
 
+## Documentation
+
+I realize documentation is a little sparse right now.  I'm working on it.
+
+A lot of build options and comments and notes are actually in `options.h` and in various files.
+
+As of `2026.05.18` I've done a lot of work to clean up the codebase and organize it.
+
+More work remains to be done and the `Feature Freeze` will remain in place at least until the "de-fork" of the audio libraries is finished.
 
 ---
 
@@ -212,7 +219,7 @@ I will add a note here that although I do use AI-assisted coding, I am not a "vi
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.05.16 dev | This readme, HTML myoptions.h generator (not here yet), cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
+| 2026.05.18 | This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
 | 2026.05.08 | SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
 | 2026.04.09 | major and minor changes to structure, aggressive reconnect to wi-fi |
 | 2026.03.30 | feature freeze begins, OTA page reload graceful, 3 javascript files combined to 1 (`script2.js`) |

@@ -21,10 +21,10 @@
 #if (ENC_BTNL!=255 && ENC_BTNR!=255) || (ENC2_BTNL!=255 && ENC2_BTNR!=255)
   #include <AiEsp32RotaryEncoder.h>
   #if (ENC_BTNL!=255 && ENC_BTNR!=255)
-    AiEsp32RotaryEncoder encoder = AiEsp32RotaryEncoder(ENC_BTNL, ENC_BTNR, ENCODER_STEPS, ENC_PULLUP);
+    AiEsp32RotaryEncoder encoder = AiEsp32RotaryEncoder(ENC_BTNL, ENC_BTNR, ENC_STEPS, ENC_PULLUP);
   #endif
   #if (ENC2_BTNL!=255 && ENC2_BTNR!=255)
-    AiEsp32RotaryEncoder encoder2 = AiEsp32RotaryEncoder(ENC2_BTNL, ENC2_BTNR, ENCODER2_STEPS, ENC2_PULLUP);
+    AiEsp32RotaryEncoder encoder2 = AiEsp32RotaryEncoder(ENC2_BTNL, ENC2_BTNR, ENC_STEPS, ENC2_PULLUP);
   #endif
 #endif
 

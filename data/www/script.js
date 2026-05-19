@@ -284,7 +284,12 @@ function onMessage(event) {
       });
     }else{
       if(typeof data.current !== 'undefined') { setCurrentItem(data.current); return; }
-      if(typeof data.file !== 'undefined') { generatePlaylist(data.file+"?"+new Date().getTime()); websocket.send('submitplaylistdone=1'); return; }
+        if(typeof data.file !== 'undefined') {
+          generatePlaylist(data.file+"?"+new Date().getTime());
+          websocket.send('submitplaylistdone=1');
+          websocket.send('getindex=1');
+          return;
+        }
       if(typeof data.act !== 'undefined'){ data.act.forEach(showclass=> { classEach(showclass, function(el) { el.classList.remove("hidden"); }); }); return; }
       Object.keys(data).forEach(key=>{
         setupElement(key, data[key]);
@@ -1222,7 +1227,7 @@ function continueLoading(mode){
             websocket.send(`mdnsname=${mdnsValue}`);
             if (mdnsValue && typeof redirectWhenReady === 'function') {
               const mdnsHost = `${mdnsValue}.local`;
-              getId("mdnsnamerow").innerHTML=`<h3 style="line-height: 37px;color: #aaa; margin: 0 auto;">${t('msg_mdns_restarting', 'mDNS restarting\u2026')}</h3>`;
+              getId("mdnsnamerow").innerHTML=`<h3 style="line-height: 37px;color: #aaa; margin: 0 auto;">${t('msg_mdns_restarting', 'mDNS restarting...')}</h3>`;
               redirectWhenReady({
                 waitSeconds: 8,
                 readyHost: mdnsHost,

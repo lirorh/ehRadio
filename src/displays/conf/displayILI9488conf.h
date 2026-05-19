@@ -19,9 +19,9 @@
   #define TITLE_FIX 0
 #endif
 #ifdef BIG_BOOT_LOGO
-  #define bootLogoTop     110
-#else
   #define bootLogoTop     60
+#else
+  #define bootLogoTop     110
 #endif
 
 /* SCROLLS  */                            /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */

@@ -62,9 +62,9 @@ void Player::init() {
     begin();
   #endif
   setAudioTaskCore(AUDIO_CORE);
-  #ifdef USE_ES8311
+  #if defined(USE_ES8311) && defined(ES8311_I2C_SDA) && defined(ES8311_I2C_SCL)
     // leaving this here but it seems not needed?  (this is the only operation that uses I2C on ES8311)
-    // if (es.begin(I2C_SDA, I2C_SCL, 400000UL)) es.setVolume(0); /* Start codec muted (or low) to avoid very loud output before saved volume is applied */
+    if (es.begin(ES8311_I2C_SDA, ES8311_I2C_SCL, 400000UL)) es.setVolume(0); /* Start codec muted (or low) to avoid very loud output before saved volume is applied */
   #endif
   setBalance(config.store.balance);
   setTone(config.store.bass, config.store.middle, config.store.treble);

@@ -283,9 +283,9 @@ class Config {
         prefs.getBytes(entry->key, oldValue, size);
         needSave = memcmp(oldValue, value, size) != 0;
       } else {
-        // Key not in NVS: skip write if value matches current struct field (= struct/compile-time default)
-        const void* currentField = (const uint8_t*)&store + entry->fieldOffset;
-        needSave = memcmp(currentField, value, size) != 0;
+        // Key not in NVS: always write. Comparing against the in-memory field is unreliable
+        // because saveValueButWait updates *field before queuing, so currentField == value always.
+        needSave = true;
       }
       if (needSave) {
         prefs.putBytes(entry->key, value, size);

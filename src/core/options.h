@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.05.08"
+#define RADIOVERSION "2026.05.19"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -150,21 +150,21 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define BRIGHTNESS_PIN 255 // BRIGHTNESS Pin
 #endif
 
-/* Can the display be dimmed? If the Brightness Pin is set, we assume true */
-/* #define DSP_DIMMING_ENABLED true or false to override the automatic decision */
-#if (defined(BRIGHTNESS_PIN) && BRIGHTNESS_PIN!=255)
-  #if !defined(DSP_DIMMING_ENABLED)
-    #warning BRIGHTNESS_PIN set so DSP_DIMMING_ENABLED true - Add #define DSP_DIMMING_ENABLED true or false to avoid this message.
-    #define DSP_DIMMING_ENABLED true
-  #endif
-#else
-  #define DSP_DIMMING_ENABLED false
+/* Can the display be dimmed? If it is set to true but the Brightness Pin is not set... */
+/* This enables / disables the ability, not the default option DIMMING_ENABLED */
+
+#if defined(DSP_DIMMING_ENABLED) && DSP_DIMMING_ENABLED && BRIGHTNESS_PIN==255
+  #warning DSP_DIMMING_ENABLED is true but BRIGHTNESS_PIN is not set so setting DSP_DIMMING_ENABLED false
+  #undef DSP_DIMMING_ENABLED
 #endif
+#ifndef DSP_DIMMING_ENABLED
+    #define DSP_DIMMING_ENABLED false
+#endif  
 
 #ifndef LIGHT_SENSOR
   #define LIGHT_SENSOR 255 // Light sensor
 #endif
-#ifndef AUTOBACKLIGHT // Auto-dimming with the light sensor (not related to DIMMING_ENABLED)
+#ifndef AUTOBACKLIGHT // Auto-dimming with the light sensor (not related to DSP_DIMMING_ENABLED)
   #ifndef AUTOBACKLIGHT_MAX
     #define AUTOBACKLIGHT_MAX 2500
   #endif
@@ -368,6 +368,14 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #ifndef PLAYER_FORCE_MONO
     #define PLAYER_FORCE_MONO true // forces the VU meter mono (setting false doesn't change hardware capability)
   #endif
+  #if defined(ES8311_I2C_SCL) && ES8311_I2C_SCL != 255 && defined(ES8311_I2C_SDA) && ES8311_I2C_SCL != 255
+    // may fix volume on boot issues (if defined and not 255)
+    // #define ES8311_I2C_SCL  15
+    // #define ES8311_I2C_SDA  16
+  #else
+    #undef ES8311_I2C_SCL
+    #undef ES8311_I2C_SDA
+  #endif
 #endif
 
 /* --- DECODER OPTIONS --- */
@@ -475,6 +483,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #if !(ENC_STEPS == 1  ENC_STEPS == 2 | ENC_STEPS == 4 // 1 is acceptable but 2 for more accuracy
     #error ENC_STEPS 1 or 2 or 4 only please
   #endif
+#else
+  #define ENC_STEPS 1
 #endif
 
 #ifndef ENC2_BTNL
@@ -494,8 +504,10 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #ifdef ENC2_STEPS
   #if !(ENC2_STEPS==1  ENC2_STEPS==2 | ENC2_STEPS==4 // 1 is acceptable but 2 for more accuracy
-    #error ENC_STEPS 1 or 2 or 4 only please
+    #error ENC2_STEPS 1 or 2 or 4 only please
   #endif
+#else
+  #define ENC2_STEPS 1
 #endif
 
 /* --- BUTTONS --- */
@@ -1383,12 +1395,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define SS_PLAYING_TIME 5
 #endif
 #ifndef DIMMING_ENABLED
-  #if DSP_DIMMING_ENABLED
-    #define DIMMING_ENABLED true
-  #else
     #define DIMMING_ENABLED false
-  #endif
-#endif
+#endif  
 #if defined(DIMMING_TIMEOUT) && ((DIMMING_TIMEOUT < 5) || (DIMMING_TIMEOUT > 65520))
   #warning "define warning in myoptions.h: DIMMING_TIMEOUT is out of range (5-65520), reverting to default 120"
   #undef DIMMING_TIMEOUT

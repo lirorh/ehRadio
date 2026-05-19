@@ -219,7 +219,7 @@ I will add a note here that although I do use AI-assisted coding, I am not a "vi
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.05.18 | This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
+| 2026.05.19 | This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
 | 2026.05.08 | SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
 | 2026.04.09 | major and minor changes to structure, aggressive reconnect to wi-fi |
 | 2026.03.30 | feature freeze begins, OTA page reload graceful, 3 javascript files combined to 1 (`script2.js`) |

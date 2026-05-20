@@ -171,6 +171,9 @@ function buildPage() {
   // 10. Timezone section
   root.appendChild(buildTimezoneSection());
 
+  // 11. Extra custom defines section
+  root.appendChild(buildExtraDefinesSection());
+
   // Show buttons
   document.getElementById('buttons-area').style.display = 'flex';
   document.getElementById('buttons-area2').style.display = 'flex';
@@ -1064,6 +1067,57 @@ function buildTimezoneSection() {
 }
 
 // ============================================================
+// Extra custom text section
+// ============================================================
+function buildExtraDefinesSection() {
+  var sec = makeSection('Custom Extras for myoptions.h');
+  sec.id = 'extra-defines-section';
+
+  var header = document.createElement('div');
+  header.className = 'default-item-header';
+  var chk = document.createElement('input');
+  chk.type = 'checkbox';
+  chk.id = 'extra-defines-chk';
+  var lbl = document.createElement('span');
+  lbl.className = 'item-name';
+  lbl.textContent = 'Extra';
+  header.appendChild(chk);
+  header.appendChild(lbl);
+
+  var ctrlDiv = document.createElement('div');
+  ctrlDiv.id = 'extra-defines-ctrl';
+  ctrlDiv.className = 'hidden';
+  ctrlDiv.style.marginTop = '10px';
+  ctrlDiv.style.textAlign = 'center';
+
+  var ta = document.createElement('textarea');
+  ta.id = 'extra-defines-text';
+  ta.className = 'extra-defines-text';
+  ta.placeholder = '#define SOME_OPTION true';
+  ctrlDiv.appendChild(ta);
+
+  sec.appendChild(header);
+  sec.appendChild(ctrlDiv);
+
+  chk.addEventListener('change', function() {
+    if (chk.checked) {
+      ctrlDiv.classList.remove('hidden');
+      lbl.style.color = '#fff';
+    } else {
+      ctrlDiv.classList.add('hidden');
+      lbl.style.color = '';
+    }
+  });
+  header.addEventListener('click', function(e) {
+    if (e.target === chk) return;
+    chk.checked = !chk.checked;
+    chk.dispatchEvent(new Event('change'));
+  });
+
+  return sec;
+}
+
+// ============================================================
 // Section factory
 // ============================================================
 function makeSection(title) {
@@ -1280,6 +1334,7 @@ function generateOptionsH() {
   out += outputLocaleSection();
   out += outputDefaultsSection();
   out += outputTimezoneSection();
+  out += outputExtraDefinesSection();
 
   out += '\n#endif // myoptions_h\n';
   return out;
@@ -1561,6 +1616,21 @@ function outputTimezoneSection() {
   var out = sectionHeader('Time Zone');
   out += outputLine('TIMEZONE_NAME', '"' + tzName + '"', null);
   out += outputLine('TIMEZONE_POSIX', '"' + posix + '"', null);
+  return out;
+}
+
+function outputExtraDefinesSection() {
+  var chk = document.getElementById('extra-defines-chk');
+  var txt = document.getElementById('extra-defines-text');
+  if (!chk || !chk.checked || !txt) return '';
+
+  var raw = txt.value || '';
+  if (!raw.trim()) return '';
+
+  var normalized = raw.replace(/\r\n?/g, '\n');
+  var out = sectionHeader('Extra defines');
+  out += normalized;
+  if (!normalized.endsWith('\n')) out += '\n';
   return out;
 }
 
@@ -2126,6 +2196,12 @@ function serializeState() {
   var tzSel = document.getElementById('tz-sel');
   if (tzChk && tzChk.checked && tzSel) state.tz = tzSel.value;
 
+  // Extra custom text (enabled flag + text)
+  var xChk = document.getElementById('extra-defines-chk');
+  var xTxt = document.getElementById('extra-defines-text');
+  if (xChk && xChk.checked) state.xe = true;
+  if (xTxt && xTxt.value && xTxt.value.trim() !== '') state.xd = xTxt.value;
+
   return state;
 }
 
@@ -2215,7 +2291,8 @@ function applyState(state) {
 // Detect format and dispatch to the appropriate restore handler
 function applyStateValues(state) {
   var isNew = (state.ci !== undefined || state.cp !== undefined || state.co !== undefined ||
-               state.cd !== undefined || state.p  !== undefined || state.v  !== undefined);
+               state.cd !== undefined || state.p  !== undefined || state.v  !== undefined ||
+               state.xe !== undefined || state.xd !== undefined);
   var isOld = !isNew && Object.keys(state).some(function(k) {
     return k.startsWith('item_') || k.startsWith('i_') || k.startsWith('opt_') || k.startsWith('def_');
   });
@@ -2350,6 +2427,24 @@ function applyStateNew(state) {
       if (tzLbl) tzLbl.style.color = '#fff';
     }
     if (tzSel) tzSel.value = state.tz;
+  }
+
+  // 9. Extra custom text (xe = enabled flag, xd = text)
+  var xChk = document.getElementById('extra-defines-chk');
+  var xCtrl = document.getElementById('extra-defines-ctrl');
+  var xTxt = document.getElementById('extra-defines-text');
+  var xText = (typeof state.xd === 'string') ? state.xd : '';
+  var hasXText = xText.trim() !== '';
+
+  if (xTxt && typeof state.xd === 'string') {
+    xTxt.value = xText;
+  }
+
+  if (xChk && (state.xe || hasXText)) {
+    xChk.checked = true;
+    if (xCtrl) xCtrl.classList.remove('hidden');
+    var xLbl = xChk.nextElementSibling;
+    if (xLbl) xLbl.style.color = '#fff';
   }
 }
 

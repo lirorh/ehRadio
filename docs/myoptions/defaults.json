@@ -4,8 +4,8 @@
     "define": "ONE_CLICK_SWITCH", "type": "boolean", "default": false, "optional": true
   },
   {
-    "name": "Playlist Default URL (downloaded on fresh install)",
-    "define": "PLAYLIST_DEFAULT_URL", "type": "text", "optional": true
+    "name": "Playlist Default URL",
+    "define": "PLAYLIST_DEFAULT_URL", "type": "text", "optional": true, "comment": "downloaded on fresh install"
   },
   {
     "name": "Screen Saver When Playing",

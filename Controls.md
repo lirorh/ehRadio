@@ -1,5 +1,7 @@
 ## Controls
 
+Updated for ehRadio as of `2026.05.20`
+
 <img src="images/controls.jpg" width="830" height="440"><br />
 
 ---
@@ -15,23 +17,23 @@
 Up to 5 buttons can be connected to the device. Three buttons are enough to control it.
 
 Button actions:
-- BTN_LEFT\
+- BTN_DOWN\
  click: volume down\
  dblclick: previous station\
  longpress: quick volume down
-- BTN_CENTER\
+- BTN_PLAY\
  click: start/stop playing\
  dblclick: switch SD/WEB mode\
  longpress: toggle between PLAYER/PLAYLIST mode
-- BTN_RIGHT\
+- BTN_UP\
  click: volume up\
  dblclick: next station\
  longpress: quick volume up
-- BTN_UP\
+- BTN_NEXT\
  click: without display - next station, with display - move up\
  dblclick: doing nothing\
  longpress: with display - quick move up
-- BTN_DOWN\
+- BTN_PREV\
  click: without display - prev station, with display - move down\
  dblclick: doing nothing\
  longpress: with display - quick move down
@@ -44,13 +46,13 @@ Button actions:
 You can connect one or two encoders to replace/complete the buttons. One encoder (without buttons) is enough to control the device.
 
 - ENCODER1\
- rotate left: (ENC_BTNL) in PLAYER mode - volume down, in PLAYLIST mode - move up\
- rotate right: (ENC_BTNR) in PLAYER mode - volume up, in PLAYLIST mode - move down\
- click, dblclick, longpress: (ENC_BTNB) same as BTN_CENTER
+ rotate left: (ENC_DT) in PLAYER mode - volume down, in PLAYLIST mode - move up\
+ rotate right: (ENC_CLK) in PLAYER mode - volume up, in PLAYLIST mode - move down\
+ click, dblclick, longpress: (ENC_SW) same as BTN_CENTER
 - ENCODER2\
- rotate left: (ENC2_BTNL) if not pressed - switch to PLAYLIST mode and move up, if pressed - volume down\
- rotate right: (ENC2_BTNR) if not pressed - switch to PLAYLIST mode and move down, if pressed - volume up\
- click, dblclick: (ENC2_BTNB) toggle between PLAYER/VOLUME mode
+ rotate left: (ENC2_DT) if not pressed - switch to PLAYLIST mode and move up, if pressed - volume down\
+ rotate right: (ENC2_CLK) if not pressed - switch to PLAYLIST mode and move down, if pressed - volume up\
+ click, dblclick: (ENC2_SW) toggle between PLAYER/VOLUME mode
 
 ---
 ### IR receiver

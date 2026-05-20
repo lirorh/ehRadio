@@ -48,9 +48,9 @@
   #define VS1053_DREQ        10
   #define VS1053_RST         -1
   #define VS_PATCH_ENABLE    false
-  #define ENC_BTNR           40
-  #define ENC_BTNL           39
-  #define ENC_BTNB           38
+  #define ENC_CLK           40
+  #define ENC_DT           39
+  #define ENC_SW           38
   #define SD_SPI             'B'
   #define SD_CS              47
   #define ONE_CLICK_SWITCH   true

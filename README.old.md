@@ -1098,7 +1098,7 @@ or -> **!!! a [full update](#update-over-web-interface) with Sketch data upload 
 - added SD Card support (more info in [connection table](#connection-tables) and [examples/myoptions.h](https://github.com/e2002/yoradio/blob/main/examples/myoptions.h))
 - added MODE button to switch SD/WEB modes (more info in [Controls.md](https://github.com/e2002/yoradio/blob/main/Controls.md))
 - asterisk on the remote control now switches SD/WEB modes
-- double click BTN_PLAY and ENC_BTNB now toggles SD/WEB modes
+- double click BTN_PLAY and ENC_SW now toggles SD/WEB modes
 - bug fixes
 
 #### v0.8.173
@@ -1381,7 +1381,7 @@ _will have to be configured again through the web interface. Please understand a
 
 #### v0.5.035
 - added two buttons BTN_UP, BTN_DOWN
-- added the pins for the second encoder ENC2_BTNL, ENC2_BTNB, ENC2_BTNR
+- added the pins for the second encoder ENC2_DT, ENC2_SW, ENC2_CLK
 - fixed display of playlist with SSD1306 configuration
 - improvements in the displays work
 - bugs fixes, some improvements

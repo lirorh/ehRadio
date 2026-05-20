@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-# update_json_locale_timezone.py
+# update_jsons_and_platformio.py
 #
 # Regenerates timezones.json and locale.json in the docs/myoptions folder by
 # pulling data from elsewhere in the repository and transforming it.
 # Copies platformio.ini from builds/generator folder as well -
 # expected that patch_pio_ini_files.py was run and patched already.
+# Also regenerates boards.json based on esp*.json files.
 #
 # DEPENDENCIES: Python standard library only (json, pathlib, re).
 #   No pip install needed.
 #
 # USAGE:
-#   python docs/myoptions/update_json_locale_timezone.py
-#   -- OR --  (from inside docs/myoptions/)
-#   python update_json_locale_timezone.py
+#   python update_jsons_and_platformio.py
 #
 # ==============================================================================
 # SOURCE / DESTINATION PATHS
@@ -43,6 +42,10 @@ LOCALE_OUT   = SCRIPT_DIR / 'locale.json'
 # This will just do a straight copy from the builds folder
 PLATFORMIO_SRC = SCRIPT_DIR / '../../builds/generator/platformio.ini'
 PLATFORMIO_OUT = SCRIPT_DIR / 'platformio.ini'
+
+# This will scan the folder for matching files and combine them to boards.json
+BOARDS_SRC = SCRIPT_DIR / 'esp*.json'
+BOARDS_OUT = SCRIPT_DIR / 'boards.json'
 
 # ==============================================================================
 # OPERATION 1 - timezones.json
@@ -161,7 +164,6 @@ def update_locale():
     print(f'[locale]    Written -> {LOCALE_OUT.name}  ({len(entries)} locales included)')
     return True
 
-
 # ==============================================================================
 # OPERATION 3 - platformio.ini
 # Expected that patch_pio_ini_files.py was run and patched
@@ -180,6 +182,43 @@ def update_platformio():
     print(f'[platformio] Written -> {PLATFORMIO_OUT.name}')
     return True
 
+# ==============================================================================
+# OPERATION 4 - boards.json
+# Rebuilds boards.json by scanning this folder for esp*.json
+# ==============================================================================
+
+def update_boards():
+    entries = []
+
+    # BOARDS_SRC is "<script_dir>/esp*.json"; glob using only the pattern part.
+    for json_file in sorted(SCRIPT_DIR.glob(BOARDS_SRC.name)):
+        try:
+            data = json.loads(json_file.read_text(encoding='utf-8'))
+        except Exception as ex:
+            print(f'  WARNING: failed to parse {json_file.name}: {ex}')
+            continue
+
+        if isinstance(data, list) and data:
+            board = data[0]
+        elif isinstance(data, dict):
+            board = data
+        else:
+            print(f'  WARNING: unsupported JSON shape in {json_file.name}, skipping')
+            continue
+
+        name = str(board.get('name', '')).strip()
+        if not name:
+            print(f'  WARNING: missing "name" in {json_file.name}, skipping')
+            continue
+
+        entries.append({
+            'name': name,
+            'file': json_file.name,
+        })
+
+    BOARDS_OUT.write_text(json.dumps(entries, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+    print(f'[boards]    Written -> {BOARDS_OUT.name}  ({len(entries)} boards included)')
+    return True
 
 # ==============================================================================
 
@@ -191,5 +230,7 @@ if __name__ == '__main__':
     update_locale()
     print()
     update_platformio()
+    print()
+    update_boards()
     print()
     print('Done.')

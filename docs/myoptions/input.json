@@ -22,19 +22,21 @@
   },
   {
     "name": "Rotary Encoder",
-    "pins": [ "ENC_BTNL", "ENC_BTNB", "ENC_BTNR" ],
+    "info": "If the encoder works in the opposite expected direction, swap CLK and DT\nA usually CLK, B usually DT",
+    "pins": [ "ENC_CLK", "ENC_DT", "ENC_SW" ],
     "defines": [
-      { "define": "ENC_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary" },
-      { "define": "ENC_BTNB_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button" }
+      { "define": "ENC_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary (true by default)" },
+      { "define": "ENC_SW_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
     ],
     "lib_deps": "${library.rotaryencoder}"
   },
   {
     "name": "Rotary Encoder 2",
-    "pins": [ "ENC2_BTNL", "ENC2_BTNB", "ENC2_BTNR" ],
+    "info": "If the encoder works in the opposite expected direction, swap CLK and DT\nA usually CLK, B usually DT",
+    "pins": [ "ENC2_CLK", "ENC2_DT", "ENC2_SW" ],
     "defines": [
-      { "define": "ENC2_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary" },
-      { "define": "ENC2_BTNB_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button" }
+      { "define": "ENC2_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary (true by default)" },
+      { "define": "ENC2_SW_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
     ],
     "lib_deps": "${library.rotaryencoder}"
   },
@@ -42,7 +44,7 @@
     "name": "Previous station/track button",
     "pins": [ "BTN_PREV" ],
     "defines": [
-      { "define": "BTN_PREV_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button" }
+      { "define": "BTN_PREV_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -50,7 +52,7 @@
     "name": "Play/pause button",
     "pins": [ "BTN_PLAY" ],
     "defines": [
-      { "define": "BTN_PLAY_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button" }
+      { "define": "BTN_PLAY_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -58,7 +60,7 @@
     "name": "Next station/track button",
     "pins": [ "BTN_NEXT" ],
     "defines": [
-      { "define": "BTN_NEXT_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button" }
+      { "define": "BTN_NEXT_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -66,7 +68,7 @@
     "name": "Volume up button",
     "pins": [ "BTN_UP" ],
     "defines": [
-      { "define": "BTN_UP_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button" }
+      { "define": "BTN_UP_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -74,7 +76,7 @@
     "name": "Volume down button",
     "pins": [ "BTN_DOWN" ],
     "defines": [
-      { "define": "BTN_DOWN_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button" }
+      { "define": "BTN_DOWN_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -82,7 +84,7 @@
     "name": "Mode switch button",
     "pins": [ "BTN_MODE" ],
     "defines": [
-      { "define": "BTN_MODE_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button" }
+      { "define": "BTN_MODE_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
     ],
     "lib_deps": "${library.onebutton}"
   },

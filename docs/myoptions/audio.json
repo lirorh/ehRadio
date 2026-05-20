@@ -21,6 +21,7 @@
   },
   {
     "name": "ES8311 (PCM I2S Mono Decoder)",
+    "info": "onboard decoder on some ESP32-S3/Display boards",
     "define": "USE_ES8311",
     "pins": [ "I2S_MCLK", "I2S_BCLK", "I2S_LRC", "I2S_DOUT", "I2S_DIN" ],
     "defines": [

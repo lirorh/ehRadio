@@ -179,7 +179,7 @@ I will add a note here that although I do use AI-assisted coding, I am not a "vi
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.05.20x | Some of the `BTN_` macros were named wrong, generator slightly updated too (no release needed), other fixes to `options.h` |
+| 2026.05.20x | Some of the `BTN_` macros were named wrong, `ENC_` macros renamed, generator slightly updated too, other fixes to `options.h` (no release needed) |
 | 2026.05.19 | `Feature Freeze` This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
 | 2026.05.08 | `Feature Freeze` SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
 | 2026.04.09 | `Feature Freeze` major and minor changes to structure, aggressive reconnect to wi-fi |

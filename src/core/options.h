@@ -466,20 +466,20 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* ============================== INPUT ============================== */
 
 /* --- ROTARY ENCODER --- */
-#ifndef ENC_BTNL
-  #define ENC_BTNL 255
+#ifndef ENC_DT
+  #define ENC_DT 255
 #endif
-#ifndef ENC_BTNB
-  #define ENC_BTNB 255
+#ifndef ENC_SW
+  #define ENC_SW 255
 #endif
-#ifndef ENC_BTNR
-  #define ENC_BTNR 255
+#ifndef ENC_CLK
+  #define ENC_CLK 255
 #endif
 #ifndef ENC_PULLUP // use internal pullup on rotary Credit: Buska1968 https://4pda.to/forum/index.php?s=&showtopic=1010378&view=findpost&p=113385448
   #define ENC_PULLUP true
 #endif
-#ifndef ENC_BTNB_PULLUP // use internal pullup on button
-  #define ENC_BTNB_PULLUP true
+#ifndef ENC_SW_PULLUP // use internal pullup on button
+  #define ENC_SW_PULLUP true
 #endif
 #ifdef ENC_STEPS
   #if !(ENC_STEPS == 1  ENC_STEPS == 2 | ENC_STEPS == 4 // 1 is acceptable but 2 for more accuracy
@@ -489,20 +489,20 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define ENC_STEPS 1
 #endif
 
-#ifndef ENC2_BTNL
-  #define ENC2_BTNL 255
+#ifndef ENC2_DT
+  #define ENC2_DT 255
 #endif
-#ifndef ENC2_BTNB
-  #define ENC2_BTNB 255
+#ifndef ENC2_SW
+  #define ENC2_SW 255
 #endif
-#ifndef ENC2_BTNR
-  #define ENC2_BTNR 255
+#ifndef ENC2_CLK
+  #define ENC2_CLK 255
 #endif
 #ifndef ENC2_PULLUP // use internal pullup on rotary
   #define ENC2_PULLUP true
 #endif
-#ifndef ENC2_BTNB_PULLUP // use internal pullup on button
-  #define ENC2_BTNB_PULLUP true
+#ifndef ENC2_SW_PULLUP // use internal pullup on button
+  #define ENC2_SW_PULLUP true
 #endif
 #ifdef ENC2_STEPS
   #if !(ENC2_STEPS==1  ENC2_STEPS==2 | ENC2_STEPS==4 // 1 is acceptable but 2 for more accuracy
@@ -573,7 +573,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 /* Use this button to wake from deep sleep (other buttons can be reused) */
 #ifndef WAKE_PIN
-  #define WAKE_PIN 255 // Wake Pin (manual wakeup from deep sleep. can match with BTN_XXXX, ENC_BTNB, ENC2_BTNB)
+  #define WAKE_PIN 255 // Wake Pin (manual wakeup from deep sleep. can match with BTN_XXXX, ENC_SW, ENC2_SW)
                 // ESP32: RTC-capable GPIOs only: 0,2,4,12-15,25-27,32-39
                 // ESP32-S3: RTC-capable GPIOs only: 0-21
                 // ESP32-C3: RTC-capable GPIOs only: 0-5

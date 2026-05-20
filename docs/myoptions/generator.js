@@ -266,6 +266,13 @@ function updateBoardImageArea() {
   var area = document.getElementById('board-image-area');
   area.innerHTML = '';
 
+  if (bd.info) {
+    var info = document.createElement('div');
+    info.className = 'section-info';
+    info.textContent = bd.info;
+    area.appendChild(info);
+  }
+
   if (bd.image) {
     var img = document.createElement('img');
     img.id = 'board-thumb';
@@ -328,7 +335,7 @@ function updateSPISections() {
 
     if (busObj.info) {
       var infoDiv = document.createElement('div');
-      infoDiv.className = 'spi-info';
+      infoDiv.className = 'section-info';
       infoDiv.textContent = busObj.info;
       pinsWrap.appendChild(infoDiv);
     }
@@ -1708,9 +1715,9 @@ function buildPinDiagram() {
   var diagramPins = {};
 
   if (hasAscii) {
-    // In the JSON: right_pins = left column of diagram, left_pins = right column
-    var diagLeft  = bd.right_pins;
-    var diagRight = bd.left_pins;
+    // In the JSON: left_pins = left column of diagram, right_pins = right column
+    var diagLeft  = bd.left_pins;
+    var diagRight = bd.right_pins;
 
     diagLeft.forEach(function(p) { var n = parsePin(p); if (!isNaN(n)) diagramPins[n] = true; });
     diagRight.forEach(function(p) { var n = parsePin(p); if (!isNaN(n)) diagramPins[n] = true; });
@@ -1820,7 +1827,7 @@ function buildBoardSection_pio(bd) {
   out += 'board = ' + bd.board + '\n';
 
   // board_build.* and board_upload.* fields
-  var skipFields = ['name', 'env', 'board', 'build_flags', 'default_pins', 'spi', 'valid_pins', 'right_pins', 'left_pins', 'image', 'url'];
+  var skipFields = ['name', 'env', 'board', 'build_flags', 'default_pins', 'spi', 'valid_pins', 'left_pins', 'right_pins', 'image', 'url'];
   Object.keys(bd).forEach(function(key) {
     if (skipFields.includes(key)) return;
     if (key.startsWith('board_')) {

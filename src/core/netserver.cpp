@@ -422,7 +422,7 @@ void NetServer::processQueue() {
                                                                 act += F("\"group_locale\",");
             if (SHOW_WEATHER || dbgact)                         act += F("\"group_weather\",");
                                                                 act += F("\"group_controls\",");
-            if (ENC_BTNL != 255 || ENC2_BTNL != 255 || dbgact)  act += F("\"group_encoder\",");
+            if (ENC_DT != 255 || ENC2_DT != 255 || dbgact)      act += F("\"group_encoder\",");
             if (IR_PIN != 255 || dbgact)                        act += F("\"group_ir\",");
           }
                                                                 act = act.substring(0, act.length() - 1);

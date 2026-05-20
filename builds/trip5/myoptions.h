@@ -204,13 +204,13 @@
 
 #if defined(SH1106_VS1053_3BUTTONS) || defined(ST7735_PCM_1BUTTON) ||\
     defined(ILI9488_PCM_1BUTTON) || defined(SH1106_PCM_REMOTE)
-  #define ENC_BTNR           40
-  #define ENC_BTNL           39
-  #define ENC_BTNB           38
+  #define ENC_CLK            40
+  #define ENC_DT             39
+  #define ENC_SW             38
 #elif defined(SH1106_PCM_1BUTTON)
-  #define ENC_BTNR           7
-  #define ENC_BTNL           15
-  #define ENC_BTNB           16
+  #define ENC_CLK            7
+  #define ENC_DT             15
+  #define ENC_SW             16
 #endif
 
 

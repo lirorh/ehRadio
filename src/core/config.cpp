@@ -672,7 +672,7 @@ void Config::bootInfo() {
   BOOTLOG("buttons:\tleft=%d, center=%d, right=%d, up=%d, down=%d, mode=%d, pullup=%s", 
           BTN_DOWN, BTN_PLAY, BTN_UP, BTN_PREV, BTN_NEXT, BTN_MODE);
   BOOTLOG("encoders:\tl1=%d, b1=%d, r1=%d, pullup=%s, l2=%d, b2=%d, r2=%d, pullup=%s", 
-          ENC_BTNL, ENC_BTNB, ENC_BTNR, ENC_PULLUP?"true":"false", ENC2_BTNL, ENC2_BTNB, ENC2_BTNR, ENC2_PULLUP?"true":"false");
+          ENC_DT, ENC_SW, ENC_CLK, ENC_PULLUP?"true":"false", ENC2_DT, ENC2_SW, ENC2_CLK, ENC2_PULLUP?"true":"false");
   BOOTLOG("ir:\t\t%d", IR_PIN);
   if (SD_CS!=255) BOOTLOG("SD:\t%d", SD_CS);
   #ifdef FIRMWARE

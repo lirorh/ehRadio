@@ -11,20 +11,20 @@
 #include "utility.h"
 
 
-#define ISPUSHBUTTONS BTN_DOWN!=255 || BTN_PLAY!=255 || BTN_UP!=255 || ENC_BTNB!=255 || BTN_PREV!=255 || BTN_NEXT!=255 || ENC2_BTNB!=255 || BTN_MODE!=255
+#define ISPUSHBUTTONS BTN_DOWN!=255 || BTN_PLAY!=255 || BTN_UP!=255 || ENC_SW!=255 || BTN_PREV!=255 || BTN_NEXT!=255 || ENC2_SW!=255 || BTN_MODE!=255
 #if ISPUSHBUTTONS
   #include <OneButton.h>
-  OneButton button[] {OneButton(BTN_DOWN, true, BTN_PREV_PULLUP), OneButton(BTN_PLAY, true, BTN_PLAY_PULLUP), OneButton(BTN_UP, true, BTN_NEXT_PULLUP), OneButton(ENC_BTNB, true, ENC_BTNB_PULLUP), OneButton(BTN_PREV, true, BTN_UP_PULLUP), OneButton(BTN_NEXT, true, BTN_DOWN_PULLUP), OneButton(ENC2_BTNB, true, ENC2_BTNB_PULLUP), OneButton(BTN_MODE, true, BTN_MODE_PULLUP)};
+  OneButton button[] {OneButton(BTN_DOWN, true, BTN_PREV_PULLUP), OneButton(BTN_PLAY, true, BTN_PLAY_PULLUP), OneButton(BTN_UP, true, BTN_NEXT_PULLUP), OneButton(ENC_SW, true, ENC_SW_PULLUP), OneButton(BTN_PREV, true, BTN_UP_PULLUP), OneButton(BTN_NEXT, true, BTN_DOWN_PULLUP), OneButton(ENC2_SW, true, ENC2_SW_PULLUP), OneButton(BTN_MODE, true, BTN_MODE_PULLUP)};
   constexpr uint8_t nrOfButtons = sizeof(button) / sizeof(button[0]);
 #endif
 
-#if (ENC_BTNL!=255 && ENC_BTNR!=255) || (ENC2_BTNL!=255 && ENC2_BTNR!=255)
+#if (ENC_DT!=255 && ENC_CLK!=255) || (ENC2_DT!=255 && ENC2_CLK!=255)
   #include <AiEsp32RotaryEncoder.h>
-  #if (ENC_BTNL!=255 && ENC_BTNR!=255)
-    AiEsp32RotaryEncoder encoder = AiEsp32RotaryEncoder(ENC_BTNL, ENC_BTNR, ENC_STEPS, ENC_PULLUP);
+  #if (ENC_DT!=255 && ENC_CLK!=255)
+    AiEsp32RotaryEncoder encoder = AiEsp32RotaryEncoder(ENC_DT, ENC_CLK, ENC_STEPS, ENC_PULLUP);
   #endif
-  #if (ENC2_BTNL!=255 && ENC2_BTNR!=255)
-    AiEsp32RotaryEncoder encoder2 = AiEsp32RotaryEncoder(ENC2_BTNL, ENC2_BTNR, ENC_STEPS, ENC2_PULLUP);
+  #if (ENC2_DT!=255 && ENC2_CLK!=255)
+    AiEsp32RotaryEncoder encoder2 = AiEsp32RotaryEncoder(ENC2_DT, ENC2_CLK, ENC_STEPS, ENC2_PULLUP);
   #endif
 #endif
 
@@ -49,14 +49,14 @@
 #endif
 
 void IRAM_ATTR readEncoderISR() {
-  #if ENC_BTNL!=255
+  #if ENC_DT!=255
     if ((SD_CS==255 && display.mode()==LOST) || display.mode()==UPDATING) return;
     encoder.readEncoder_ISR();
   #endif
 }
 
 void IRAM_ATTR readEncoder2ISR() {
-  #if ENC2_BTNL!=255
+  #if ENC2_DT!=255
     if ((SD_CS==255 && display.mode()==LOST) || display.mode()==UPDATING) return;
     encoder2.readEncoder_ISR();
   #endif
@@ -68,13 +68,13 @@ void Controls::btnLongPressStartCb(void* p)  { controls.onBtnLongPressStart((int
 void Controls::btnLongPressStopCb(void* p)   { controls.onBtnLongPressStop((int)p); }
 
 void Controls::init() {
-  #if ENC_BTNL!=255
+  #if ENC_DT!=255
     encoder.begin();
     encoder.setup(readEncoderISR);
     encoder.setBoundaries(0, 254, true);
     encoder.setAcceleration(config.store.encacc);
   #endif
-  #if ENC2_BTNL!=255
+  #if ENC2_DT!=255
     encoder2.begin();
     encoder2.setup(readEncoder2ISR);
     encoder2.setBoundaries(0, 254, true);
@@ -83,7 +83,7 @@ void Controls::init() {
 
   #if ISPUSHBUTTONS
     for (int i = 0; i < nrOfButtons; i++) {
-      if ((i == 0 && BTN_DOWN == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_UP == 255) || (i == 3 && ENC_BTNB == 255) || (i == 4 && BTN_PREV == 255) || (i == 5 && BTN_NEXT == 255) || (i == 6 && ENC2_BTNB == 255) || (i == 7 && BTN_MODE == 255)) continue;
+      if ((i == 0 && BTN_DOWN == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_UP == 255) || (i == 3 && ENC_SW == 255) || (i == 4 && BTN_PREV == 255) || (i == 5 && BTN_NEXT == 255) || (i == 6 && ENC2_SW == 255) || (i == 7 && BTN_MODE == 255)) continue;
       button[i].attachClick(btnClickCb, (void*)i);
       button[i].attachDoubleClick(btnDoubleClickCb, (void*)i);
       button[i].attachLongPressStart(btnLongPressStartCb, (void*)i);
@@ -111,15 +111,15 @@ void Controls::loop() {
   if (display.mode()==UPDATING || display.mode()==SDCHANGE) return;
   if (SD_CS==255 && display.mode()==LOST) return;
   backlightControls.controlsLoop();
-  #if ENC_BTNL!=255
+  #if ENC_DT!=255
     encoder1Loop();
   #endif
-  #if ENC2_BTNL!=255
+  #if ENC2_DT!=255
     encoder2Loop();
   #endif
   #if ISPUSHBUTTONS
     for (unsigned i = 0; i < nrOfButtons; i++) {
-      if ((i == 0 && BTN_DOWN == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_UP == 255) || (i == 3 && ENC_BTNB == 255) || (i == 4 && BTN_PREV == 255) || (i == 5 && BTN_NEXT == 255) || (i == 6 && ENC2_BTNB == 255)) continue;
+      if ((i == 0 && BTN_DOWN == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_UP == 255) || (i == 3 && ENC_SW == 255) || (i == 4 && BTN_PREV == 255) || (i == 5 && BTN_NEXT == 255) || (i == 6 && ENC2_SW == 255)) continue;
       button[i].tick();
       if (lpId >= 0) {
         if (DSP_MODEL == DSP_DUMMY && (lpId == 4 || lpId == 5)) continue;
@@ -135,13 +135,13 @@ void Controls::loop() {
   #endif
 }
 
-#if (ENC_BTNL!=255 && ENC_BTNR!=255) || (ENC2_BTNL!=255 && ENC2_BTNR!=255)
+#if (ENC_DT!=255 && ENC_CLK!=255) || (ENC2_DT!=255 && ENC2_CLK!=255)
   void Controls::encodersLoop(AiEsp32RotaryEncoder *enc, bool first) {
     if (network.status != CONNECTED && network.status!=SDREADY) return;
     if (display.mode()==LOST) return;
     int8_t encoderDelta = enc->encoderChanged();
     if (encoderDelta!=0) {
-      uint8_t encBtnState = digitalRead(first?ENC_BTNB:ENC2_BTNB);
+      uint8_t encBtnState = digitalRead(first?ENC_SW:ENC2_SW);
     #if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
       first = first?(first && encBtnState):(!encBtnState);
       if (first) {
@@ -170,16 +170,16 @@ void Controls::loop() {
     #endif //#if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
     }
   }
-#endif //#if (ENC_BTNL!=255 && ENC_BTNR!=255) || (ENC2_BTNL!=255 && ENC2_BTNR!=255)
+#endif //#if (ENC_DT!=255 && ENC_CLK!=255) || (ENC2_DT!=255 && ENC2_CLK!=255)
 
 void Controls::encoder1Loop() {
-  #if ENC_BTNL!=255
+  #if ENC_DT!=255
    encodersLoop(&encoder, true);
   #endif
 }
 
 void Controls::encoder2Loop() {
-  #if ENC2_BTNL!=255
+  #if ENC2_DT!=255
     encodersLoop(&encoder2, false);
   #endif
 }
@@ -522,7 +522,7 @@ void Controls::onBtnClick(int id) {
           }
         } else {
           if (display.mode() == PLAYER) {
-            if (config.store.skipPlaylistUpDown || ENC2_BTNL!=255) {
+            if (config.store.skipPlaylistUpDown || ENC2_DT!=255) {
               if (id == EVT_BTNUP) {
                 player.prev();
               } else {
@@ -587,10 +587,10 @@ void Controls::setIRTolerance(uint8_t tl) {
 
 void Controls::setEncAcceleration(uint16_t acc) {
   config.saveValue(&config.store.encacc, acc);
-  #if ENC_BTNL!=255
+  #if ENC_DT!=255
     encoder.setAcceleration(config.store.encacc);
   #endif
-  #if ENC2_BTNL!=255
+  #if ENC2_DT!=255
     encoder2.setAcceleration(config.store.encacc);
   #endif
 }

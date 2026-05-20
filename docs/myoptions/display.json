@@ -2,32 +2,33 @@
   {
     "name": "Dummy (no physical display)",
     "type": "",
+    "info": "🪳\nSt. Gulik bids you good luck.\nFnord",
     "define": "DSP_MODEL DSP_DUMMY"
   },
   {
     "name": "1602 (16x2 LCD)",
-    "type": "SPI",
+    "type": "",
     "define": "DSP_MODEL DSP_1602",
     "pins": [ "LCD_RS", "LCD_E", "LCD_D4", "LCD_D5", "LCD_D6", "LCD_D7" ],
     "build_src_filter": "+<libraries/LiquidCrystalI2C/*> ; not needed?"
   },
   {
     "name": "1602 (I2C 16x2 LCD)",
-    "type": "SPI",
+    "type": "I2C",
     "define": "DSP_MODEL DSP_1602I2C",
     "pins": [ "I2C_SDA", "I2C_SCL" ],
     "build_src_filter": "+<libraries/LiquidCrystalI2C/*>"
   },
   {
     "name": "2004 (20x4 LCD)",
-    "type": "SPI",
+    "type": "",
     "define": "DSP_MODEL DSP_2004",
     "pins": [ "LCD_RS", "LCD_E", "LCD_D4", "LCD_D5", "LCD_D6", "LCD_D7" ],
     "build_src_filter": "+<libraries/LiquidCrystalI2C/*> ; not needed?"
   },
   {
     "name": "2004 (I2C 20x4 LCD)",
-    "type": "SPI",
+    "type": "I2C",
     "define": "DSP_MODEL DSP_2004I2C",
     "pins": [ "I2C_SDA", "I2C_SCL" ],
     "build_src_filter": "+<libraries/LiquidCrystalI2C/*>"
@@ -35,6 +36,7 @@
   {
     "name": "GC9A01A (SPI 240x240 TFT)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_GC9A01A",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
@@ -48,6 +50,7 @@
   {
     "name": "GC9106 (SPI 160x80 TFT)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_GC9106",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
@@ -59,6 +62,7 @@
   {
     "name": "ILI9225 (SPI 220x176 TFT)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_ILI9225",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
@@ -72,6 +76,7 @@
   {
     "name": "ILI9341 (SPI 320x240 TFT)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_ILI9341",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
@@ -85,6 +90,7 @@
   {
     "name": "ILI9488 (SPI 480x320 TFT)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_ILI9488",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
@@ -92,7 +98,7 @@
       { "define": "BRIGHTNESS_PIN", "type": "pin", "default": 255, "optional": true, "comment": "pin that controls brightness / backlight (255 = unused)" },
       { "define": "DSP_DIMMING_ENABLED", "type": "boolean", "default": true, "comment": "enable screen dimming (depends on brightness pin)"},
       { "define": "DSP_INVERT_QUIRK", "type": "boolean", "default": false, "optional": true, "comment": "fixes display inversion quirk (very common)" },
-      { "define": "BIG_BOOT_LOGO", "type": "boolean", "default": true, "optional": true }
+      { "define": "BIG_BOOT_LOGO", "type": "boolean", "default": true, "optional": true, "comment": "set to false to save space on an ESP32" }
     ],
     "build_src_filter": "+<libraries/ILI9488/*>"
   },
@@ -139,6 +145,7 @@
   {
     "name": "SSD1305 (SPI 128x64 OLED)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_SSD1305",
     "pins": [ "TFT_DC", "TFT_CS" ],
     "defines": [
@@ -188,8 +195,8 @@
   },
   {
     "name": "ST7735 (SPI 160x128 TFT)",
-    "info": "",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_ST7735",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
@@ -203,6 +210,7 @@
   {
     "name": "ST7789 (SPI 320x240 TFT)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_ST7789",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
@@ -216,6 +224,7 @@
   {
     "name": "ST7789_76 (SPI 284x76 TFT)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_ST7789_76",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
@@ -229,6 +238,7 @@
   {
     "name": "ST7796 (SPI 480x320 TFT)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_ST7796",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
@@ -236,13 +246,14 @@
       { "define": "BRIGHTNESS_PIN", "type": "pin", "default": 255, "optional": true, "comment": "pin that controls brightness / backlight (255 = unused)" },
       { "define": "DSP_DIMMING_ENABLED", "type": "boolean", "default": true, "comment": "enable screen dimming (depends on brightness pin)"},
       { "define": "DSP_INVERT_QUIRK", "type": "boolean", "default": false, "optional": true, "comment": "fixes display inversion quirk (very common)" },
-      { "define": "BIG_BOOT_LOGO", "type": "boolean", "default": true, "optional": true }
+      { "define": "BIG_BOOT_LOGO", "type": "boolean", "default": true, "optional": true, "comment": "set to false to save space on an ESP32" }
     ],
     "build_src_filter": "+<libraries/Adafruit_ST7796S/*>"
   },
   {
     "name": "ST7920 (SPI 128x64 LCD)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
     "define": "DSP_MODEL DSP_ST7920",
     "pins": [ "TFT_CS" ],
     "build_src_filter": "+<libraries/ST7920/*>"

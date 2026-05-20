@@ -36,19 +36,23 @@ def parse_myoptions_h(myoptions_path):
       #define FIRMWARE "filename.bin" // "board_env", "chip_family", "Contributor"
       #define FIRMWARE_NAME "Friendly Name" // "optional_url"
 
-    Returns:
-      firmwares  - list of 5-tuples (board_env, chip_family, fw_env, friendly_name, contributor)
-      url_map    - dict mapping fw_env -> url
+        Returns:
+            firmwares          - list of 5-tuples (board_env, chip_family, fw_env, friendly_name, contributor)
+            url_map            - dict mapping fw_env -> url
+            missing_name_envs  - list of fw_env values missing FIRMWARE_NAME in this file
     """
     content = _strip_comments(Path(myoptions_path).read_text(encoding='utf-8'))
 
     firmwares = []
     url_map   = {}
 
-    fw_pattern   = re.compile(r'#define\s+FIRMWARE\s+"([^"]+)"\s*//\s*"([^"]+)",\s*"([^"]+)",\s*"([^"]+)"')
-    name_pattern = re.compile(r'#define\s+FIRMWARE_NAME\s+"([^"]+)"(?:\s*//\s*"([^"]*)")?')
+    fw_pattern        = re.compile(r'#define\s+FIRMWARE\s+"([^"]+)"\s*//\s*"([^"]+)",\s*"([^"]+)",\s*"([^"]+)"')
+    name_pattern      = re.compile(r'#define\s+FIRMWARE_NAME\s+"([^"]+)"(?:\s*//\s*"([^"]*)")?')
+    missing_name_envs = []
 
-    for m in fw_pattern.finditer(content):
+    fw_matches = list(fw_pattern.finditer(content))
+
+    for idx, m in enumerate(fw_matches):
         filename    = m.group(1)
         board_env   = m.group(2)
         chip_family = m.group(3)
@@ -60,8 +64,11 @@ def parse_myoptions_h(myoptions_path):
 
         fw_env = filename[:-4] if filename.endswith('.bin') else filename
 
-        # Look for FIRMWARE_NAME within next 500 chars
-        after    = content[m.end():m.end() + 500]
+        # Look for FIRMWARE_NAME within this FIRMWARE block.
+        # Bound the search to before the next FIRMWARE define so very long
+        # URLs are supported without leaking into the next entry.
+        next_start = fw_matches[idx + 1].start() if idx + 1 < len(fw_matches) else len(content)
+        after = content[m.end():next_start]
         nm       = name_pattern.search(after)
         if nm:
             friendly_name = nm.group(1)
@@ -70,10 +77,11 @@ def parse_myoptions_h(myoptions_path):
                 url_map[fw_env] = url
         else:
             friendly_name = fw_env
+            missing_name_envs.append(fw_env)
 
         firmwares.append((board_env, chip_family, fw_env, friendly_name, contributor))
 
-    return firmwares, url_map
+    return firmwares, url_map, missing_name_envs
 
 
 def get_version_from_options_h():
@@ -92,7 +100,7 @@ def generate_firmware_txt(firmwares, output_path):
     with open(output_path, 'w', encoding='utf-8') as f:
         for board_env, chip_family, fw_env, friendly_name, _ in firmwares:
             f.write(f'{board_env}|{chip_family}|{fw_env}|{friendly_name}\n')
-    print(f'✅ Generated {output_path} with {len(firmwares)} firmware entries')
+    print(f'✍  Generated {output_path} with {len(firmwares)} firmware entries')
 
 
 def generate_releases_md(firmwares, url_map, output_path):
@@ -160,7 +168,7 @@ def generate_releases_md(firmwares, url_map, output_path):
                         new_lines.append(f'  - [`{filename}`]({url_map[fw_env]})\n')
                     else:
                         new_lines.append(f'  - `{filename}`\n')
-                print(f'✅ Updated {disp} Firmware section ({len(by_contributor[key])} entries)')
+                print(f'📌 Updated {disp} Firmware section ({len(by_contributor[key])} entries)')
             else:
                 print(f'⚠️  No firmware for {m.group(1)} — section removed')
             continue
@@ -169,7 +177,7 @@ def generate_releases_md(firmwares, url_map, output_path):
         i += 1
 
     output_path.write_text(''.join(new_lines), encoding='utf-8')
-    print(f'✅ Patched {output_path}')
+    print(f'🔧 Patched {output_path}')
 
 
 def generate_esp_web_tools_manifests(firmwares, output_dir, version=''):
@@ -213,7 +221,7 @@ def generate_esp_web_tools_manifests(firmwares, output_dir, version=''):
             json.dump(manifest, f, indent=2)
             f.write('\n')
 
-    print(f'✅ Generated {len(firmwares)} ESP Web Tools manifests in {manifests_dir}')
+    print(f'✍  Generated {len(firmwares)} ESP Web Tools manifests in {manifests_dir}')
 
 
 def generate_firmware_info_json(firmwares, output_path, version=''):
@@ -243,7 +251,7 @@ def generate_firmware_info_json(firmwares, output_path, version=''):
         json.dump(firmware_info, f, indent=2)
         f.write('\n')
 
-    print(f'✅ Generated {output_path} with {len(variants)} firmware variants')
+    print(f'🪳  Generated {output_path} with {len(variants)} firmware variants')
 
 
 def main():
@@ -252,6 +260,7 @@ def main():
     all_firmwares = []
     all_url_map   = {}
     seen_fw_envs  = set()
+    skipped_defs  = 0
 
     print('Building firmware.txt and manifests...')
 
@@ -267,16 +276,20 @@ def main():
         if not myoptions_path.exists():
             continue
 
-        firmwares, url_map = parse_myoptions_h(myoptions_path)
+        firmwares, url_map, missing_name_envs = parse_myoptions_h(myoptions_path)
         if not firmwares:
             continue
 
         print(f'{subfolder.name}/')
+        for fw_env in missing_name_envs:
+            print(f'  ⚠️   Missing FIRMWARE_NAME for {fw_env} in {myoptions_path}')
+        skipped_defs += len(missing_name_envs)
 
         for entry in firmwares:
             fw_env = entry[2]
             if fw_env in seen_fw_envs:
                 print(f'  {fw_env} - Duplicate!')
+                skipped_defs += 1
                 continue
             seen_fw_envs.add(fw_env)
             all_firmwares.append(entry)
@@ -288,7 +301,8 @@ def main():
         print('\n⚠️  No firmware definitions found in any subfolder')
         return 1
 
-    print(f'\n✅ Total: {len(all_firmwares)} firmware definitions')
+    print(f'\n❌ Skipped: {skipped_defs} firmware definitions')
+    print(f'✅ Total: {len(all_firmwares)} firmware definitions')
 
     releases_dir.mkdir(parents=True, exist_ok=True)
 

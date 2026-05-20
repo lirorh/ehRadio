@@ -1,13 +1,13 @@
 [ "SPI Bus Pins",
   {
     "name": "SPI Bus A",
-    "info": "SPIA_MISO = 255 if display is only device on SPI A",
+    "info": "Required by SPI Display",
     "spi": "A",
     "pins": [ "SPIA_SCK", "SPIA_MISO", "SPIA_MOSI" ]
   },
   {
     "name": "SPI Bus B",
-    "info": "SPI display always gets A so make others use B",
+    "info": "Recommended for VS1053 and other SPI peripherals",
     "spi": "B",
     "pins": [ "SPIB_SCK", "SPIB_MISO", "SPIB_MOSI" ]
   }

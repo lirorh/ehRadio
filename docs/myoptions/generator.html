@@ -20,7 +20,7 @@
       margin: 0 auto;
       padding: 20px 0 10px 0;
       font-weight: bold;
-      font-size: 1.6rem;
+      font-size: 2rem;
       color: #C80C02;
       text-align: center;
     }
@@ -64,7 +64,7 @@
       padding: 4px 12px;
       background: #000;
       font-weight: bold;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       text-transform: uppercase;
       color: #ccc;
     }
@@ -160,7 +160,11 @@
       box-sizing: border-box;
     }
     input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #888; }
-    input.pin-error { border-color: #C80C02 !important; background: #2a0000 !important; }
+    input.pin-error { border-color: #C80C02 !important; background: #2a0000 !important; color: #ff8888 !important; }
+    input.pin-ok    { border-color: #2a9d2a !important; background: #002a00 !important; color: #88ff88 !important; }
+    input.pin-dup   { border-color: #c8c000 !important; background: #2a2a00 !important; color: #ffff88 !important; }
+    input.pin-i2c   { border-color: #cc7700 !important; background: #2a1800 !important; color: #ffcc88 !important; }
+    input.pin-en    { border-color: #7b2fbe !important; background: #1a0028 !important; color: #cc88ff !important; }
     input.wide-text { width: 200px; }
 
     /* Select dropdowns */
@@ -259,8 +263,8 @@
     /* Section info note */
     .section-info {
       text-align: center;
-      color: #777;
-      font-size: 0.9rem;
+      color: #bbb;
+      font-size: 1rem;
       margin-bottom: 10px;
       font-style: italic;
     }
@@ -445,8 +449,8 @@
     /* SPI info row */
     .spi-info {
       text-align: center;
-      color: #888;
-      font-size: 0.85rem;
+      color: #bbb;
+      font-size: 0.95rem;
       margin-bottom: 8px;
     }
 
@@ -455,7 +459,7 @@
       background: #000;
       color: #ccc;
       font-family: 'Courier New', monospace;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       padding: 16px;
       border-radius: 8px;
       margin: 0;

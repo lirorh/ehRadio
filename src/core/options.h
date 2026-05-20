@@ -195,13 +195,15 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define BITRATE_FULL true // display bitrate badge
 #endif
 
-/* Use #define #BIG_BOOT_LOGO with 480x320 displays if you want a bigger boot logo */
-#ifdef BIG_BOOT_LOGO
-  #if (DSP_MODEL!=DSP_ST7796 && DSP_MODEL!=DSP_ILI9488 && DSP_MODEL!=DSP_ILI9486)
-    #warning Your display may handle BIG_BOOT_LOGO badly!
+/* Use #define BIG_BOOT_LOGO with 480x320 displays if you want a bigger boot logo */
+
+#if DSP_MODEL==DSP_ST7796 || DSP_MODEL==DSP_ILI9488 || DSP_MODEL!=DSP_ILI9486
+  #ifndef BIG_BOOT_LOGO
+    #if defined(CONFIG_IDF_TARGET_ESP32) // ESP32 is already low on flash size and this is huge
+      #define BIG_BOOT_LOGO true
+    #endif
   #endif
 #endif
-
 
 /* ============================== SPI BUSES AND PINS ============================== */
 
@@ -511,16 +513,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 
 /* --- BUTTONS --- */
-/* First, compatibility with yoRadio defines */
-#ifdef BTN_LEFT
-  #define BTN_PREV BTN_LEFT
-#endif
-#ifdef BTN_CENTER
-  #define BTN_PLAY BTN_CENTER
-#endif
-#ifdef BTN_RIGHT
-  #define BTN_NEXT BTN_RIGHT
-#endif
 /* Useful if you want to apply false to all pullups with one define (otherwise true) */
 #ifdef BTN_INTERNALPULLUP
   #define BTN_PREV_PULLUP BTN_INTERNALPULLUP
@@ -531,8 +523,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define BTN_MODE_PULLUP BTN_INTERNALPULLUP
 #endif
 /* ehRadio Buttons */
-#ifndef BTN_PREV
-  #define BTN_PREV 255
+#ifndef BTN_DOWN
+  #define BTN_DOWN 255
 #endif
 #ifndef BTN_PREV_PULLUP
   #define BTN_PREV_PULLUP true
@@ -543,20 +535,20 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef BTN_PLAY_PULLUP
   #define BTN_PLAY_PULLUP true
 #endif
-#ifndef BTN_NEXT
-  #define BTN_NEXT 255
+#ifndef BTN_UP
+  #define BTN_UP 255
 #endif
 #ifndef BTN_NEXT_PULLUP
   #define BTN_NEXT_PULLUP true
 #endif
-#ifndef BTN_UP
-  #define BTN_UP 255
+#ifndef BTN_PREV
+  #define BTN_PREV 255
 #endif
 #ifndef BTN_UP_PULLUP
   #define BTN_UP_PULLUP true
 #endif
-#ifndef BTN_DOWN
-  #define BTN_DOWN 255
+#ifndef BTN_NEXT
+  #define BTN_NEXT 255
 #endif
 #ifndef BTN_DOWN_PULLUP
   #define BTN_DOWN_PULLUP true

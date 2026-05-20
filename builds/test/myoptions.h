@@ -54,7 +54,7 @@
   #define SD_SPI             'B'
   #define SD_CS              47
   #define ONE_CLICK_SWITCH   true
-  #define BTN_DOWN           0
+  #define BTN_NEXT           0
 #endif
 /* --- SYSTEM OVERRIDES & USER DEFAULTS --- */
 #define LOOP_TASK_STACK_SIZE 16

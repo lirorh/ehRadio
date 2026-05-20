@@ -85,5 +85,11 @@
       { "define": "BTN_MODE_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button" }
     ],
     "lib_deps": "${library.onebutton}"
+  },
+  {
+    "name": "Wake Pin",
+    "pins": [ "WAKE_PIN" ],
+    "info": "The button on this pin can wake the device from deep sleep (re-use a button)",
+    "lib_deps": "${library.onebutton}"
   }
 ]

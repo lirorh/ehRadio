@@ -670,7 +670,7 @@ void Config::bootInfo() {
   BOOTLOG("wifiscanbest:\t%s", store.wifiscanbest?"true":"false");
   BOOTLOG("mqttenable:\t%s", store.mqttenable?"true":"false");
   BOOTLOG("buttons:\tleft=%d, center=%d, right=%d, up=%d, down=%d, mode=%d, pullup=%s", 
-          BTN_PREV, BTN_PLAY, BTN_NEXT, BTN_UP, BTN_DOWN, BTN_MODE);
+          BTN_DOWN, BTN_PLAY, BTN_UP, BTN_PREV, BTN_NEXT, BTN_MODE);
   BOOTLOG("encoders:\tl1=%d, b1=%d, r1=%d, pullup=%s, l2=%d, b2=%d, r2=%d, pullup=%s", 
           ENC_BTNL, ENC_BTNB, ENC_BTNR, ENC_PULLUP?"true":"false", ENC2_BTNL, ENC2_BTNB, ENC2_BTNR, ENC2_PULLUP?"true":"false");
   BOOTLOG("ir:\t\t%d", IR_PIN);

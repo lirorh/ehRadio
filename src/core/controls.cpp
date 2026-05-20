@@ -11,10 +11,10 @@
 #include "utility.h"
 
 
-#define ISPUSHBUTTONS BTN_PREV!=255 || BTN_PLAY!=255 || BTN_NEXT!=255 || ENC_BTNB!=255 || BTN_UP!=255 || BTN_DOWN!=255 || ENC2_BTNB!=255 || BTN_MODE!=255
+#define ISPUSHBUTTONS BTN_DOWN!=255 || BTN_PLAY!=255 || BTN_UP!=255 || ENC_BTNB!=255 || BTN_PREV!=255 || BTN_NEXT!=255 || ENC2_BTNB!=255 || BTN_MODE!=255
 #if ISPUSHBUTTONS
   #include <OneButton.h>
-  OneButton button[] {OneButton(BTN_PREV, true, BTN_PREV_PULLUP), OneButton(BTN_PLAY, true, BTN_PLAY_PULLUP), OneButton(BTN_NEXT, true, BTN_NEXT_PULLUP), OneButton(ENC_BTNB, true, ENC_BTNB_PULLUP), OneButton(BTN_UP, true, BTN_UP_PULLUP), OneButton(BTN_DOWN, true, BTN_DOWN_PULLUP), OneButton(ENC2_BTNB, true, ENC2_BTNB_PULLUP), OneButton(BTN_MODE, true, BTN_MODE_PULLUP)};
+  OneButton button[] {OneButton(BTN_DOWN, true, BTN_PREV_PULLUP), OneButton(BTN_PLAY, true, BTN_PLAY_PULLUP), OneButton(BTN_UP, true, BTN_NEXT_PULLUP), OneButton(ENC_BTNB, true, ENC_BTNB_PULLUP), OneButton(BTN_PREV, true, BTN_UP_PULLUP), OneButton(BTN_NEXT, true, BTN_DOWN_PULLUP), OneButton(ENC2_BTNB, true, ENC2_BTNB_PULLUP), OneButton(BTN_MODE, true, BTN_MODE_PULLUP)};
   constexpr uint8_t nrOfButtons = sizeof(button) / sizeof(button[0]);
 #endif
 
@@ -83,7 +83,7 @@ void Controls::init() {
 
   #if ISPUSHBUTTONS
     for (int i = 0; i < nrOfButtons; i++) {
-      if ((i == 0 && BTN_PREV == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_NEXT == 255) || (i == 3 && ENC_BTNB == 255) || (i == 4 && BTN_UP == 255) || (i == 5 && BTN_DOWN == 255) || (i == 6 && ENC2_BTNB == 255) || (i == 7 && BTN_MODE == 255)) continue;
+      if ((i == 0 && BTN_DOWN == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_UP == 255) || (i == 3 && ENC_BTNB == 255) || (i == 4 && BTN_PREV == 255) || (i == 5 && BTN_NEXT == 255) || (i == 6 && ENC2_BTNB == 255) || (i == 7 && BTN_MODE == 255)) continue;
       button[i].attachClick(btnClickCb, (void*)i);
       button[i].attachDoubleClick(btnDoubleClickCb, (void*)i);
       button[i].attachLongPressStart(btnLongPressStartCb, (void*)i);
@@ -119,7 +119,7 @@ void Controls::loop() {
   #endif
   #if ISPUSHBUTTONS
     for (unsigned i = 0; i < nrOfButtons; i++) {
-      if ((i == 0 && BTN_PREV == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_NEXT == 255) || (i == 3 && ENC_BTNB == 255) || (i == 4 && BTN_UP == 255) || (i == 5 && BTN_DOWN == 255) || (i == 6 && ENC2_BTNB == 255)) continue;
+      if ((i == 0 && BTN_DOWN == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_UP == 255) || (i == 3 && ENC_BTNB == 255) || (i == 4 && BTN_PREV == 255) || (i == 5 && BTN_NEXT == 255) || (i == 6 && ENC2_BTNB == 255)) continue;
       button[i].tick();
       if (lpId >= 0) {
         if (DSP_MODEL == DSP_DUMMY && (lpId == 4 || lpId == 5)) continue;

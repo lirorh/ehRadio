@@ -15,15 +15,15 @@
 Up to 5 buttons can be connected to the device. Three buttons are enough to control it.
 
 Button actions:
-- BTN_PREV\
+- BTN_LEFT\
  click: volume down\
  dblclick: previous station\
  longpress: quick volume down
-- BTN_PLAY\
+- BTN_CENTER\
  click: start/stop playing\
  dblclick: switch SD/WEB mode\
  longpress: toggle between PLAYER/PLAYLIST mode
-- BTN_NEXT\
+- BTN_RIGHT\
  click: volume up\
  dblclick: next station\
  longpress: quick volume up
@@ -46,7 +46,7 @@ You can connect one or two encoders to replace/complete the buttons. One encoder
 - ENCODER1\
  rotate left: (ENC_BTNL) in PLAYER mode - volume down, in PLAYLIST mode - move up\
  rotate right: (ENC_BTNR) in PLAYER mode - volume up, in PLAYLIST mode - move down\
- click, dblclick, longpress: (ENC_BTNB) same as BTN_PLAY
+ click, dblclick, longpress: (ENC_BTNB) same as BTN_CENTER
 - ENCODER2\
  rotate left: (ENC2_BTNL) if not pressed - switch to PLAYLIST mode and move up, if pressed - volume down\
  rotate right: (ENC2_BTNR) if not pressed - switch to PLAYLIST mode and move down, if pressed - volume up\

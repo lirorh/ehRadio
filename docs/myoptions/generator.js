@@ -1081,38 +1081,62 @@ function validateAllPins() {
     return isElementVisible(el);
   });
 
-  // Clear errors
-  allPinInputs.forEach(function(el) { el.classList.remove('pin-error'); });
+  // Clear ALL pin classes
+  allPinInputs.forEach(function(el) {
+    el.classList.remove('pin-error', 'pin-ok', 'pin-dup', 'pin-i2c', 'pin-en');
+  });
 
   var bd = gData.boardData;
   var validPins = bd ? bd.valid_pins : null;
 
-  // Map of value -> [elements] for duplicate detection
+  // Map of value -> [{el, define}] for duplicate detection
   var pinValueMap = {};
   visiblePins.forEach(function(el) {
     var val = parseInt(el.value);
     if (isNaN(val)) return;
-    if (val === -1 || val === 255) return; // these are "unused" sentinels, skip dup check
     if (!pinValueMap[val]) pinValueMap[val] = [];
-    pinValueMap[val].push(el);
+    pinValueMap[val].push({
+      el: el,
+      define: (el.dataset.define || el.dataset.pin || '').toUpperCase()
+    });
   });
 
   visiblePins.forEach(function(el) {
     var val = parseInt(el.value);
+    var define = (el.dataset.define || el.dataset.pin || '').toUpperCase();
+
+    // Blank / empty — no highlight (stays dark)
+    if (el.value.trim() === '') return;
+
+    // NaN — red (invalid number)
     if (isNaN(val)) { el.classList.add('pin-error'); return; }
 
-    // Check valid_pins
-    if (validPins && val !== -1 && val !== 255) {
-      if (!validPins.includes(val)) {
-        el.classList.add('pin-error');
-        return;
-      }
+    // 255 — no highlight (unused sentinel, stays dark)
+    if (val === 255) return;
+
+    // -1 — purple (EN pin)
+    if (val === -1) { el.classList.add('pin-en'); return; }
+
+    // Check valid_pins — red if not in list
+    if (validPins && !validPins.includes(val)) {
+      el.classList.add('pin-error');
+      return;
     }
 
     // Check duplicates
-    if (val !== -1 && val !== 255 && pinValueMap[val] && pinValueMap[val].length > 1) {
-      el.classList.add('pin-error');
+    var group = pinValueMap[val];
+    if (group && group.length > 1) {
+      var isI2c = (define.indexOf('SDA') >= 0 || define.indexOf('SCL') >= 0 || define.indexOf('I2C') >= 0);
+      if (isI2c) {
+        el.classList.add('pin-i2c'); // orange — allowed but warn
+      } else {
+        el.classList.add('pin-dup'); // yellow — error
+      }
+      return;
     }
+
+    // All good — green
+    el.classList.add('pin-ok');
   });
 }
 

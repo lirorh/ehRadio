@@ -5,7 +5,7 @@
     "defines": [
       { "define": "VS1053_SPI", "type": "spi", "comment": "assign VS1053 to SPI bus (if SPI display, don't put on Bus A / if no SPI display, put VS1053 alone on Bus A)" },
       { "define": "VS1053_RST", "type": "pin", "default": -1, "optional": true, "comment": "pin RST is attached to (-1 for EN pin"},
-      { "define": "VS_PATCH_ENABLE", "type": "boolean", "default": false, "comment": "for the 2.5V boards with wrong voltage regulator. See: https://github.com/e2002/yoradio/issues/108}" }
+      { "define": "VS_PATCH_ENABLE", "type": "boolean", "default": false, "comment": "enables FLAC playback but should be false for 2.5V boards with wrong voltage regulator: https://github.com/e2002/yoradio/issues/108}" }
     ],
     "lib_deps": "",
     "build_src_filter": "+<libraries/VS1053_Audio/*>"

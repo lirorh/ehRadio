@@ -15,7 +15,7 @@
 //  Pin  Function
 //  ---  --------
 //  -1   TFT_RST
-//  0    BTN_DOWN
+//  0    BTN_NEXT
 //  1    MUTE_PIN
 //  4    I2S_MCLK
 //  5    I2S_BCLK
@@ -79,7 +79,7 @@
 #define TS_SCL               15
 #define TS_INT               17
 #define TS_RST               18
-#define BTN_DOWN             0
+#define BTN_NEXT             0
 
 /* --- Peripherals and Build Options --- */
 #define RGB_LED_PIN          42
@@ -98,7 +98,7 @@
 #define SHOW_VU_METER        true
 #define SMART_START          true
 #define SNTP_1               "lt.ntp.pool.org"
-#define SNTP_2               "ntp.pool.org"
+#define SNTP_2               "pool.ntp.org"
 #define VOLUME_STEPS         5
 #define WEATHER_METRIC       false
 #define WEATHER_LAT          "55.721924" /* latitude */

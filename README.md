@@ -102,12 +102,17 @@ More work remains to be done and the `Feature Freeze` will remain in place at le
 
 I can't 100% confirm this, but I am pretty sure all devices built for other ESP-based radio projects will run ehRadio, as long as the hardware
 is supported (and even if it isn't).  Not all radios built for ehRadio will run other firmwares.
-The combination of an SPI display with a VS1053 is the type that would be difficult to run yoRadio or ESP32-RadioV2.
+The combination of an SPI display with a VS1053 is the type that would be difficult to run yoRadio or ESP32-RadioV2 on an ESP32-S3 (but may be fine on ESP32).
 That said, as contributers add their configurations, more than likely, they will continue to use "standard" pins and parts with radios designed
 from yoRadio or ESP32-RadioV2 plans.  Devices that have the SPI Display & VS1053 will be marked, so as to keep newbies on track...?
 
 Here will be some sketches and helpful hints to building one of the "prebuilt" firmwares as available in the Releases and the
 [online flasher](https://trip5.github.io/ehRadio/firmware.html).
+
+If you don't want to mess around with the code, already have a good idea on how the hardware works, and would just like to use a prebuilt binary,
+check out the [Releases](https://github.com/trip5/ehRadio/releases/) and click on a link to open the generator with that binary's profile,
+which includes hardware needed, pins to connect, and more.  Note that for inputs and peripherals, you can just nevermind the hardware as the radio
+will still function perfectly without it... just your menu system will show things that don't exist.
 
 ### Trip5's Radios
 
@@ -179,7 +184,7 @@ I will add a note here that although I do use AI-assisted coding, I am not a "vi
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.05.20x | Some of the `BTN_` macros were named wrong, `ENC_` macros renamed, generator slightly updated too, other fixes to `options.h` (no release needed) |
+| 2026.05.20 | `Feature Freeze` Mostly fixes to `options.h`: some `BTN_` macros named wrong, `ENC_` macros renamed, generator updated, other fixes |
 | 2026.05.19 | `Feature Freeze` This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
 | 2026.05.08 | `Feature Freeze` SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
 | 2026.04.09 | `Feature Freeze` major and minor changes to structure, aggressive reconnect to wi-fi |

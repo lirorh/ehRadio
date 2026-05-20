@@ -12,124 +12,67 @@
 
 ehRadio runs on an ESP32 to play Internet radio streams. 
 
-An radio may be built using an ESP32, an audio decoder, a display, and some inputs.
+A radio may be built using an ESP32, an audio decoder, a display, and some inputs.
 I prefer to build with ESP32-S3 boards but ESP32 or ESP32-C3 boards are possible, too.
 
 To develop, I prefer [VS Code](https://code.visualstudio.com/) but you may try other IDEs.
 I compiled using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well
 Some libraries may only be available from [Platformio Registry](https://registry.platformio.org/).
 
+If you have zero desire to compile but still want to build a radio?  That's OK, too.
+You can check out the [Built ehRadios](#buil)
+
 ehRadio is a fork of [ёRadio](https://github.com/e2002/yoradio/) / yoRadio v0.9.533.
 Read the [A History of ESP Radios](#a-history-of-esp-radios).
 
 ## Features
+
+
+ehRadio is focused on increasing usability for a non-builder / non-coder while at the same time
+stressing future-compatibility for builders (starting with the ESP32-S3 and future ESP boards).
 
 ehRadio inherits a lot from ёRadio, so here's some similarities and differences,
 especially in terms of how they are used and how they are built.
 
 ### Features For Users
 
-<table><tr valign="top"><td align="left" width="50%">
-
-#### ёRadio
-
-  - Physical controls (decided by builder)
-    - up to 2 rotaries
-    - up to 6 buttons
-    - touchscreen control (very basic)
-      - Nextion uses advanced control
-  - WebUI interface
-    - control playback
-    - edit/import playlists
-    - change certain settings
-  - MQTT, Telnet, HTTP
-    - mostly used for playback
-    - some settings can be changed
-  - Home Assistant integration (through MQTT)
-
-</td><td align="left" width="50%">
-
-#### ehRadio
-
-  - Includes all ёRadio physical controls
-    - Nextion support is incomplete or broken
-  - WebUI very similar but with added functionality
-    - Radio Station search
-      - uses Radio-browser API
-      - auto-updates server list
-    - Curated lists
-      - can download/merge/preview other playlists
-    - Mobile device screen optimization
-  - eh Discovery Protocol
-    - mobile app can be used to quickly open the WebUI
-  - Proper time zone support
-    - Daylight times
-    - Auto-updates the list
-  - Web Flasher
-    - improv used to set Wifi
-  - Firmware can be OTA updated
-    - new binary downloaded and applied automatically
-    - will automatically update data/www files
-    - WebUI automatically reloads
-  - Unified commandhandler
-    - WebUI, MQTT, Telnet, HTTP commands same
-
-</td></tr></table>
+| ёRadio | ehRadio |
+| ------ | --------|
+| Physical controls (decided by builder)        | Uses ёRadio control architecture |
+| - up to 2 rotaries and 6 buttons              | - same|
+| - touchscreen control (basic swipes and taps) | - same | 
+| - Nextion uses advanced control               | - Nextion support is incomplete or broken |
+| MQTT, Telnet, HTTP                            | MQTT, Telnet, HTTP |
+| - mostly used for playback                    | - use the same commands as WebUI (!) |
+| Home Assistant integration (through MQTT)     | Home Assistant integration (through MQTT) - improved a bit |
+| WebUI interface, includes control playback    | WebUI similar but with added functionality |
+| - edit/import/export playlists                | - edit/import/export/merge playlists (works on mobile too) |
+| - change certain settings                     | - change many settings |
+|                                               | Radio Station search using Radio-browser API | 
+|                                               | Curated lists can download/merge/preview other playlists |
 
 ### Features For Builders
 
-<table><tr valign="top"><td align="left" width="50%">
-
-#### ёRadio
-
-  - Primarily focused on ESP32
-    - 4MB of flash is fine
-    - ESP-WROVER has PSRAM, works better
-    - ESP32-WROOM has no PSRAM but still functions
-    - Support for ESP32-S3
-    - ESP32-C3
-  - Multiple audio decoders available
-    - I2S PCM decoder
-    - VS1053 (or VS1003)
-    - ESP32's builtin DAC
-  - multiple displays
-    - see `options.h` for a full list
-  - SPI buses use default pins
-    - SPI display and VS1053 must use VSPI or HSPI
-      - VSPI and HSPI are in board definition files
-    - ESP32 defines VSPI/SPI3 bus or HSPI/SPI2 bus
-    - ESP32-S3 defines FSPI/SPI2 (HSPI in `myoptions.h`)
-      - board defines do not have a second bus
-      - no way to use VS1053 and SPI display together
-    - ESP32-C3 defines FSPI/SPI2
-      - this chip can't have second bus anyways
-    - SD and touchscreen can use any pins
-      - no enforcement for bus limit
-
-</td><td align="left" width="50%">
-
-#### ehRadio
-
-  - Primarily focused on ESP32-S3
-    - 8MB flash recommended
-      - 4MB may work but usability features will break
-    - ESP-WROVER with PSRAM probably supported but untested
-    - ESP32-WROOM likely doesn't work
-    - Support for ESP32-C3 but untested
-  - Multiple audio decoders available
-    - I2S and VS1053 updated (for higher bitrate streams)
-  - same display architecture
-    - supported displays same as of ёRadio v0.9.533
-    - ёRadio and ehRadio display configs should be compatible with each other
-  - Almost all user default settings can be set in `myoptions.h`
-  - SPI buses can use custom pins
-    - define the bus pins in `myoptions.h`
-      - needed for boards that don't have board definitions
-      - fixes ESP32-S3 problem with SPI display and VS1053
-    - SPI display will always use Bus A
-    - other devices can be assigned to Bus A or B
-
-</td></tr></table>
+| ёRadio | ehRadio |
+| ------ | --------|
+| Primarily focused on ESP32                           | Primarily focused on ESP32-S3 |
+| - 4MB of flash is fine                               | - 8MB flash recommended, 4MB certain features will break (until fixed) |
+| - ESP-WROVER has PSRAM, works better                 | - ESP-WROVER with PSRAM probably supported but untested |
+| - ESP32-WROOM has no PSRAM but still functions       | - ESP32-WROOM likely doesn't work at all |  
+| - Some support for ESP32-S3 and ESP32-C3             | - ESP32-S3 well-tested, ESP32-C3 untested |
+| Multiple audio decoders supported                    | Multiple audio decoders supported (based on ёRadio) | 
+| - I2S PCM decoder                                    | - I2S and VS1053 updated (for higher bitrate streams) |
+| - VS1053 (or VS1003)                                 | - ES8311 works (a common codec on ESP32-S3 display boards) |
+| - ESP32's builtin DAC                                | - Future updates will support more by using external libraries |
+| Multiple displays                                    | Uses 'ёRadio' display architecture |
+| - see `options.h` for a full list                    | - ёRadio and ehRadio display configs should be compatible with each other |
+| SPI buses use default pins                           | SPI buses can use custom pins |
+| - SPI display and VS1053 can only use VSPI or HSPI   | - non-standard bus pins may be assigned to Bus A or B |
+| - VSPI and HSPI are in board definition files        | - bus pins defined in `myoptions.h` |
+| - ESP32 defines VSPI/SPI3 bus or HSPI/SPI2 bus       | - it is still recommended to use default pins wherever possible |
+| - ESP32-S3 defines FSPI/SPI2 but no second bus       | - ESP32-S3's FSPI pins should be assigned as Bus A but any pins can be assigned to Bus B  |
+| - no way to use VS1053 and SPI display together      | - Recommended: SPI display on A, VS1053 and other devices on B OR VS1053 on A and others on B |
+| Most default settings hardcoded                      | Almost all user default settings can be set in `myoptions.h` |
 
 ---
 
@@ -139,7 +82,7 @@ especially in terms of how they are used and how they are built.
 
 [myoptions Generator](https://trip5.github.io/ehRadio/myoptions/generator.html)
 
-Many more tools are available in the codebase as well.
+Many more tools for tinkering with the code are available in the codebase as well.
 
 ---
 
@@ -149,9 +92,26 @@ I realize documentation is a little sparse right now.  I'm working on it.
 
 A lot of build options and comments and notes are actually in `options.h` and in various files.
 
-As of `2026.05.18` I've done a lot of work to clean up the codebase and organize it.
+As of `2026.05.19` I've done a lot of work to clean up the codebase and organize it.
 
 More work remains to be done and the `Feature Freeze` will remain in place at least until the "de-fork" of the audio libraries is finished.
+
+---
+
+## Radio Creations
+
+I can't 100% confirm this, but I am pretty sure all devices built for other ESP-based radio projects will run ehRadio, as long as the hardware
+is supported (and even if it isn't).  Not all radios built for ehRadio will run other firmwares.
+The combination of an SPI display with a VS1053 is the type that would be difficult to run yoRadio or ESP32-RadioV2.
+That said, as contributers add their configurations, more than likely, they will continue to use "standard" pins and parts with radios designed
+from yoRadio or ESP32-RadioV2 plans.  Devices that have the SPI Display & VS1053 will be marked, so as to keep newbies on track...?
+
+Here will be some sketches and helpful hints to building one of the "prebuilt" firmwares as available in the Releases and the
+[online flasher](https://trip5.github.io/ehRadio/firmware.html).
+
+### Trip5's Radios
+
+...coming soon...
 
 ---
 
@@ -202,12 +162,12 @@ That PR started [June 13, 2025](https://github.com/e2002/yoradio/pull/184) was a
 
 In retrospect, proposing thousands of lines of changes was rude and unrealistic.  After some thought, ehRadio was officially forked August 10, 2025.
 
-As of 2026.05.08, ehRadio uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.512m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
+ehRadio currently uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.512m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
 likely mostly from schreibfaul1's library [3.1.0 January 7, 2025](https://github.com/schreibfaul1/ESP32-audioI2S/releases/tag/3.1.0).
 ehRadio also currently uses the `ESP32-vs1053_ext` library from Maleksm's ёRadio mod v0.9.512m, likely mostly from schreibfaul1's [final version](https://github.com/schreibfaul1/ESP32-vs1053_ext).
 These libraries are so intertwined with the codebase that it may be impossible to migrate to newer versions, but... I will try.
 
-For that and other major needed changes to the codebase, I maintain [code-issues.md](/.github/code-issues.md), which may be a messy file to look at, depending on how these efforts are going.
+For that and other major needed changes to the codebase, I maintain a `code-issues.md` file which may be a messy file to look at, depending on how these efforts are going.
 
 I will add a note here that although I do use AI-assisted coding, I am not a "vibe-coder" by any measure.
 
@@ -219,10 +179,10 @@ I will add a note here that although I do use AI-assisted coding, I am not a "vi
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.05.19 | This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
-| 2026.05.08 | SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
-| 2026.04.09 | major and minor changes to structure, aggressive reconnect to wi-fi |
-| 2026.03.30 | feature freeze begins, OTA page reload graceful, 3 javascript files combined to 1 (`script2.js`) |
+| 2026.05.19 | `Feature Freeze` This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
+| 2026.05.08 | `Feature Freeze` SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
+| 2026.04.09 | `Feature Freeze` major and minor changes to structure, aggressive reconnect to wi-fi |
+| 2026.03.30 | `Feature Freeze` begins, OTA page reload graceful, 3 javascript files combined to 1 (`script2.js`) |
 | 2026.03.22 | ehDP added, playlist editor grabbable fixed |
 | 2026.03.18 | multiple weather providers, screensaver mode fixed, https connection improved, w/Kasperaitis: multi-locales in display and WebUI, Kasperaitis: battery handling |
 | 2026.02.18 | WebUI improved, Curated Lists, default playlist on first boot, Smart start fixed, SPIFFS cleanup, Kasperaitis: battery monitor and telnet formatting |

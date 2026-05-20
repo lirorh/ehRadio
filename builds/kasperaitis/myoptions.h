@@ -10,6 +10,7 @@
 // Display: ILI9341 (SPI 320x240 TFT)
 // Audio Decoder: ES8311 (PCM I2S Mono Decoder)
 // SPI Bus A: ILI9341 (SPI 320x240 TFT)
+// SPI Bus B: SD Card Reader
 //
 //  Pin  Function
 //  ---  --------
@@ -34,12 +35,12 @@
 //  42   RGB_LED_PIN
 //  45   BRIGHTNESS_PIN
 //  46   TFT_DC
+//  47   SD_CS
 
 
 /* --- Firmware File & Board --- */
 #define FIRMWARE "kasperaitis_es3c28p.bin" // "esp32_s3_n16r8", "ESP32-S3", "Kasperaitis"
 #define FIRMWARE_NAME "ES3C28P" // "https://www.lcdwiki.com/2.8inch_ESP32-S3_Display"
-
 
 /* --- SPI Bus Pins --- */
 #define SPIA_SCK             12
@@ -83,6 +84,8 @@
 /* --- Peripherals and Build Options --- */
 #define RGB_LED_PIN          42
 #define MQTT_ENABLE
+#define SD_CS                47
+#define SD_SPI               'B'       /* assign SD to SPI bus */
 
 /* --- Locale --- */
 #define DSP_LANGUAGE_lt_LT
@@ -94,9 +97,10 @@
 #define SHOW_AUDIO_INFO      true
 #define SHOW_VU_METER        true
 #define SMART_START          true
-#define SNTP_1               "lt.pool.org"
+#define SNTP_1               "lt.ntp.pool.org"
 #define SNTP_2               "ntp.pool.org"
 #define VOLUME_STEPS         5
+#define WEATHER_METRIC       false
 #define WEATHER_LAT          "55.721924" /* latitude */
 #define WEATHER_LON          "21.117868" /* longitude */
 #define WIFI_SCAN_BEST_RSSI  true
@@ -104,19 +108,5 @@
 /* --- Time Zone --- */
 #define TIMEZONE_NAME        "Europe/Vilnius"
 #define TIMEZONE_POSIX       "EET-2EEST,M3.5.0/3,M10.5.0/4"
-
-/* --- Battery --- */
-#define BATTERY_PIN          9         /* GPIO9: ADC pin for battery voltage */
-//#define BATTERY_CHARGE_PIN 255         /* No charging status GPIO exposed (TP4054 CHRG pin not connected on ES3C28P) */
-
-#define BATTERY_DIVIDER_RATIO 2.0      /* 100k + 100k voltage divider = 1:2 ratio */
-#define BATTERY_ADC_REF_MV    3438     /* ESP32-S3 ADC reference voltage (calibrated EL103565 3000mAh 11.1Wh) */
-#define BATTERY_UPDATE_INTERVAL 60000  /* Update every 60 seconds */
-
-//#define BATTERY_DEBUG                /* Uncomment to enable debug output */
-#define BATTERY_CHARGE_INFER_HOLD_SAMPLES 3 /* number of measurements (samples) to hold (e.g., 3 readings at BATTERY_UPDATE_INTERVAL) */
-#define BATTERY_IMMEDIATE_PERCENT_THRESHOLD 20 /* percent */
-#define BATTERY_CANDIDATE_PERCENT_DELTA 1 /* percent */
-#define BATTERY_SUSTAINED_PERCENT_WINDOW_THRESHOLD 0 /* percent over hold window */
 
 #endif // myoptions_h

@@ -187,57 +187,15 @@
     "lib_deps": "${library.ssd1327}"
   },
   {
-    "name": "ST7735 BLACKTAB (SPI 160x128 TFT)",
-    "type": "SPI",
-    "define": "DSP_MODEL DSP_ST7735",
-    "pins": [ "TFT_CS", "TFT_DC" ],
-    "defines": [
-      { "define": "DTYPE INITR_BLACKTAB", "type": "flag", "optional": false },
-      { "define": "DSP_INVERT_QUIRK", "type": "boolean", "default": false, "optional": true, "comment": "fixes display inversion quirk (very common)" }
-    ],
-    "lib_deps": "${library.st7735}"
-  },
-  {
-    "name": "ST7735 GREENTAB (SPI 160x128 TFT)",
+    "name": "ST7735 (SPI 160x128 TFT)",
     "info": "",
     "type": "SPI",
     "define": "DSP_MODEL DSP_ST7735",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
-      { "define": "DTYPE INITR_GREENTAB", "type": "flag", "optional": false },
-      { "define": "DSP_INVERT_QUIRK", "type": "boolean", "default": false, "optional": true, "comment": "fixes display inversion quirk (very common)" }
-    ],
-    "lib_deps": "${library.st7735}"
-  },
-  {
-    "name": "ST7735 144GREENTAB (SPI 128x128 TFT)",
-    "type": "SPI",
-    "define": "DSP_MODEL DSP_ST7735",
-    "pins": [ "TFT_CS", "TFT_DC" ],
-    "defines": [
-      { "define": "DTYPE INITR_144GREENTAB", "type": "flag", "optional": false },
-      { "define": "DSP_INVERT_QUIRK", "type": "boolean", "default": false, "optional": true, "comment": "fixes display inversion quirk (very common)" }
-    ],
-    "lib_deps": "${library.st7735}"
-  },
-  {
-    "name": "ST7735 MINI160x80 (SPI 160x80 TFT)",
-    "type": "SPI",
-    "define": "DSP_MODEL DSP_ST7735",
-    "pins": [ "TFT_CS", "TFT_DC" ],
-    "defines": [
-      { "define": "DTYPE INITR_MINI160x80", "type": "flag", "optional": false },
-      { "define": "DSP_INVERT_QUIRK", "type": "boolean", "default": false, "optional": true, "comment": "fixes display inversion quirk (very common)" }
-    ],
-    "lib_deps": "${library.st7735}"
-  },
-  {
-    "name": "ST7735 REDTAB (SPI 160x128 TFT)",
-    "type": "SPI",
-    "define": "DSP_MODEL DSP_ST7735",
-    "pins": [ "TFT_CS", "TFT_DC" ],
-    "defines": [
-      { "define": "DTYPE INITR_REDTAB", "type": "flag", "optional": false },
+      { "define": "DTYPE", "type": "enum", "options": ["INITR_BLACKTAB", "INITR_GREENTAB", "INITR_REDTAB", "INITR_144GREENTAB", "INITR_MINI160x80"], "optional": true, "comment": "INITR_BLACKTAB is default if omitted, INITR_GREENTAB or INITR_REDTAB may work. INITR_144GREENTAB is 128x128 and INITR_MINI160x80 is 160x80." },
+      { "define": "BRIGHTNESS_PIN", "type": "pin", "default": 255, "optional": true, "comment": "pin that controls brightness / backlight (255 = unused)" },
+      { "define": "DSP_DIMMING_ENABLED", "type": "boolean", "default": true, "comment": "enable screen dimming (depends on brightness pin)"},
       { "define": "DSP_INVERT_QUIRK", "type": "boolean", "default": false, "optional": true, "comment": "fixes display inversion quirk (very common)" }
     ],
     "lib_deps": "${library.st7735}"
@@ -258,7 +216,7 @@
   {
     "name": "ST7789_76 (SPI 284x76 TFT)",
     "type": "SPI",
-    "define": "DSP_MODEL DSP_ST7789",
+    "define": "DSP_MODEL DSP_ST7789_76",
     "pins": [ "TFT_CS", "TFT_DC" ],
     "defines": [
       { "define": "TFT_RST", "type": "pin", "default": -1, "optional": true, "comment": "pin RST is attached to (-1 = EN pin)" },

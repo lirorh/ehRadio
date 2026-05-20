@@ -10,31 +10,36 @@
 // Display: ILI9341 (SPI 320x240 TFT)
 // Audio Decoder: ES8311 (PCM I2S Mono Decoder)
 // SPI Bus A: ILI9341 (SPI 320x240 TFT)
+// SPI Bus B: SD Card Reader
 //
 //  Pin  Function
 //  ---  --------
+//  -1   TFT_RST
 //  0    BTN_DOWN
-//  1    I2S_DIN
+//  1    MUTE_PIN
 //  4    I2S_MCLK
 //  5    I2S_BCLK
+//  6    I2S_DIN
 //  7    I2S_LRC
 //  8    I2S_DOUT
 //  10   TFT_CS
 //  11   SPIA_MOSI
 //  12   SPIA_SCK
-//  15   TS_SCL
-//  16   TS_SDA
+//  15   ES8311_I2C_SCL + TS_SCL
+//  16   ES8311_I2C_SDA + TS_SDA
 //  17   TS_INT
 //  18   TS_RST
 //  38   SPIB_SCK
 //  39   SPIB_MISO
 //  40   SPIB_MOSI
 //  42   RGB_LED_PIN
+//  45   BRIGHTNESS_PIN
 //  46   TFT_DC
+//  47   SD_CS
 
 
 /* --- Firmware File & Board --- */
-#define FIRMWARE_NAME        "My ehRadio" /* your ehRadio's name */
+#define FIRMWARE_NAME        "es3c28p" /* your ehRadio's name */
 
 /* --- SPI Bus Pins --- */
 #define SPIA_SCK             12
@@ -49,6 +54,7 @@
 #define TFT_CS               10
 #define TFT_DC               46
 #define TFT_RST              -1        /* pin RST is attached to (-1 = EN pin) */
+#define BRIGHTNESS_PIN       45        /* pin that controls brightness / backlight (255 = unused) */
 #define DSP_DIMMING_ENABLED  true      /* enable screen dimming (depends on brightness pin) */
 #define DSP_INVERT_QUIRK     true      /* fixes display inversion quirk (very common) */
 
@@ -57,8 +63,10 @@
 #define I2S_BCLK             5
 #define I2S_LRC              7
 #define I2S_DOUT             8
-#define I2S_DIN              1
-#define MUTE_PIN             255       /* pin MUTE is attached to (255 for unused) */
+#define I2S_DIN              6
+#define MUTE_PIN             1         /* pin MUTE is attached to (255 for unused) */
+#define ES8311_I2C_SDA       16        /* may fix volume control on boot */
+#define ES8311_I2C_SCL       15        /* may fix volume control on boot */
 #define USE_ES8311
 #define MUTE_VAL             HIGH      /* enables turning off audio amplifier */
 #define ES8311_MAX_I2S       180       /* maximum I2S value to allow when mapping to ES8311 codec (0..254) */
@@ -75,6 +83,8 @@
 /* --- Peripherals and Build Options --- */
 #define RGB_LED_PIN          42
 #define MQTT_ENABLE
+#define SD_CS                47
+#define SD_SPI               'B'       /* assign SD to SPI bus */
 
 /* --- Locale --- */
 #define DSP_LANGUAGE_lt_LT
@@ -86,9 +96,10 @@
 #define SHOW_AUDIO_INFO      true
 #define SHOW_VU_METER        true
 #define SMART_START          true
-#define SNTP_1               "lt.pool.org"
-#define SNTP_2               "0.lt.pool.org"
+#define SNTP_1               "lt.ntp.pool.org"
+#define SNTP_2               "ntp.pool.org"
 #define VOLUME_STEPS         5
+#define WEATHER_METRIC       false
 #define WEATHER_LAT          "55.721924" /* latitude */
 #define WEATHER_LON          "21.117868" /* longitude */
 #define WIFI_SCAN_BEST_RSSI  true

@@ -1012,8 +1012,12 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef GITHUBURL
   #define GITHUBURL "https://github.com/trip5/ehradio" // used by the ESPFileUpdater in BrowserClient (and in URLs below)
 #endif
-#ifdef FIRMWARE // this is the filename.bin online
- // #define FIRMWARE_NAME "Trip5's Big Screen Radio" optional name of the firmware (appears only in eh Device Protocol and will appear as the filename (without .bin) by default if not defined)
+
+#ifdef ENABLE_UPDATER // if this is defined, enables online updates
+  #ifndef FIRMWARE // this is the filename.bin online
+    #error ENABLE_UPDATER defined but FIRMWARE is not
+  #endif
+  // #define FIRMWARE_NAME "Trip5's Big Screen Radio" optional name of the firmware (appears only in eh Device Protocol and will appear as the filename (without .bin) by default if not defined)
   #ifndef FILESURL
     #define FILESURL GITHUBURL "/releases/download/" RADIOVERSION "/" // + FILE for SPIFFS files (this version)
   #endif
@@ -1030,13 +1034,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define CHECKUPDATEURL_TIME "1 day"
   #endif
 #else
-  #undef FILESURL
-  #undef UPDATEURL
-  #undef CHECKUPDATEURL
-  #undef VERSIONSTRING
-  #undef CHECKUPDATEURL_TIME
-#endif
-#ifdef DISABLE_UPDATER // if this is defined, disables online updates
   #undef FILESURL
   #undef UPDATEURL
   #undef CHECKUPDATEURL

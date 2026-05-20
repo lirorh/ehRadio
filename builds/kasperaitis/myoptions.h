@@ -41,6 +41,7 @@
 /* --- Firmware File & Board --- */
 #define FIRMWARE "kasperaitis_es3c28p.bin" // "esp32_s3_n16r8", "ESP32-S3", "Kasperaitis"
 #define FIRMWARE_NAME "ES3C28P" // "https://www.lcdwiki.com/2.8inch_ESP32-S3_Display"
+#define ENABLE_UPDATER // enables OTA updates
 
 /* --- SPI Bus Pins --- */
 #define SPIA_SCK             12

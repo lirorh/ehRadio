@@ -6,7 +6,7 @@
 /*        ************************************************************************      */
 /*        . . .  CHECK options.h for full options, examples, and overrides   . . .      */
 
-// ES3C28P (ESP32-S3-N16R8)
+// ESP32-S3 ES3C28P (ESP32-S3-N16R8)
 // Display: ILI9341 (SPI 320x240 TFT)
 // Audio Decoder: ES8311 (PCM I2S Mono Decoder)
 // SPI Bus A: ILI9341 (SPI 320x240 TFT)
@@ -96,10 +96,9 @@
 #define SHOW_AUDIO_INFO      true
 #define SHOW_VU_METER        true
 #define SMART_START          true
-#define SNTP_1               "lt.ntp.pool.org"
+#define SNTP_1               "lt.pool.ntp.org"
 #define SNTP_2               "pool.ntp.org"
 #define VOLUME_STEPS         5
-#define WEATHER_METRIC       false
 #define WEATHER_LAT          "55.721924" /* latitude */
 #define WEATHER_LON          "21.117868" /* longitude */
 #define WIFI_SCAN_BEST_RSSI  true

@@ -1,7 +1,6 @@
 [
   {
     "name": "ESP32-S3-DevKitC-1 N16R4 (16MB Flash 4MB PSRAM)",
-    "info": "The standard Espressif ESP32-S3 Dev Board",
     "env": "esp32_s3_n16r4",
     "board": "esp32-s3-devkitc-1",
     "build_flags": "-DBOARD_HAS_PSRAM -DARDUINO_USB_MODE=1",
@@ -20,6 +19,7 @@
     "left_pins": [ "3V3", "3V3", "-1", "4", "5", "6", "7", "15", "16", "17", "18", "8", "3", "46", "9", "10", "11", "12", "13", "14", "5V", "G"],
     "right_pins": [ "G", "43", "44", "1", "2", "42", "41", "40", "39", "38", "37", "36", "35", "0", "45", "48", "47", "21", "20", "19", "G", "G" ],
     "image": "ESP32-S3-DevKitC-1.jpg",
+    "info": "The standard Espressif ESP32-S3 Dev Board",
     "url": "https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/index.html"
   }
 ]

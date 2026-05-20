@@ -4,6 +4,10 @@
     "define": "ONE_CLICK_SWITCH", "type": "boolean", "default": false, "optional": true
   },
   {
+    "name": "Playlist Default URL (downloaded on fresh install)",
+    "define": "PLAYLIST_DEFAULT_URL", "type": "text", "optional": true
+  },
+  {
     "name": "Screen Saver When Playing",
     "define": "SS_PLAYING", "type": "boolean", "default": false, "optional": true
   },
@@ -47,7 +51,7 @@
     "name": "Weather - Longitude",
     "define": "WEATHER_LON", "type": "text", "optional": true, "comment": "longitude"
   },
-{
+  {
     "name": "Wifi Scan for Best RSSI",
     "define": "WIFI_SCAN_BEST_RSSI", "type": "boolean", "default": false, "optional": true
   }

@@ -239,10 +239,7 @@ void Controls::irLoop() {
           if (config.ircodes.irVals[target][j]==irResults.value) {
             if (network.status != CONNECTED && network.status!=SDREADY && target!=IR_AST) return;
             if (target!=IR_AST && display.mode()==LOST) return;
-            if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
-              display.putRequest(NEWMODE, PLAYER);
-              return;
-            }
+            if (screenSaverExit()) return;
             switch (target) {
               case IR_PLAY: {
                   irBlink();
@@ -397,6 +394,20 @@ boolean Controls::checklpdelay(int m, unsigned long &tstamp) {
   }
 }
 
+bool Controls::screenSaverExit() {
+  if (display.mode() != SCREENSAVER && display.mode() != SCREENBLANK) {
+    return false;
+  }
+  display.resetQueue();
+  config.screensaverTicks = 0;
+  config.screensaverPlayingTicks = 0;
+  display.putRequest(NEWMODE, PLAYER);
+  #ifdef DSP_LCD
+    delay(200);
+  #endif
+  return true;
+}
+
 void Controls::onBtnDuringLongPress(int id) {
   if (network.status != CONNECTED && network.status!=SDREADY) return;
   if (checklpdelay(BTN_LONGPRESS_LOOP_DELAY, lpDelay)) {
@@ -428,8 +439,7 @@ void Controls::onBtnDuringLongPress(int id) {
 }
 
 void Controls::controlsEvent(bool toRight, int8_t volDelta) {
-  if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
-    display.putRequest(NEWMODE, PLAYER);
+  if (screenSaverExit()) {
     return;  // Don't perform action, just exit screensaver
   }
   if (display.mode() == NUMBERS) {
@@ -461,6 +471,7 @@ void Controls::controlsEvent(bool toRight, int8_t volDelta) {
 }
 
 void Controls::onBtnClick(int id) {
+  if (screenSaverExit()) return;
   bool passBnCenter = (controlEvt_e)id==EVT_BTNCENTER || (controlEvt_e)id==EVT_ENCBTNB || (controlEvt_e)id==EVT_ENC2BTNB;
   controlEvt_e btnid = static_cast<controlEvt_e>(id);
   if (network.status != CONNECTED && network.status!=SDREADY && (controlEvt_e)id!=EVT_BTNMODE && !passBnCenter) return;
@@ -478,12 +489,6 @@ void Controls::onBtnClick(int id) {
         }
         if (display.mode() == PLAYER) {
           player.toggle();
-        }
-        if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
-          display.putRequest(NEWMODE, PLAYER);
-          #ifdef DSP_LCD
-            delay(200);
-          #endif
         }
         if (display.mode() == STATIONS) {
           display.putRequest(NEWMODE, PLAYER);
@@ -506,14 +511,6 @@ void Controls::onBtnClick(int id) {
       }
     case EVT_BTNUP:
     case EVT_BTNDOWN: {
-        // Exit screensaver on first press (don't perform action if skipPlaylistUpDown enabled)
-        if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
-          display.putRequest(NEWMODE, PLAYER);
-          return;  // first press only exits screensaver
-          #ifdef DSP_LCD
-            delay(200); // brief delay for mode change
-          #endif
-        }
         if (DSP_MODEL == DSP_DUMMY) {
           if (id == EVT_BTNUP) {
             player.next();
@@ -549,10 +546,7 @@ void Controls::onBtnClick(int id) {
 }
 
 void Controls::onBtnDoubleClick(int id) {
-  if (display.mode() == SCREENSAVER || display.mode() == SCREENBLANK) {
-    display.putRequest(NEWMODE, PLAYER);
-    return;
-  }
+  if (screenSaverExit()) return;
   switch ((controlEvt_e)id) {
     case EVT_BTNLEFT: {
         if (display.mode() != PLAYER) return;

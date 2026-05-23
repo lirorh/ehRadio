@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
-#include "fonts/bootlogo62x40.h"
+#include "bootlogo/62x40.h"
 #include "fonts/dsfont35.h"
 
 typedef GFXcanvas16 Canvas;

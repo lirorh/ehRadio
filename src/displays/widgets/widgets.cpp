@@ -11,6 +11,15 @@
 #include "../../core/player.h"    //  for VU widget
 #include "../../core/utility.h"
 
+#if CLOCKFONT == YO_MONO // no special character but an 8 on a 7-segment display is the same
+  #define CLOCKGLOW_STRING "88:88"
+#elif CLOCKFONT == YO_CLASSIC // this fixed-width font will produce a bad effect
+    #undef CLOCKGLOW
+    #define CLOCKGLOW false
+#else //if CLOCKFONT == CHUNKY6_PX || CLOCKFONT == CHUNKY6
+  #define CLOCKGLOW_STRING "//://"
+#endif
+
 /************************
       FILL WIDGET
  ************************/
@@ -346,9 +355,14 @@ void SliderWidget::setValue(uint32_t val) {
 }
 
 void SliderWidget::_drawslider() {
-  uint16_t valwidth = map(_value, 0, _max, 0, _width - _outlined * 2);
-  if (_oldvalwidth == valwidth) return;
-  dsp.fillRect(_config.left + _outlined + min(valwidth, _oldvalwidth), _config.top + _outlined, abs(_oldvalwidth - valwidth), _height - _outlined * 2, _oldvalwidth > valwidth ? _bgcolor : _fgcolor);
+  uint16_t innerWidth = _width - _outlined * 2;
+  uint16_t innerHeight = _height - _outlined * 2;
+  uint32_t clampedValue = (_max == 0) ? 0 : min(_value, _max);
+  uint16_t valwidth = (_max == 0) ? 0 : map(clampedValue, 0, _max, 0, innerWidth);
+  dsp.fillRect(_config.left + _outlined, _config.top + _outlined, innerWidth, innerHeight, _bgcolor);
+  if (valwidth > 0) {
+    dsp.fillRect(_config.left + _outlined, _config.top + _outlined, valwidth, innerHeight, _fgcolor);
+  }
   _oldvalwidth = valwidth;
 }
 
@@ -357,12 +371,11 @@ void SliderWidget::_draw() {
   _clear();
   if(!_active) return;
   if (_outlined) dsp.drawRect(_config.left, _config.top, _width, _height, _oucolor);
-  uint16_t valwidth = map(_value, 0, _max, 0, _width - _outlined * 2);
-  dsp.fillRect(_config.left + _outlined, _config.top + _outlined, valwidth, _height - _outlined * 2, _fgcolor);
+  _drawslider();
 }
 
 void SliderWidget::_clear() {
-//  _oldvalwidth = 0;
+  _oldvalwidth = 0;
   dsp.fillRect(_config.left, _config.top, _width, _height, _bgcolor);
 }
 void SliderWidget::_reset() {
@@ -662,7 +675,7 @@ uint16_t ClockWidget::_top(){
 }
 
 void ClockWidget::_getTimeBounds() {
-  _timewidth = _textWidth(_timebuffer);
+  _timewidth = _textWidth(CLOCKGLOW_STRING);
   uint8_t fs = _superfont>0?_superfont:TIME_SIZE;
   uint16_t rightside = CHARWIDTH * fs * 2; // seconds
   if(_fullclock){
@@ -681,10 +694,10 @@ void ClockWidget::_getTimeBounds() {
       _clockleft = (dsp.width()/2 - _clockwidth/2)+_config.left;
       break;
   }
-  char buf[4];
-  if (config.store.clock12) strftime(buf, 4, "%l", &network.timeinfo);
-  if (!config.store.clock12) strftime(buf, 4, "%H", &network.timeinfo);
-  _dotsleft=_textWidth(buf);
+  _dotsleft = 0;
+  for (const char* p = CLOCKGLOW_STRING; *p && *p != ':'; ++p) {
+    _dotsleft += _charWidth((unsigned char)*p);
+  }
 }
 
 #ifndef DSP_LCD
@@ -706,34 +719,44 @@ void ClockWidget::_getTimeBounds() {
     gfx.setTextSize(Clock_GFXfontPtr==nullptr?TIME_SIZE:1);
     gfx.setFont(Clock_GFXfontPtr);
     bool clockInTitle=!config.isScreensaver && _config.top<_timeheight; //DSP_SSD1306x32
+    uint16_t clockColor = config.isScreensaver ? config.theme.clockss : config.theme.clock;
+    uint16_t clockBgColor = config.isScreensaver ? config.theme.clockbgss : config.theme.clockbg;
+    uint16_t secondsColor = config.isScreensaver ? config.theme.secondsss : config.theme.seconds;
+    uint16_t dowColor = config.isScreensaver ? config.theme.dowss : config.theme.dow;
+    uint16_t dateColor = config.isScreensaver ? config.theme.datess : config.theme.date;
+    bool showFullClockOnScreensaver = !config.isScreensaver || (_fb->ready() && config.store.screensaverFullDateTime);
     if(force){
       _clearClock();
       _getTimeBounds();
       #ifndef DSP_OLED
-        if(CLOCKFONT_MONO) {
-          gfx.setTextColor(config.theme.clockbg, config.theme.background);
+        if(CLOCKGLOW) {
+          gfx.setTextColor(clockBgColor, config.theme.background);
           gfx.setCursor(_left(), _top());
-          if (config.store.clock12) gfx.print("18:88");
-          if (!config.store.clock12) gfx.print("88:88");
+          gfx.print(CLOCKGLOW_STRING);
         }
       #endif
       if(clockInTitle)
         gfx.setTextColor(config.theme.meta, config.theme.metabg);
       else
-        gfx.setTextColor(config.theme.clock, config.theme.background);
-      gfx.setCursor(_left(), _top());
-      gfx.print(_timebuffer);
+        gfx.setTextColor(clockColor, config.theme.background);
+      uint16_t timeLeft = _left();
+      const char* timeText = _timebuffer;
+      if (config.store.clock12 && _timebuffer[0] == ' ') {
+        timeLeft += _charWidth((unsigned char)CLOCKGLOW_STRING[0]);
+        timeText = _timebuffer + 1;
+      }
+      gfx.setCursor(timeLeft, _top());
+      gfx.print(timeText);
       if(_fullclock){
         // lines, date & dow
-        bool fullClockOnScreensaver = (!config.isScreensaver || (_fb->ready() && FULL_SCR_CLOCK));
         _linesleft = _left()+_timewidth+_space;
-        if(fullClockOnScreensaver){
+        if(showFullClockOnScreensaver){
           gfx.drawFastVLine(_linesleft, _top()-_timeheight, _timeheight, config.theme.div);
           gfx.drawFastHLine(_linesleft, _top()-(_timeheight)/2, CHARWIDTH * _superfont * 2 + _space, config.theme.div);
           gfx.setFont();
           gfx.setTextSize(_superfont);
           gfx.setCursor(_linesleft+_space+1, _top()-CHARHEIGHT * _superfont);
-          gfx.setTextColor(config.theme.dow, config.theme.background);
+          gfx.setTextColor(dowColor, config.theme.background);
           gfx.print(utf8To(LANG::dow[network.timeinfo.tm_wday], false));
           sprintf(_tmp, "%2d %s %d", network.timeinfo.tm_mday, LANG::mnths[network.timeinfo.tm_mon], network.timeinfo.tm_year+1900);
           strlcpy(_datebuf, utf8To(_tmp, true), sizeof(_datebuf));
@@ -744,12 +767,12 @@ void ClockWidget::_getTimeBounds() {
           #else
             gfx.setCursor(_left()+_clockwidth-_datewidth, _top() + _space);
           #endif
-          gfx.setTextColor(config.theme.date, config.theme.background);
+          gfx.setTextColor(dateColor, config.theme.background);
           gfx.print(_datebuf);
         }
       }
     }
-    if(_fullclock || _superfont>0){
+    if ((_fullclock || _superfont>0) && (!_fullclock || showFullClockOnScreensaver)) {
       gfx.setFont();
       gfx.setTextSize(_superfont);
       if(!_fullclock){
@@ -761,19 +784,19 @@ void ClockWidget::_getTimeBounds() {
       }else{
         gfx.setCursor(_linesleft+_space+1, _top()-_timeheight);
       }
-      gfx.setTextColor(config.theme.seconds, config.theme.background);
+      gfx.setTextColor(secondsColor, config.theme.background);
       sprintf(_tmp, "%02d", network.timeinfo.tm_sec);
       gfx.print(_tmp);
     }
     gfx.setTextSize(Clock_GFXfontPtr==nullptr?TIME_SIZE:1);
     gfx.setFont(Clock_GFXfontPtr);
     #ifndef DSP_OLED
-      gfx.setTextColor(dots ? config.theme.clock : (CLOCKFONT_MONO?config.theme.clockbg:config.theme.background), config.theme.background);
+      gfx.setTextColor(dots ? clockColor : (CLOCKGLOW?clockBgColor:config.theme.background), config.theme.background);
     #else
       if(clockInTitle) {
         gfx.setTextColor(dots ? config.theme.meta:config.theme.metabg, config.theme.metabg);
       }else{
-        gfx.setTextColor(dots ? config.theme.clock:config.theme.background, config.theme.background);
+        gfx.setTextColor(dots ? clockColor:config.theme.background, config.theme.background);
       }
     #endif
     dots=!dots;

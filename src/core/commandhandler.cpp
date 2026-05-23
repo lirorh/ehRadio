@@ -160,11 +160,12 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
     #endif
   };
   if (cmdIs(command, "screensaverenabled"))        { config.saveValue(&config.store.screensaverEnabled, static_cast<bool>(atoi(value))); screensaverHelper(); return true; }
-  if (cmdIs(command, "screensavertimeout"))        { config.saveValue(&config.store.screensaverTimeout, static_cast<uint16_t>(constrain(atoi(value), 5, 65520))); screensaverHelper(); return true; }
   if (cmdIs(command, "screensaverblank"))          { config.saveValue(&config.store.screensaverBlank, static_cast<bool>(atoi(value))); screensaverHelper(); return true; }
+  if (cmdIs(command, "screensavertimeout"))        { config.saveValue(&config.store.screensaverTimeout, static_cast<uint16_t>(constrain(atoi(value), 5, 65520))); screensaverHelper(); return true; }
   if (cmdIs(command, "screensaverplayingenabled")) { config.saveValue(&config.store.screensaverPlayingEnabled, static_cast<bool>(atoi(value))); screensaverHelper(); return true; }
-  if (cmdIs(command, "screensaverplayingtimeout")) { config.saveValue(&config.store.screensaverPlayingTimeout, static_cast<uint16_t>(constrain(atoi(value), 1, 1080))); screensaverHelper(); return true; }
   if (cmdIs(command, "screensaverplayingblank"))   { config.saveValue(&config.store.screensaverPlayingBlank, static_cast<bool>(atoi(value))); screensaverHelper(); return true; }
+  if (cmdIs(command, "screensaverplayingtimeout")) { config.saveValue(&config.store.screensaverPlayingTimeout, static_cast<uint16_t>(constrain(atoi(value), 1, 1080))); screensaverHelper(); return true; }
+  if (cmdIs(command, "screensaverfull"))           { config.saveValue(&config.store.screensaverFullDateTime, static_cast<bool>(atoi(value))); screensaverHelper(); return true; }
   if (cmdIs(command, "dimmingenabled"))            { config.saveValue(&config.store.dimmingEnabled, static_cast<bool>(atoi(value))); backlightControls.restart(); return true; }
   if (cmdIs(command, "dimmingbrightness"))         {
     int dimbr=atoi(value);

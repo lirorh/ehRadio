@@ -379,7 +379,11 @@ void Config::loadTheme() {
   theme.seconds       = color565(COLOR_SECONDS);
   theme.dow           = color565(COLOR_DAY_OF_W);
   theme.date          = color565(COLOR_DATE);
-  theme.heap          = color565(COLOR_HEAP);
+  theme.clockss       = color565(COLOR_CLOCK_SS);
+  theme.clockbgss     = color565(COLOR_CLOCK_BG_SS);
+  theme.secondsss     = color565(COLOR_SECONDS_SS);
+  theme.dowss         = color565(COLOR_DAY_OF_W_SS);
+  theme.datess        = color565(COLOR_DATE_SS);
   theme.buffer        = color565(COLOR_BUFFER);
   theme.ip            = color565(COLOR_IP);
   theme.vol           = color565(COLOR_VOLUME_VALUE);
@@ -427,11 +431,12 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     display.setContrast();
     saveValue(&store.numplaylist, (bool)NUMBERED_PLAYLIST);
     saveValue(&store.screensaverEnabled, (bool)SS_NOTPLAYING);
-    saveValue(&store.screensaverTimeout, (uint16_t)SS_NOTPLAYING_TIME);
     saveValue(&store.screensaverBlank, (bool)SS_NOTPLAYING_BLANK);
+    saveValue(&store.screensaverTimeout, (uint16_t)SS_NOTPLAYING_TIME);
     saveValue(&store.screensaverPlayingEnabled, (bool)SS_PLAYING);
-    saveValue(&store.screensaverPlayingTimeout, (uint16_t)SS_PLAYING_TIME);
     saveValue(&store.screensaverPlayingBlank, (bool)SS_PLAYING_BLANK);
+    saveValue(&store.screensaverPlayingTimeout, (uint16_t)SS_PLAYING_TIME);
+    saveValue(&store.screensaverFullDateTime, (bool)SS_FULL_DATETIME);
     saveValue(&store.dimmingEnabled, (bool)DIMMING_ENABLED);
     saveValue(&store.dimmingTimeout, (uint16_t)DIMMING_TIMEOUT);
     saveValue(&store.dimmingBrightness, (uint8_t)DIMMING_BRIGHTNESS);
@@ -718,11 +723,12 @@ const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(contrast, "contrast"),
   CONFIG_KEY_ENTRY(battery_adc_ref_mv, "battref"),
   CONFIG_KEY_ENTRY(screensaverEnabled, "scrnsvren"),
-  CONFIG_KEY_ENTRY(screensaverTimeout, "scrnsvrto"),
   CONFIG_KEY_ENTRY(screensaverBlank, "scrnsvrbl"),
+  CONFIG_KEY_ENTRY(screensaverTimeout, "scrnsvrto"),
   CONFIG_KEY_ENTRY(screensaverPlayingEnabled, "scrnsvrplen"),
-  CONFIG_KEY_ENTRY(screensaverPlayingTimeout, "scrnsvrplto"),
   CONFIG_KEY_ENTRY(screensaverPlayingBlank, "scrnsvrplbl"),
+  CONFIG_KEY_ENTRY(screensaverPlayingTimeout, "scrnsvrplto"),
+  CONFIG_KEY_ENTRY(screensaverFullDateTime, "scrnsvrfull"),
   CONFIG_KEY_ENTRY(dimmingEnabled, "dimmingen"),
   CONFIG_KEY_ENTRY(dimmingTimeout, "dimmingto"),
   CONFIG_KEY_ENTRY(dimmingBrightness, "dimmingbr"),

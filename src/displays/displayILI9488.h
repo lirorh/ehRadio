@@ -4,10 +4,10 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include "../libraries/ILI9488/ILI9486_SPI.h"
-#ifdef BIG_BOOT_LOGO
-  #include "fonts/bootlogo198x128.h"
+#if defined(BIG_BOOT_LOGO) || BIG_BOOT_LOGO //true
+  #include "bootlogo/198x128.h"
 #else
-  #include "fonts/bootlogo99x64.h"
+  #include "bootlogo/99x64.h"
 #endif
 #include "fonts/dsfont70.h"
 

@@ -65,6 +65,17 @@ Page *pages[] = { new Page(), new Page(), new Page(), new Page() };
   #define BITRATE_FULL     false
 #endif
 
+static uint32_t normalizeBufferbarValue(uint32_t rawValue, uint32_t maxValue) {
+  if (maxValue == 0) return 0;
+  uint32_t clampedRaw = min(rawValue, maxValue);
+  #if BUFFERBAR_VISUAL_FULL_PERCENT >= 100
+    return clampedRaw;
+  #else
+    uint32_t scaled = (uint32_t)(((uint64_t)clampedRaw * 100ULL) / BUFFERBAR_VISUAL_FULL_PERCENT);
+    return min(scaled, maxValue);
+  #endif
+}
+
 
 void returnPlayer() {
   display.putRequest(NEWMODE, PLAYER);
@@ -133,7 +144,7 @@ void Display::_bootScreen() {
   _bootstring = (TextWidget*) &_boot->addWidget(new TextWidget(bootstrConf, 50, true, BOOT_TXT_COLOR, 0));
   _pager->addPage(_boot);
   _pager->setPage(_boot, true);
-  dsp.drawLogo(bootLogoTop);
+  dsp.drawLogo(BOOTLOGOTOP);
   _bootStep = 1;
 }
 
@@ -171,8 +182,9 @@ void Display::_buildPager() {
   #ifndef HIDE_VOLBAR
     _volbar = new SliderWidget(volbarConf, config.theme.volbarin, config.theme.background, 254, config.theme.volbarout);
   #endif
-  #ifndef HIDE_HEAPBAR
-    _heapbar = new SliderWidget(heapbarConf, config.theme.buffer, config.theme.background, psramInit()?300000:1600 * 10);
+  #ifndef HIDE_BUFFERBAR
+    _bufferbarMax = psramInit() ? 300000 : 1600 * 10;
+    _bufferbar = new SliderWidget(bufferbarConf, config.theme.buffer, config.theme.background, _bufferbarMax);
   #endif
   #ifndef HIDE_VOL
     _voltxt = new TextWidget(voltxtConf, 10, false, config.theme.vol, config.theme.background);
@@ -183,7 +195,7 @@ void Display::_buildPager() {
   #ifndef HIDE_RSSI
     _rssi = new TextWidget(rssiConf, 20, false, config.theme.rssi, config.theme.background);
   #endif
-  #if defined(BATTERY_PIN) && (BATTERY_PIN!=255)
+  #if defined(BATTERY_PIN) && (BATTERY_PIN!=255) && !defined(HIDE_BATTERY)
     _battery = new TextWidget(batteryConf, 10, false, config.theme.battery, config.theme.background);
   #endif
   _nums->init(numConf, 10, false, config.theme.digit, config.theme.background);
@@ -196,7 +208,7 @@ void Display::_buildPager() {
   if (_volip)    _footer->addWidget(_volip);
   if (_battery)  _footer->addWidget( _battery);
   if (_rssi)     _footer->addWidget(_rssi);
-  if (_heapbar)  _footer->addWidget(_heapbar);
+  if (_bufferbar)  _footer->addWidget(_bufferbar);
   
   if (_metabackground) pages[PG_PLAYER]->addWidget(_metabackground);
   pages[PG_PLAYER]->addWidget(_meta);
@@ -322,7 +334,7 @@ void Display::_start() {
   _mode = PLAYER;
   config.setTitle(LANG::const_PlReady);
   
-  if (_heapbar)  _heapbar->lock(!config.store.audioinfo);
+  if (_bufferbar)  _bufferbar->lock(!config.store.audioinfo);
   
   if (_weather)  _weather->lock(!config.store.showweather);
   if (_weather && config.store.showweather) network.buildWeatherString();
@@ -332,7 +344,7 @@ void Display::_start() {
   #ifndef HIDE_IP
     if (_volip) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
   #endif
-  #if defined(BATTERY_PIN) && (BATTERY_PIN!=255)
+  #if defined(BATTERY_PIN) && (BATTERY_PIN!=255) && !defined(HIDE_BATTERY)
     if(_battery) _updateBattery();
   #endif
   _pager->setPage(pages[PG_PLAYER]);
@@ -579,7 +591,11 @@ void Display::loop() {
             } 
           }
           break;
-        case AUDIOINFO: if (_heapbar)  { _heapbar->lock(!config.store.audioinfo); _heapbar->setValue(player.inBufferFilled()); } break;
+        case AUDIOINFO: if (_bufferbar)  {
+            _bufferbar->lock(!config.store.audioinfo);
+            _bufferbar->setValue(normalizeBufferbarValue(player.inBufferFilled(), _bufferbarMax));
+          }
+          break;
         case SHOWVUMETER: {
           if (_vuwidget) {
             _vuwidget->lock(!config.store.vumeter); 
@@ -620,7 +636,12 @@ void Display::loop() {
           if (_mode == SDCHANGE) _nums->setText(request.payload, "%d");
           break;
         }
-        case DSPRSSI: if (_rssi) { _setRSSI(request.payload); } if (_heapbar && config.store.audioinfo) _heapbar->setValue(player.isRunning()?player.inBufferFilled():0); break;
+        case DSPRSSI:
+          if (_rssi) { _setRSSI(request.payload); }
+          if (_bufferbar && config.store.audioinfo) {
+            _bufferbar->setValue(normalizeBufferbarValue(player.isRunning() ? player.inBufferFilled() : 0, _bufferbarMax));
+          }
+          break;
         #if defined(BATTERY_PIN) && (BATTERY_PIN!=255)
           case DSPBATTERY: {
             if(_battery) _updateBattery();
@@ -669,7 +690,7 @@ void Display::_setRSSI(int rssi) {
   _rssi->setText(rssiG);
 }
 
-#if defined(BATTERY_PIN) && (BATTERY_PIN!=255)
+#if defined(BATTERY_PIN) && (BATTERY_PIN!=255) && !defined(HIDE_BATTERY)
   void Display::_updateBattery() {
     if(_battery) {
       BatteryStatus bat = battery.getStatus();
@@ -679,9 +700,9 @@ void Display::_setRSSI(int rssi) {
       }
       if(battery.isInitialized() || bat.valid) {
         const char *baseFmt;
-        if(bat.percentage < 25) baseFmt = batteryRangeLowFmt;
-        else if(bat.percentage < 75) baseFmt = batteryRangeMidFmt;
-        else baseFmt = batteryRangeHighFmt;
+        if(bat.percentage < 25) baseFmt = batteryRangeFmt[0];
+        else if(bat.percentage < 75) baseFmt = batteryRangeFmt[1];
+        else baseFmt = batteryRangeFmt[2];
         char buf[48];
         snprintf(buf, sizeof(buf), baseFmt, bat.percentage);
 
@@ -714,8 +735,8 @@ void Display::_setRSSI(int rssi) {
              - decimal 25 (octal \031) => discharging icon
            Use inferred flags when a charge pin isn't present. */
         const char *chg_prefix = NULL;
-        if (bat.charging || bat.charging_inferred) chg_prefix = "\030"; /* dec24 */
-        else if (bat.discharging_inferred) chg_prefix = "\031"; /* dec25 */
+        //if (bat.charging || bat.charging_inferred) chg_prefix = "\030"; /* dec24 */
+        //else if (bat.discharging_inferred) chg_prefix = "\031"; /* dec25 */
         if (chg_prefix) {
           /* Insert prefix glyph then a 2-pixel spacer control char (0x1E) before the battery text. */
           size_t len = strlen(buf);

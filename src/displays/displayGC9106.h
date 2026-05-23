@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include "../libraries/Adafruit_GC9106Ex/Adafruit_GC9106Ex.h"       // https://github.com/prenticedavid/Adafruit_GC9102_kbv
-#include "fonts/bootlogo62x40.h"
+#include "bootlogo/62x40.h"
 #include "fonts/dsfont35.h"
 
 typedef GFXcanvas16 Canvas;

@@ -36,6 +36,7 @@ private:
   void onBtnLongPressStart(int id);
   void onBtnLongPressStop(int id);
   boolean checklpdelay(int m, unsigned long &tstamp);
+  bool screenSaverExit();
   void onBtnDuringLongPress(int id);
   void onBtnDoubleClick(int id);
   static void btnClickCb(void* p);

@@ -58,7 +58,7 @@ class Widget{
     bool _active, _moved, _locked;
     uint16_t _fgcolor, _bgcolor, _width;
     WidgetConfig _config;
-    MoveConfig   _backMove;
+    MoveConfig _backMove;
     virtual void _draw() {}
     virtual void _clear() {}
     virtual void _reset() {}

@@ -6,10 +6,10 @@
 #include <Adafruit_ST7789.h>
 
 #if DSP_MODEL==DSP_ST7789_76
-  #include "fonts/bootlogo62x40.h"
+  #include "bootlogo/62x40.h"
   #include "fonts/dsfont35.h"
 #else
-  #include "fonts/bootlogo99x64.h"
+  #include "bootlogo/99x64.h"
   #include "fonts/dsfont52.h"
 #endif
 

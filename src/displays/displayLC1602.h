@@ -49,13 +49,13 @@
 #endif
 
 /* not used required */
-#define bootLogoTop     0
-const char           rssiFmt[]    PROGMEM = "";
-const MoveConfig    clockMove     PROGMEM = { 0, 0, -1 };
-const MoveConfig   weatherMove    PROGMEM = { 0, 0, -1 };
-const MoveConfig   weatherMoveVU    PROGMEM = { 0, 0, -1 };
-const char  const_lcdApMode[]    PROGMEM = "AP/IMPROV MODE";
-const char  const_lcdApName[]    PROGMEM = "AP NAME: ";
-const char  const_lcdApPass[]    PROGMEM = "PASSWORD: ";
+#define BOOTLOGOTOP     0
+const char rssiFmt[]    PROGMEM = "";
+const MoveConfig clockMove     PROGMEM = { 0, 0, -1 };
+const MoveConfig weatherMove    PROGMEM = { 0, 0, -1 };
+const MoveConfig weatherMoveVU    PROGMEM = { 0, 0, -1 };
+const char const_lcdApMode[]    PROGMEM = "AP/IMPROV MODE";
+const char const_lcdApName[]    PROGMEM = "AP NAME: ";
+const char const_lcdApPass[]    PROGMEM = "PASSWORD: ";
 
 #endif

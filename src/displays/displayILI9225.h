@@ -4,7 +4,7 @@
 //==================================================
 #include <Arduino.h>
 #include "../libraries/ILI9225Fix/TFT_22_ILI9225Fix.h"
-#include "fonts/bootlogo99x64.h"
+#include "bootlogo/99x64.h"
 #include "fonts/dsfont35.h"
 
 typedef GFXcanvas16 Canvas;

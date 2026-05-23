@@ -66,7 +66,11 @@ struct theme_t {
   uint16_t seconds;
   uint16_t dow;
   uint16_t date;
-  uint16_t heap;
+  uint16_t clockss;
+  uint16_t clockbgss;
+  uint16_t secondsss;
+  uint16_t dowss;
+  uint16_t datess;
   uint16_t buffer;
   uint16_t ip;
   uint16_t vol;
@@ -117,6 +121,7 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   bool      screensaverPlayingEnabled = SS_PLAYING;
   bool      screensaverPlayingBlank = SS_PLAYING_BLANK;
   uint16_t  screensaverPlayingTimeout = SS_PLAYING_TIME;
+  bool      screensaverFullDateTime = SS_FULL_DATETIME;
   bool      dimmingEnabled = DIMMING_ENABLED;
   uint16_t  dimmingTimeout = DIMMING_TIMEOUT;
   uint8_t   dimmingBrightness = DIMMING_BRIGHTNESS;

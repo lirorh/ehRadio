@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include "../libraries/ST7920/ST7920.h"
-#include "fonts/bootlogo21x32.h"
+#include "bootlogo/110x32mono.h"
 
 typedef GFXcanvas1 Canvas;
 typedef ST7920 yoDisplay;

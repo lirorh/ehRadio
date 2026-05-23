@@ -22,8 +22,8 @@
 *******************************************************************************/
 
 #include <stdint.h>
-#define LOGO_WIDTH    99
-#define LOGO_HEIGHT   64
+#define LOGO_WIDTH 99
+#define LOGO_HEIGHT 64
 
 static const uint16_t logo[6336] PROGMEM = {
     // ∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙∙

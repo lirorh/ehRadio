@@ -116,6 +116,9 @@ Grouped (not one-by-one deep explained) areas:
   - `static_assert` with `__builtin_strcmp` for enumerated string options (e.g. `WEATHER_API`, `WEATHER_WIND_SPEED_UNITS`). **Update the `static_assert` whenever a new provider/value is added.**
   - `/* PREVENT BOARD-DEFINED PIN RE-USE */` section lives after the `/* ESP DEVBOARD */` LED block (requires `LED_PIN` and `ESP_S3C3` to be defined first). Covers LED vs RST pin conflicts only — keep it narrowly scoped.
 - **What is intentionally NOT guarded**: booleans (compiler error is obvious), pin numbers (board-dependent range), free-form strings (`AP_SSID`, `MQTT_*`, URLs), color macros (R,G,B triplets), `AUTOBACKLIGHT(x)` (C macro function), `BATTERY_CURVE_MV/PCT` (already has `static_assert` in `battery.cpp`).
+- Buffer bar visual mapping:
+  - `BUFFERBAR_VISUAL_FULL_PERCENT` controls where input-buffer fill is rendered as visually full.
+  - default `82` means 82% raw fill maps to 100% bar width; set `100` to keep direct 1:1 mapping.
 
 ## Compile-Time Modularity and Build Variants (`#if` / `#ifdef` behavior)
 
@@ -218,8 +221,10 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 
 ## `src/core/config.h`
 - Defines persistent struct `config_t store`.
+- `theme_t` no longer includes `theme.heap`; runtime input-buffer rendering uses `theme.buffer`.
 - Defines station/theme structs and config API.
 - Defines key constants for SPIFFS paths and data file locations.
+- `theme_t` now includes screensaver-specific clock palette fields (`clockss`, `clockbgss`, `secondsss`, `dowss`, `datess`) so screensaver clock/date elements can use colors independent from normal PLAYER-mode clock colors.
 - `station_t` fields (`name`, `url`, `title`) are sized by `STATION_FIELD_LENGTH` (default 170, defined in `options.h`). These are RAM-only fields — not NVS-stored. `BUFLEN` has been retired; use `STATION_FIELD_LENGTH` for station metadata buffers across the codebase.
 - `SD_PATH_LENGTH` (256, defined in `sdmanager.h`) is used for SD filesystem path buffers where paths may exceed 170 bytes.
 - `Config::keyMap` declaration controls Preferences key mapping.
@@ -250,6 +255,8 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - `changeMode()` short-circuits SD mode switches the same way, avoiding the SPI retry path when the slot is empty
 - Key interaction:
   - almost every module reads/writes through `config`.
+- Theme loading note:
+  - `Config::loadTheme()` now initializes both normal clock colors and screensaver-specific clock colors from `options.h` macros (`COLOR_CLOCK_SS`, `COLOR_CLOCK_BG_SS`, `COLOR_SECONDS_SS`, `COLOR_DAY_OF_W_SS`, `COLOR_DATE_SS`).
 
 ## `src/core/startup.h` / `startup.cpp`
 - Boot-only orchestration module following the standard core `class + global instance` pattern (`Startup startup;`).
@@ -335,6 +342,12 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 ## `src/core/display.h` / `display.cpp`
 - `display.h` declares Display class and display mode/change API.
 - Render queue + display task + widget/page orchestration.
+- Buffer bar terminology was aligned to actual behavior:
+  - `_heapbar` -> `_bufferbar`
+  - `HIDE_HEAPBAR` -> `HIDE_BUFFERBAR`
+  - `heapbarConf` -> `bufferbarConf`
+- Input-buffer bar values still come from `player.inBufferFilled()`; only visual normalization changed via `BUFFERBAR_VISUAL_FULL_PERCENT`.
+- Battery widget support now follows the same config-file contract: feasible display configs define `batteryConf` plus `batteryRangeLowFmt` / `batteryRangeMidFmt` / `batteryRangeHighFmt`, while tiny or LCD-only layouts use `HIDE_BATTERY` to keep `display.cpp` compile-safe.
 - Main responsibilities:
   - initialize rendering task and widgets
   - mode switching (`PLAYER`, `VOL`, `STATIONS`, `LOST`, `UPDATING`, screensaver)
@@ -398,6 +411,8 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 - Converts hardware input events into same core actions used by WebUI (`controlsEvent`, player commands, display mode changes).
 - `Controls::loop()` now calls `backlightControls.controlsLoop()` directly for non-PLAYER backlight wake behavior.
 - IR record debug text now routes through centralized logging macros.
+- Screensaver wake hardening:
+  - `controlsEvent()` now flushes pending display requests (`display.resetQueue()`) and zeroes screensaver tick counters before queueing `NEWMODE, PLAYER` when waking from `SCREENSAVER`/`SCREENBLANK`, preventing one-detent rotary wake races where a stale queued screensaver mode request could immediately re-apply.
 
 ## `src/core/telnet.h` / `telnet.cpp`
 - Telnet and serial command handling.
@@ -618,6 +633,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - common display core wrapper and API layer used by `core/display.cpp`.
 - `src/displays/widgets/widgets.h`, `widgets.cpp`, `widgetsconfig.h`
   - widget classes (scroll, text, bars, VU, clock, playlist, etc.).
+  - `SliderWidget` buffer/volume bar rendering now repaints the full inner area each update to avoid stale pixels after page/mode transitions.
 - `src/displays/widgets/pages.h`, `pages.cpp`
   - page and pager composition framework.
 - `src/displays/nextion.h`, `nextion.cpp`
@@ -637,6 +653,10 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 ## Display config files (`src/displays/conf/*.h`)
 - Mostly widget coordinates/sizing/visibility for each panel class.
 - Treated as layout maps rather than logic-heavy files.
+- Buffer bar layout/visibility symbols were renamed:
+  - `heapbarConf` -> `bufferbarConf`
+  - `HIDE_HEAPBAR` -> `HIDE_BUFFERBAR`
+- Battery widget layout now exists on the feasible non-LCD configs; unsupported small/LCD panels explicitly define `HIDE_BATTERY`.
 
 ## Display tools
 - `src/displays/tools/utf8To.*`

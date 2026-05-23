@@ -15,7 +15,7 @@ TARGET:
 
 MODES:
     (default)        Interactive mode - prompts for missing keys, ask about cleanup, ask about sort
-    --fast, -f       Add all missing keys at once using HTML Found text, skip individual edits (one prompt)
+    --fast, -f       Add all missing keys at once using HTML Found text, skip individual edits (no prompt unless translation fails)
     --every, -e      Prompt to review every single key using HTML Found text (detailed proofreading)
     --diff, -d       Only prompt when HTML text differs from JSON (to compare hardcoded)
     --ndiff, -n      Only prompt when HTML text is same as JSON (to fix untranslated text)
@@ -30,7 +30,7 @@ EXAMPLES:
     py scan_www_check_json.py fr_FR
 
     # Interactive check of each key with translation (cleaned & sorted file)
-    py scan_www_check_json.py lt_LT --translate --clean --sort
+
 
     # Fast mode WITH translation (auto-translate all missing keys in all files)
     py scan_www_check_json.py * --translate --fast --clean --sort
@@ -174,7 +174,7 @@ def translate_text(text, source_locale=None, target_locale=None):
                 error_msg = result.stderr.strip()
                 if error_msg:
                     print(f"\n⚠ Translation error: {error_msg}")
-                    print("  Falling back to hardcoded text for remaining keys.\n")
+                    print("  Source text requires confirmation per key.\n")
                     _translation_error_shown = True
             
             # Cache as not supported
@@ -185,7 +185,7 @@ def translate_text(text, source_locale=None, target_locale=None):
             # Timeout - show warning on first occurrence
             if not _translation_error_shown:
                 print(f"\n⚠ Translation timeout (>30s) for {target_locale}")
-                print("  Falling back to hardcoded text for remaining keys.\n")
+                print("  Source text requires confirmation per key.\n")
                 _translation_error_shown = True
             _translation_lang_cache[target_locale] = False
             return None
@@ -193,7 +193,7 @@ def translate_text(text, source_locale=None, target_locale=None):
             # Unicode error from subprocess
             if not _translation_error_shown:
                 print(f"\n⚠ Translation encoding error for {target_locale}: {e}")
-                print("  Falling back to hardcoded text for remaining keys.\n")
+                print("  Source text requires confirmation per key.\n")
                 _translation_error_shown = True
             _translation_lang_cache[target_locale] = False
             return None
@@ -201,7 +201,7 @@ def translate_text(text, source_locale=None, target_locale=None):
             # Other error - show on first occurrence
             if not _translation_error_shown:
                 print(f"\n⚠ Translation error: {e}")
-                print("  Falling back to hardcoded text for remaining keys.\n")
+                print("  Source text requires confirmation per key.\n")
                 _translation_error_shown = True
             _translation_lang_cache[target_locale] = False
             return None
@@ -330,6 +330,15 @@ def scan_www_folder(www_path):
     return all_keys
 
 
+def confirm_source_text_use(key, source_text, reason, keep_existing=False):
+    """Ask before writing source text when translation is missing/unchanged."""
+    print(f"\n⚠ {reason}: {key}")
+    print(f"[Source] {source_text}")
+    suffix = "(n keeps JSON)" if keep_existing else "(n skips key)"
+    print(f"Use source text anyway? [y/n] {suffix}: ", end='', flush=True)
+    return input().strip().lower() == 'y'
+
+
 def prompt_for_key(key, found_text, json_text=None, filename=None, mode='missing', locale_code=None, use_translate=False):
     """Prompt user for translation text."""
     print()  # Blank line before prompt
@@ -338,6 +347,13 @@ def prompt_for_key(key, found_text, json_text=None, filename=None, mode='missing
     translated_text = None
     if use_translate and locale_code and locale_code != 'en_US':
         translated_text = translate_text(found_text, target_locale=locale_code)
+        failed_or_same = (not translated_text) or translated_text == found_text
+        if failed_or_same:
+            reason = "Translation failed" if not translated_text else "Translation returned unchanged source text"
+            keep_existing = mode != 'missing'
+            if not confirm_source_text_use(key, found_text, reason, keep_existing=keep_existing):
+                return json_text if keep_existing else None
+            translated_text = None
     
     if mode == 'missing':
         print(f"[{filename}] {key}")
@@ -609,7 +625,7 @@ def process_locale_file(locale_code, www_path, json_path, mode, auto_clean, auto
             if use_translate and locale_code != 'en_US':
                 # Auto-translate all missing keys and show progress
                 print(f"\nAuto-translating {len(missing_keys)} missing keys...")
-                print("  (✓ = translated, → = using hardcoded text)\n")
+                print("  (✓ = translated, → = source confirmed, - = source skipped)\n")
                 
                 for key, data in missing_keys:
                     found_text = data['text']
@@ -617,28 +633,24 @@ def process_locale_file(locale_code, www_path, json_path, mode, auto_clean, auto
                     translated_text = translate_text(found_text, target_locale=locale_code)
                     
                     # Use translation if available, otherwise fallback to Found text
-                    if translated_text:
+                    if translated_text and translated_text != found_text:
                         pending_updates[key] = translated_text
                         print(f"  ✓ {key}: {translated_text}")
                     else:
-                        pending_updates[key] = found_text
-                        print(f"  → {key}: {found_text}")
+                        reason = "Translation failed" if not translated_text else "Translation returned unchanged source text"
+                        if confirm_source_text_use(key, found_text, reason):
+                            pending_updates[key] = found_text
+                            print(f"  → {key}: {found_text}")
+                        else:
+                            print(f"  - {key}: skipped")
             else:
                 # No translation: just prepare hardcoded text
                 for key, data in missing_keys:
                     pending_updates[key] = data['text']
-            
-            # NOW prompt user to confirm adding
-            print(f"\nAdd {len(pending_updates)} keys? [y/n]: ", end='', flush=True)
-            
-            response = input().strip().lower()
-            if response != 'y':
-                print("Skipped adding missing keys")
-            else:
-                # User confirmed - apply updates
-                updates.update(pending_updates)
-                processed_count = len(pending_updates)
-                print(f"✓ Added {processed_count} key(s) to JSON")
+
+            updates.update(pending_updates)
+            processed_count = len(pending_updates)
+            print(f"\n✓ Added {processed_count} key(s) to JSON")
     
     elif mode in ('missing', 'every', 'diff', 'ndiff'):
         for key, data in found_keys.items():

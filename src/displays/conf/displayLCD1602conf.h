@@ -17,35 +17,36 @@
 #define HIDE_TITLE2
 #define HIDE_VOL
 #define HIDE_VOLBAR
-#define HIDE_HEAPBAR
+#define HIDE_BUFFERBAR
 #define HIDE_RSSI
 #define HIDE_VU
 #define HIDE_WEATHER
+#define HIDE_BATTERY
 #define META_MOVE
 
-//#define bootLogoTop     68
+//#define BOOTLOGOTOP     68
 
-/* SCROLLS  */                            /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
-#define SDELTA      2
-#define STIME       400
-const ScrollConfig      metaConf   PROGMEM = {{ 0, 0, 1, WA_LEFT }, 140, true, MAX_WIDTH-6, 2000, SDELTA, STIME };
-const ScrollConfig    title1Conf   PROGMEM = {{ 0, 1, 1, WA_LEFT }, 140, true, MAX_WIDTH-4, 2000, SDELTA, STIME };
-const ScrollConfig  playlistConf   PROGMEM = {{ 1, 1, 1, WA_LEFT }, 140, true, MAX_WIDTH-1, 2000, SDELTA, STIME };
+/* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
+#define SDELTA          2
+#define STIME           400
+const ScrollConfig metaConf       PROGMEM = {{ 0, 0, 1, WA_LEFT }, 140, true, MAX_WIDTH-6, 2000, SDELTA, STIME };
+const ScrollConfig title1Conf     PROGMEM = {{ 0, 1, 1, WA_LEFT }, 140, true, MAX_WIDTH-4, 2000, SDELTA, STIME };
+const ScrollConfig playlistConf   PROGMEM = {{ 1, 1, 1, WA_LEFT }, 140, true, MAX_WIDTH-1, 2000, SDELTA, STIME };
 
 /* WIDGETS  */                           /* { left, top, fontsize, align } */
-const WidgetConfig    bootstrConf  PROGMEM = { 0, 0, 1, WA_CENTER };
-const WidgetConfig    bitrateConf  PROGMEM = { 0, 1, 1, WA_RIGHT };
-const WidgetConfig        numConf  PROGMEM = { 0, 1, 1, WA_CENTER };
-const WidgetConfig      clockConf  PROGMEM = { 0, 0, 1, WA_RIGHT };
-const WidgetConfig    bootWdtConf  PROGMEM = { 0, 1, 1, WA_CENTER };
-const ProgressConfig  bootPrgConf  PROGMEM = { 250, 10, 4 };
+const WidgetConfig bootstrConf    PROGMEM = { 0, 0, 1, WA_CENTER };
+const WidgetConfig bitrateConf    PROGMEM = { 0, 1, 1, WA_RIGHT };
+const WidgetConfig numConf        PROGMEM = { 0, 1, 1, WA_CENTER };
+const WidgetConfig clockConf      PROGMEM = { 0, 0, 1, WA_RIGHT };
+const WidgetConfig bootWdtConf    PROGMEM = { 0, 1, 1, WA_CENTER };
+const ProgressConfig bootPrgConf  PROGMEM = { 250, 10, 4 };
 
 /* STRINGS  */
-const char         numtxtFmt[]    PROGMEM = "%d";
-const char        bitrateFmt[]    PROGMEM = "%d";
-//const char        bootstrFmt[]    PROGMEM = "Trying to %s";
-
+const char numtxtFmt[]            PROGMEM = "%d";
+const char bitrateFmt[]           PROGMEM = "%d";
+//const char bootstrFmt[]           PROGMEM = "Trying to %s";
 
 /* MOVES  */                             /* { left, top, width } */
-const MoveConfig   metaMove       PROGMEM = { 0, 0, MAX_WIDTH };
+const MoveConfig metaMove         PROGMEM = { 0, 0, MAX_WIDTH };
+
 #endif

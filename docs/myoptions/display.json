@@ -98,7 +98,7 @@
       { "define": "BRIGHTNESS_PIN", "type": "pin", "default": 255, "optional": true, "comment": "pin that controls brightness / backlight (255 = unused)" },
       { "define": "DSP_DIMMING_ENABLED", "type": "boolean", "default": true, "comment": "enable screen dimming (depends on brightness pin)"},
       { "define": "DSP_INVERT_QUIRK", "type": "boolean", "default": false, "optional": true, "comment": "fixes display inversion quirk (very common)" },
-      { "define": "BIG_BOOT_LOGO", "type": "boolean", "default": true, "optional": true, "comment": "set to false to save space on an ESP32" }
+      { "define": "BIG_BOOT_LOGO", "type": "boolean", "default": true, "optional": true, "comment": "set to false to save space" }
     ],
     "build_src_filter": "+<libraries/ILI9488/*>"
   },
@@ -246,7 +246,7 @@
       { "define": "BRIGHTNESS_PIN", "type": "pin", "default": 255, "optional": true, "comment": "pin that controls brightness / backlight (255 = unused)" },
       { "define": "DSP_DIMMING_ENABLED", "type": "boolean", "default": true, "comment": "enable screen dimming (depends on brightness pin)"},
       { "define": "DSP_INVERT_QUIRK", "type": "boolean", "default": false, "optional": true, "comment": "fixes display inversion quirk (very common)" },
-      { "define": "BIG_BOOT_LOGO", "type": "boolean", "default": true, "optional": true, "comment": "set to false to save space on an ESP32" }
+      { "define": "BIG_BOOT_LOGO", "type": "boolean", "default": true, "optional": true, "comment": "set to false to save space" }
     ],
     "build_src_filter": "+<libraries/Adafruit_ST7796S/*>"
   },

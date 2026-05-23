@@ -6,7 +6,7 @@
 #include <Adafruit_SSD1306.h>
 
 #if DSP_MODEL==DSP_SSD1306
-  #include "fonts/bootlogo21x32.h"
+  #include "bootlogo/110x32mono.h"
 #endif
 
 typedef GFXcanvas1 Canvas;

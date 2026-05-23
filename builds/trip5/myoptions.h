@@ -11,6 +11,7 @@
 
 // in VSCode, the first environment in platformio.ini is used to evaluate the #ifdef chains
 // The build_flags = -DSH1106_PCM_REMOTE is a #define... so to debug, we need to undefine it first:
+//
 //#undef SH1106_PCM_REMOTE
 //
 // Then uncomment the build to debug:
@@ -311,4 +312,14 @@
 //#define DSP_LANGUAGE_de_DE // sets the display language - see the available options by checking `displayL10n_*.h` files in `locale` folder 
 //#define WEBUI_LOCALE "de_DE" // can set a default WebUI locale different than the display - check locale/webui folder .json files (user-configurable)
 
+/* --- Clock Font Notes --- */
+// CHUNKY6_PX is default...
+//#define CLOCKFONT CHUNKY6
+//#define CLOCKFONT YO_MONO
+//#define CLOCKFONT YO_CLASSIC
+//
+
+#ifndef BATTERY_PIN
+  #define BATTERY_PIN     7
+#endif
 #endif // myoptions_h

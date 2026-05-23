@@ -93,12 +93,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef TFT_DC
   #define TFT_DC 255
 #endif
-#ifndef USE_FBUFFER
-  #define USE_FBUFFER true
-#endif
-#ifndef FULL_SCR_CLOCK
-  #define FULL_SCR_CLOCK true
-#endif
 
 /* ST7735 display submodel */
 // INITR_BLACKTAB // 1.8" https://aliexpress.ru/item/1005002822797745.html
@@ -188,9 +182,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef RSSI_STEPS
   #define RSSI_STEPS -50,-60,-70,-80
 #endif
-#ifndef CLOCKFONT_MONO
-  #define CLOCKFONT_MONO true // monospace clock font
-#endif
 #ifndef BITRATE_FULL
   #define BITRATE_FULL true // display bitrate badge
 #endif
@@ -200,8 +191,34 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #if DSP_MODEL==DSP_ST7796 || DSP_MODEL==DSP_ILI9488 || DSP_MODEL!=DSP_ILI9486
   #ifndef BIG_BOOT_LOGO
     #if defined(CONFIG_IDF_TARGET_ESP32) // ESP32 is already low on flash size and this is huge
-      #define BIG_BOOT_LOGO true
+      #define BIG_BOOT_LOGO false
     #endif
+      #define BIG_BOOT_LOGO true
+  #endif
+#endif
+
+#ifndef USE_FBUFFER
+  #define USE_FBUFFER true // framebuffer: best to leave this on
+#endif
+
+/* Define your clock as #define CLOCKFONT CHUNKY6 */
+
+#define YO_MONO         0  // Default modern yoRadio 7-Segment font (monospaced)
+#define YO_CLASSIC      1  // Classic yoRadio 7-Segment font (1 is narrow)
+#define CHUNKY6_PX      2  // Default
+#define CHUNKY6         3  // Really heavy looking
+
+/* Chunky 6 with spaces between pixels is the default */
+#ifndef CLOCKFONT
+  #define CLOCKFONT CHUNKY6_PX
+#endif
+
+/* This makes the characters get an LED/VFD background color that makes it look like a real clock */
+#ifndef CLOCKGLOW // CLOCKGLOW uses a special character to color COLOR_CLOCK_BG behind the clock for a glow effect
+  #if CLOCKFONT == YO_CLASSIC
+    #define CLOCKGLOW false // this will be forced later anyways (this font isn't fixed-width so the effect doesn't work)
+  #else
+    #define CLOCKGLOW true
   #endif
 #endif
 
@@ -730,6 +747,16 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
  // #define CONNECT_HTTP_HTTPS_TIMEOUT 1700, 3700 /* For ESP32? */
  // undefined means using library defaults (preferred)
 #endif
+// Since the buffer can never technically fill up, the visual buffer bar should look "full"
+// when the buffer is near to maximum potential, estimating that 80% to 85% is good.
+#ifndef BUFFERBAR_VISUAL_FULL_PERCENT // value where buffer bar appears visually full
+  #define BUFFERBAR_VISUAL_FULL_PERCENT 82
+#endif
+#if BUFFERBAR_VISUAL_FULL_PERCENT < 1 || BUFFERBAR_VISUAL_FULL_PERCENT > 100
+  #warning BUFFERBAR_VISUAL_FULL_PERCENT out of range, resetting to default 82
+  #undef BUFFERBAR_VISUAL_FULL_PERCENT
+  #define BUFFERBAR_VISUAL_FULL_PERCENT 82
+#endif
 
 /* --- CPU CORES --- */
 /* ESP32 and ESP32-S3 have 2 cores. Core 0 will handle audio processes. */
@@ -878,7 +905,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define PLAYBACK_TASK_PRIORITY 3 // highest: stream connection / playback start
 #endif
 #ifndef NET_TASK_PRIORITY
-  #define NET_TASK_PRIORITY 3 // highest: WiFi search, stream retry, OTA download
+  #define NET_TASK_PRIORITY 2 // highest: WiFi search, stream retry, OTA download
 #endif
 #ifndef LOW_TASK_PRIORITY
   #define LOW_TASK_PRIORITY 1 // lowest: background/deferrable tasks (round-robin with loop())
@@ -902,108 +929,121 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 
 /* ============================== COLOR ============================== */
-/* ehRadio Color Theme: over-ridden by mytheme.h (if it exists) */
-/*        color name                R,   G,   B  */
-#ifndef COLOR_BACKGROUND // background
-  #define COLOR_BACKGROUND          0,   0,   0
+/* ehRadio Color Theme: over-ridden by mytheme.h (if it exists)        */
+/*---------------------------------------------------------------------*/
+/*      COLOR NAME       Color (0-255) R,   G,   B // note             */
+/*---------------------------------------------------------------------*/
+#ifndef COLOR_BACKGROUND
+  #define COLOR_BACKGROUND             0,   0,   0 // background
 #endif
-#ifndef COLOR_STATION_NAME // station text color
-  #define COLOR_STATION_NAME        0,   0,   0
+#ifndef COLOR_STATION_NAME
+  #define COLOR_STATION_NAME         247, 247, 247 // station text color
 #endif
-#ifndef COLOR_STATION_BG // current station background
-  #define COLOR_STATION_BG          0, 100, 255
+#ifndef COLOR_STATION_BG
+  #define COLOR_STATION_BG             0,  63, 207 // current station background
 #endif
-#ifndef COLOR_STATION_FILL // fill color (outside bg)
-  #define COLOR_STATION_FILL        0,  98, 250
+#ifndef COLOR_STATION_FILL
+  #define COLOR_STATION_FILL           0,  55, 191 // fill color (outside bg)
 #endif
-#ifndef COLOR_SNG_TITLE_1 // first title
-  #define COLOR_SNG_TITLE_1       255, 255, 255
+#ifndef COLOR_SNG_TITLE_1
+  #define COLOR_SNG_TITLE_1          239, 239, 239 // first title
 #endif
-#ifndef COLOR_SNG_TITLE_2 // second title
-  #define COLOR_SNG_TITLE_2       220, 220, 220
+#ifndef COLOR_SNG_TITLE_2
+  #define COLOR_SNG_TITLE_2          207, 207, 207 // second title
 #endif
-#ifndef COLOR_WEATHER // weather string
-  #define COLOR_WEATHER           224, 124,  16
+#ifndef COLOR_WEATHER
+  #define COLOR_WEATHER              223, 223,   0 // weather string
 #endif
-#ifndef COLOR_VU_MAX // max of VU meter "FireBrick"
-  #define COLOR_VU_MAX            178,  34,  34
+#ifndef COLOR_VU_MAX
+  #define COLOR_VU_MAX               175,  31,  31 // max of VU meter
 #endif
-#ifndef COLOR_VU_MIN // min of VU meter "Green"
-  #define COLOR_VU_MIN              0, 128,   0
+#ifndef COLOR_VU_MIN
+  #define COLOR_VU_MIN                15, 127,  15 // min of VU meter
 #endif
-#ifndef COLOR_CLOCK // clock color
-  #define COLOR_CLOCK             255,  32,  16
+#ifndef COLOR_CLOCK
+  #define COLOR_CLOCK                255,  31,   7 // clock color
 #endif
-#ifndef COLOR_CLOCK_BG // clock color background
-  #define COLOR_CLOCK_BG           30,   2,   2
+#ifndef COLOR_CLOCK_BG
+  #define COLOR_CLOCK_BG              31,   3,   0 // clock color background
 #endif
-#ifndef COLOR_SECONDS // seconds color (DSP_ST7789, DSP_ILI9341, DSP_ILI9225)
-  #define COLOR_SECONDS           255,  16,   4
+#ifndef COLOR_SECONDS
+  #define COLOR_SECONDS              247,  27,   5 // seconds color (DSP_ST7789, DSP_ILI9341, DSP_ILI9225)
 #endif
-#ifndef COLOR_DAY_OF_W // day of week color (for DSP_ST7789, DSP_ILI9341, DSP_ILI9225)
-  #define COLOR_DAY_OF_W          240, 240, 240
+#ifndef COLOR_DAY_OF_W
+  #define COLOR_DAY_OF_W             255, 192, 192 // day of week color (for DSP_ST7789, DSP_ILI9341, DSP_ILI9225)
 #endif
-#ifndef COLOR_DATE // date color (DSP_ST7789, DSP_ILI9341, DSP_ILI9225)
-  #define COLOR_DATE              255, 255, 255
+#ifndef COLOR_DATE
+  #define COLOR_DATE                 192, 192, 255 // date color (DSP_ST7789, DSP_ILI9341, DSP_ILI9225)
 #endif
-#ifndef COLOR_HEAP // heap string
-  #define COLOR_HEAP              224, 124,  16
+#ifndef COLOR_CLOCK_SS
+  #define COLOR_CLOCK_SS             153, 217, 234 // screensaver clock color
 #endif
-#ifndef COLOR_BUFFER // buffer line
-  #define COLOR_BUFFER            224, 64,  192
+#ifndef COLOR_CLOCK_BG_SS
+  #define COLOR_CLOCK_BG_SS            8,  11,  12 // screensaver clock glow/background color
 #endif
-#ifndef COLOR_IP // IP address
-  #define COLOR_IP                  0, 200, 220
+#ifndef COLOR_SECONDS_SS
+  #define COLOR_SECONDS_SS           140, 200, 220 // screensaver seconds color
 #endif
-#ifndef COLOR_VOLUME_VALUE // volume number
-  #define COLOR_VOLUME_VALUE      15,  180,  15
+#ifndef COLOR_DAY_OF_W_SS
+  #define COLOR_DAY_OF_W_SS          110, 110, 150 // screensaver day of week color
 #endif
-#ifndef COLOR_RSSI // rssi
-  #define COLOR_RSSI                0, 200, 220
+#ifndef COLOR_DATE_SS
+  #define COLOR_DATE_SS              150, 110, 110 // screensaver date color
 #endif
-#ifndef COLOR_BATTERY // battery
-  #define COLOR_BATTERY           224, 124,  16
+#ifndef COLOR_BUFFER
+  #define COLOR_BUFFER               231,  47, 255 // buffer bar line
 #endif
-#ifndef COLOR_VOLBAR_OUT // border of volume bar
-  #define COLOR_VOLBAR_OUT        30,  200,  30
+#ifndef COLOR_IP
+  #define COLOR_IP                   153, 217, 234 // IP address
 #endif
-#ifndef COLOR_VOLBAR_IN // inside volume bar
-  #define COLOR_VOLBAR_IN         5,   140,   5
+#ifndef COLOR_VOLUME_VALUE
+  #define COLOR_VOLUME_VALUE         223, 223,   0 // volume number
 #endif
-#ifndef COLOR_DIGITS // numbers...?
-  #define COLOR_DIGITS            255, 255, 255
+#ifndef COLOR_RSSI
+  #define COLOR_RSSI                 153, 217, 234 // rssi
 #endif
-#ifndef COLOR_DIVIDER // lines around clock
-  #define COLOR_DIVIDER           132, 132, 165
+#ifndef COLOR_BATTERY
+  #define COLOR_BATTERY              153, 217, 234 // battery
 #endif
-#ifndef COLOR_PL_CURRENT // playlist current item
-  #define COLOR_PL_CURRENT          0, 170, 250
+#ifndef COLOR_VOLBAR_OUT
+  #define COLOR_VOLBAR_OUT           223, 223,   0 // border of volume bar
 #endif
-#ifndef COLOR_PL_CURRENT_BG // playlist current item background
-  #define COLOR_PL_CURRENT_BG      30,  30,  30
+#ifndef COLOR_VOLBAR_IN
+  #define COLOR_VOLBAR_IN            207, 207,   0 // inside volume bar
 #endif
-#ifndef COLOR_PL_CURRENT_FILL // playlist current item fill background
-  #define COLOR_PL_CURRENT_FILL    60,  60,  60
+#ifndef COLOR_DIGITS
+  #define COLOR_DIGITS               255,  31,   7 // number on the volume page
 #endif
-#ifndef COLOR_PLAYLIST_0 // playlist string 0
-  #define COLOR_PLAYLIST_0        250, 250, 250
+#ifndef COLOR_DIVIDER
+  #define COLOR_DIVIDER               91,  91,  91 // lines around clock
 #endif
-#ifndef COLOR_PLAYLIST_1 // playlist string 1
-  #define COLOR_PLAYLIST_1        230, 230, 230
+#ifndef COLOR_PL_CURRENT
+  #define COLOR_PL_CURRENT           255, 255, 255 // playlist current item
 #endif
-#ifndef COLOR_PLAYLIST_2 // playlist string 2
-  #define COLOR_PLAYLIST_2        210, 210, 210
+#ifndef COLOR_PL_CURRENT_BG
+  #define COLOR_PL_CURRENT_BG        255,  31,   7 // playlist current item background
 #endif
-#ifndef COLOR_PLAYLIST_3 // playlist string 3
-  #define COLOR_PLAYLIST_3        190, 190, 190
+#ifndef COLOR_PL_CURRENT_FILL
+  #define COLOR_PL_CURRENT_FILL      231,  23,   7 // playlist current item fill outline
 #endif
-#ifndef COLOR_PLAYLIST_4 // playlist string 4
-  #define COLOR_PLAYLIST_4        170, 170, 170
+#ifndef COLOR_PLAYLIST_0
+  #define COLOR_PLAYLIST_0           231, 231, 231 // playlist string 0
 #endif
-#ifndef COLOR_BITRATE // stream bitrate
-  #define COLOR_BITRATE           220, 220,  90
+#ifndef COLOR_PLAYLIST_1
+  #define COLOR_PLAYLIST_1           199, 199, 199 // playlist string 1
 #endif
-
+#ifndef COLOR_PLAYLIST_2
+  #define COLOR_PLAYLIST_2           167, 167, 167 // playlist string 2
+#endif
+#ifndef COLOR_PLAYLIST_3
+  #define COLOR_PLAYLIST_3           135, 135, 135 // playlist string 3
+#endif
+#ifndef COLOR_PLAYLIST_4
+  #define COLOR_PLAYLIST_4           103, 103, 103 // playlist string 4
+#endif
+#ifndef COLOR_BITRATE
+  #define COLOR_BITRATE              231,  47, 255 // stream bitrate
+#endif
 
 /* ============================== SYSTEM DEFAULTS ============================== */
 
@@ -1382,6 +1422,9 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #ifndef SS_PLAYING_TIME
   #define SS_PLAYING_TIME 5
+#endif
+#ifndef SS_FULL_DATETIME
+  #define SS_FULL_DATETIME false
 #endif
 #ifndef DIMMING_ENABLED
     #define DIMMING_ENABLED false

@@ -19,7 +19,7 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 - [ ] 1. Audio Library Migration / De-Forking
 - [ ] 2. Dead / Unreachable Code
 - [ ] 3. Smaller SPIFFS than expected could break workflows
-- [ ] 4. Display conf.h Files That Lack a Battery Widget
+- [ ] 4. Display conf.h Files With Unchecked Battery Widget
 - [ ] 5. Can Display Be Improved?
 - ... Below is not part of the audit but worth consideration (or fixing)
 
@@ -468,23 +468,23 @@ If we do that, we should initiate cleanup on every boot (well, initiate cleanup 
 
 ---
 
-## [ ] 4. Display conf.h Files That Lack a Battery Widget
+## [ ] 4. Display conf.h Files With Unchecked Battery Widget
 
-### [ ] 4.1 Only one display conf defines `batteryConf` and battery range format strings (ILI9341) `[LOW]`
+### [ ] 4.1 Battery widget checked on real hardware? `[LOW]`
 
 - **File**: All `src/displays/conf/display*conf.h`
-- **Problem**: `src/core/display.cpp` references `batteryConf`, `batteryRangeLowFmt`, `batteryRangeMidFmt`, and `batteryRangeHighFmt` inside `#if defined(BATTERY_PIN) && (BATTERY_PIN!=255)` guards. These symbols are only defined in `displayILI9341conf.h`. Any hardware combination using another display with `BATTERY_PIN` set will fail to compile. The CI test build exposed this when `TEST_CI_VS1053` used SH1106 — it was worked around by switching the test env to ILI9341, but the underlying problem remains for real users.
-- **Action**: Add `batteryConf`, `batteryRangeLowFmt`, `batteryRangeMidFmt`, and `batteryRangeHighFmt` to all display conf files that have a plausible battery use case (i.e., all non-LCD/non-dummy displays). Coordinates and glyph codes will differ per display.
+- **Problem**: `src/core/display.cpp` references `batteryConf`, `batteryRangeLowFmt`, `batteryRangeMidFmt`, and `batteryRangeHighFmt` inside `#if defined(BATTERY_PIN) && (BATTERY_PIN!=255) && !defined(HIDE_BATTERY)` guards. The feasible non-LCD display configs now define those symbols; tiny panels and LCD-only panels use `HIDE_BATTERY` instead of trying to force a bad layout.
+- **Action**: Keep the non-LCD display confs aligned with this contract, and use the checklist below as the real-hardware verification matrix for each target.
 
-| Has battery widget? | Display conf file |
+| Battery widget checked on real hardware? | Display conf file |
 |---|---|
-| [X] | `displayILI9341conf.h` |
+| [X] | `displayILI9341conf.h` (so probably OK on ST7789) |
 | [ ] | `displayGC9106conf.h` |
 | [ ] | `displayGC9A01Aconf.h` |
 | [ ] | `displayILI9225conf.h` |
-| [ ] | `displayILI9488conf.h` |
+| [X] | `displayILI9488conf.h` (so probably OK on ST7796 ) |
 | [ ] | `displayN5110conf.h` |
-| [ ] | `displaySH1106conf.h` |
+| [-] | `displaySH1106conf.h` - tested but not functional, needs further testing |
 | [ ] | `displaySSD1305conf.h` |
 | [ ] | `displaySSD1306conf.h` |
 | [ ] | `displaySSD1306x32conf.h` |
@@ -559,7 +559,7 @@ These displays maintain their own internal frame buffer — Adafruit_SH110X keep
 
 The I2C clock for SH1106 is `I2CFREQ_HZ = 4,000,000` (4MHz Fast-mode+). A 128×64 buffer = 1,024 bytes. At 4MHz I2C: ~(1024×9 bits) / 4MHz ≈ 2.3ms per full frame push. This is well within the 10ms loop budget, so OLED is not bandwidth-constrained.
 
-Features hidden by conf file (`displaySH1106conf.h`): `HIDE_VU`, `HIDE_HEAPBAR`, `HIDE_VOL` — because there is simply no room on a 128×64 canvas for a VU meter or heap bar. `HIDE_TITLE2` is **not** set (title2 at row 28 fits). Bitrate shows right-aligned at size-1 on the same row as title1 (row 19). The footer collapses to just IP and RSSI on row 55.
+Features hidden by conf file (`displaySH1106conf.h`): `HIDE_VU`, `HIDE_BUFFERBAR`, `HIDE_VOL` — because there is simply no room on a 128×64 canvas for a VU meter or buffer bar. `HIDE_TITLE2` is **not** set (title2 at row 28 fits). Bitrate shows right-aligned at size-1 on the same row as title1 (row 19). The footer collapses to just IP and RSSI on row 55.
 
 #### Class 3: LCD Character Display (DSP_1602I2C, DSP_2004I2C, DSP_1602, DSP_2004)
 
@@ -571,7 +571,7 @@ Widget layout is in **character coordinates**: a 16×2 display has positions (co
 
 The entire widget object model still instantiates — `ScrollWidget`, `TextWidget`, `ClockWidget` are all real objects — but they operate on character-cell coordinates. `_draw()` calls `dsp.fillRect(x, y, w, 1, 0)` which translates to writing `w` spaces at cursor position `(x, y)`, and `dsp.print(text)` which writes characters there. This is clever reuse of the widget infrastructure without a pixel rendering pipeline.
 
-Large portions of the UI are disabled via conf file: `HIDE_IP`, `HIDE_TITLE2`, `HIDE_VOL`, `HIDE_VOLBAR`, `HIDE_HEAPBAR`, `HIDE_RSSI`, `HIDE_VU`, `HIDE_WEATHER`. The LCD lives on two rows and uses them both fully: meta (station name) scrolls on row 0, title1 (track) on row 1. Bitrate shows right-aligned on row 1. Clock is right-aligned on row 0. There is a `META_MOVE` define which repositions the meta widget to fill the full width when a dialog (volume/lost) is shown.
+Large portions of the UI are disabled via conf file: `HIDE_IP`, `HIDE_TITLE2`, `HIDE_VOL`, `HIDE_VOLBAR`, `HIDE_BUFFERBAR`, `HIDE_RSSI`, `HIDE_VU`, `HIDE_WEATHER`. The LCD lives on two rows and uses them both fully: meta (station name) scrolls on row 0, title1 (track) on row 1. Bitrate shows right-aligned on row 1. Clock is right-aligned on row 0. There is a `META_MOVE` define which repositions the meta widget to fill the full width when a dialog (volume/lost) is shown.
 
 The playlist view (`PG_PLAYLIST` page) works on LCD — the `PlayListWidget` uses `_current` (a `ScrollWidget`) to show the selected item. The `_plbackground` highlight fill and the `pages[PG_DIALOG]->addPage(_footer)` are both guarded by `#if !defined(DSP_LCD)` so those are absent.
 

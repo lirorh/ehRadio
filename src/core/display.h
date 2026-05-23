@@ -56,24 +56,25 @@ class Display {
     void lock()   { _locked=true; }
     void unlock() { _locked=false; }
   private:
-    ScrollWidget *_meta, *_title1, *_plcurrent, *_weather, *_title2;
-    PlayListWidget *_plwidget;
+    ScrollWidget *_meta = nullptr, *_title1 = nullptr, *_plcurrent = nullptr, *_weather = nullptr, *_title2 = nullptr;
+    PlayListWidget *_plwidget = nullptr;
     #ifdef UPDATEURL
       TextWidget *_updLabel = nullptr, *_updValue = nullptr;
       WidgetConfig _updConf;           // keep a copy of the label's configuration
       bool _updFirstCall = true;
       int _updBarWidth = 10;
     #endif
-    BitrateWidget *_fullbitrate;
-    FillWidget *_metabackground, *_plbackground;
-    SliderWidget *_volbar, *_heapbar;
-    Pager *_pager;
-    Page *_footer;
-    VuWidget *_vuwidget;
-    NumWidget *_nums;
-    ClockWidget *_clock;
-    Page *_boot;
-    TextWidget *_bootstring, *_volip, *_voltxt, *_battery, *_rssi, *_bitrate;
+    BitrateWidget *_fullbitrate = nullptr;
+    FillWidget *_metabackground = nullptr, *_plbackground = nullptr;
+    SliderWidget *_volbar = nullptr, *_bufferbar = nullptr;
+    uint32_t _bufferbarMax = 0;
+    Pager *_pager = nullptr;
+    Page *_footer = nullptr;
+    VuWidget *_vuwidget = nullptr;
+    NumWidget *_nums = nullptr;
+    ClockWidget *_clock = nullptr;
+    Page *_boot = nullptr;
+    TextWidget *_bootstring = nullptr, *_volip = nullptr, *_voltxt = nullptr, *_battery = nullptr, *_rssi = nullptr, *_bitrate = nullptr;
     Ticker _returnTicker;
     bool _locked = false;
     uint8_t _bootStep = 0;
@@ -82,7 +83,7 @@ class Display {
     void _showDialog(const char *title);
     void _setReturnTicker(uint8_t time_s);
     void _swichMode(displayMode_e newmode);
-    #if defined(BATTERY_PIN) && (BATTERY_PIN!=255)
+    #if defined(BATTERY_PIN) && (BATTERY_PIN!=255) && !defined(HIDE_BATTERY)
       void _updateBattery();
     #endif
 };

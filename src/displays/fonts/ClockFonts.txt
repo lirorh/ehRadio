@@ -1,0 +1,70 @@
+Trip5's Notes about the fonts used by the clock:
+
+This folder ONLY contains fonts used by the clock (and on the volume page screen)
+
+yofont5x7 and yofont10x14
+are ONLY used by ILI9225.cpp
+
+TinyFont5 and TinyFont6
+are ONLY used by displayN5110.h (Nokia)
+
+dsfont19 = DS_DIGI15pt7b, DS_DIGI15pt7b_mono
+is not used by anything ...was it meant for really tiny displays?
+
+dsfont35 = DS_DIGI28pt7b, DS_DIGI128pt7b_mono, ...
+displayGC9106.h
+displayILI9225.h
+displaySSD1322.h
+displaySSD1327.h
+displayST7735.h
+displayST7789.h (for DSP_ST7789_76)
+
+dsfont52 = DS_DIGI42pt7b, DS_DIGI42pt7b_mono, ...
+displayGC9A01A.h
+displayILI9341.h
+displayST7789.h (for regular DSP_ST7789_76)
+
+dsfont70: DS_DIGI56pt7b, DS_DIGI56pt7b_mono, ...
+displayILI9488.h
+displayST7796.h
+
+The DS_DIGI fonts marked as 56pt7b are actually 70 pixels tall
+                         ...42pt is 52 pixels tall
+                         ...28pt is 35 pixels tall
+                         ...15pt is 19 pixels tall
+Likely it's what size of a true type font it was derived from.
+
+The link https://tchapi.github.io/Adafruit-GFX-Font-Customiser/ originally appeared in the comments for the dsfont*.h files.
+It is a font editor but not enjoyable to use.
+
+So, let's generate a font from a PNG...
+0123456789:
+numbers are a fixed-width and the colon is half of that width - this including spaces
+The result is the total width will be divisible by 21
+
+Used my own tool to make the graphic for 70: https://trip5.github.io/Matrix-Fonts/renderer.html
+(note that it adds a 1 or 2 pixel border all around and we then add black borders and trim
+so that there are equal numbers of black pixels left-right and top-bottom,
+odd ones getting extra space on right and bottom)
+
+Chunky6_70:    pixel size 14
+Chunky6_70_px: pixel size 11 + 3 pixels space
+       height: 5 * 14 = 70 pixels
+       length: 4 (includes 1 empty column) * 14 = 56 (per digit) x 10.5 = 588 pixels
+
+Chunky6_52:    pixel size 10
+Chunky6_52_px: pixel size 8 + 2 pixels space
+       height: 5 * 10 = 50 + 1 blank top + 1 blank bottom = 52 pixels
+       length: 4 (includes 1 empty column) * 10 = 40 (per digit) x 10.5 = 420 pixels
+
+Chunky6_35:    pixel size 7
+Chunky6_35_px: pixel size 6 + 1 pixels space
+       height: 5 * 7 = 35 pixels
+       length: 4 (includes 1 empty column) * 7 = 35 (per digit) x 10.5 = 294 pixels
+
+This is the tool that can do it...
+py .\png_to_gfxfont.py Chunky6_70_px.png Chunky6_70_px.h --glow-char /
+That glow-char switch makes the "glow" character
+
+
+Chunky6 is part of https://github.com/trip5/Matrix-Fonts

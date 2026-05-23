@@ -6,8 +6,7 @@
 #include <Adafruit_PCD8544.h>
 #include "fonts/TinyFont5.h"
 #include "fonts/TinyFont6.h"
-#include "fonts/bootlogo21x28.h"
-#include "fonts/bootlogo35.h"
+#include "bootlogo/36x32mono.h"
 
 typedef GFXcanvas1 Canvas;
 typedef Adafruit_PCD8544 yoDisplay;

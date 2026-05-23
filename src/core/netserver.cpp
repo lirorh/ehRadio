@@ -456,7 +456,7 @@ void NetServer::processQueue() {
                                   config.store.autoupdate,
                                   config.store.mdnsname);
                                   break;
-      case GETSCREEN:     snprintf(wsbuf, sizeof(wsbuf), "{\"flip\":%d,\"inv\":%d,\"nump\":%d,\"tsf\":%d,\"tsd\":%d,\"dspon\":%d,\"br\":%d,\"con\":%d,\"scre\":%d,\"scrt\":%d,\"scrb\":%d,\"scrpe\":%d,\"scrpt\":%d,\"scrpb\":%d,\"dimmingenabled\":%d,\"dimmingtimeout\":%d,\"dimmingbrightness\":%d,\"volumepage\":%d,\"clock12\":%d}",
+      case GETSCREEN:     snprintf(wsbuf, sizeof(wsbuf), "{\"flip\":%d,\"inv\":%d,\"nump\":%d,\"tsf\":%d,\"tsd\":%d,\"dspon\":%d,\"br\":%d,\"con\":%d,\"scre\":%d,\"scrb\":%d,\"scrt\":%d,\"scrpe\":%d,\"scrpb\":%d,\"scrpt\":%d,\"scrfull\":%d,\"dimmingenabled\":%d,\"dimmingtimeout\":%d,\"dimmingbrightness\":%d,\"volumepage\":%d,\"clock12\":%d}",
                                   config.store.flipscreen,
                                   config.store.invertdisplay,
                                   config.store.numplaylist,
@@ -466,11 +466,12 @@ void NetServer::processQueue() {
                                   config.store.brightness,
                                   config.store.contrast,
                                   config.store.screensaverEnabled,
-                                  config.store.screensaverTimeout,
                                   config.store.screensaverBlank,
+                                  config.store.screensaverTimeout,
                                   config.store.screensaverPlayingEnabled,
-                                  config.store.screensaverPlayingTimeout,
                                   config.store.screensaverPlayingBlank,
+                                  config.store.screensaverPlayingTimeout,
+                                  config.store.screensaverFullDateTime,
                                   config.store.dimmingEnabled,
                                   config.store.dimmingTimeout,
                                   config.store.dimmingBrightness,

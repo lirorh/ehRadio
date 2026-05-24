@@ -150,7 +150,7 @@ jobs:
 
       - name: Build firmware for all contributors
         run: |
-          # Track which board_envs have had bootloader/partitions/spiffs extracted
+          # Track which board_envs have had bootloader/partitions extracted
           declare -A board_done
 
           for subfolder in builds/*/; do
@@ -194,21 +194,13 @@ jobs:
                 echo "  ✅ ${fw_env}.bin"
               fi
 
-              # Extract bootloader/partitions/spiffs for this board_env (first occurrence only)
+              # Extract bootloader/partitions for this board_env (first occurrence only)
               board_env=$(awk -F'|' -v fw="${fw_env}" '$3 == fw {print $1; exit}' builds/releases/firmware.txt)
               if [ -n "$board_env" ] && [ -z "${board_done[$board_env]+x}" ]; then
                 if [ -f "$d/bootloader.bin" ] && [ -f "$d/partitions.bin" ]; then
                   cp "$d/bootloader.bin" "binaries/${board_env}_bootloader.bin"
                   cp "$d/partitions.bin" "binaries/${board_env}_partitions.bin"
                   echo "  ✅ ${board_env}: bootloader + partitions"
-
-                  echo "  📦 Building SPIFFS for ${board_env} using env ${pio_env}..."
-                  pio run --environment "${pio_env}" --target buildfs
-                  if [ -f "$d/spiffs.bin" ]; then
-                    cp "$d/spiffs.bin" "binaries/${board_env}_spiffs.bin"
-                    echo "  ✅ ${board_env}: spiffs"
-                  fi
-
                   board_done[$board_env]=1
                 fi
               fi

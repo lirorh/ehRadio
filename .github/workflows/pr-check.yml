@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - dev
-      - ehradio
+      - main
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -18,20 +18,20 @@ jobs:
 
   # -------------------------------------------------------------------------
   # Job 1: Branch guard
-  # Blocks PRs targeting 'ehradio' from anyone other than the repo owner.
-  # The 'ehradio' branch is kept in sync with 'dev' by the owner only.
+  # Blocks PRs targeting 'main' from anyone other than the repo owner.
+  # The 'main' branch is kept in sync with 'dev' by the owner only.
   # -------------------------------------------------------------------------
   branch-guard:
     name: Branch check
     runs-on: ubuntu-latest
     steps:
-      - name: Block PRs to ehradio from non-owner
-        if: github.base_ref == 'ehradio' && github.actor != github.repository_owner
+      - name: Block PRs to main from non-owner
+        if: github.base_ref == 'main' && github.actor != github.repository_owner
         run: |
-          echo "❌ Pull requests to the 'ehradio' branch are not accepted."
+          echo "❌ Pull requests to the 'main' branch are not accepted."
           echo ""
           echo "Please retarget your PR to the 'dev' branch instead."
-          echo "The 'ehradio' branch is a release sync managed by the repo owner."
+          echo "The 'main' branch is a release sync managed by the repo owner."
           exit 1
       - name: OK
         run: echo "✅ Branch check passed."

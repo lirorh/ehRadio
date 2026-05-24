@@ -9,7 +9,9 @@ TinyFont5 and TinyFont6
 are ONLY used by displayN5110.h (Nokia)
 
 dsfont19 = DS_DIGI15pt7b, DS_DIGI15pt7b_mono
-is not used by anything ...was it meant for really tiny displays?
+displaySH1106.h
+displaySSD1306.h (DSP_SSD1306)
+displaySSD1305.h
 
 dsfont35 = DS_DIGI28pt7b, DS_DIGI128pt7b_mono, ...
 displayGC9106.h
@@ -45,7 +47,7 @@ The result is the total width will be divisible by 21
 Used my own tool to make the graphic for 70: https://trip5.github.io/Matrix-Fonts/renderer.html
 (note that it adds a 1 or 2 pixel border all around and we then add black borders and trim
 so that there are equal numbers of black pixels left-right and top-bottom,
-odd ones getting extra space on right and bottom)
+odd ones getting extra space on left and bottom)
 
 Chunky6_70:    pixel size 14
 Chunky6_70_px: pixel size 11 + 3 pixels space
@@ -61,6 +63,11 @@ Chunky6_35:    pixel size 7
 Chunky6_35_px: pixel size 6 + 1 pixels space
        height: 5 * 7 = 35 pixels
        length: 4 (includes 1 empty column) * 7 = 35 (per digit) x 10.5 = 294 pixels
+
+Chunky6_15:    pixel size 3
+Chunky6_15_px: pixel size 2 + 1 pixels space
+       height: 5 * 3 = 15 pixels
+       length: 4 (includes 1 empty column) * 3 = 12 (per digit) x 10.5 = 126 pixels
 
 This is the tool that can do it...
 py .\png_to_gfxfont.py Chunky6_70_px.png Chunky6_70_px.h --glow-char /

@@ -1,12 +1,9 @@
 /*************************************************************************************
-    SSD1306 128x32 displays configuration file.
-    Copy this file to src/displays/conf/displaySSD1306conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    OLED128x32 displays configuration file.
 *************************************************************************************/
 
-#ifndef displaySSD1306conf_h
-#define displaySSD1306conf_h
+#ifndef displayOLED128x32conf_h
+#define displayOLED128x32conf_h
 
 #define DSP_WIDTH       128
 #define TFT_FRAMEWDT    1

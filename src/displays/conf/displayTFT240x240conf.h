@@ -1,12 +1,9 @@
 /*************************************************************************************
-    ST7789 240x240 displays configuration file.
-    Copy this file to src/displays/conf/displayST7789conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    TFT240x240 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayST7789conf_h
-#define displayST7789conf_h
+#ifndef displayTFT240x240conf_h
+#define displayTFT240x240conf_h
 
 #define DSP_WIDTH       240
 #define TFT_FRAMEWDT    8

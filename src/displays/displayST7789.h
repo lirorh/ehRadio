@@ -18,16 +18,12 @@ typedef Adafruit_ST7789 yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayST7789conf_custom.h")
-  #include "conf/displayST7789conf_custom.h"
+#if DSP_MODEL==DSP_ST7789
+  #include "conf/displayTFT320x240conf.h"
+#elif DSP_MODEL==DSP_ST7789_76
+  #include "conf/displayTFT284x76conf.h"
 #else
-  #if DSP_MODEL==DSP_ST7789
-    #include "conf/displayST7789conf.h"
-  #elif DSP_MODEL==DSP_ST7789_76
-    #include "conf/displayST7789_76conf.h"
-  #else
-    #include "conf/displayST7789_240conf.h"
-  #endif
+  #include "conf/displayTFT240x240conf.h"
 #endif
 
 #endif

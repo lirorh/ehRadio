@@ -1,21 +1,21 @@
 /*************************************************************************************
-    ST7735 128x128 displays configuration file.
-    Copy this file to src/displays/conf/displayST7735conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    OLED128x128 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayST7789conf_h
-#define displayST7789conf_h
+#ifndef displayOLED128x128conf_h
+#define displayOLED128x128conf_h
 
 #define DSP_WIDTH       128
 #define TFT_FRAMEWDT    4
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
 
+#define HIDE_BUFFERBAR
+#define HIDE_VU
+
 #define BOOTLOGOTOP     34
 
 /* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
-const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 2, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 3, 30 };
+const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 2, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 4, 30 };
 const ScrollConfig title1Conf     PROGMEM = {{ TFT_FRAMEWDT, 26, 1, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 2, 30 };
 const ScrollConfig title2Conf     PROGMEM = {{ TFT_FRAMEWDT, 36, 1, WA_LEFT }, 140, true, MAX_WIDTH-6*3-4, 5000, 2, 30 };
 const ScrollConfig playlistConf   PROGMEM = {{ TFT_FRAMEWDT, 56, 1, WA_LEFT }, 140, true, MAX_WIDTH, 1000, 4, 30 };

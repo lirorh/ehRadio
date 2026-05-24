@@ -13,10 +13,6 @@ typedef Adafruit_PCD8544 yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayN5110conf_custom.h")
-  #include "conf/displayN5110conf_custom.h"
-#else
-  #include "conf/displayN5110conf.h"
-#endif
+#include "conf/displayLCD84x48conf.h"
 
 #endif

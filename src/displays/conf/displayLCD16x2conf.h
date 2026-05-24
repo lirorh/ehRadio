@@ -1,12 +1,9 @@
 /*************************************************************************************
-    LCD1602 displays configuration file.
-    Copy this file to src/displays/conf/displayLCD1602conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    LCD16x2 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayLCD1602conf_h
-#define displayLCD1602conf_h
+#ifndef displayLCD16x2conf_h
+#define displayLCD16x2conf_h
 
 #define DSP_WIDTH       16
 #define TFT_FRAMEWDT    0

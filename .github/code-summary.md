@@ -653,6 +653,12 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 ## Display config files (`src/displays/conf/*.h`)
 - Mostly widget coordinates/sizing/visibility for each panel class.
 - Treated as layout maps rather than logic-heavy files.
+- Consolidated canonical conf files now route multiple models by panel type/dimensions:
+  - `displayOLED128x64conf.h` for SH1106/SH1107/SSD1305/SSD1306 128x64 OLED class.
+  - `displayTFT480x320conf.h` for ILI9488/ST7796 class.
+  - `displayTFT320x240conf.h` for ILI9341/ST7789 class.
+- The canonical files are intentionally deduplicated masters without per-model `#if DSP_MODEL...` branches; model-specific legacy deltas were removed in favor of one shared layout baseline per family.
+- Display driver headers now include conf files directly; custom fallback include blocks using `__has_include("conf/*_custom.h")` were removed.
 - Buffer bar layout/visibility symbols were renamed:
   - `heapbarConf` -> `bufferbarConf`
   - `HIDE_HEAPBAR` -> `HIDE_BUFFERBAR`

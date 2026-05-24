@@ -31,17 +31,9 @@
 #include "tools/commongfx.h"
 
 #ifdef LCD_2004
-  #if __has_include("conf/displayLCD2004conf_custom.h")
-    #include "conf/displayLCD2004conf_custom.h"
-  #else
-    #include "conf/displayLCD2004conf.h"
-  #endif
+  #include "conf/displayLCD20x4conf.h"
 #else
-  #if __has_include("conf/displayLCD1602conf_custom.h")
-    #include "conf/displayLCD1602conf_custom.h"
-  #else
-    #include "conf/displayLCD1602conf.h"
-  #endif
+  #include "conf/displayLCD16x2conf.h"
 #endif
 
 #endif

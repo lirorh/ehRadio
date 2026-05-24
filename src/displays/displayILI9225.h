@@ -12,10 +12,6 @@ typedef TFT_22_ILI9225 yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayILI9225conf_custom.h")
-  #include "conf/displayILI9225conf_custom.h"
-#else
-  #include "conf/displayILI9225conf.h"
-#endif
+#include "conf/displayTFT220x176conf.h"
 
 #endif

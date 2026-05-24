@@ -1,12 +1,9 @@
 /*************************************************************************************
-    ILI9225 220x176 displays configuration file.
-    Copy this file to src/displays/conf/displayILI9225conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    TFT220x176 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayILI9225conf_h
-#define displayILI9225conf_h
+#ifndef displayTFT220x176conf_h
+#define displayTFT220x176conf_h
 
 #define DSP_WIDTH       220
 #define DSP_HEIGHT      176

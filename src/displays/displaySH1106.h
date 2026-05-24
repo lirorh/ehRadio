@@ -17,10 +17,6 @@ typedef GFXcanvas1 Canvas;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displaySH1106conf_custom.h")
-  #include "conf/displaySH1106conf_custom.h"
-#else
-  #include "conf/displaySH1106conf.h"
-#endif
+#include "conf/displayOLED128x64conf.h"
 
 #endif

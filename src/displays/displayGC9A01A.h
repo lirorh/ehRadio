@@ -13,10 +13,6 @@ typedef Adafruit_GC9A01A yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayGC9A01Aconf_custom.h")
-  #include "conf/displayGC9A01Aconf_custom.h"
-#else
-  #include "conf/displayGC9A01Aconf.h"
-#endif
+#include "conf/displayTFT240x240roundconf.h"
 
 #endif

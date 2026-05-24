@@ -18,10 +18,6 @@ typedef Adafruit_ST7796S_kbv yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayST7796conf_custom.h")
-  #include "conf/displayST7796conf_custom.h"
-#else
-  #include "conf/displayST7796conf.h"
-#endif
+#include "conf/displayTFT480x320conf.h"
 
 #endif

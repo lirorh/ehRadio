@@ -1,12 +1,9 @@
 /*************************************************************************************
-    ST7796 480X320 displays configuration file.
-    Copy this file to src/displays/conf/displayILI9488conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    TFT480x320 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayILI9488conf_h
-#define displayILI9488conf_h
+#ifndef displayTFT480x320conf_h
+#define displayTFT480x320conf_h
 
 #define DSP_WIDTH       480
 #define DSP_HEIGHT      320
@@ -18,7 +15,7 @@
 #else
   #define TITLE_FIX     0
 #endif
-#if defined(BIG_BOOT_LOGO) || BIG_BOOT_LOGO //true
+#if defined(BIG_BOOT_LOGO) || BIG_BOOT_LOGO // true
   #define BOOTLOGOTOP   60
 #else
   #define BOOTLOGOTOP   110
@@ -57,7 +54,7 @@ const WidgetConfig vuConf         PROGMEM = { TFT_FRAMEWDT, 136, 1, WA_LEFT };
 
 const WidgetConfig bootWdtConf    PROGMEM = { 0, 205, 2, WA_CENTER };
 const ProgressConfig bootPrgConf  PROGMEM = { 90, 14, 4 };
-const BitrateConfig fullbitrateConf PROGMEM = {{DSP_WIDTH-TFT_FRAMEWDT-38, 59, 2, WA_LEFT}, 42 };
+const BitrateConfig fullbitrateConf PROGMEM = {{ DSP_WIDTH-TFT_FRAMEWDT-38, 59, 2, WA_LEFT }, 42 };
 
 /* BANDS  */                             /* { onebandwidth, onebandheight, bandsHspace, bandsVspace, numofbands, fadespeed } */
 const VUBandsConfig bandsConf     PROGMEM = { 32, 130, 4, 2, 10, 3 };
@@ -70,6 +67,7 @@ const char voltxtFmt[]            PROGMEM = "\023\025%d";
 const char batteryRangeFmt[][8]   PROGMEM = { "\013 %d%%", "\014 %d%%", "\017 %d%%" };
 const char bitrateFmt[]           PROGMEM = "%d kBs";
 
+/* MOVES  */                             /* { left, top, width } */
 const MoveConfig clockMove        PROGMEM = { 0, 230, -1 };
 const MoveConfig weatherMove      PROGMEM = { 8, 120, MAX_WIDTH };
 const MoveConfig weatherMoveVU    PROGMEM = { 89, 120, MAX_WIDTH-89+TFT_FRAMEWDT };

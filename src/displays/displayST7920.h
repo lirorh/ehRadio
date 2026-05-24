@@ -11,10 +11,6 @@ typedef ST7920 yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayST7920conf_custom.h")
-  #include "conf/displayST7920conf_custom.h"
-#else
-  #include "conf/displayST7920conf.h"
-#endif
+#include "conf/displayLCD128x64conf.h"
 
 #endif

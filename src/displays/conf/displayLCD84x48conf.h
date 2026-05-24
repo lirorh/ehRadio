@@ -1,12 +1,9 @@
 /*************************************************************************************
-    Nokia 5110 84x48 displays configuration file.
-    Copy this file to src/displays/conf/displayN5110conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    LCD84x48 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayN5110conf_h
-#define displayN5110conf_h
+#ifndef displayLCD84x48conf_h
+#define displayLCD84x48conf_h
 
 #define DSP_WIDTH       84
 #define TFT_FRAMEWDT    0

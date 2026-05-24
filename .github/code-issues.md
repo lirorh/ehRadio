@@ -478,28 +478,23 @@ If we do that, we should initiate cleanup on every boot (well, initiate cleanup 
 
 | Battery widget checked on real hardware? | Display conf file |
 |---|---|
-| [X] | `displayILI9341conf.h` (so probably OK on ST7789) |
-| [ ] | `displayGC9106conf.h` |
-| [ ] | `displayGC9A01Aconf.h` |
-| [ ] | `displayILI9225conf.h` |
-| [X] | `displayILI9488conf.h` (so probably OK on ST7796 ) |
-| [ ] | `displayN5110conf.h` |
-| [-] | `displaySH1106conf.h` - tested but not functional, needs further testing |
-| [ ] | `displaySSD1305conf.h` |
-| [ ] | `displaySSD1306conf.h` |
-| [ ] | `displaySSD1306x32conf.h` |
-| [ ] | `displaySSD1322conf.h` |
-| [ ] | `displaySSD1327conf.h` |
-| [ ] | `displayST7735_144conf.h` |
-| [ ] | `displayST7735_blackconf.h` |
-| [ ] | `displayST7735_miniconf.h` |
-| [ ] | `displayST7789conf.h` |
-| [ ] | `displayST7789_76conf.h` |
-| [ ] | `displayST7789_240conf.h` |
-| [ ] | `displayST7796conf.h` |
-| [ ] | `displayST7920conf.h` |
-| N/A (LCD) | `displayLCD1602conf.h` |
-| N/A (LCD) | `displayLCD2004conf.h` |
+| [X] | `displayTFT320x240conf.h` (ILI9341/ST7789 shared) |
+| [ ] | `displayTFT160x80conf.h` |
+| [ ] | `displayTFT240x240roundconf.h` |
+| [ ] | `displayTFT220x176conf.h` |
+| [X] | `displayTFT480x320conf.h` (ILI9488/ST7796 shared) |
+| [ ] | `displayLCD84x48conf.h` |
+| [-] | `displayOLED128x64conf.h` (SH1106/SSD1305/SSD1306 shared) - tested but not functional, needs further testing |
+| [ ] | `displayOLED128x32conf.h` |
+| [ ] | `displayOLED256x64conf.h` |
+| [ ] | `displayOLED128x128conf.h` |
+| [ ] | `displayTFT128x128conf.h` |
+| [ ] | `displayTFT160x128conf.h` |
+| [ ] | `displayTFT284x76conf.h` |
+| [ ] | `displayTFT240x240conf.h` |
+| [ ] | `displayLCD128x64conf.h` |
+| N/A (LCD) | `displayLCD16x2conf.h` |
+| N/A (LCD) | `displayLCD20x4conf.h` |
 
 ---
 
@@ -559,7 +554,7 @@ These displays maintain their own internal frame buffer — Adafruit_SH110X keep
 
 The I2C clock for SH1106 is `I2CFREQ_HZ = 4,000,000` (4MHz Fast-mode+). A 128×64 buffer = 1,024 bytes. At 4MHz I2C: ~(1024×9 bits) / 4MHz ≈ 2.3ms per full frame push. This is well within the 10ms loop budget, so OLED is not bandwidth-constrained.
 
-Features hidden by conf file (`displaySH1106conf.h`): `HIDE_VU`, `HIDE_BUFFERBAR`, `HIDE_VOL` — because there is simply no room on a 128×64 canvas for a VU meter or buffer bar. `HIDE_TITLE2` is **not** set (title2 at row 28 fits). Bitrate shows right-aligned at size-1 on the same row as title1 (row 19). The footer collapses to just IP and RSSI on row 55.
+Features hidden by conf file (`displayOLED128x64conf.h`) for the SH1106 branch: `HIDE_VU`, `HIDE_BUFFERBAR`, `HIDE_VOL` — because there is simply no room on a 128×64 canvas for a VU meter or buffer bar. `HIDE_TITLE2` is **not** set (title2 at row 28 fits). Bitrate shows right-aligned at size-1 on the same row as title1 (row 19). The footer collapses to just IP and RSSI on row 55.
 
 #### Class 3: LCD Character Display (DSP_1602I2C, DSP_2004I2C, DSP_1602, DSP_2004)
 

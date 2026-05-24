@@ -16,11 +16,7 @@ typedef ILI9486_SPI yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayILI9488conf_custom.h")
-  #include "conf/displayILI9488conf_custom.h"
-#else
-  #include "conf/displayILI9488conf.h"
-#endif
+#include "conf/displayTFT480x320conf.h"
 
 #define ILI9488_SLPIN     0x10
 #define ILI9488_SLPOUT    0x11

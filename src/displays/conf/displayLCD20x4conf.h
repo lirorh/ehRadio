@@ -1,12 +1,9 @@
 /*************************************************************************************
-    LCD2004 displays configuration file.
-    Copy this file to src/displays/conf/displayLCD2004conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    LCD20x4 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayLCD2004conf_h
-#define displayLCD2004conf_h
+#ifndef displayLCD20x4conf_h
+#define displayLCD20x4conf_h
 
 #define DSP_WIDTH       20
 #define TFT_FRAMEWDT    0

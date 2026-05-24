@@ -12,10 +12,6 @@ typedef Jamis_SSD1322 yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displaySSD1322conf_custom.h")
-  #include "conf/displaySSD1322conf_custom.h"
-#else
-  #include "conf/displaySSD1322conf.h"
-#endif
+#include "conf/displayOLED256x64conf.h"
 
 #endif

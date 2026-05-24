@@ -12,18 +12,11 @@ typedef Adafruit_ST7735 yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayST7735conf_custom.h")
-  #include "conf/displayST7735conf_custom.h"
+#if DTYPE==INITR_MINI160x80
+  #include "conf/displayTFT160x80conf.h"
+#elif DTYPE==INITR_144GREENTAB
+  #include "conf/displayTFT128x128conf.h"
 #else
-  #if DTYPE==INITR_MINI160x80
-    #include "conf/displayST7735_miniconf.h"
-  #elif DTYPE==INITR_144GREENTAB
-    #include "conf/displayST7735_144conf.h"
-  #else
-    #include "conf/displayST7735_blackconf.h"
-  #endif
+  #include "conf/displayTFT160x128conf.h"
 #endif
-
-
-
 #endif

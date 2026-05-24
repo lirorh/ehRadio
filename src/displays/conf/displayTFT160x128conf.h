@@ -1,11 +1,8 @@
 /*************************************************************************************
-    ST7735 160x128 displays configuration file.
-    Copy this file to src/displays/conf/displayST7735conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    TFT160x128 displays configuration file.
 *************************************************************************************/
-#ifndef displayST7735conf_h
-#define displayST7735conf_h
+#ifndef displayTFT160x128conf_h
+#define displayTFT160x128conf_h
 
 #define DSP_WIDTH       160
 #define TFT_FRAMEWDT    4

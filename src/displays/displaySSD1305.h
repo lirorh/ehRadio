@@ -12,10 +12,6 @@ typedef Adafruit_SSD1305 yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displaySSD1305conf_custom.h")
-  #include "conf/displaySSD1305conf_custom.h"
-#else
-  #include "conf/displaySSD1305conf.h"
-#endif
+#include "conf/displayOLED128x64conf.h"
 
 #endif

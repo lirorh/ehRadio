@@ -1,24 +1,18 @@
 /*************************************************************************************
-    ST7789 320x240 displays configuration file.
-    Copy this file to src/displays/conf/displayST7789conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    TFT320x240 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayST7789conf_h
-#define displayST7789conf_h
+#ifndef displayTFT320x240conf_h
+#define displayTFT320x240conf_h
 
 #define DSP_WIDTH       320
 #define TFT_FRAMEWDT    8
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
-//#define PLMITEMS        11
-//#define PLMITEMLENGHT   40
-//#define PLMITEMHEIGHT   22
 
 #if BITRATE_FULL
-  #define TITLE_FIX 44
+  #define TITLE_FIX     44
 #else
-  #define TITLE_FIX 0
+  #define TITLE_FIX     0
 #endif
 #define BOOTLOGOTOP     68
 
@@ -45,7 +39,7 @@ const WidgetConfig voltxtConf     PROGMEM = { 0, 214, 1, WA_CENTER };
 const WidgetConfig batteryConf    PROGMEM = { (DSP_WIDTH*2)/3+2, 214, 1, WA_LEFT };
 const WidgetConfig iptxtConf      PROGMEM = { TFT_FRAMEWDT, 214, 1, WA_LEFT };
 const WidgetConfig rssiConf       PROGMEM = { TFT_FRAMEWDT, 208, 2, WA_RIGHT };
-const WidgetConfig numConf        PROGMEM = { 0, 120+30, 0, WA_CENTER };
+const WidgetConfig numConf        PROGMEM = { 0, 150, 0, WA_CENTER };
 const WidgetConfig apNameConf     PROGMEM = { TFT_FRAMEWDT, 66, 2, WA_CENTER };
 const WidgetConfig apName2Conf    PROGMEM = { TFT_FRAMEWDT, 90, 2, WA_CENTER };
 const WidgetConfig apPassConf     PROGMEM = { TFT_FRAMEWDT, 130, 2, WA_CENTER };
@@ -55,7 +49,7 @@ const WidgetConfig vuConf         PROGMEM = { TFT_FRAMEWDT, 100, 1, WA_LEFT };
 
 const WidgetConfig bootWdtConf    PROGMEM = { 0, 162, 1, WA_CENTER };
 const ProgressConfig bootPrgConf  PROGMEM = { 90, 14, 4 };
-const BitrateConfig fullbitrateConf PROGMEM = {{DSP_WIDTH-TFT_FRAMEWDT-34, 43, 2, WA_LEFT}, 42 };
+const BitrateConfig fullbitrateConf PROGMEM = {{ DSP_WIDTH-TFT_FRAMEWDT-34, 43, 2, WA_LEFT }, 42 };
 
 /* BANDS  */                             /* { onebandwidth, onebandheight, bandsHspace, bandsVspace, numofbands, fadespeed } */
 const VUBandsConfig bandsConf     PROGMEM = { 24, 100, 4, 2, 10, 2 };

@@ -1,12 +1,9 @@
 /*************************************************************************************
-    ST7789 284x76 displays configuration file.
-    Copy this file to src/displays/conf/displayST7789conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    TFT284x76 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayST778976conf_h
-#define displayST778976conf_h
+#ifndef displayTFT284x76conf_h
+#define displayTFT284x76conf_h
 
 #define DSP_WIDTH       284
 #define DSP_HEIGHT      76

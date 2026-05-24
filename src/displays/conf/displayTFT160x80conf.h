@@ -1,24 +1,22 @@
 /*************************************************************************************
-    GC9106 160x80 displays configuration file.
-    Copy this file to src/displays/conf/displayGC9106conf_custom.h
-    and modify it
-    More info on https://github.com/e2002/yoradio/wiki/Widgets#widgets-description
+    TFT160x80 displays configuration file.
 *************************************************************************************/
 
-#ifndef displayGC9106conf_h
-#define displayGC9106conf_h
+#ifndef displayTFT160x80conf_h
+#define displayTFT160x80conf_h
 
 #define DSP_WIDTH       160
 #define TFT_FRAMEWDT    1
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
-#define BOOTLOGOTOP     5
 
 #define HIDE_IP
 #define HIDE_TITLE2
 #define HIDE_VOL
 
+#define BOOTLOGOTOP     5
+
 /* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
-const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 2, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 4, 30 };
+const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 2, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 3, 30 };
 const ScrollConfig title1Conf     PROGMEM = {{ TFT_FRAMEWDT, 19, 1, WA_LEFT }, 140, true, MAX_WIDTH-6*3-4, 5000, 3, 30 };
 //const ScrollConfig title2Conf     PROGMEM = {{ TFT_FRAMEWDT, 36, 1, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 2, 30 };
 const ScrollConfig playlistConf   PROGMEM = {{ TFT_FRAMEWDT, 33, 1, WA_LEFT }, 140, true, MAX_WIDTH, 0, 3, 30 };
@@ -38,8 +36,8 @@ const WidgetConfig bootstrConf    PROGMEM = { 0, 65, 1, WA_CENTER };
 const WidgetConfig bitrateConf    PROGMEM = { TFT_FRAMEWDT, 19, 1, WA_RIGHT };
 //const WidgetConfig voltxtConf     PROGMEM = { 32, 108, 1, WA_RIGHT };
 //const WidgetConfig iptxtConf      PROGMEM = { TFT_FRAMEWDT, 108, 1, WA_LEFT };
-const WidgetConfig batteryConf    PROGMEM = { (DSP_WIDTH*2)/3+2, 67, 1, WA_LEFT };
 const WidgetConfig rssiConf       PROGMEM = { TFT_FRAMEWDT, 80-13, 1, WA_RIGHT };
+const WidgetConfig batteryConf    PROGMEM = { (DSP_WIDTH*2)/3+2, 80-13, 1, WA_LEFT };
 const WidgetConfig numConf        PROGMEM = { 0, 29+32, 0, WA_CENTER };
 const WidgetConfig apNameConf     PROGMEM = { 0, 20, 1, WA_CENTER };
 const WidgetConfig apName2Conf    PROGMEM = { 0, 32, 1, WA_CENTER };
@@ -52,7 +50,7 @@ const WidgetConfig bootWdtConf    PROGMEM = { 0, 50, 1, WA_CENTER };
 const ProgressConfig bootPrgConf  PROGMEM = { 90, 14, 4 };
 
 /* BANDS  */                             /* { onebandwidth, onebandheight, bandsHspace, bandsVspace, numofbands, fadespeed } */
-const VUBandsConfig bandsConf     PROGMEM = { 12, 48, 2, 1, 8, 3 };
+const VUBandsConfig bandsConf     PROGMEM = { 12, 48, 2, 1, 8, 2 };
 
 /* STRINGS  */
 const char numtxtFmt[]            PROGMEM = "%d";

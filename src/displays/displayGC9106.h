@@ -13,10 +13,6 @@ typedef Adafruit_GC9106Ex yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayGC9106conf_custom.h")
-  #include "conf/displayGC9106conf_custom.h"
-#else
-  #include "conf/displayGC9106conf.h"
-#endif
+#include "conf/displayTFT160x80conf.h"
 
 #endif

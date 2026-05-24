@@ -12,10 +12,6 @@ typedef Adafruit_ILI9341 yoDisplay;
 
 #include "tools/commongfx.h"
 
-#if __has_include("conf/displayILI9341conf_custom.h")
-  #include "conf/displayILI9341conf_custom.h"
-#else
-  #include "conf/displayILI9341conf.h"
-#endif
+#include "conf/displayTFT320x240conf.h"
 
 #endif

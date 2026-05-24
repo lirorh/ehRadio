@@ -126,21 +126,6 @@ void Display::init() {
 
 uint16_t Display::width() { return dsp.width(); }
 uint16_t Display::height() { return dsp.height(); }
-#if TIME_SIZE>19
-  #if DSP_MODEL==DSP_SSD1322
-    #define BOOT_PRG_COLOR    WHITE
-    #define BOOT_TXT_COLOR    WHITE
-    #define PINK              WHITE
-  #elif DSP_MODEL==DSP_SSD1327
-    #define BOOT_PRG_COLOR    0x07
-    #define BOOT_TXT_COLOR    0x3f
-    #define PINK              0x02
-  #else
-    #define BOOT_PRG_COLOR    0xE68B
-    #define BOOT_TXT_COLOR    0xFFFF
-    #define PINK              0xF97F
-  #endif
-#endif
 
 void Display::_bootScreen() {
   _boot = new Page();

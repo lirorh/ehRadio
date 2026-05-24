@@ -9,17 +9,6 @@
 typedef GFXcanvas1 Canvas;
 typedef ST7920 yoDisplay;
 
-/*
- * OLED COLORS
- */
-#define BOOT_PRG_COLOR    WHITE
-#define BOOT_TXT_COLOR    WHITE
-#define PINK              WHITE
-#define SILVER            WHITE
-#define TFT_BG            BLACK
-#define TFT_FG            WHITE
-#define TFT_LOGO          WHITE
-
 #include "tools/commongfx.h"
 
 #if __has_include("conf/displayST7920conf_custom.h")

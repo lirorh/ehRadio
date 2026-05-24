@@ -2,6 +2,8 @@
 #define dspcore_h
 #pragma once
 
+#include "dspcolors.h"
+
 #if DSP_MODEL==DSP_DUMMY
   #define DUMMYDISPLAY
   #define DSP_NOT_FLIPPED

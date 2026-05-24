@@ -16,17 +16,6 @@ typedef Adafruit_SSD1327 yoDisplay;
       0x07, 0x08, 0x10, 0x18, 0x20, 0x2f, 0x38, 0x3f,
       */
 
-/*
- * TFT COLORS
- */
-
-#define DARK_GRAY   0x01
-#define SILVER      0x07
-#define TFT_BG      0x00
-#define TFT_FG      0x08
-#define TFT_LOGO    0x3f
-#define ORANGE      0x05
-
 #include "tools/commongfx.h"
 
 #if __has_include("conf/displaySSD1327conf_custom.h")

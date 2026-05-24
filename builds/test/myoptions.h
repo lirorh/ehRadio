@@ -48,23 +48,21 @@
   #define VS1053_DREQ        10
   #define VS1053_RST         -1
   #define VS_PATCH_ENABLE    false
-  #define ENC_CLK           40
-  #define ENC_DT           39
-  #define ENC_SW           38
+  #define ENC_CLK            40
+  #define ENC_DT             39
+  #define ENC_SW             38
   #define SD_SPI             'B'
   #define SD_CS              47
   #define ONE_CLICK_SWITCH   true
   #define BTN_NEXT           0
 #endif
 /* --- SYSTEM OVERRIDES & USER DEFAULTS --- */
-#define LOOP_TASK_STACK_SIZE 16
-#define CONFIG_ASYNC_TCP_QUEUE_SIZE 64
-#define SMART_START       true
-#define TIMEZONE_NAME     "UTC"
-#define TIMEZONE_POSIX    "UTC0"
-#define SNTP_1            "pool.ntp.org"
-#define SNTP_2            "time.nist.gov"
-#define WEATHER_LAT       "0.0"
-#define WEATHER_LON       "0.0"
+#define SMART_START          true
+#define TIMEZONE_NAME        "UTC"
+#define TIMEZONE_POSIX       "UTC0"
+#define SNTP_1               "pool.ntp.org"
+#define SNTP_2               "time.nist.gov"
+#define WEATHER_LAT          "0.0"
+#define WEATHER_LON          "0.0"
 
 #endif // myoptions_h

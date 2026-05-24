@@ -10,15 +10,6 @@
 typedef GFXcanvas1 Canvas;
 typedef Jamis_SSD1322 yoDisplay;
 
-/*
- * OLED COLORS
- */
-
-#define SILVER            WHITE
-#define TFT_BG            BLACK
-#define TFT_FG            WHITE
-#define TFT_LOGO          WHITE
-
 #include "tools/commongfx.h"
 
 #if __has_include("conf/displaySSD1322conf_custom.h")

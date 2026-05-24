@@ -38,16 +38,18 @@ especially in terms of how they are used and how they are built.
 
 | ёRadio | ehRadio |
 | ------ | --------|
-| Physical controls (decided by builder)        | Uses ёRadio control architecture |
-| - up to 2 rotaries and 6 buttons              | - same|
+| Physical controls (builder's choice)          | Uses ёRadio control architecture |
+| - up to 2 rotaries and 6 buttons              | - same |
 | - touchscreen control (basic swipes and taps) | - same | 
 | - Nextion uses advanced control               | - Nextion support is incomplete or broken |
+| English or Russian display                    | 37 Display languages (Latin & Cyrillic) (builder's choice)
 | MQTT, Telnet, HTTP                            | MQTT, Telnet, HTTP |
 | - mostly used for playback                    | - use the same commands as WebUI (!) |
 | Home Assistant integration (through MQTT)     | Home Assistant integration (through MQTT) - improved a bit |
 | WebUI interface, includes control playback    | WebUI similar but with added functionality |
 | - edit/import/export playlists                | - edit/import/export/merge playlists (works on mobile too) |
 | - change certain settings                     | - change many settings |
+| - English UI                                  | - 50 Languages (easily changeable)
 |                                               | Radio Station search using Radio-browser API | 
 |                                               | Curated lists can download/merge/preview other playlists |
 
@@ -92,7 +94,7 @@ I realize documentation is a little sparse right now.  I'm working on it.
 
 A lot of build options and comments and notes are actually in `options.h` and in various files.
 
-As of `2026.05.19` I've done a lot of work to clean up the codebase and organize it.
+As of `2026.05.24` I've done a lot of work to clean up the codebase and organize it.  I think that part is done.
 
 More work remains to be done and the `Feature Freeze` will remain in place at least until the "de-fork" of the audio libraries is finished.
 
@@ -162,7 +164,7 @@ e2002 began sharing his work on the 4PDA "WI-FI internet radio DIY" thread [Janu
 In July 2023, I built my first radio using Edzelf's [ESP32Radio-V2](https://github.com/Edzelf/ESP32Radio-V2/).
 In November 2024, I discovered [ёRadio](https://github.com/e2002/yoradio/) and on December 26, 2024, I made my [first PR](https://github.com/e2002/yoradio/pull/125).
 
-In May I began adding full support for Radio-browser API with the hope it would improve a user's experience. I also merged many of maleksm's mods.
+In May 2005 I began adding full support for Radio-browser API with the hope it would improve a user's experience. I also merged many of maleksm's mods.
 That PR started [June 13, 2025](https://github.com/e2002/yoradio/pull/184) was abandoned June 19, 2025 with a ridiculous amount of changes.
 
 In retrospect, proposing thousands of lines of changes was rude and unrealistic.  After some thought, ehRadio was forked August 10, 2025.
@@ -177,7 +179,7 @@ For that and other major needed changes to the codebase, I maintain a `code-issu
 
 I will add a note here that although I do use AI-assisted coding, I am not a "vibe-coder" - except for python scripts.
 I welcome all pull requests but please follow the rules as laid out in `copilot-instructions.md` and `code-summary.md`,
-the former of which is a set of hard rules for Ai-assisted coding, the latter of which is an AI-generated `Bible` of the codebase to help an LLM to maintain codebase consistancy.
+the former of which is a set of hard rules for AI-assisted coding, the latter of which is an AI-generated `Bible` of the codebase to help an LLM maintain codebase consistancy.
 
 ---
 
@@ -187,7 +189,7 @@ the former of which is a set of hard rules for Ai-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.05.23 | `Feature Freeze` `De-fork from ёRadio` Theme updated, Chunky6 clock font, fixes to `options.h`: `BTN_*` fixed & `ENC_*` renamed, screensaver and battery and other fixes (esp. for smaller screens like SH1106), generator updated |
+| 2026.05.24 | `Feature Freeze` `De-fork from ёRadio` Theme updated, Chunky6 font, fixes to `options.h`: `BTN_*` fixed & `ENC_*` renamed, screensaver and battery and other fixes (esp. for smaller screens like SH1106), generator updated |
 | 2026.05.19 | `Feature Freeze` This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
 | 2026.05.08 | `Feature Freeze` SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
 | 2026.04.09 | `Feature Freeze` major and minor changes to structure, aggressive reconnect to wi-fi |

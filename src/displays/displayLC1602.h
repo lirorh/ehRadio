@@ -28,10 +28,6 @@
   #define DSP_INIT LiquidCrystal(LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7)
 #endif
 
-#define BOOT_PRG_COLOR    0x1
-#define BOOT_TXT_COLOR    0x1
-#define PINK              0x1
-
 #include "tools/commongfx.h"
 
 #ifdef LCD_2004
@@ -47,15 +43,5 @@
     #include "conf/displayLCD1602conf.h"
   #endif
 #endif
-
-/* not used required */
-#define BOOTLOGOTOP     0
-const char rssiFmt[]    PROGMEM = "";
-const MoveConfig clockMove     PROGMEM = { 0, 0, -1 };
-const MoveConfig weatherMove    PROGMEM = { 0, 0, -1 };
-const MoveConfig weatherMoveVU    PROGMEM = { 0, 0, -1 };
-const char const_lcdApMode[]    PROGMEM = "AP/IMPROV MODE";
-const char const_lcdApName[]    PROGMEM = "AP NAME: ";
-const char const_lcdApPass[]    PROGMEM = "PASSWORD: ";
 
 #endif

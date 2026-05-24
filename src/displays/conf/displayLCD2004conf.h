@@ -21,6 +21,8 @@
 #define HIDE_BATTERY
 #define META_MOVE
 
+#define BOOTLOGOTOP     0
+
 /* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
 #define SDELTA          2
 #define STIME           300
@@ -43,11 +45,18 @@ const ProgressConfig bootPrgConf  PROGMEM = { 250, 10, 4 };
 const char numtxtFmt[]            PROGMEM = "%d";
 const char bitrateFmt[]           PROGMEM = "%d";
 const char voltxtFmt[]            PROGMEM = "%d";
+const char rssiFmt[]              PROGMEM = "";
+const char const_lcdApMode[]      PROGMEM = "AP/IMPROV MODE";
+const char const_lcdApName[]      PROGMEM = "AP NAME: ";
+const char const_lcdApPass[]      PROGMEM = "PASSWORD: ";
 
 //#define WEATHER_FMT_SHORT
 //const char weatherFmt[]           PROGMEM = "%.1fC %dmm %s%%";
 
 /* MOVES  */                             /* { left, top, width } */
 const MoveConfig metaMove         PROGMEM = { 0, 0, MAX_WIDTH };
+const MoveConfig clockMove        PROGMEM = { 0, 0, -1 };
+const MoveConfig weatherMove      PROGMEM = { 0, 0, -1 };
+const MoveConfig weatherMoveVU    PROGMEM = { 0, 0, -1 };
 
 #endif

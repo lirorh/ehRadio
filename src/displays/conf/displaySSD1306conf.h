@@ -46,7 +46,7 @@ const WidgetConfig apNameConf     PROGMEM = { 0, 18, 1, WA_CENTER };
 const WidgetConfig apName2Conf    PROGMEM = { 0, 26, 1, WA_CENTER };
 const WidgetConfig apPassConf     PROGMEM = { 0, 37, 1, WA_CENTER };
 const WidgetConfig apPass2Conf    PROGMEM = { 0, 45, 1, WA_CENTER };
-const WidgetConfig clockConf      PROGMEM = { 6, 36, 0, WA_CENTER };
+const WidgetConfig clockConf      PROGMEM = { TFT_FRAMEWDT, 54, 0, WA_LEFT };
 const WidgetConfig vuConf         PROGMEM = { 1, 28, 1, WA_LEFT };
 
 const WidgetConfig bootWdtConf    PROGMEM = { 0, 64-8*2-5, 1, WA_CENTER };

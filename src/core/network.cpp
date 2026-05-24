@@ -73,23 +73,29 @@ void ticks() {
     }
   }
   #ifndef DSP_LCD
-    if (config.store.screensaverEnabled && display.mode()==PLAYER && !player.isRunning()) {
-      config.screensaverTicks++;
-      if (config.screensaverTicks > config.store.screensaverTimeout+SCREENSAVERSTARTUPDELAY) {
-        if (config.store.screensaverBlank) {
-          display.putRequest(NEWMODE, SCREENBLANK);
-        } else {
-          display.putRequest(NEWMODE, SCREENSAVER);
+    bool connectingStream = display.mode()==PLAYER && !player.isRunning() && strcmp_P(config.station.title, LANG::const_PlConnect) == 0;
+    if (connectingStream) {
+      config.screensaverTicks = 0;
+      config.screensaverPlayingTicks = 0;
+    } else {
+      if (config.store.screensaverEnabled && display.mode()==PLAYER && !player.isRunning()) {
+        config.screensaverTicks++;
+        if (config.screensaverTicks > config.store.screensaverTimeout+SCREENSAVERSTARTUPDELAY) {
+          if (config.store.screensaverBlank) {
+            display.putRequest(NEWMODE, SCREENBLANK);
+          } else {
+            display.putRequest(NEWMODE, SCREENSAVER);
+          }
         }
       }
-    }
-    if (config.store.screensaverPlayingEnabled && display.mode()==PLAYER && player.isRunning()) {
-      config.screensaverPlayingTicks++;
-      if (config.screensaverPlayingTicks > config.store.screensaverPlayingTimeout*60+SCREENSAVERSTARTUPDELAY) {
-        if (config.store.screensaverPlayingBlank) {
-          display.putRequest(NEWMODE, SCREENBLANK);
-        } else {
-          display.putRequest(NEWMODE, SCREENSAVER);
+      if (config.store.screensaverPlayingEnabled && display.mode()==PLAYER && player.isRunning()) {
+        config.screensaverPlayingTicks++;
+        if (config.screensaverPlayingTicks > config.store.screensaverPlayingTimeout*60+SCREENSAVERSTARTUPDELAY) {
+          if (config.store.screensaverPlayingBlank) {
+            display.putRequest(NEWMODE, SCREENBLANK);
+          } else {
+            display.putRequest(NEWMODE, SCREENSAVER);
+          }
         }
       }
     }

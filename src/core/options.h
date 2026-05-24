@@ -187,7 +187,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 
 /* Use #define BIG_BOOT_LOGO with 480x320 displays if you want a bigger boot logo */
-
 #if DSP_MODEL==DSP_ST7796 || DSP_MODEL==DSP_ILI9488 || DSP_MODEL!=DSP_ILI9486
   #ifndef BIG_BOOT_LOGO
     #if defined(CONFIG_IDF_TARGET_ESP32) // ESP32 is already low on flash size and this is huge
@@ -201,24 +200,28 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define USE_FBUFFER true // framebuffer: best to leave this on
 #endif
 
-/* Define your clock as #define CLOCKFONT CHUNKY6 */
-
+/* Define your clock/volume page font as #define CLOCKFONT CHUNKY6 */
 #define YO_MONO         0  // Default modern yoRadio 7-Segment font (monospaced)
 #define YO_CLASSIC      1  // Classic yoRadio 7-Segment font (1 is narrow)
 #define CHUNKY6_PX      2  // Default
 #define CHUNKY6         3  // Really heavy looking
 
-/* Chunky 6 with spaces between pixels is the default */
+/* Chunky6 with spaces between pixels is the default (except on smaller displays) */
 #ifndef CLOCKFONT
-  #define CLOCKFONT CHUNKY6_PX
+  #if DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SH1106 || DSP_MODEL==DSP_SH1107 || DSP_MODEL==DSP_SSD1305 || DSP_MODEL==DSP_SSD1305I2C
+  // note that using YO_MONO or YO_CLASSIC on the above list of displays will revert to glcd font (the common font)
+    #define CLOCKFONT CHUNKY6
+  #else
+    #define CLOCKFONT CHUNKY6_PX
+  #endif
 #endif
 
 /* This makes the characters get an LED/VFD background color that makes it look like a real clock */
 #ifndef CLOCKGLOW // CLOCKGLOW uses a special character to color COLOR_CLOCK_BG behind the clock for a glow effect
-  #if CLOCKFONT == YO_CLASSIC
-    #define CLOCKGLOW false // this will be forced later anyways (this font isn't fixed-width so the effect doesn't work)
-  #else
+  #if CLOCKFONT == YO_MONO || CLOCKFONT == CHUNKY6_PX
     #define CLOCKGLOW true
+  #else
+    #define CLOCKGLOW false // with YO_CLASSIC, this effect looks super-terrible, with CHUNKY6 it is not great
   #endif
 #endif
 

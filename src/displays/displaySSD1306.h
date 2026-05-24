@@ -9,6 +9,10 @@
   #include "bootlogo/110x32mono.h"
 #endif
 
+#if DSP_MODEL==DSP_SSD1306
+  #include "ehfonts/font15.h"
+#endif
+
 typedef GFXcanvas1 Canvas;
 typedef Adafruit_SSD1306 yoDisplay;
 

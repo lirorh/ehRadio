@@ -15,6 +15,11 @@
   config.theme.clock      = TFT_FG;
   config.theme.seconds    = TFT_FG;
   config.theme.clockbg    = TFT_BG;
+  config.theme.clockss    = TFT_FG;
+  config.theme.secondsss  = TFT_FG;
+  config.theme.clockbgss  = TFT_BG;
+  config.theme.dowss      = TFT_FG;
+  config.theme.datess     = TFT_FG;
   config.theme.weather    = TFT_FG;
   config.theme.title1     = TFT_FG;
   config.theme.title2     = TFT_FG;

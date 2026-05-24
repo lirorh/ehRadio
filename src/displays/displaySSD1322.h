@@ -5,7 +5,7 @@
 #include <Adafruit_GFX.h>
 #include "../libraries/SSD1322/SSD1322.h"
 #include "bootlogo/110x32mono.h"
-#include "fonts/dsfont35.h"
+#include "ehfonts/font35.h"
 
 typedef GFXcanvas1 Canvas;
 typedef Jamis_SSD1322 yoDisplay;

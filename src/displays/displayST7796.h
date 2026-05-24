@@ -11,7 +11,7 @@
   #include "bootlogo/99x64.h"
 #endif
 
-#include "fonts/dsfont70.h"
+#include "ehfonts/font70.h"
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_ST7796S_kbv yoDisplay;

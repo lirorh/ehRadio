@@ -547,7 +547,7 @@ These are full-color SPI panels. Each pixel is a 16-bit RGB565 value. The `ILI94
 
 `VuWidget` uses a `GFXcanvas16` canvas (raw pixel array) that is pushed similarly via `drawRGBBitmap` or `writePixels`. Both paths are already doing the right thing for burst efficiency.
 
-**`ClockWidget`** on large TFTs uses the `dsfont70.h` custom digit font (`TIME_SIZE=70`). It tracks previously rendered digits and only redraws changed segments — there is a `_forceflag` / `_timebuffer` mechanism to minimize SPI traffic for the clock area.
+**`ClockWidget`** on large TFTs uses the `font70.h` custom digit font (`TIME_SIZE=70`). It tracks previously rendered digits and only redraws changed segments — there is a `_forceflag` / `_timebuffer` mechanism to minimize SPI traffic for the clock area.
 
 #### Class 2: Monochrome OLED (SH1106, SSD1306, SSD1327, SSD1322, …)
 
@@ -624,7 +624,7 @@ The queue has depth 5. If display processing falls behind, `xQueueSend` blocks f
 
 **VU meter:** Rendered via `GFXcanvas16::fillRect()` into a small canvas, then pushed via `drawRGBBitmap` or `writePixels` (single burst). Called every loop tick when not locked. The fade algorithm uses a static `measL`/`measR` that decays toward `dimension` (fully filled / muted) when not playing, and tracks peak when playing — a simple LED-hold style meter.
 
-**ClockWidget:** Has its own partial-update logic using `_timebuffer` (stores current `"HH:MM"` string). Only redraws if `_timebuffer != new time`. On large TFTs with `TIME_SIZE=70`, it uses the custom `dsfont70.h` font and calculates exact pixel bounds for each digit. The `_fullclock` flag controls whether a date row is shown beneath the time.
+**ClockWidget:** Has its own partial-update logic using `_timebuffer` (stores current `"HH:MM"` string). Only redraws if `_timebuffer != new time`. On large TFTs with `TIME_SIZE=70`, it uses the custom `font70.h` font and calculates exact pixel bounds for each digit. The `_fullclock` flag controls whether a date row is shown beneath the time.
 
 **Pages:** There are exactly 4 static pages: `PG_PLAYER`, `PG_DIALOG`, `PG_PLAYLIST`, `PG_SCREENSAVER`. Plus dynamic pages (`_boot`, `_footer`) that are added/removed from `_pager` as needed. The `_footer` page is a sub-page of `PG_PLAYER` and `PG_DIALOG` — it holds the volume bar, volume text, IP, battery, RSSI, and heap bar widgets that are shared between both modes.
 

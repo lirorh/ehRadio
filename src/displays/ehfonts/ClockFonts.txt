@@ -8,12 +8,15 @@ are ONLY used by ILI9225.cpp
 TinyFont5 and TinyFont6
 are ONLY used by displayN5110.h (Nokia)
 
-dsfont19 = DS_DIGI15pt7b, DS_DIGI15pt7b_mono
+font15 = Chunky6_15, Chunky6_15_px
 displaySH1106.h
 displaySSD1306.h (DSP_SSD1306)
 displaySSD1305.h
 
-dsfont35 = DS_DIGI28pt7b, DS_DIGI128pt7b_mono, ...
+font19 = DS_DIGI/DS_DIGI15pt7b, DS_DIGI/DS_DIGI15pt7b_mono, Chunky6_15, Chunky6_15_px
+...nothing...?
+
+font35 = DS_DIGI/DS_DIGI28pt7b, DS_DIGI/DS_DIGI28pt7b_mono, Chunky6_35, Chunky6_35_px
 displayGC9106.h
 displayILI9225.h
 displaySSD1322.h
@@ -21,12 +24,12 @@ displaySSD1327.h
 displayST7735.h
 displayST7789.h (for DSP_ST7789_76)
 
-dsfont52 = DS_DIGI42pt7b, DS_DIGI42pt7b_mono, ...
+font52 = DS_DIGI/DS_DIGI42pt7b, DS_DIGI/DS_DIGI42pt7b_mono, Chunky6_15, Chunky6_15_px
 displayGC9A01A.h
 displayILI9341.h
 displayST7789.h (for regular DSP_ST7789_76)
 
-dsfont70: DS_DIGI56pt7b, DS_DIGI56pt7b_mono, ...
+font70: DS_DIGI/DS_DIGI56pt7b, DS_DIGI/DS_DIGI56pt7b_mono, Chunky6_15, Chunky6_15_px
 displayILI9488.h
 displayST7796.h
 
@@ -34,9 +37,9 @@ The DS_DIGI fonts marked as 56pt7b are actually 70 pixels tall
                          ...42pt is 52 pixels tall
                          ...28pt is 35 pixels tall
                          ...15pt is 19 pixels tall
-Likely it's what size of a true type font it was derived from.
+Likely it's what size of a true type font it was derived from (which originally included some below the baseline).
 
-The link https://tchapi.github.io/Adafruit-GFX-Font-Customiser/ originally appeared in the comments for the dsfont*.h files.
+The link https://tchapi.github.io/Adafruit-GFX-Font-Customiser/ originally appeared in the comments for the font*.h files.
 It is a font editor but not enjoyable to use.
 
 So, let's generate a font from a PNG...
@@ -74,4 +77,4 @@ py .\png_to_gfxfont.py Chunky6_70_px.png Chunky6_70_px.h --glow-char /
 That glow-char switch makes the "glow" character
 
 
-Chunky6 is part of https://github.com/trip5/Matrix-Fonts
+Chunky6 is part of https://github.com/trip5/Matrix-Fonts and now lives under Chunky6/

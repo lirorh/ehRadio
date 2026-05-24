@@ -7,10 +7,10 @@
 
 #if DSP_MODEL==DSP_ST7789_76
   #include "bootlogo/62x40.h"
-  #include "fonts/dsfont35.h"
+  #include "ehfonts/font35.h"
 #else
   #include "bootlogo/99x64.h"
-  #include "fonts/dsfont52.h"
+  #include "ehfonts/font52.h"
 #endif
 
 typedef GFXcanvas16 Canvas;

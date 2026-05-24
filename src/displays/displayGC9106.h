@@ -6,7 +6,7 @@
 #include <Adafruit_GFX.h>
 #include "../libraries/Adafruit_GC9106Ex/Adafruit_GC9106Ex.h"       // https://github.com/prenticedavid/Adafruit_GC9102_kbv
 #include "bootlogo/62x40.h"
-#include "fonts/dsfont35.h"
+#include "ehfonts/font35.h"
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_GC9106Ex yoDisplay;

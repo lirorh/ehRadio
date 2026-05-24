@@ -6,7 +6,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_GC9A01A.h>
 #include "bootlogo/99x64.h"
-#include "fonts/dsfont52.h"
+#include "ehfonts/font52.h"
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_GC9A01A yoDisplay;

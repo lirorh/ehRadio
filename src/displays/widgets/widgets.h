@@ -210,6 +210,7 @@ class ClockWidget: public Widget {
     void clear(){ _clearClock(); }
     inline uint16_t dateSize(){ return _space+ _dateheight; }
     inline uint16_t clockWidth(){ return _clockwidth; }
+    inline uint16_t clockHeight(){ return _clockheight; }
   private:
   #ifndef DSP_LCD
     #if DSP_MODEL==DSP_ILI9225

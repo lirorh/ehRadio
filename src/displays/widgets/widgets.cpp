@@ -11,11 +11,8 @@
 #include "../../core/player.h"    //  for VU widget
 #include "../../core/utility.h"
 
-#if CLOCKFONT == YO_MONO // no special character but an 8 on a 7-segment display is the same
+#if CLOCKFONT == YO_MONO || CLOCKFONT == YO_CLASSIC // no special character but an 8 on a 7-segment display is the same
   #define CLOCKGLOW_STRING "88:88"
-#elif CLOCKFONT == YO_CLASSIC // this fixed-width font will produce a bad effect
-    #undef CLOCKGLOW
-    #define CLOCKGLOW false
 #else //if CLOCKFONT == CHUNKY6_PX || CLOCKFONT == CHUNKY6
   #define CLOCKGLOW_STRING "//://"
 #endif
@@ -500,7 +497,7 @@ void VuWidget::_clear(){ }
       NUM & CLOCK
  ************************/
 #if !defined(DSP_LCD)
-  #if TIME_SIZE<19 //19->NOKIA
+  #if TIME_SIZE<15 || (TIME_SIZE==15 && (CLOCKFONT==YO_MONO || CLOCKFONT==YO_CLASSIC))
     const GFXfont* Clock_GFXfontPtr = nullptr;
     #define CLOCKFONT5x7
   #else
@@ -567,7 +564,7 @@ void NumWidget::setText(const char* txt) {
   #endif
   if (_active)
   #ifndef CLOCKFONT5x7
-    dsp.fillRect(_oldleft == 0 ? _realLeft() : min(_oldleft, _realLeft()),  _config.top-_textheight+1, max(_oldtextwidth, _textwidth), realth, _bgcolor);
+    dsp.fillRect(_oldleft == 0 ? _realLeft() : min(_oldleft, _realLeft()),  _config.top-_textheight, max(_oldtextwidth, _textwidth), realth, _bgcolor);
   #else
     dsp.fillRect(_oldleft == 0 ? _realLeft() : min(_oldleft, _realLeft()),  _config.top, max(_oldtextwidth, _textwidth), realth, _bgcolor);
   #endif
@@ -634,7 +631,7 @@ void ClockWidget::init(WidgetConfig wconf, uint16_t fgcolor, uint16_t bgcolor){
   _timeheight = _textHeight();
   _fullclock = TIME_SIZE>35 || DSP_MODEL==DSP_ILI9225;
   if(_fullclock) _superfont = TIME_SIZE / 17; //magick
-  else if(TIME_SIZE==19 || TIME_SIZE==2) _superfont=1;
+  else if(TIME_SIZE==15 || TIME_SIZE==2) _superfont=1;
   else _superfont=0;
   _space = (5*_superfont)/2; //magick
   if(_fullclock){
@@ -725,6 +722,7 @@ void ClockWidget::_getTimeBounds() {
     uint16_t dowColor = config.isScreensaver ? config.theme.dowss : config.theme.dow;
     uint16_t dateColor = config.isScreensaver ? config.theme.datess : config.theme.date;
     bool showFullClockOnScreensaver = !config.isScreensaver || (_fb->ready() && config.store.screensaverFullDateTime);
+    bool showSecondsOnScreensaver = !config.isScreensaver || config.store.screensaverFullDateTime;
     if(force){
       _clearClock();
       _getTimeBounds();
@@ -772,7 +770,7 @@ void ClockWidget::_getTimeBounds() {
         }
       }
     }
-    if ((_fullclock || _superfont>0) && (!_fullclock || showFullClockOnScreensaver)) {
+    if ((_fullclock || _superfont>0) && (!_fullclock || showFullClockOnScreensaver) && (_fullclock || showSecondsOnScreensaver)) {
       gfx.setFont();
       gfx.setTextSize(_superfont);
       if(!_fullclock){
@@ -812,7 +810,7 @@ void ClockWidget::_getTimeBounds() {
     else
   #endif
   #ifndef CLOCKFONT5x7
-    dsp.fillRect(_left(), _top()-_timeheight, _clockwidth, _clockheight+1, config.theme.background);
+    dsp.fillRect(_left(), _top()-_timeheight, _clockwidth+2, _clockheight+1, config.theme.background);
   #else
     dsp.fillRect(_left(), _top(), _clockwidth+1, _clockheight+1, config.theme.background);
   #endif

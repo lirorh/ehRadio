@@ -12,7 +12,7 @@
   #include "displayST7735.h"
 
 #elif DSP_MODEL==DSP_SSD1306
-  #define TIME_SIZE           2
+  #define TIME_SIZE           15
   #define DSP_OLED
   #include "displaySSD1306.h"
 
@@ -22,7 +22,7 @@
   #include "displaySSD1306.h"
 
 #elif DSP_MODEL==DSP_NOKIA5110
-  #define TIME_SIZE           19
+  #define TIME_SIZE           15
   #define DSP_OLED
   #include "displayN5110.h"
 
@@ -37,7 +37,7 @@
   #include "displayST7789.h"
 
 #elif DSP_MODEL==DSP_SH1106 || DSP_MODEL==DSP_SH1107
-  #define TIME_SIZE           2
+  #define TIME_SIZE           15
   #define DSP_OLED
   #include "displaySH1106.h"
 
@@ -57,7 +57,7 @@
   #include "displayILI9341.h"
 
 #elif DSP_MODEL==DSP_SSD1305 || DSP_MODEL==DSP_SSD1305I2C
-  #define TIME_SIZE           2
+  #define TIME_SIZE           15
   #define DSP_OLED
   #include "displaySSD1305.h"
 
@@ -99,6 +99,12 @@
   #define DSP_OLED
   #include "displayST7920.h"
 
+#endif
+
+// if not using the Chunky fonts, we can revert to the GLCDfont but we need to change the size
+#if TIME_SIZE == 15 && (CLOCKFONT == YO_MONO || CLOCKFONT == YO_CLASSIC)
+  #undef TIME_SIZE
+  #define TIME_SIZE 2
 #endif
 
 //extern DspCore dsp;

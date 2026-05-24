@@ -21,7 +21,7 @@ This document is intentionally per-file focused for:
 Grouped (not one-by-one deep explained) areas:
 - `src/displays/display*.cpp/.h` (drivers follow similar shape)
 - `src/displays/conf/*.h` (widget placement/config pattern files)
-- `src/displays/fonts/*` (font assets)
+- `src/displays/ehfonts/*` (font assets)
 
 ---
 
@@ -673,7 +673,8 @@ Purpose:
 - display utility support
 
 ## Display fonts/assets
-- `src/displays/fonts/*` for boot logos and digit/font assets.
+- `src/displays/ehfonts/*` for digit/font assets.
+- `font15.h` is wired for 128x64 mono-OLED clock paths (SH1106/SH1107, SSD1306 128x64, SSD1305). Clock font dispatch headers now live under `src/displays/ehfonts/` (`font15.h`, `font19.h`, `font35.h`, `font52.h`, `font70.h`), and DS_DIGI/Chunky6 families also live there (`src/displays/ehfonts/DS_DIGI/`, `src/displays/ehfonts/Chunky6/`). `font15.h` maps CHUNKY6 modes directly to Chunky6_15 variants; `font19.h` is retained for possible future use. For clock rendering fallback, widgets now force `CLOCKFONT5x7` when `TIME_SIZE<15`, or when `TIME_SIZE==15` with `CLOCKFONT` set to `YO_MONO` or `YO_CLASSIC`.
 
 ---
 

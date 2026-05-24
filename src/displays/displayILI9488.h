@@ -9,7 +9,7 @@
 #else
   #include "bootlogo/99x64.h"
 #endif
-#include "fonts/dsfont70.h"
+#include "ehfonts/font70.h"
 
 typedef GFXcanvas16 Canvas;
 typedef ILI9486_SPI yoDisplay;

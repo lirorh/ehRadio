@@ -23,6 +23,10 @@
   #include "../displays/nextion.h"
 #endif
 
+#ifndef IP_WEATHER_SHARED
+  #define IP_WEATHER_SHARED false
+#endif
+
 Display display;
 #ifdef USE_NEXTION
   Nextion nextion;
@@ -342,7 +346,14 @@ void Display::_start() {
   if (_vuwidget) _vuwidget->lock();
   if (_rssi)     _setRSSI(WiFi.RSSI());
   #ifndef HIDE_IP
-    if (_volip) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+    if (_volip) {
+      #if IP_WEATHER_SHARED // weather and IP share the same bottom row; hide IP when weather is active
+        if (config.store.showweather) _volip->setText("");
+        else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+      #else
+        _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+      #endif
+    }
   #endif
   #if defined(BATTERY_PIN) && (BATTERY_PIN!=255) && !defined(HIDE_BATTERY)
     if(_battery) _updateBattery();
@@ -394,6 +405,24 @@ void Display::_swichMode(displayMode_e newmode) {
     _nums->setText("");
     config.isScreensaver = false;
     _pager->setPage(pages[PG_PLAYER]);
+    #ifndef HIDE_IP
+      if (_volip) {
+        #if IP_WEATHER_SHARED // weather and IP share the same bottom row; hide IP when weather is active
+          if (config.store.showweather) _volip->setText("");
+          else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+        #else
+          _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+        #endif
+      }
+    #endif
+    #if IP_WEATHER_SHARED // force weather repaint on return to PLAYER; larger displays repaint naturally
+      if (config.store.showweather && _weather) {
+        _weather->lock(false);
+        // Force a clean repaint of the shared weather/IP row after overlays like VOL/SCREENSAVER.
+        _weather->setText("");
+        if (network.weatherBuf) _weather->setText(network.weatherBuf);
+      }
+    #endif
     config.setDspOn(config.store.dspon, false);
   }
   if (newmode == SCREENSAVER || newmode == SCREENBLANK) {
@@ -410,13 +439,19 @@ void Display::_swichMode(displayMode_e newmode) {
     config.isScreensaver = false;
   }
   if (newmode == VOL) {
+    #if IP_WEATHER_SHARED // weather and IP share the same bottom row; pause weather so VOL can show IP
+      if (config.store.showweather && _weather) {
+        // Pause weather updates while volume UI is active to avoid shared-line collisions.
+        _weather->lock(true);
+        _weather->setText("");
+      }
+    #endif
     if (config.store.volumepage) {
-      #ifndef HIDE_IP
-        _showDialog(LANG::const_DlgVolume);
-      #else
-        _showDialog(utility.ipToStr(WiFi.localIP()));
-      #endif
+      _showDialog(LANG::const_DlgVolume);
     }
+    #ifndef HIDE_IP
+      if (_volip) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+    #endif
     _nums->setText(config.store.volume, numtxtFmt);
   }
   if (newmode == LOST)      _showDialog(LANG::const_DlgLost);
@@ -604,19 +639,38 @@ void Display::loop() {
           break;
         }
         case SHOWWEATHER: {
-          if (_weather) _weather->lock(!config.store.showweather);
+          #if IP_WEATHER_SHARED // also lock weather during VOL to prevent shared-row collision with IP
+            if (_weather) _weather->lock(!config.store.showweather || _mode == VOL);
+          #else
+            if (_weather) _weather->lock(!config.store.showweather);
+          #endif
           if (!config.store.showweather) {
             if (_weather) _weather->setText("");
             #ifndef HIDE_IP
               if (_volip) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
             #endif
           } else {
-            network.buildWeatherString();
+            #if IP_WEATHER_SHARED // weather and IP share a row; suppress weather text and IP together based on mode
+              if (_mode == VOL) {
+                if (_weather) _weather->setText("");
+              } else {
+                #ifndef HIDE_IP
+                  if (_volip) _volip->setText("");
+                #endif
+                network.buildWeatherString();
+              }
+	          #else // larger displays have separate rows; just update weather, leave IP alone
+              network.buildWeatherString();
+            #endif
           }
           break;
         }
         case NEWWEATHER: {
-          if (_weather && network.weatherBuf) _weather->setText(network.weatherBuf);
+          #if IP_WEATHER_SHARED // skip weather repaint during VOL to avoid overwriting the IP shown there
+            if (_mode != VOL && _weather && network.weatherBuf) _weather->setText(network.weatherBuf);
+          #else
+            if (_weather && network.weatherBuf) _weather->setText(network.weatherBuf);
+          #endif
           break;
         }
         case BOOTSTRING: {
@@ -653,13 +707,19 @@ void Display::loop() {
         case DSP_START: _start();  break;
         case NEWIP: {
           #ifndef HIDE_IP
-            if (_volip) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+            #if IP_WEATHER_SHARED // skip IP repaint in PLAYER when weather owns the shared row
+              if (_volip && !(_mode == PLAYER && config.store.showweather)) {
+            #else
+              if (_volip) {
+            #endif
+              _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+            }
           #endif
           break;
         }
         default: break;
 
-        // check if there are more messages waiting in the Q, in this case break the loop() and go
+        // check if there are more messages waiting in the queue, in this case break the loop() and go
         // for another round to evict next message, do not waste time to redraw the screen, etc...
         if (uxQueueMessagesWaiting(displayQueue))
           return;
@@ -801,13 +861,16 @@ void Display::_time(bool redraw) {
     }
   #endif
   if (config.isScreensaver && network.timeinfo.tm_sec % 60 == 0) {
-    #if TIME_SIZE<19
-      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT, (dsp.height()-TIME_SIZE*CHARHEIGHT-TFT_FRAMEWDT)));
-    #else
-      uint16_t ft=static_cast<uint16_t>(random(TFT_FRAMEWDT+TIME_SIZE, (dsp.height()-_clock->dateSize()-TFT_FRAMEWDT*2)));
-    #endif
-    uint16_t lt=static_cast<uint16_t>(random(TFT_FRAMEWDT, (dsp.width()-_clock->clockWidth()-TFT_FRAMEWDT)));
-    if (clockConf.align==WA_CENTER) lt-=(dsp.width()-_clock->clockWidth())/2;
+    int32_t minTop = TFT_FRAMEWDT + _clock->clockHeight();
+    int32_t maxTop = dsp.height() - TFT_FRAMEWDT;
+    uint16_t ft = (maxTop > minTop) ? static_cast<uint16_t>(random(minTop, maxTop + 1)) : static_cast<uint16_t>(minTop);
+
+    int32_t minLeft = TFT_FRAMEWDT;
+    int32_t maxLeft = dsp.width() - _clock->clockWidth() - TFT_FRAMEWDT;
+    int32_t left = (maxLeft > minLeft) ? random(minLeft, maxLeft + 1) : minLeft;
+    if (clockConf.align == WA_CENTER) left -= (dsp.width() - _clock->clockWidth()) / 2;
+    if (left < 0) left = 0;
+    uint16_t lt = static_cast<uint16_t>(left);
     //_clock->moveTo({clockConf.left, ft, 0});
     _clock->moveTo({lt, ft, 0});
   }

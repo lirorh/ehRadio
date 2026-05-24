@@ -5,7 +5,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
 #include "bootlogo/62x40.h"
-#include "fonts/dsfont35.h"
+#include "ehfonts/font35.h"
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_ST7735 yoDisplay;

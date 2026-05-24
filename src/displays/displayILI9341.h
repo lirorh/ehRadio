@@ -5,7 +5,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
 #include "bootlogo/99x64.h"
-#include "fonts/dsfont52.h"
+#include "ehfonts/font52.h"
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_ILI9341 yoDisplay;

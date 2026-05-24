@@ -18,6 +18,14 @@
 
 #define BOOTLOGOTOP     8
 
+#define IP_WEATHER_SHARED true // these widgets share the same space
+
+#if CLOCKFONT == YO_MONO || CLOCKFONT == YO_CLASSIC
+  #define FONTSHIFT 0
+#else // CHUNKY6 CHUNKY6_PX
+  #define FONTSHIFT 15
+#endif
+
 /* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
 const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 2, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 3, 25 };
 const ScrollConfig title1Conf     PROGMEM = {{ TFT_FRAMEWDT, 19, 1, WA_LEFT }, 140, true, MAX_WIDTH-6*4, 5000, 2, 25 };
@@ -40,12 +48,12 @@ const WidgetConfig bitrateConf    PROGMEM = { 0, 19, 1, WA_RIGHT };
 const WidgetConfig iptxtConf      PROGMEM = { TFT_FRAMEWDT, 64-9, 1, WA_LEFT };
 const WidgetConfig rssiConf       PROGMEM = { 0, 64-9, 1, WA_RIGHT };
 const WidgetConfig batteryConf    PROGMEM = { (DSP_WIDTH*2)/3+2, 64-9, 1, WA_LEFT };
-const WidgetConfig numConf        PROGMEM = { 0, 28, 0, WA_CENTER };
+const WidgetConfig numConf        PROGMEM = { 0, 28+FONTSHIFT, 0, WA_CENTER };
 const WidgetConfig apNameConf     PROGMEM = { 0, 18, 1, WA_CENTER };
 const WidgetConfig apName2Conf    PROGMEM = { 0, 26, 1, WA_CENTER };
 const WidgetConfig apPassConf     PROGMEM = { 0, 37, 1, WA_CENTER };
 const WidgetConfig apPass2Conf    PROGMEM = { 0, 45, 1, WA_CENTER };
-const WidgetConfig clockConf      PROGMEM = { 6, 38, 0, WA_CENTER };
+const WidgetConfig clockConf      PROGMEM = { TFT_FRAMEWDT, 38+FONTSHIFT, 0, WA_CENTER };
 const WidgetConfig vuConf         PROGMEM = { 1, 28, 1, WA_LEFT };
 
 const WidgetConfig bootWdtConf    PROGMEM = { 0, 64-8*2-5, 1, WA_CENTER };

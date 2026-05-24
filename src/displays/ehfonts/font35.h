@@ -1,5 +1,5 @@
-#ifndef dsfont_h
-#define dsfont_h
+#ifndef font_h
+#define font_h
 
 #if CLOCKFONT == YO_MONO
   #include "DS_DIGI/DS_DIGI28pt7b_mono.h"

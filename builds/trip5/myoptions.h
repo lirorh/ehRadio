@@ -317,9 +317,6 @@
 //#define CLOCKFONT CHUNKY6
 //#define CLOCKFONT YO_MONO
 //#define CLOCKFONT YO_CLASSIC
-//
 
-#ifndef BATTERY_PIN
-  #define BATTERY_PIN     7
-#endif
+
 #endif // myoptions_h

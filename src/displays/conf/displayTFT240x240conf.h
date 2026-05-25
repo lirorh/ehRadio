@@ -54,7 +54,7 @@ const VUBandsConfig bandsConf     PROGMEM = { 100, 20, 10, 2, 10, 5 };
 /* STRINGS  */
 const char numtxtFmt[]            PROGMEM = "%d";
 const char rssiFmt[]              PROGMEM = "WiFi %d";
-const char iptxtFmt[]             PROGMEM = "%s";
+const char iptxtFmt[]             PROGMEM = "\010 %s";
 const char voltxtFmt[]            PROGMEM = "%d";
 const char batteryRangeFmt[][8]   PROGMEM = { "\013 %d%%", "\014 %d%%", "\017 %d%%" };
 const char bitrateFmt[]           PROGMEM = "%d kBs";

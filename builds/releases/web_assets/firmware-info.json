@@ -3,11 +3,6 @@
   "version": "2026.05.25",
   "variants": [
     {
-      "name": "Kasperaitis ES3C28P",
-      "manifest": "manifests/kasperaitis_es3c28p-manifest.json",
-      "description": "ehRadio - kasperaitis_es3c28p"
-    },
-    {
       "name": "Trip5 Big Color Screen with 1-Button",
       "manifest": "manifests/trip5_ili9488_pcm_1button-manifest.json",
       "description": "ehRadio - trip5_ili9488_pcm_1button"
@@ -36,6 +31,11 @@
       "name": "Trip5 OLED with Remote",
       "manifest": "manifests/trip5_sh1106_pcm_remote-manifest.json",
       "description": "ehRadio - trip5_sh1106_pcm_remote"
+    },
+    {
+      "name": "Trip5 es3c28p",
+      "manifest": "manifests/kasperaitis_es3c28p-manifest.json",
+      "description": "ehRadio - kasperaitis_es3c28p"
     }
   ]
 }

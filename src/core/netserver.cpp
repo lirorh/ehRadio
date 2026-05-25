@@ -398,7 +398,7 @@ void NetServer::processQueue() {
           String act = F("\"group_wifi\",");
           if (network.status == CONNECTED) {
                                                                 act += F("\"group_system\",");
-            if (battery.isInitialized() || dbgact)             act += F("\"group_battery\",");
+            if (battery.isInitialized() || dbgact)              act += F("\"group_battery\",");
                                                               #ifdef MQTT_ENABLE
                                                                 act += F("\"group_mqtt\",");
                                                               #endif
@@ -417,6 +417,7 @@ void NetServer::processQueue() {
             if (BRIGHTNESS_PIN != 255 || nxtn || dbgact)        act += F("\"group_brightness\",");
             if (DSP_DIMMING_ENABLED || dbgact)                  act += F("\"group_dimming\",");
             if (DSP_CAN_FLIPPED || dbgact)                      act += F("\"group_tft\",");
+            if (TIME_SIZE !=35 || dbgact)                       act += F("\"group_full_time\",");
             if (TS_MODEL != TS_MODEL_UNDEFINED || dbgact)       act += F("\"group_touch\",");
             if (DSP_MODEL == DSP_NOKIA5110)                     act += F("\"group_nokia\",");
                                                                 act += F("\"group_locale\",");

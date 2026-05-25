@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.05.24"
+#define RADIOVERSION "2026.05.25"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -1188,7 +1188,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
    #define NETSERVER_DEBUG // This enables Netserver logging: GET client requests and sending files in chunks
   #endif
   #ifndef CORE_MONITOR
-    #define CORE_MONITOR // This shows the ESP32 CPU Core Monitor in serial and telnet (updated every 5s)
+    #define CORE_MONITOR // This shows the ESP32 CPU Core Monitor in serial and telnet (updated every 5s), includes SPIFFS information
   #endif
   #ifdef WIDGET_DEBUG
     #define WIDGET_DEBUG // This shows the Widget's Text in logging.  It's extremely noisy.
@@ -1406,12 +1406,12 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef SS_NOTPLAYING_BLANK
   #define SS_NOTPLAYING_BLANK false
 #endif
-#if defined(SS_NOTPLAYING_TIME) && ((SS_NOTPLAYING_TIME < 1) || (SS_NOTPLAYING_TIME > 65520))
-  #warning "define warning in myoptions.h: SS_NOTPLAYING_TIME is out of range (1-65520), reverting to default 1"
+#if defined(SS_NOTPLAYING_TIME) && ((SS_NOTPLAYING_TIME < 5) || (SS_NOTPLAYING_TIME > 65520))
+  #warning "define warning in myoptions.h: SS_NOTPLAYING_TIME is out of range (5-65520), reverting to default 120"
   #undef SS_NOTPLAYING_TIME
 #endif
 #ifndef SS_NOTPLAYING_TIME
-  #define SS_NOTPLAYING_TIME 1
+  #define SS_NOTPLAYING_TIME 120
 #endif
 #ifndef SS_PLAYING
   #define SS_PLAYING false

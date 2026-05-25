@@ -568,7 +568,7 @@ void Display::loop() {
   }
   if (_bootStep==2) {
     if (config.isScreensaver) {
-      if (DSP_INVERT_QUIRK && config.displayIsInverted) {
+      if (config.displayIsInverted) {
         config.displayIsInverted = false;
         display.invert();
       }

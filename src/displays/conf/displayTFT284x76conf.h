@@ -57,7 +57,7 @@ const VUBandsConfig bandsConf     PROGMEM = { DSP_WIDTH/2-TFT_FRAMEWDT*2-2, 7, T
 /* STRINGS  */
 const char numtxtFmt[]            PROGMEM = "%d";
 const char rssiFmt[]              PROGMEM = "%d";
-const char iptxtFmt[]             PROGMEM = "%s";
+const char iptxtFmt[]             PROGMEM = "\010 %s";
 //const char voltxtFmt[]            PROGMEM = "%d";
 const char batteryRangeFmt[][8]   PROGMEM = { "\013 %d%%", "\014 %d%%", "\017 %d%%" };
 const char bitrateFmt[]           PROGMEM = "%d kBs";

@@ -4,7 +4,13 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
-#include "bootlogo/62x40.h"
+
+#if DTYPE==INITR_MINI160x80
+  #include "bootlogo/62x40.h"
+#else
+  #include "bootlogo/99x64.h"
+#endif
+
 #include "ehfonts/font35.h"
 
 typedef GFXcanvas16 Canvas;

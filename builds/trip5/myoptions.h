@@ -235,9 +235,6 @@
 #endif
 
 #define MQTT_ENABLE
-// #define CORE_MONITOR
-// #define ALL_DEBUG_LOGS
-
 
 /* --- Battery --- */
 
@@ -312,7 +309,11 @@
 //#define DSP_LANGUAGE_de_DE // sets the display language - see the available options by checking `displayL10n_*.h` files in `locale` folder 
 //#define WEBUI_LOCALE "de_DE" // can set a default WebUI locale different than the display - check locale/webui folder .json files (user-configurable)
 
-/* --- Clock Font Notes --- */
+/* --- Debug? --- */
+// #define CORE_MONITOR
+// #define ALL_DEBUG_LOGS
+
+/* --- Clock Fonts --- */
 // CHUNKY6_PX is default...
 //#define CLOCKFONT CHUNKY6
 //#define CLOCKFONT YO_MONO

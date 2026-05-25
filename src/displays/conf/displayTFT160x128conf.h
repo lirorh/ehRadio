@@ -13,7 +13,7 @@
 #else
   #define TITLE_FIX 0
 #endif
-#define BOOTLOGOTOP     34
+#define BOOTLOGOTOP     16
 
 /* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
 const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 2, WA_LEFT }, 140, true, MAX_WIDTH, 5000, 3, 30 };
@@ -36,15 +36,14 @@ const WidgetConfig bootstrConf    PROGMEM = { 0, 110, 1, WA_CENTER };
 const WidgetConfig bitrateConf    PROGMEM = { TFT_FRAMEWDT, 26, 1, WA_RIGHT };
 //const WidgetConfig bitrateConf    PROGMEM = { TFT_FRAMEWDT, 99, 1, WA_LEFT };
 const WidgetConfig voltxtConf     PROGMEM = { TFT_FRAMEWDT, 108, 1, WA_LEFT };
+const WidgetConfig batteryConf    PROGMEM = { (DSP_WIDTH*2)/3+2, 108, 1, WA_LEFT };
 const WidgetConfig iptxtConf      PROGMEM = { TFT_FRAMEWDT, 108, 1, WA_CENTER };
 const WidgetConfig rssiConf       PROGMEM = { TFT_FRAMEWDT, 108, 1, WA_RIGHT };
-const WidgetConfig batteryConf    PROGMEM = { (DSP_WIDTH*2)/3+2, 108, 1, WA_LEFT };
 const WidgetConfig numConf        PROGMEM = { 0, 86, 0, WA_CENTER };
 const WidgetConfig apNameConf     PROGMEM = { 0, 40, 1, WA_CENTER };
 const WidgetConfig apName2Conf    PROGMEM = { 0, 54, 1, WA_CENTER };
 const WidgetConfig apPassConf     PROGMEM = { 0, 74, 1, WA_CENTER };
 const WidgetConfig apPass2Conf    PROGMEM = { 0, 88, 1, WA_CENTER };
-const char batteryRangeFmt[][8]   PROGMEM = { "\013 %d%%", "\014 %d%%", "\017 %d%%" };
 const WidgetConfig clockConf      PROGMEM = { 0, 94, 0, WA_CENTER };
 const WidgetConfig vuConf         PROGMEM = { TFT_FRAMEWDT, 54, 1, WA_LEFT };
 
@@ -60,6 +59,7 @@ const char numtxtFmt[]            PROGMEM = "%d";
 const char rssiFmt[]              PROGMEM = "%d";
 const char iptxtFmt[]             PROGMEM = " %s";
 const char voltxtFmt[]            PROGMEM = "\023\025%d";
+const char batteryRangeFmt[][8]   PROGMEM = { "\013 %d%%", "\014 %d%%", "\017 %d%%" };
 const char bitrateFmt[]           PROGMEM = "%d";
 
 /* MOVES  */                             /* { left, top, width (0 - auto, -1 - lock } */

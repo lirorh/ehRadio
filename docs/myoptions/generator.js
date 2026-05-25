@@ -1897,10 +1897,10 @@ function buildBoardSection_pio(bd) {
   out += 'board = ' + bd.board + '\n';
 
   // board_build.* and board_upload.* fields
-  var skipFields = ['name', 'env', 'board', 'build_flags', 'default_pins', 'spi', 'valid_pins', 'left_pins', 'right_pins', 'image', 'url'];
+  var skipFields = ['name', 'env', 'board', 'build_flags', 'default_pins', 'spi', 'valid_pins', 'left_pins', 'right_pins', 'image', 'info', 'url'];
   Object.keys(bd).forEach(function(key) {
     if (skipFields.includes(key)) return;
-    if (key.startsWith('board_')) {
+    if (key.startsWith('board_') || key.startsWith('build_')) {
       out += key + ' = ' + bd[key] + '\n';
     }
   });

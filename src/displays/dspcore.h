@@ -74,6 +74,7 @@
 
 #elif DSP_MODEL==DSP_ILI9225
   #define TIME_SIZE           35
+  #define PSFBUFFER
   #include "displayILI9225.h"
 
 #elif DSP_MODEL==DSP_ST7796

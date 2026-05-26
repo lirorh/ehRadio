@@ -311,7 +311,7 @@
 
 /* --- Debug? --- */
 // #define CORE_MONITOR
-// #define ALL_DEBUG_LOGS
+//#define ALL_DEBUG_LOGS
 
 /* --- Clock Fonts --- */
 // CHUNKY6_PX is default...

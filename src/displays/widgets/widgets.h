@@ -213,11 +213,7 @@ class ClockWidget: public Widget {
     inline uint16_t clockHeight(){ return _clockheight; }
   private:
   #ifndef DSP_LCD
-    #if DSP_MODEL==DSP_ILI9225
-      auto &getRealDsp();
-    #else
-      Adafruit_GFX &getRealDsp();
-    #endif
+    Adafruit_GFX &getRealDsp();
   #endif
   protected:
     char  _timebuffer[20]="00:00";

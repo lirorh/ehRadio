@@ -24,6 +24,7 @@ public:
   bool loadStation(uint16_t stationId);
   uint16_t findStationByUrl(const char* url);
   char* stationByNum(uint16_t num);
+  uint16_t fillPlaylistRange(int from, uint8_t count, char names[][STATION_FIELD_LENGTH / 2]);
   void doSleepW();
   void sleepForAfter(uint16_t sleepfor, uint16_t sa = 0);
   void cleanupSpiffs();

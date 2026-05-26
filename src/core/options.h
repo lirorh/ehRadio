@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.05.25"
+#define RADIOVERSION "2026.05.26"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -197,7 +197,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 
 #ifndef USE_FBUFFER
-  #define USE_FBUFFER true // framebuffer: best to leave this on
+  #define USE_FBUFFER true // framebuffer: best to leave this on (will use PSRAM if available and SRAM if not)
 #endif
 
 /* Define your clock/volume page font as #define CLOCKFONT CHUNKY6 */
@@ -908,7 +908,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define PLAYBACK_TASK_PRIORITY 3 // highest: stream connection / playback start
 #endif
 #ifndef NET_TASK_PRIORITY
-  #define NET_TASK_PRIORITY 2 // highest: WiFi search, stream retry, OTA download
+  #define NET_TASK_PRIORITY 3 // highest: WiFi search, stream retry, OTA download
 #endif
 #ifndef LOW_TASK_PRIORITY
   #define LOW_TASK_PRIORITY 1 // lowest: background/deferrable tasks (round-robin with loop())

@@ -453,26 +453,18 @@ void VuWidget::_draw(){
     #else
       _canvas->fillRect(0, 0, _bands.width-(_bands.width-measL), _bands.width, _bgcolor);
       _canvas->fillRect(_bands.width * 2 + _bands.space - measR, 0, measR, _bands.width, _bgcolor);
-      #if DSP_MODEL!=DSP_ILI9225
-        dsp.startWrite();
-        dsp.setAddrWindow(_config.left, _config.top, _bands.width * 2 + _bands.space, _bands.height);
-        dsp.writePixels((uint16_t*)_canvas->getBuffer(), (_bands.width * 2 + _bands.space)*_bands.height);
-        dsp.endWrite();
-      #else
-        dsp.drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
-      #endif
-    #endif
-  }else{
-    _canvas->fillRect(0, 0, _bands.width, measL, _bgcolor);
-    _canvas->fillRect(_bands.width + _bands.space, 0, _bands.width, measR, _bgcolor);
-    #if DSP_MODEL!=DSP_ILI9225
       dsp.startWrite();
       dsp.setAddrWindow(_config.left, _config.top, _bands.width * 2 + _bands.space, _bands.height);
       dsp.writePixels((uint16_t*)_canvas->getBuffer(), (_bands.width * 2 + _bands.space)*_bands.height);
       dsp.endWrite();
-    #else
-      dsp.drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
     #endif
+  }else{
+    _canvas->fillRect(0, 0, _bands.width, measL, _bgcolor);
+    _canvas->fillRect(_bands.width + _bands.space, 0, _bands.width, measR, _bgcolor);
+      dsp.startWrite();
+      dsp.setAddrWindow(_config.left, _config.top, _bands.width * 2 + _bands.space, _bands.height);
+      dsp.writePixels((uint16_t*)_canvas->getBuffer(), (_bands.width * 2 + _bands.space)*_bands.height);
+      dsp.endWrite();
   }
 }
 
@@ -532,11 +524,7 @@ void VuWidget::_clear(){ }
 uint16_t _textWidth(const char *txt){
   uint16_t w = 0, l=strlen(txt);
   for(uint16_t c=0;c<l;c++) w+=_charWidth(txt[c]);
-  #if DSP_MODEL==DSP_ILI9225
-    return w+l;
-  #else
-    return w;
-  #endif
+  return w;
 }
 
 /************************
@@ -698,18 +686,12 @@ void ClockWidget::_getTimeBounds() {
 }
 
 #ifndef DSP_LCD
-  #if DSP_MODEL==DSP_ILI9225
-    auto& ClockWidget::getRealDsp(){
-      return dsp;
-    }
-  #else
-    Adafruit_GFX& ClockWidget::getRealDsp(){
-      #ifdef PSFBUFFER
-        if (_fb && _fb->ready()) return *_fb;
-      #endif
-      return dsp;
-    }
-  #endif
+  Adafruit_GFX& ClockWidget::getRealDsp(){
+    #ifdef PSFBUFFER
+      if (_fb && _fb->ready()) return *_fb;
+    #endif
+    return dsp;
+  }
 
   void ClockWidget::_printClock(bool force){
     auto& gfx = getRealDsp();
@@ -949,28 +931,31 @@ void PlayListWidget::init(ScrollWidget* current){
 }
 
 uint8_t PlayListWidget::_fillPlMenu(int from, uint8_t count) {
-  uint16_t stationsCount = utility.playlistLength();
+  // Static buffer avoids VLA stack pressure on DspTask (4–8KB stack).
+  // 31 slots × 85 bytes = 2635 bytes BSS; covers textsize=1 on up to ~320px tall displays.
+  static char names[31][STATION_FIELD_LENGTH / 2];
+  uint8_t safeCount = min(count, (uint8_t)31);
+  uint16_t stationsCount = utility.fillPlaylistRange(from, safeCount, names);
   if (stationsCount == 0) {
     return 0;
   }
 
-  for (uint8_t c = 0; c < count; ++c) {
+  for (uint8_t c = 0; c < safeCount; ++c) {
     int stationId = from + c;
     if (stationId < 1 || stationId > stationsCount) {
       _printPLitem(c, "");
       continue;
     }
 
-    const char* stationName = utility.stationByNum((uint16_t)stationId);
-    if (config.store.numplaylist && stationName[0] != '\0') {
-      String label = String(stationId) + " " + stationName;
+    if (config.store.numplaylist && names[c][0] != '\0') {
+      String label = String(stationId) + " " + names[c];
       _printPLitem(c, label.c_str());
     } else {
-      _printPLitem(c, stationName);
+      _printPLitem(c, names[c]);
     }
   }
 
-  return count;
+  return safeCount;
 }
 
 #ifndef DSP_LCD

@@ -768,7 +768,7 @@ All color TFT controllers used by ehRadio are supported. The following are **out
 | ILI9488 / ILI9486 | ✅ | ❌ | DMA **not supported** for ILI9488 even in TFT_eSPI |
 | GC9A01A | ✅ | ✅ | DMA supported |
 | GC9106 | ❓ | — | Not listed in TFT_eSPI driver set; needs investigation |
-| ILI9225 | ✅ (partial) | ❌ | Custom ILI9225Fix library handles edge cases; risky to migrate |
+| ILI9225 | ✅ | ❌ | Migrated to Adafruit_ILI9225 (Adafruit_SPITFT-based); old TFT_22_ILI9225Fix removed |
 
 ---
 

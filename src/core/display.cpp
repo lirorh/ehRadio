@@ -463,11 +463,7 @@ void Display::resetQueue() {
 }
 
 void Display::_drawPlaylist() {
-  uint16_t count = utility.playlistLength();
-  if (count == 0) currentPlItem = 0;
-  else if (currentPlItem < 1) currentPlItem = 1;
-  else if (currentPlItem > count) currentPlItem = count;
-
+  if (currentPlItem < 1) currentPlItem = 1;
   //dsp.drawPlaylist(currentPlItem);
   _plwidget->drawPlaylist(currentPlItem);
   _setReturnTicker(30);

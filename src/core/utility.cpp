@@ -405,10 +405,39 @@ uint16_t Utility::findStationByUrl(const char* url) {
   return 0;
 }
 
+uint16_t Utility::fillPlaylistRange(int from, uint8_t count, char names[][STATION_FIELD_LENGTH / 2]) {
+  for (uint8_t c = 0; c < count; c++) names[c][0] = '\0';
+  uint16_t total = playlistLength();
+  if (total == 0 || count == 0) return total;
+
+  File playlist = config.SDPLFS()->open(REAL_PLAYL, "r");
+  File index = config.SDPLFS()->open(REAL_INDEX, "r");
+  if (!playlist || !index) {
+    if (playlist) playlist.close();
+    if (index) index.close();
+    return total;
+  }
+
+  char nameBuf[STATION_FIELD_LENGTH] = {0};
+  char urlBuf[STATION_FIELD_LENGTH] = {0};
+  int ovolBuf = 0;
+  for (uint8_t c = 0; c < count; c++) {
+    int stationId = from + c;
+    if (stationId < 1 || stationId > (int)total) continue;
+    memset(nameBuf, 0, sizeof(nameBuf));
+    if (readStationEntry(playlist, index, (uint16_t)stationId, nameBuf, urlBuf, ovolBuf)) {
+      strlcpy(names[c], nameBuf, STATION_FIELD_LENGTH / 2);
+    }
+  }
+
+  playlist.close();
+  index.close();
+  return total;
+}
+
 char* Utility::stationByNum(uint16_t num) {
   memset(stationBuf, 0, sizeof(stationBuf));
-  uint16_t count = playlistLength();
-  if (num < 1 || num > count) return stationBuf;
+  if (num < 1) return stationBuf;
 
   char stationName[STATION_FIELD_LENGTH] = {0};
   char stationUrl[STATION_FIELD_LENGTH] = {0};

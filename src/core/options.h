@@ -908,7 +908,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define PLAYBACK_TASK_PRIORITY 3 // highest: stream connection / playback start
 #endif
 #ifndef NET_TASK_PRIORITY
-  #define NET_TASK_PRIORITY 2 // highest: WiFi search, stream retry, OTA download
+  #define NET_TASK_PRIORITY 3 // highest: WiFi search, stream retry, OTA download
 #endif
 #ifndef LOW_TASK_PRIORITY
   #define LOW_TASK_PRIORITY 1 // lowest: background/deferrable tasks (round-robin with loop())

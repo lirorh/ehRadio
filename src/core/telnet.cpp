@@ -213,7 +213,7 @@ bool Telnet::begin(bool quiet) {
     if (!quiet) {
       SERIALLOG("done");
       BOOTLOG("");
-      BOOTLOG("Ready! Go to http:/%s/ to configure", WiFi.localIP().toString().c_str());
+      BOOTLOG("Ready! Go to http://%s/ to configure", WiFi.localIP().toString().c_str());
       BOOTLOG("------------------------------------------------");
       BOOTLOG("");
     }

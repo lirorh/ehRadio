@@ -453,26 +453,18 @@ void VuWidget::_draw(){
     #else
       _canvas->fillRect(0, 0, _bands.width-(_bands.width-measL), _bands.width, _bgcolor);
       _canvas->fillRect(_bands.width * 2 + _bands.space - measR, 0, measR, _bands.width, _bgcolor);
-      #if DSP_MODEL!=DSP_ILI9225
-        dsp.startWrite();
-        dsp.setAddrWindow(_config.left, _config.top, _bands.width * 2 + _bands.space, _bands.height);
-        dsp.writePixels((uint16_t*)_canvas->getBuffer(), (_bands.width * 2 + _bands.space)*_bands.height);
-        dsp.endWrite();
-      #else
-        dsp.drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
-      #endif
-    #endif
-  }else{
-    _canvas->fillRect(0, 0, _bands.width, measL, _bgcolor);
-    _canvas->fillRect(_bands.width + _bands.space, 0, _bands.width, measR, _bgcolor);
-    #if DSP_MODEL!=DSP_ILI9225
       dsp.startWrite();
       dsp.setAddrWindow(_config.left, _config.top, _bands.width * 2 + _bands.space, _bands.height);
       dsp.writePixels((uint16_t*)_canvas->getBuffer(), (_bands.width * 2 + _bands.space)*_bands.height);
       dsp.endWrite();
-    #else
-      dsp.drawRGBBitmap(_config.left, _config.top, _canvas->getBuffer(), _bands.width * 2 + _bands.space, _bands.height);
     #endif
+  }else{
+    _canvas->fillRect(0, 0, _bands.width, measL, _bgcolor);
+    _canvas->fillRect(_bands.width + _bands.space, 0, _bands.width, measR, _bgcolor);
+      dsp.startWrite();
+      dsp.setAddrWindow(_config.left, _config.top, _bands.width * 2 + _bands.space, _bands.height);
+      dsp.writePixels((uint16_t*)_canvas->getBuffer(), (_bands.width * 2 + _bands.space)*_bands.height);
+      dsp.endWrite();
   }
 }
 
@@ -532,11 +524,7 @@ void VuWidget::_clear(){ }
 uint16_t _textWidth(const char *txt){
   uint16_t w = 0, l=strlen(txt);
   for(uint16_t c=0;c<l;c++) w+=_charWidth(txt[c]);
-  #if DSP_MODEL==DSP_ILI9225
-    return w+l;
-  #else
-    return w;
-  #endif
+  return w;
 }
 
 /************************
@@ -698,18 +686,12 @@ void ClockWidget::_getTimeBounds() {
 }
 
 #ifndef DSP_LCD
-  #if DSP_MODEL==DSP_ILI9225
-    auto& ClockWidget::getRealDsp(){
-      return dsp;
-    }
-  #else
-    Adafruit_GFX& ClockWidget::getRealDsp(){
-      #ifdef PSFBUFFER
-        if (_fb && _fb->ready()) return *_fb;
-      #endif
-      return dsp;
-    }
-  #endif
+  Adafruit_GFX& ClockWidget::getRealDsp(){
+    #ifdef PSFBUFFER
+      if (_fb && _fb->ready()) return *_fb;
+    #endif
+    return dsp;
+  }
 
   void ClockWidget::_printClock(bool force){
     auto& gfx = getRealDsp();

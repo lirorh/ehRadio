@@ -9,13 +9,16 @@ The following libraries are custom to ehRadio, mostly inherited from yoRadio v0.
 
 #### Adafruit ST7796S https://github.com/prenticedavid/Adafruit_ST7796S_kbv
   - not on Platformio (and not actually an Adafruit library)
+
+#### Adafruit ILI9225 
+  - from ёRadio v0.9.710, likely original or cribbed from other Adafruit drivers (like above)
+  - Replaced ILI9225Fix (which required a lot of `#if DSP_MODEL==DSP_ILI9225` (or `!=`) fixes in the codebase)
+    - original likely modified from https://github.com/arduinopavlodar/TFT_22_ILI9225
+    - those fixes have been removed
   
 #### FT6336_Touchscreen
   - made by https://github.com/kasperaitis for ehRadio
   - used as source: https://github.com/aselectroworks/Arduino-FT6336U
-
-#### ILI9225Fix https://github.com/arduinopavlodar/TFT_22_ILI9225
-  - not on Platformio and also highly-modified from an unknown version
 
 #### ILI9488 https://github.com/ZinggJM/ILI9486_SPI
   - highly-modified from version 1.0.5?

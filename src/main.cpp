@@ -132,7 +132,7 @@ void loop() {
           (unsigned)uxTaskGetStackHighWaterMark(NULL),
           (unsigned)(dspTaskHandle ? uxTaskGetStackHighWaterMark(dspTaskHandle) : 0),
           (unsigned)(nsTaskHandle  ? uxTaskGetStackHighWaterMark(nsTaskHandle)  : 0));
-      FUNCTIONLOG("SPIFFS", "Used: %u / %u bytes, Free: %u bytes\n", SPIFFS.usedBytes(), SPIFFS.totalBytes(), SPIFFS.totalBytes() - SPIFFS.usedBytes());
+      FUNCTIONLOG("SPIFFS", "Used: %u / %u bytes, Free: %u bytes", SPIFFS.usedBytes(), SPIFFS.totalBytes(), SPIFFS.totalBytes() - SPIFFS.usedBytes());
       cmLastPrint = millis();
     }
   #endif

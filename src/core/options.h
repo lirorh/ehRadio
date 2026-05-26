@@ -197,7 +197,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 
 #ifndef USE_FBUFFER
-  #define USE_FBUFFER true // framebuffer: best to leave this on
+  #define USE_FBUFFER true // framebuffer: best to leave this on (will use PSRAM if available and SRAM if not)
 #endif
 
 /* Define your clock/volume page font as #define CLOCKFONT CHUNKY6 */

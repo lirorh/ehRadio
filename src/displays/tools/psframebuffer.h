@@ -20,11 +20,25 @@ class  psFrameBuffer : public Adafruit_GFX {
     }
     bool begin(yoDisplay *dspl, int16_t l, int16_t t, int16_t w, int16_t h, uint16_t bgcolor = 0){
       _dspl = dspl; _ll = l; _tt = t; _ww = w; _hh = h; _bgcolor = bgcolor;
+      // Clamp to display bounds – prevents writePixels overflow when placed near screen edges
+      if (_ll < 0) { _ww += _ll; _ll = 0; }
+      if (_tt < 0) { _hh += _tt; _tt = 0; }
+      if (_ll + _ww > _dspl->width())  _ww = _dspl->width()  - _ll;
+      if (_tt + _hh > _dspl->height()) _hh = _dspl->height() - _tt;
+      if (_ww <= 0 || _hh <= 0) { _ready = false; return false; }
       _createBuffer();
       return _ready;
     }
     void move(int16_t l, int16_t t, int16_t w, int16_t h){
       _ll = l; _tt = t; _ww = w; _hh = h;
+      // Clamp to display bounds (mirrors begin() clamping)
+      if (_ll < 0) { _ww += _ll; _ll = 0; }
+      if (_tt < 0) { _hh += _tt; _tt = 0; }
+      if (_dspl) {
+        if (_ll + _ww > _dspl->width())  _ww = _dspl->width()  - _ll;
+        if (_tt + _hh > _dspl->height()) _hh = _dspl->height() - _tt;
+      }
+      if (_ww <= 0 || _hh <= 0) return;
       freeBuffer();
       _createBuffer();
     }
@@ -53,14 +67,12 @@ class  psFrameBuffer : public Adafruit_GFX {
     bool _ready = false;
     uint16_t _bgcolor;
     void _createBuffer(){
-      if(USE_FBUFFER){
+      #if (defined(USE_FBUFFER) && USE_FBUFFER)
         if(psramInit())
           buffer = (uint16_t*) ps_calloc(_hh * _ww, sizeof(uint16_t));
-        #ifdef SFBUFFER
         else
           buffer = (uint16_t*) calloc(_hh * _ww, sizeof(uint16_t));
-        #endif
-      }
+      #endif
       if(buffer){
         for (int i = 0; i < _hh * _ww; i++)
           buffer[i] = _bgcolor;

@@ -51,9 +51,12 @@ markdown_extensions:
       permalink: true
       toc_depth: 3
 
-# Single page site, no need for navigation menu
-# nav:
-#   - Home: index.md
+nav:
+  - Home: README.md
+  - Old Readme: README.old.md
+  - Controls: Controls.md
+  - Commands: Commands.md
+  - Trip 5's Notebook: images/notebook/notebook.md
 
 plugins:
   - search

@@ -15,6 +15,8 @@ ehRadio runs on an ESP32 to play Internet radio streams.
 A radio may be built using an ESP32, an audio decoder, a display, and some inputs.
 I prefer to build with ESP32-S3 boards but ESP32 or ESP32-C3 boards are possible, too.
 
+![image](./images/Trip5_ES3C28P.jpg)
+
 To develop, I prefer [VS Code](https://code.visualstudio.com/) but you may try other IDEs.
 I compiled using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well
 Some libraries may only be available from [Platformio Registry](https://registry.platformio.org/).
@@ -25,8 +27,9 @@ You can check out the [Built ehRadios](#buil)
 ehRadio is a fork of [ёRadio](https://github.com/e2002/yoradio/) / yoRadio v0.9.533.
 Read the [A History of ESP Radios](#a-history-of-esp-radios).
 
-## Features
+---
 
+## Features
 
 ehRadio is focused on increasing usability for a non-builder / non-coder while at the same time
 stressing future-compatibility for builders (starting with the ESP32-S3 and future ESP boards).
@@ -79,13 +82,29 @@ especially in terms of how they are used and how they are built.
 
 ---
 
-## Tools
+## Controls
 
-[myoptions Generator](https://trip5.github.io/ehRadio/myoptions/generator.html)
+Information on how the physical controls function detailed are [here](Controls.md).
 
-[Online Flasher](https://trip5.github.io/ehRadio/firmware.html)
+---
 
-Many more tools for tinkering with the code are available in the codebase as well.
+## WebUI
+
+The WebUI is optimized for mobile browsers but will look great on PCs, too.
+
+### Player and Playlist Editor
+
+![image](./images/WebUI_player_editor.jpg)
+
+### Search and Curated Lists
+
+![image](./images/WebUI_search_curated.jpg)
+
+### Settings
+
+![image](./images/WebUI_settings1.jpg)
+
+![image](./images/WebUI_settings2.jpg)
 
 ---
 
@@ -93,33 +112,68 @@ Many more tools for tinkering with the code are available in the codebase as wel
 
 I realize documentation is a little sparse right now.  I'm working on it.
 
-A lot of build options and comments and notes are actually in `options.h` and in various files.
+The best starting point (after reading this page) is the [myoptions Generator](https://trip5.github.io/ehRadio/myoptions/generator.html).
+This can assist in making a very good `myoptions.h` file, which should be placed in the root of the build folder next to `platformio.ini` (which the generator also makes). 
+It contains almost all supported hardware and peripherals which can be used when building an ehRadio.
 
-As of `2026.05.24` I've done a lot of work to clean up the codebase and organize it.  I think that part is done.
+If you need to get more advanced options, a lot of build options and comments and notes are actually in `options.h`.
+There are notes on numerous notes on how to further customize your `myoptions.h`.
+Some hardware questions may also be answered within this file.
 
+Want to get even more advanced? There are bunches of notes and tools in the codebase including font editors & builders, localization scripts, and more.
+
+As of `2026.05.25` I've done a lot of work to clean up the codebase and organize it.  I think that part is done.
 More work remains to be done and the `Feature Freeze` will remain in place at least until the "de-fork" of the audio libraries is finished.
 
 ---
 
 ## Radio Creations
 
-I can't 100% confirm this, but I am pretty sure all devices built for other ESP-based radio projects will run ehRadio, as long as the hardware
-is supported (and even if it isn't).  Not all radios built for ehRadio will run other firmwares.
-The combination of an SPI display with a VS1053 is the type that would be difficult to run yoRadio or ESP32-RadioV2 on an ESP32-S3 (but may be fine on ESP32).
-That said, as contributers add their configurations, more than likely, they will continue to use "standard" pins and parts with radios designed
-from yoRadio or ESP32-RadioV2 plans.  Devices that have the SPI Display & VS1053 will be marked, so as to keep newbies on track...?
+I can't 100% confirm this, but I am pretty sure all devices built for other ESP-based radio projects will run ehRadio, as long as the hardware is supported.
+And although (as of 2026), ehRadio has been reworked so an ESP32-S3 can be wired with an SPI display and a VS1053 (which ёRadio & ESP32-RadioV2 wouldn't be able to do),
+I haven't actually built a radio like that yet.red towards ESP32s and the two SPI buses... as already noted above.
 
-Here will be some sketches and helpful hints to building one of the "prebuilt" firmwares as available in the Releases and the
+Below here are some sketches and helpful hints to building one of the "prebuilt" firmwares as available in the Releases and the
 [online flasher](https://trip5.github.io/ehRadio/firmware.html).
 
 If you don't want to mess around with the code, already have a good idea on how the hardware works, and would just like to use a prebuilt binary,
 check out the [Releases](https://github.com/trip5/ehRadio/releases/) and click on a link to open the generator with that binary's profile,
-which includes hardware needed, pins to connect, and more.  Note that for inputs and peripherals, you can just nevermind the hardware as the radio
-will still function perfectly without it... just your menu system will show things that don't exist.
+which includes hardware needed, pins to connect, and more.
+
+Note that for inputs and peripherals, you can just ignore the hardware as the radio will still function perfectly without it.
+Buttons and and SD card can especially be ignored (but it won't work well without a rotary encoder).
+Caveat: your WebUI may show links to peripherals that don't exist (like the SD card or IR encoder).
+
+If don't want to mess around with VS Code but would still like your own build added to the Releases, you can make a
+[firmware request](https://github.com/trip5/ehRadio/discussions/categories/firmware-requests).
+I would ask that you do a bit of research before just requesting a firmware.  Building releases is non-trivial.
 
 ### Trip5's Radios
 
-...coming soon...
+These are a few I have made, using cheap Bluetooth speakers from Aliexpress, gutted, and fitted with plastic cases stuck where the Bluetooth control once was.
+
+![image](./images/Trip5_ehRadio_family.jpg)
+
+I exclusively use XH2.54 connectors to connect between components with headers and to the ESP32-S3.
+With a bit of practice, it becomes quite easy to make reliable conections that can also be (fairly) easily changed later.
+They are way more reliable that using breadboards and duPont connectors.
+
+![image](./images/Trip5_SH1106_VS1053_3buttons1.jpg)
+
+Of course, switches will still require some soldering.
+
+![image](./images/Trip5_SH1106_VS1053_3buttons2.jpg)
+
+And painter's tape keeps the components from making contact with each other when I stuff them into the speaker.
+
+At some point, I will make a more beautiful radio, perhaps taking inspiration from:
+- [ThomasH358](https://www.instructables.com/How-to-Build-a-Portable-Bluetooth-Tube-Amplifier/)
+- [WelshWoodWorking](https://www.instructables.com/Vintage-Style-MP3-Radio/)
+- [Peppy Radio Woodware](https://github.com/project-owner/Peppy.doc/wiki/Woodware)
+- [Peppy Player on DIY Audio](https://www.diyaudio.com/community/threads/peppy-player.288412/)
+- [Google Image Search](https://www.google.com/search?q=diy+arduino+radio+project&tbm=isch)
+
+For more notes, check out [my Notebook](./images/notebook/notebook.md), which contains notes about various components and a sketch of one of my builds.
 
 ---
 
@@ -189,7 +243,8 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 ### Updates
 
 | Date       | Release Notes    |
-| ---------- | ---------------- |
+| ---------- | ------------------ |
+| 2026.05.27 | `Not a release` IR fixed, documentation massively improved |
 | 2026.05.26 | `Feature Freeze` `De-fork from ёRadio` Theme updated, Chunky6 font, fixes to `options.h`: `BTN_*` fixed & `ENC_*` renamed, screensaver fixes, battery widgets, ILI9225 from ёRadio v0.9.710, generator updated, partitions changed |
 | 2026.05.19 | `Feature Freeze` This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
 | 2026.05.08 | `Feature Freeze` SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |

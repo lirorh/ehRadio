@@ -349,6 +349,11 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #endif
 #endif
 
+/* Actually upstream in the library - by default enables improved decoding */
+#ifndef VS_PATCH_ENABLE
+  //#define VS_PATCH_ENABLE false /* For the 2.5V boards with wrong voltage regulator.  See here: https://github.com/e2002/yoradio/issues/108 */
+#endif
+
 /* --- ESP32 INTERNAL DAC --- */
 /* The ESP32 has an internal DAC - these are the pins needed to use it */
 /* It is NOT recommended to use and not officially supported */

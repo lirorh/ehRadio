@@ -178,7 +178,7 @@ void TouchScreen::loop() {
       if (direct == TSD_REQUEST) {
         uint32_t pressTicks = millis()-touchLongPress;
         if (pressTicks < BTN_PRESS_TICKS*2) {
-          if (pressTicks > 50) controls.onBtnClick(EVT_BTNCENTER);
+          if (pressTicks > 50) controls.onBtnClick(EVT_BTN_PLAY);
         } else {
           display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
         }

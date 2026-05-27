@@ -92,6 +92,7 @@ Order and sections match that file.
 | `screensaverplayingenabled` | Enable/disable playing screensaver behavior. |
 | `screensaverplayingtimeout` | Set playing screensaver timeout (1..1080). |
 | `screensaverplayingblank` | Enable/disable playing screensaver blanking behavior. |
+| `screensaverfull` | Enable/disable full time on the screensaver. |
 | `dimmingenabled` | Enable/disable idle dimming behavior. |
 | `dimmingtimeout` | Set idle dimming timeout (5..65520). |
 | `dimmingbrightness` | Set dimmed brightness (0..100, clamped to the current brightness setting). |

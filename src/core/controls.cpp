@@ -7,6 +7,22 @@
 #include "logging.h"
 #include "netserver.h"
 #include "network.h"
+
+#if IR_PIN!=255
+  #include <assert.h>
+  #include <IRrecv.h>
+  #include <IRremoteESP8266.h>
+  #include <IRac.h>
+  #include <IRtext.h>
+  #include <IRutils.h>
+  const uint16_t kCaptureBufferSize = 1024;
+  const uint8_t kTimeout = IR_TIMEOUT;
+  const uint16_t kMinUnknownSize = 12;
+  #define LEGACY_TIMING_INFO false
+  IRrecv irrecv(IR_PIN, kCaptureBufferSize, kTimeout, true);
+  decode_results irResults;
+#endif
+
 #include "player.h"
 #include "utility.h"
 
@@ -31,21 +47,6 @@
 #if (TS_MODEL!=TS_MODEL_UNDEFINED) && (DSP_MODEL!=DSP_DUMMY)
   #include "touchscreen.h"
   TouchScreen touchscreen;
-#endif
-
-#if IR_PIN!=255
-  #include <assert.h>
-  #include <IRrecv.h>
-  #include <IRremoteESP8266.h>
-  #include <IRac.h>
-  #include <IRtext.h>
-  #include <IRutils.h>
-  const uint16_t kCaptureBufferSize = 1024;
-  const uint8_t kTimeout = IR_TIMEOUT;
-  const uint16_t kMinUnknownSize = 12;
-  #define LEGACY_TIMING_INFO false
-  IRrecv irrecv(IR_PIN, kCaptureBufferSize, kTimeout, true);
-  decode_results irResults;
 #endif
 
 void IRAM_ATTR readEncoderISR() {
@@ -321,7 +322,7 @@ void Controls::irLoop() {
                 }
               case IR_AST: {
                   //ESP.restart();
-                  onBtnClick(EVT_BTNMODE);
+                  onBtnClick(EVT_BTN_MODE);
                   break;
                 }
             } /* switch (target) */
@@ -336,29 +337,29 @@ void Controls::irLoop() {
 
 void Controls::onBtnLongPressStart(int id) {
   switch ((controlEvt_e)id) {
-    case EVT_BTNLEFT:
-    case EVT_BTNRIGHT:
+    case EVT_BTN_DOWN:
+    case EVT_BTN_UP:
     case EVT_BTNUP:
-    case EVT_BTNDOWN: {
+    case EVT_BTN_NEXT: {
         lpId = id;
         break;
       }
-    case EVT_BTNCENTER:
-    case EVT_ENCBTNB: {
+    case EVT_BTN_PLAY:
+    case EVT_ENC_SW: {
         #if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
           break;
         #endif
         display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
         break;
       }
-    case EVT_ENC2BTNB: {
+    case EVT_ENC2_SW: {
         #if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
           break;
         #endif
         display.putRequest(NEWMODE, display.mode() == PLAYER ? VOL : PLAYER);
         break;
       }
-    case EVT_BTNMODE: {
+    case EVT_BTN_MODE: {
         //utility.doSleepW();
         display.putRequest(NEWMODE, SLEEPING);
         break;
@@ -369,14 +370,14 @@ void Controls::onBtnLongPressStart(int id) {
 
 void Controls::onBtnLongPressStop(int id) {
   switch ((controlEvt_e)id) {
-    case EVT_BTNLEFT:
-    case EVT_BTNRIGHT:
+    case EVT_BTN_DOWN:
+    case EVT_BTN_UP:
     case EVT_BTNUP:
-    case EVT_BTNDOWN: {
+    case EVT_BTN_NEXT: {
         lpId = -1;
         break;
       }
-    case EVT_BTNMODE: {
+    case EVT_BTN_MODE: {
         utility.doSleepW();
         break;
       }
@@ -412,22 +413,22 @@ void Controls::onBtnDuringLongPress(int id) {
   if (network.status != CONNECTED && network.status!=SDREADY) return;
   if (checklpdelay(BTN_LONGPRESS_LOOP_DELAY, lpDelay)) {
     switch ((controlEvt_e)id) {
-      case EVT_BTNLEFT: {
+      case EVT_BTN_DOWN: {
           controlsEvent(false);
           break;
         }
-      case EVT_BTNRIGHT: {
+      case EVT_BTN_UP: {
           controlsEvent(true);
           break;
         }
       case EVT_BTNUP:
-      case EVT_BTNDOWN: {
+      case EVT_BTN_NEXT: {
           if (!config.store.skipPlaylistUpDown) {
             if (display.mode() == PLAYER) {
               display.putRequest(NEWMODE, STATIONS);
             }
             if (display.mode() == STATIONS) {
-              controlsEvent(id == EVT_BTNDOWN);
+              controlsEvent(id == EVT_BTN_NEXT);
             }
           }
           break;
@@ -472,17 +473,17 @@ void Controls::controlsEvent(bool toRight, int8_t volDelta) {
 
 void Controls::onBtnClick(int id) {
   if (screenSaverExit()) return;
-  bool passBnCenter = (controlEvt_e)id==EVT_BTNCENTER || (controlEvt_e)id==EVT_ENCBTNB || (controlEvt_e)id==EVT_ENC2BTNB;
+  bool passBnCenter = (controlEvt_e)id==EVT_BTN_PLAY || (controlEvt_e)id==EVT_ENC_SW || (controlEvt_e)id==EVT_ENC2_SW;
   controlEvt_e btnid = static_cast<controlEvt_e>(id);
-  if (network.status != CONNECTED && network.status!=SDREADY && (controlEvt_e)id!=EVT_BTNMODE && !passBnCenter) return;
+  if (network.status != CONNECTED && network.status!=SDREADY && (controlEvt_e)id!=EVT_BTN_MODE && !passBnCenter) return;
   switch (btnid) {
-    case EVT_BTNLEFT: {
+    case EVT_BTN_DOWN: {
         controlsEvent(false);
         break;
       }
-    case EVT_BTNCENTER:
-    case EVT_ENCBTNB:
-    case EVT_ENC2BTNB: {
+    case EVT_BTN_PLAY:
+    case EVT_ENC_SW:
+    case EVT_ENC2_SW: {
         if (display.mode() == NUMBERS) {
           display.numOfNextStation = 0;
           display.putRequest(NEWMODE, PLAYER);
@@ -505,12 +506,12 @@ void Controls::onBtnClick(int id) {
         }
         break;
       }
-    case EVT_BTNRIGHT: {
+    case EVT_BTN_UP: {
         controlsEvent(true);
         break;
       }
     case EVT_BTNUP:
-    case EVT_BTNDOWN: {
+    case EVT_BTN_NEXT: {
         if (DSP_MODEL == DSP_DUMMY) {
           if (id == EVT_BTNUP) {
             player.next();
@@ -530,13 +531,13 @@ void Controls::onBtnClick(int id) {
             }
           }
           if (display.mode() == STATIONS) {
-            controlsEvent(id == EVT_BTNDOWN);
+            controlsEvent(id == EVT_BTN_NEXT);
           }
         }
         break;
       }
     #ifdef USE_SD
-    case EVT_BTNMODE: {
+    case EVT_BTN_MODE: {
       config.changeMode();
       break;
     }
@@ -548,20 +549,20 @@ void Controls::onBtnClick(int id) {
 void Controls::onBtnDoubleClick(int id) {
   if (screenSaverExit()) return;
   switch ((controlEvt_e)id) {
-    case EVT_BTNLEFT: {
+    case EVT_BTN_DOWN: {
         if (display.mode() != PLAYER) return;
         if (network.status != CONNECTED && network.status!=SDREADY) return;
         player.prev();
         break;
       }
-    case EVT_BTNCENTER:
-    case EVT_ENCBTNB:
-    case EVT_ENC2BTNB: {
+    case EVT_BTN_PLAY:
+    case EVT_ENC_SW:
+    case EVT_ENC2_SW: {
         //display.putRequest(NEWMODE, display.mode() == PLAYER ? VOL : PLAYER);
-        onBtnClick(EVT_BTNMODE);
+        onBtnClick(EVT_BTN_MODE);
         break;
       }
-    case EVT_BTNRIGHT: {
+    case EVT_BTN_UP: {
         if (display.mode() != PLAYER) return;
         if (network.status != CONNECTED && network.status!=SDREADY) return;
         player.next();

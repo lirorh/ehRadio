@@ -20,7 +20,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 
-VERSION = '2026.05.13'
+VERSION = '2026.05.27'
 
 _LOGGER      = logging.getLogger(__name__)
 
@@ -43,20 +43,24 @@ SUPPORT_EHRADIO = (
 DEFAULT_NAME = 'myradio'
 CONF_MAX_VOLUME = 'max_volume'
 CONF_ROOT_TOPIC = 'root_topic'
+CONF_FALLBACK_IMAGE = 'fallback_image'
+DEFAULT_FALLBACK_IMAGE = 'https://trip5.github.io/ehRadio/images/logo-color-HA'
 
 MEDIA_PLAYER_PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend({
   vol.Required(CONF_ROOT_TOPIC, default="ehradio"): cv.string,
   vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-  vol.Optional(CONF_MAX_VOLUME, default='254'): cv.string
+  vol.Optional(CONF_MAX_VOLUME, default='254'): cv.string,
+  vol.Optional(CONF_FALLBACK_IMAGE, default=DEFAULT_FALLBACK_IMAGE): cv.string
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
   root_topic = config.get(CONF_ROOT_TOPIC)
   name = config.get(CONF_NAME)
   max_volume = int(config.get(CONF_MAX_VOLUME, 254))
+  fallback_image = config.get(CONF_FALLBACK_IMAGE, DEFAULT_FALLBACK_IMAGE)
   playlist = []
   api = ehradioApi(root_topic, hass, playlist)
-  add_devices([ehradioDevice(name, max_volume, api)], True)
+  add_devices([ehradioDevice(name, max_volume, fallback_image, api)], True)
 
 class ehradioApi():
   def __init__(self, root_topic, hass, playlist):
@@ -119,7 +123,7 @@ class ehradioApi():
           counter=counter+1
 
 class ehradioDevice(MediaPlayerEntity):
-  def __init__(self, name, max_volume, api):
+  def __init__(self, name, max_volume, fallback_image, api):
     self._name = name
     self.api = api
     self._state = MediaPlayerState.OFF
@@ -130,6 +134,7 @@ class ehradioDevice(MediaPlayerEntity):
     self._entity_picture = None
     self._volume = 0
     self._max_volume = max_volume
+    self._fallback_image = fallback_image
 
   async def async_added_to_hass(self):
     await asyncio.sleep(5)
@@ -193,7 +198,11 @@ class ehradioDevice(MediaPlayerEntity):
 
   @property
   def entity_picture(self):
-    return self._entity_picture if self._entity_picture else "https://trip5.github.io/ehRadio/images/logo-color-icon.svg"
+    return self._entity_picture if self._entity_picture else self._fallback_image
+
+  @property
+  def media_image_remotely_accessible(self):
+    return True
 
   @property
   def state(self):

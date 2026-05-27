@@ -7,7 +7,7 @@
 A rotary encoders is the recommended first choice of input.  One encoder is enough to control the device.
 
 | Encoder Action             | Player Mode             | Playlist Mode |
-| -------------------------- | ----------------------- | --------------|
+| -------------------------- | ----------------------- | ------------- |
 | Rotate clockwise           | volume up               | next station/track |
 | Rotate counter-clockwise   | volume down             | previous station/track |
 | Click (Same as `BTN_PLAY`) | start/stop playing      | play selected station/track |
@@ -16,7 +16,7 @@ A rotary encoders is the recommended first choice of input.  One encoder is enou
 
 Rotary Encoder 2
 
-| Encoder Action         | Not pressed                                      | While Pressing |
+| Encoder Action           | Not pressed                                      | While Pressing |
 | ------------------------ | ------------------------------------------------ | -------------- |
 | Rotate clockwise         | switch to playlist mode & next station/track     | volume up |
 | Rotate counter-clockwise | switch to playlist mode & previous station/track | volume down |
@@ -51,14 +51,15 @@ IR receivers can be configured from the WebUI. Up to 3 remotes can be used.
 
 Repeat for other buttons.
 
-**Button assignment:**
-- &#9199; - start/stop playing
-- &#9194; - previous station
-- &#9654; - next station
-- &#9650; - volume up, longpress - quick volume up
-- &#9660; - volume down, longpress - quick volume down
-- &nbsp;**\#**  &nbsp;- toggle between PLAYER/PLAYLIST mode
-- **0-9** - Start entering the station number. To finish input and start playback, press the play button. To cancel, press hash.
+| Button  | Action                 | Longpress Action |
+| ------  | ---------------------- | ---------------- |
+| &#9199; | start/stop playing     | - |
+| &#9664; | previous station/track | - |
+| &#9654; | next station/track     | - |
+| &#9650; | volume up              | quick volume up |
+| &#9660; | volume down            | quick volume down
+| #       | toggle between player/playlist mode | - |
+| 0-9     | Start entering the station number. To finish input and start playback, press the play button. To cancel, press hash. | - |
 
 ### Joystick
 

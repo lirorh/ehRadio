@@ -1,5 +1,6 @@
 # ёRadio
-<img src="images/yoradio/yologo.png" width="190" height="142">
+
+![image](images/yoradio/yologo.png)
 
 ##### Web-radio based on [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) or/and [ESP32-vs1053_ext](https://github.com/schreibfaul1/ESP32-vs1053_ext) library
 ---
@@ -21,12 +22,13 @@
 ---
 #### NEW!
 ##### yoRadio Printed Circuit Boards repository:
-[<img src="images/yoradio/yopcb.jpg" width="830" height="auto" />](https://github.com/e2002/yopcb)
+[![image](images/yoradio/yopcb.jpg)](https://github.com/e2002/yopcb)
 
 https://github.com/e2002/yopcb
 
 ---
-<img src="images/yoradio/img0_2.jpg" width="830" height="467">
+
+![image](images/yoradio/img0_2.jpg)
 
 ##### More images in [Images.md](Images.md)
 
@@ -86,7 +88,7 @@ https://www.aliexpress.com/item/33009687492.html
 ---
 ## Connection tables
 ##### Use [this tool](https://e2002.github.io/docs/myoptions-generator.html) to build your own connection table and myoptions.h file.
-<img src="images/yoradio/myoptions-generator.png" width="830" height="527"><br />
+![image](images/yoradio/myoptions-generator.png)
 
 https://e2002.github.io/docs/myoptions-generator.html
 
@@ -142,7 +144,7 @@ Rotation of the display:
 
 ---
 ## Quick start
-<img src="images/yoradio/board4.jpg" width="830" height="473"><br />
+![image](images/yoradio/board4.jpg)
 
 - <span style="color: red; font-weight: bold; font-size: 22px;text-decoration: underline;">Arduino IDE version 2.x.x is not supported. Use Arduino IDE 1.8.19</span>
 - <span style="color: red; font-weight: bold; font-size: 22px;text-decoration: underline;">ESP32 core version 2.0.0 or higher is [required](https://github.com/espressif/arduino-esp32)!</span>
@@ -176,7 +178,7 @@ download _http://\<yoradioip\>/data/playlist.csv_ and _http://\<yoradioip\>/data
 3. Get SPIFFS binary: disconnect ESP32 from your computer, click on **ESP32 Data Sketch Upload**. \
  You will get an error and file path
 
- <img src="images/yoradio/getspiffs.jpg" width="830" height="208">
+![image](images/yoradio/getspiffs.jpg)
 
 4. Go to page _http://\<yoradioip\>/update_ and upload ehRadio.ino.esp32.bin and yoRadio.spiffs.bin in turn, checking the appropriate upload options.
 5. Well done!
@@ -189,7 +191,7 @@ download _http://\<yoradioip\>/data/playlist.csv_ and _http://\<yoradioip\>/data
 
 ---
 ## Home Assistant
-<img src="images/yoradio/ha.jpg" width="500" height="270"><br />
+![image](images/yoradio/ha.jpg)
 
 0. Requires [MQTT integration](https://www.home-assistant.io/integrations/mqtt/)
 1. Copy directory HA/custom_components/yoradio to .homeassistant/custom_components/
@@ -868,7 +870,7 @@ _will have to be configured again through the web interface. Please understand a
 #### v0.4.320
 - MQTT support
 
-<img src="images/yoradio/mqtt.jpg" width="680" height="110">
+![image](images/yoradio/mqtt.jpg)
 
 #### v0.4.315
 - added support for digital buttons for the IR control \

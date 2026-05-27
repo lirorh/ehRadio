@@ -44,7 +44,7 @@ DEFAULT_NAME = 'myradio'
 CONF_MAX_VOLUME = 'max_volume'
 CONF_ROOT_TOPIC = 'root_topic'
 CONF_FALLBACK_IMAGE = 'fallback_image'
-DEFAULT_FALLBACK_IMAGE = 'https://trip5.github.io/ehRadio/images/logo-color-HA'
+DEFAULT_FALLBACK_IMAGE = 'https://trip5.github.io/ehRadio/images/logo-color-square.png'
 
 MEDIA_PLAYER_PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend({
   vol.Required(CONF_ROOT_TOPIC, default="ehradio"): cv.string,

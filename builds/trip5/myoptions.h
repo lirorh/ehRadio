@@ -319,5 +319,4 @@
 //#define CLOCKFONT YO_MONO
 //#define CLOCKFONT YO_CLASSIC
 
-
 #endif // myoptions_h

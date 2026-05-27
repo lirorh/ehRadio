@@ -3,6 +3,7 @@ site_description: ESP32 Radio (yoRadio fork)
 site_url: https://trip5.github.io/ehRadio/
 repo_url: https://github.com/trip5/ehRadio
 repo_name: trip5/ehRadio
+docs_dir: .
 
 theme:
   name: material

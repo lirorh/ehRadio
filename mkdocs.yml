@@ -52,10 +52,10 @@ markdown_extensions:
       toc_depth: 3
 
 nav:
-  - Readme: ./README.md
-  - Old Readme: ./README.old.md
-  - Controls: ./Controls.md
-  - Commands: ./Commands.md
+  - Readme: README.md
+  - Old Readme: README.old.md
+  - Controls: Controls.md
+  - Commands: Commands.md
   - Trip 5's Notebook: images/notebook/notebook.md
 
 plugins:

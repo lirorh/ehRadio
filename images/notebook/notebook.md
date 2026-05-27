@@ -29,4 +29,4 @@ Here are some pages.
 
 ### sh1106_vs1053_3buttons Case
 
-![image](trip5_sh1106_vs1053_3buttons_case.jpg)
+![image](sh1106_vs1053_3buttons_case.jpg)

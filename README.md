@@ -156,6 +156,7 @@ And painter's tape keeps the components from making contact with each other when
 Of course, switches will still require some soldering.
 
 At some point, I will make a more beautiful radio, perhaps taking inspiration from:
+
 - [ThomasH358](https://www.instructables.com/How-to-Build-a-Portable-Bluetooth-Tube-Amplifier/)
 - [WelshWoodWorking](https://www.instructables.com/Vintage-Style-MP3-Radio/)
 - [Peppy Radio Woodware](https://github.com/project-owner/Peppy.doc/wiki/Woodware)

@@ -24,9 +24,10 @@ Rotary Encoder 2
 
 ### Buttons
 
-Up to 5 buttons can be connected to the device. Three buttons are enough to control all functions ().
+Up to 5 buttons can be connected to the device. Three buttons are enough to control all functions.
 
-Button actions:
+Button Actions
+
 | Button   | Click                   | Double-click            | Long-press |
 | -------- | ----------------------- | ----------------------- | ---------- |
 | BTN_PLAY | start/stop playing      | toggle stations/SD mode | toggle between player and playlist |
@@ -123,6 +124,7 @@ Publish `<mqtttopic>command` (for example, `ehradio/myradio/command`).
 Connect to the radio with `telnet <radio-ip>`.
 
 The format is the same as MQTT but with some quirks:
+
 - `quit`/`bye` will close the connection
 - `help` will show a short list of useful commands
 - `play` with no value is equivalent to `start`

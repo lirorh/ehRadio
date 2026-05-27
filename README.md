@@ -15,7 +15,7 @@ I prefer to build with ESP32-S3 boards but ESP32 or ESP32-C3 boards are possible
 In some cases, like for the ES3C28P, no peripherals are even needed.
 
 To develop, I prefer [VS Code](https://code.visualstudio.com/) but you may try other IDEs.
-I compiled using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well
+I compiled using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well.
 Some libraries may only be available from [Platformio Registry](https://registry.platformio.org/).
 
 If you have zero desire to use VS Code but still want to build a radio?  That's OK, too.

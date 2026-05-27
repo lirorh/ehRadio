@@ -82,7 +82,7 @@ You can use a joystick [like this](https://aliexpress.com/item/4000681560472.htm
 ![image](images/HomeAssistant.jpg)
 
 A Home Assistant custom integration is available in the `HA` folder.
-Put it in a `ehradio` folder in your Home Assistant's `custom_components` folder.
+Copy `ehradio` folder into your Home Assistant's `custom_components` folder.
 
 MQTT must be enabled.
 

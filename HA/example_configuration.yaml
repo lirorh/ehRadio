@@ -16,3 +16,4 @@ media_player:
   - platform: ehradio
     name: My ehRadio
     root_topic: ehradio/myradio/
+    # fallback_image: "https://example.com/my-custom-logo.png"  # optional: override default logo shown when no station art is available

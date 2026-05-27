@@ -1,13 +1,8 @@
-<!--
-![image](images/logo-color.svg)
--->
-
 <img src="images/logo-color.svg" width="50%">
 
 # ehRadio
 
 ***This documentation is the same on the [Github Page](https://trip5.github.io/ehRadio/), which may be easier to read.***
-
 
 ## Introduction
 
@@ -23,11 +18,11 @@ To develop, I prefer [VS Code](https://code.visualstudio.com/) but you may try o
 I compiled using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well
 Some libraries may only be available from [Platformio Registry](https://registry.platformio.org/).
 
-If you have zero desire to compile but still want to build a radio?  That's OK, too.
-But I would suggest you read up a bit before beginning.
+If you have zero desire to use VS Code but still want to build a radio?  That's OK, too.
+But I would suggest you read the documentation a bit to make sure you get the right firmware for your radio.
 
-ehRadio is a fork of [ёRadio](https://github.com/e2002/yoradio/) / yoRadio v0.9.533.
-Read the [A History of ESP Radios](#a-history-of-esp-radios).
+ehRadio is a fork of [ёRadio](https://github.com/e2002/yoradio/) / yoRadio v0.9.533 and would not exist without
+the years of work e2002 put into it.  Read the [A History of ESP Radios](#a-history-of-esp-radios).
 
 ---
 
@@ -48,6 +43,7 @@ especially in terms of how they are used and how they are built.
 | - touchscreen control (basic swipes and taps) | - same | 
 | - IR remote control                           | - same |
 | - Nextion uses advanced control               | - Nextion support is incomplete or broken |
+| Must be flashed using VS Code / Arduino IDE   | OTA updates make getting a new version easy-peasy |
 | English or Russian display                    | 37 Display languages (Latin & Cyrillic) (builder's choice)
 | MQTT, Telnet, HTTP                            | MQTT, Telnet, HTTP |
 | - mostly used for playback                    | - uses the same command set |
@@ -57,8 +53,8 @@ especially in terms of how they are used and how they are built.
 | - edit/import/export playlists                | - edit/import/export/merge playlists (mobile-first design) |
 | - English UI                                  | - 50 Languages (easily changeable)
 |                                               | - easy to locate with [ehDP](https://github.com/trip5/eh-Device-Scanner) |
-|                                               | Radio Station search using Radio-browser API | 
-|                                               | Curated lists can download/merge/preview other playlists |
+|                                               | - Radio Station search using Radio-browser API | 
+|                                               | - Curated lists can download/merge/preview other playlists |
 
 ### Features For Builders
 
@@ -87,7 +83,9 @@ especially in terms of how they are used and how they are built.
 
 ## Controls
 
-Information on how the physical controls function detailed are [here](Controls.md).
+ehRadio can be built with various control methods, including rotary encoders, buttons, an IR receiver, touchscreen, WebUI, Home Assistant, MQTT, Telnet, and HTTP.
+
+Information on how the controls function detailed are [here](Controls.md).
 
 ---
 
@@ -95,19 +93,9 @@ Information on how the physical controls function detailed are [here](Controls.m
 
 The WebUI is optimized for mobile browsers but will look great on PCs, too.
 
-### Player and Playlist Editor
-
 ![image](images/WebUI_player_editor.jpg)
 
-### Search and Curated Lists
-
-![image](images/WebUI_search_curated.jpg)
-
-### Settings
-
-![image](images/WebUI_settings1.jpg)
-
-![image](images/WebUI_settings2.jpg)
+More screenshots from the WebUI are [here](WebUI).
 
 ---
 
@@ -132,7 +120,7 @@ More work remains to be done and the `Feature Freeze` will remain in place at le
 
 I can't 100% confirm this, but I am pretty sure all devices built for other ESP-based radio projects will run ehRadio, as long as the hardware is supported.
 And although (as of 2026), ehRadio has been reworked so an ESP32-S3 can be wired with an SPI display and a VS1053 (which ёRadio & ESP32-RadioV2 wouldn't be able to do),
-I haven't actually built a radio like that yet.red towards ESP32s and the two SPI buses... as already noted above.
+I haven't actually built a radio like that yet.
 
 Below here are some sketches and helpful hints to building one of the "prebuilt" firmwares as available in the Releases and the
 [online flasher](https://trip5.github.io/ehRadio/firmware.html).
@@ -175,6 +163,10 @@ At some point, I will make a more beautiful radio, perhaps taking inspiration fr
 - [Google Image Search](https://www.google.com/search?q=diy+arduino+radio+project&tbm=isch)
 
 For more notes, check out [my Notebook](images/notebook/notebook.md), which contains notes about various components and a sketch of one of my builds.
+
+### ёRadio Builds
+
+e2002 collected a lot of pictures of ёRadio builds [here](Images.md).
 
 ---
 
@@ -245,7 +237,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ------------------ |
-| 2026.05.27 | `Not a release` IR fixed, documentation massively improved |
+| 2026.05.27 | `Feature Freeeze` `Not a release` IR fixed, documentation completely overhauled |
 | 2026.05.26 | `Feature Freeze` `De-fork from ёRadio` Theme updated, Chunky6 font, fixes to `options.h`: `BTN_*` fixed & `ENC_*` renamed, screensaver fixes, battery widgets, ILI9225 from ёRadio v0.9.710, generator updated, partitions changed |
 | 2026.05.19 | `Feature Freeze` This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
 | 2026.05.08 | `Feature Freeze` SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
@@ -265,11 +257,11 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 ### Old Readme
 
-A full history of ёRadio from v0.4.177 to v0.9.533 and to ehRadio 2026.05.08 can be seen in the [old Readme](README.old.md).
+A full history of ёRadio from v0.4.177 to v0.9.533 can be seen in the [old Readme](README.old.md).
 
 ### Credit
 
 Thanks to:
   - [Kasperaitis](https://github.com/kasperaitis) - for work initiating locales (WebUI and display language, display fonts, etc.) and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
-  - [e2002](https://github.com/e2002) - for [ёRadio](https://github.com/e2002/yoradio/)
+  - [e2002](https://github.com/e2002) - for [ёRadio](https://github.com/e2002/yoradio/) without which ehRadio would not be possible
 

@@ -8,20 +8,23 @@
 
 ***This documentation is the same on the [Github Page](https://trip5.github.io/ehRadio/), which may be easier to read.***
 
+
 ## Introduction
+
+<img src="images/Trip5_ES3C28P.jpg" width="50%">
 
 ehRadio runs on an ESP32 to play Internet radio streams. 
 
 A radio may be built using an ESP32, an audio decoder, a display, and some inputs.
 I prefer to build with ESP32-S3 boards but ESP32 or ESP32-C3 boards are possible, too.
-
-![image](images/Trip5_ES3C28P.jpg)
+In some cases, like for the ES3C28P, no peripherals are even needed.
 
 To develop, I prefer [VS Code](https://code.visualstudio.com/) but you may try other IDEs.
 I compiled using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well
 Some libraries may only be available from [Platformio Registry](https://registry.platformio.org/).
 
 If you have zero desire to compile but still want to build a radio?  That's OK, too.
+But I would suggest you read up a bit before beginning.
 
 ehRadio is a fork of [ёRadio](https://github.com/e2002/yoradio/) / yoRadio v0.9.533.
 Read the [A History of ESP Radios](#a-history-of-esp-radios).
@@ -43,14 +46,15 @@ especially in terms of how they are used and how they are built.
 | Physical controls (builder's choice)          | Uses ёRadio control architecture |
 | - up to 2 rotaries and 6 buttons              | - same |
 | - touchscreen control (basic swipes and taps) | - same | 
+| - IR remote control                           | - same |
 | - Nextion uses advanced control               | - Nextion support is incomplete or broken |
 | English or Russian display                    | 37 Display languages (Latin & Cyrillic) (builder's choice)
 | MQTT, Telnet, HTTP                            | MQTT, Telnet, HTTP |
-| - mostly used for playback                    | - use the same commands as WebUI (!) |
-| Home Assistant integration (through MQTT)     | Home Assistant integration (through MQTT) - improved a bit |
+| - mostly used for playback                    | - uses the same command set |
+| Home Assistant integration (through MQTT)     | Home Assistant integration (through MQTT) - improved |
 | WebUI interface, includes control playback    | WebUI similar but with added functionality |
-| - edit/import/export playlists                | - edit/import/export/merge playlists (works on mobile too) |
 | - change certain settings                     | - change many settings |
+| - edit/import/export playlists                | - edit/import/export/merge playlists (mobile-first design) |
 | - English UI                                  | - 50 Languages (easily changeable)
 |                                               | - easy to locate with [ehDP](https://github.com/trip5/eh-Device-Scanner) |
 |                                               | Radio Station search using Radio-browser API | 
@@ -109,14 +113,12 @@ The WebUI is optimized for mobile browsers but will look great on PCs, too.
 
 ## Documentation
 
-I realize documentation is a little sparse right now.  I'm working on it.
-
 The best starting point (after reading this page) is the [myoptions Generator](https://trip5.github.io/ehRadio/myoptions/generator.html).
 This can assist in making a very good `myoptions.h` file, which should be placed in the root of the build folder next to `platformio.ini` (which the generator also makes). 
 It contains almost all supported hardware and peripherals which can be used when building an ehRadio.
 
 If you need to get more advanced options, a lot of build options and comments and notes are actually in `options.h`.
-There are notes on numerous notes on how to further customize your `myoptions.h`.
+Contained within are notes on numerous notes on how to further customize your `myoptions.h`.
 Some hardware questions may also be answered within this file.
 
 Want to get even more advanced? There are bunches of notes and tools in the codebase including font editors & builders, localization scripts, and more.
@@ -155,15 +157,15 @@ These are a few I have made, using cheap Bluetooth speakers from Aliexpress, gut
 
 I exclusively use XH2.54 connectors to connect between components with headers and to the ESP32-S3.
 With a bit of practice, it becomes quite easy to make reliable conections that can also be (fairly) easily changed later.
-They are way more reliable that using breadboards and duPont connectors.
+They are way more reliable than using breadboards and duPont connectors.
 
 ![image](images/Trip5_SH1106_VS1053_3buttons1.jpg)
 
-Of course, switches will still require some soldering.
+And painter's tape keeps the components from making contact with each other when I stuff them into the speaker.
 
 ![image](images/Trip5_SH1106_VS1053_3buttons2.jpg)
 
-And painter's tape keeps the components from making contact with each other when I stuff them into the speaker.
+Of course, switches will still require some soldering.
 
 At some point, I will make a more beautiful radio, perhaps taking inspiration from:
 - [ThomasH358](https://www.instructables.com/How-to-Build-a-Portable-Bluetooth-Tube-Amplifier/)

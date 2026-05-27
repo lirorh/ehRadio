@@ -1,5 +1,5 @@
 <!--
-![image](./images/logo-color.svg)
+![image](images/logo-color.svg)
 -->
 
 <img src="images/logo-color.svg" width="50%">
@@ -15,14 +15,13 @@ ehRadio runs on an ESP32 to play Internet radio streams.
 A radio may be built using an ESP32, an audio decoder, a display, and some inputs.
 I prefer to build with ESP32-S3 boards but ESP32 or ESP32-C3 boards are possible, too.
 
-![image](./images/Trip5_ES3C28P.jpg)
+![image](images/Trip5_ES3C28P.jpg)
 
 To develop, I prefer [VS Code](https://code.visualstudio.com/) but you may try other IDEs.
 I compiled using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well
 Some libraries may only be available from [Platformio Registry](https://registry.platformio.org/).
 
 If you have zero desire to compile but still want to build a radio?  That's OK, too.
-You can check out the [Built ehRadios](#buil)
 
 ehRadio is a fork of [ёRadio](https://github.com/e2002/yoradio/) / yoRadio v0.9.533.
 Read the [A History of ESP Radios](#a-history-of-esp-radios).
@@ -94,17 +93,17 @@ The WebUI is optimized for mobile browsers but will look great on PCs, too.
 
 ### Player and Playlist Editor
 
-![image](./images/WebUI_player_editor.jpg)
+![image](images/WebUI_player_editor.jpg)
 
 ### Search and Curated Lists
 
-![image](./images/WebUI_search_curated.jpg)
+![image](images/WebUI_search_curated.jpg)
 
 ### Settings
 
-![image](./images/WebUI_settings1.jpg)
+![image](images/WebUI_settings1.jpg)
 
-![image](./images/WebUI_settings2.jpg)
+![image](images/WebUI_settings2.jpg)
 
 ---
 
@@ -152,17 +151,17 @@ I would ask that you do a bit of research before just requesting a firmware.  Bu
 
 These are a few I have made, using cheap Bluetooth speakers from Aliexpress, gutted, and fitted with plastic cases stuck where the Bluetooth control once was.
 
-![image](./images/Trip5_ehRadio_family.jpg)
+![image](images/Trip5_ehRadio_family.jpg)
 
 I exclusively use XH2.54 connectors to connect between components with headers and to the ESP32-S3.
 With a bit of practice, it becomes quite easy to make reliable conections that can also be (fairly) easily changed later.
 They are way more reliable that using breadboards and duPont connectors.
 
-![image](./images/Trip5_SH1106_VS1053_3buttons1.jpg)
+![image](images/Trip5_SH1106_VS1053_3buttons1.jpg)
 
 Of course, switches will still require some soldering.
 
-![image](./images/Trip5_SH1106_VS1053_3buttons2.jpg)
+![image](images/Trip5_SH1106_VS1053_3buttons2.jpg)
 
 And painter's tape keeps the components from making contact with each other when I stuff them into the speaker.
 
@@ -173,7 +172,7 @@ At some point, I will make a more beautiful radio, perhaps taking inspiration fr
 - [Peppy Player on DIY Audio](https://www.diyaudio.com/community/threads/peppy-player.288412/)
 - [Google Image Search](https://www.google.com/search?q=diy+arduino+radio+project&tbm=isch)
 
-For more notes, check out [my Notebook](./images/notebook/notebook.md), which contains notes about various components and a sketch of one of my builds.
+For more notes, check out [my Notebook](images/notebook/notebook.md), which contains notes about various components and a sketch of one of my builds.
 
 ---
 

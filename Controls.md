@@ -47,7 +47,7 @@ IR receivers can be configured from the WebUI. Up to 3 remotes can be used.
 2. Press the button you need on the left to record the IR code.
 3. Select the slot on the right and press the button on the physical IR remote. Avoid `UNKNOWN`.
 
-![image](./images/IRrecorder.jpg)
+![image](images/IRrecorder.jpg)
 
 Repeat for other buttons.
 
@@ -64,7 +64,7 @@ Repeat for other buttons.
 
 You can use a joystick [like this](https://aliexpress.com/item/4000681560472.html) instead of connecting five buttons.
 
-![image](./images/joystick.jpg)
+![image](images/joystick.jpg)
 
 ### Touchscreen
 
@@ -78,7 +78,7 @@ You can use a joystick [like this](https://aliexpress.com/item/4000681560472.htm
 
 ## Home Assistant Component
 
-![image](./images/HomeAssistant.jpg)
+![image](images/HomeAssistant.jpg)
 
 A Home Assistant custom integration is available in the `HA` folder.
 Put it in a `ehradio` folder in your Home Assistant's `custom_components` folder.
@@ -157,5 +157,5 @@ Note: the value matters - even for boolean toggles you need a value (for example
 The server responds 200 with empty body on success, 404 on unrecognized commands.
 Some commands (like reset or clearspiffs) trigger a redirect to `/`.
 
-For a (hopefully) complete list of commands, check out [Commands](./Commands.md).
+For a (hopefully) complete list of commands, check out [Commands](Commands.md).
 In case this list is incomplete, `commandhandler.cpp` will show everything.

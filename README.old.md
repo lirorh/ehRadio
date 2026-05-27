@@ -1,546 +1,5 @@
-<img src="images/logo-color.svg" width="50%">
-
-# ehRadio
-
-***This documentation is the same on the [Github Page](https://trip5.github.io/ehRadio/), which may be easier to read.***
-
-## Under Heavy Construction
-
-This is a fork of yoRadio from version 0.9.533.  Many changes are coming... many things remain untested.
-
-The objective of this fork is to create a more pleasant experience to use for all users, including those we builders might want to give to family members.
-
-No support for ESP8266.  Support for low-end versions of ESP32s may get dropped (PSRAM is already a requirement).  I build with ESP32-S3s and various displays.
-I can't test every piece of hardware this firmware is capable of suporting.
-
-I may drop support for certain components like Nextion (it's already likely broken).
-
-If you have issues it may help to also check yoRadio documentation.  The hardware implementations should still be 99% compatible.
-
-Documentation will be improved at some point... Until then, check this page and [yoRadio](https://github.com/e2002/yoradio) documentation.
-
-
-## ehRadio Version history
-
-### 2026.05.08 - Feature Freeze ON
-  - Sorry, I broke OTA updates with a new file-naming scheme
-    - binary file names have been simplified, shortened (this breaks OTA)
-    - `version.txt` contents changed, too (I avoided this until now because it would break OTA)
-    - Using workflows and scripts, other contributers can now add their myoptions.h to official releases (and OTA will work)
-    - contributors can keep their `myoptions.h` files simple (see `builds/kasperaitis/`)
-  - `Platformio.ini` and `myoptions.h` files simplified (they were getting complicated)
-    - python scripts added to assist in managing them
-  - Plugins removed
-
-### 2026.05.06 Dev - Feature Freeze ON
-  - SPI Buses and devices now more flexible (not forced to use board defaults)
-    - See `options.h` and `myoptions.h` for more
-
-### 2026.05.03 Dev - Feature Freeze ON
-  - Unified `commandhandler`
-    - all commands routed through the same path so websockets, Telnet, MQTT, and HTTP have (mostly) the same command set
-    - see `Commands.md` for a full list and how to use commands
-  - Unified logging
-    - logging uses formatting functions to be more readable
-    - logging is sent to serial and telnet simultaneously
-    - Telnet will show errors for commands that are blocked
-  - Home Assistant custom component fixed
-
-### 2026.04.09 - Feature Freeze ON
-  - Fixes worth a release even if still in repairs:
-    - aggressive re-connect on streams that disconnect (for any reason)
-    - SD card scan on boot fixed
-  - commandhandler re-arranged
-  - options.h expanded with checks (optionchecker.h removed)
-  - multiple other minor and major code changes
-
-### 2026.03.30 - Feature Freeze ON
-  - the codebase is in serious need of organization and repair
-    - see `.github/code-issues.md` for more info
-    - please hold off on any PRs until this is finished (it could take some time)
-    - the `ehRadio` branch will not be updated until finished
-    - the `dev` branch will be updated periodically
-  - minor fix to how ehDP is handled in options (updates immediately)
-  - redirect browser after OTA update and reboots are now handled gracefully with redirects
-  - internal documentation (`options.h`) is improving... this `README.md` is still a mess.
-  - 3 javascript files combined to 1 (`script2.js`) to improve OTA file updating speed
-
-### 2026.03.22
-  - [ehDP Library](https://github.com/trip5/ehDP) added
-    - Device can be found using [eh Device Scanner](https://github.com/trip5/eh-Device-Scanner)
-  - Grabbable and hovered items fixed in playlist editor for mobile devices
-  - Some major changes to the workflows that handle Releases and firmware generation
-
-### 2026.03.18
-
-  - Thanks to [kasperaitis](https://github.com/kasperaitis) for [PR 50](https://github.com/trip5/ehRadio/pull/50)
-    - Ignore placeholder stream titles
-    - improved battery handling
-  - Also: [PR 51](https://github.com/trip5/ehRadio/pull/51)
-    - good work on multi-locale options for display!
-    - glyph tools (more characters are always good)
-    - began multi-locale support of WebUI
-  - Configure the display language with something like `#define DSP_LANGUAGE_de_DE` in `myoptions.h`
-    - see the available options by checking `displayL10n_*.h` files in `locale` folder 
-  - WebUI locale now dynamically configurable
-    - if online update capable, can switch between any that are available in the release
-    - if not, then can switch between hardcoded HTML (en_US) and another (if English is not the default)
-    - translations may not be good... report issues or open a PR!
-    - Configure the default webUI language with `#define WEBUI_LANGUAGE_STRING "de_DE"` in `myoptions.h`
-    - if not specified, will use the same as the display language
-    - sets a default WebUI locale different than the display - check locale/webui folder .json files (user-configurable)
-    - can still switch between 2 languages even if not using an online firmware (if it uses a locale .json)
-  - Multiple Weather providers now available (APIs: Openweather 2.5 & 3.0, Open-Meteo v1)
-    - old code relied on Openweather API 2.5 which will be discontinued
-    - completely re-factored with possibility to add more
-    - configurable in WebUI
-    - preferences for units can be defined in `myoptions.h` with
-      - `#define WEATHER_METRIC false` (for °F, mmHg, mph)
-      - `#define WEATHER_METRIC true` (for °C, hPa, km/h) (this is default)
-      - individual unit preferences can also be defined
-        - `#define WEATHER_TEMPERATURE_F true` (for °F)
-        - `#define WEATHER_PRESSURE_MMHG true` (for mmHg)
-        - `#define WEATHER_WIND_SPEED_UNITS "mph"` (for mph)
-          - `"kmh"` (for km/h)
-          - `"ms"` (for m/s)
-          - `"kn"` (for knots)
-  - screensaver mode exits faster on button press
-  - connection timeout can be altered from library default of 250ms for HTTP and 1700ms for HTTPS connections
-    - in `myoptions.h` there should be two numbers like: `#define CONNECT_HTTP_HTTPS_TIMEOUT 1700, 3700`
-    - probably only useful on older ESP32 boards
-  - Can add `#define DISABLE_UPDATER` to `myoptions.h` to disable firmware updating capabilities
-  - Time sync interval can be configured in WebUI
-    - default in `myoptions.h` set with `#define TIME_SYNC_INTERVAL 1` (time in hours: 1 to 24)
-  - Weather API sync interval can be configured in WebUI
-    - default in `myoptions.h` set with `#define WEATHER_SYNC_INTERVAL 30` (time in minutes: 10 to 60)
-
-### 2026.02.18
-  - WebUI greatly improved for mobile and tablet devices
-    - automatic checking for new version availability
-    - .css files improved
-  - Broken playlist editor fixed (sorry!) with major improvements
-    - can now import 2 ways: replace or merge
-    - importing of json and csv files are done in-browser
-    - undo button can undo any changes
-    - re-order by dragging stations on mobile browsers
-  - Broken search fixed to work with `https` radio-browser servers (using names instead of IPs)
-    - fallback server added to defines:
-      - `#define RADIO_BROWSER_SERVER "all.api.radio-browser.info"` added
-    - as part of this, ESPFileUpdater was updated to handle chunked transfers
-    - sort options added (sort by clicks is the default instead of by name)
-  - Curated Lists
-    - uses Releases at [Trip5's webstations](https://github.com/trip5/webstations)
-    - lists can be viewed, individual stations previewed and added (just like search)
-    - lists can be directly imported to the playlist editor with replace or merge
-    - defines in `myoptions.h` can be used to edit sources:
-      - name that appears `#define CURATED_LISTS "Trip5's webstations"`
-      - the link used with the name `#define CURATED_LISTS_LINK "https://github.com/trip5/webstations"`
-      - the base url where playlists can be downloaded `#define CURATED_LISTS_URL "https://github.com/trip5/webstations/releases/latest/download/"`
-      - the json file that is an index of the playlists `#define CURATED_LISTS_INDEX "index.json"`
-      - or disabled with `#define CURATED_LISTS false`
-        - actually any define here will work as long as all others are not defined.
-  - A default playlist can be downloaded on first boot if there is no playlist detected
-    - must be added in `myoptions.h` - there is no default
-    - `#define PLAYLIST_DEFAULT_URL "https://github.com/trip5/webstations/releases/latest/download/trip5-radio-playlist.csv"`
-  - Smart start now always resumes last-played station (even if not playing when powered-off)
-  - Send clicks to Radio Browser API
-    - Delay before sending the click `#define RADIO_BROWSER_SEND_CLICK_DELAY 5000`
-    - opt out with `#define RADIO_BROWSER_NO_SEND_CLICKS` in `myoptions.h`
-      - semi-functional [Search by url doesn't find resolved_url](https://gitlab.com/radiobrowser/radiobrowser-api-rust/-/issues?sort=created_date&state=opened&search=url&first_page_size=20&show=eyJpaWQiOiIyNDkiLCJmdWxsX3BhdGgiOiJyYWRpb2Jyb3dzZXIvcmFkaW9icm93c2VyLWFwaS1ydXN0IiwiaWQiOjE4NDA4NzM5MH0%3D)
-  - Settings: Tools changed to Danger Zone - with some added warnings
-  - SPIFFS clean-up added (after update, unwanted files are purged)
-    - added because online flasher does not erase SPIFFS
-  - Minor improvements to code
-    - vars set to default value in `.h` file instead of in `.cpp`
-    - fixed `.h` framework headers to use `< >` instead of `" "`
-    - pretty code - most `#if` & `#ifdef` blocks now indented
-    - most functions now included no-op instead of being blocked by `#ifdef`
-  - Optimized declarations in src files
-  - More cleanup to various files and folders
-  - `printFix` separated from `utf8Rus`
-    - choose one text pre-processor (others may be added later)
-    - use these if your display prints garbage instead of text
-    - functions added for Nextion (other displays already had both options available)
-    - put one of these in your `myoptions.h`
-      - `#define PRINT_FIX` tries to reduce Unicode characters to ASCII (mostly successfully)
-      - `#define UTF8_RUS` will convert Unicode Russian characters to ASCII
-  - Added check for new versions (and will show if available in WebUI)
-  - Visual feedback on display for firmware udpating and getting files
-  - Platformio.ini now includes pre- and post-steps to compress www files for SPIFFS
-  - more defaults added to `options.h` which can be changed in `myoptions.h`
-    - `#define CHECKUPDATEURL_TIME "1 day"`
-    - `#define TIMEZONES_JSON_CHECKTIME "4 weeks"`
-    - `#define RB_SERVERS_CHECKTIME "1 day"`
-    - `#define TIME_SYNC_INTERVAL 3600` (if RTC then `86400`)
-    - `#define WEATHER_SYNC_INTERVAL 1800` (maybe this should be a configurable setting?)
-  - Thanks to [kasperaitis](https://github.com/kasperaitis) for [PR 42](https://github.com/trip5/ehRadio/pull/42)
-    - Auto Update on Boot option added
-      - will automatically download firmware updates
-      - a second reboot will begin the file downloader
-    - Battery monitoring added
-      - Requires these in `myoptions.h`
-        - `#define BATTERY_PIN`
-        - `#define BATTERY_CHARGE_PIN`
-        - `#define BATTERY_DIVIDER_RATIO`
-        - `#define BATTERY_ADC_REF_MV`
-        - `#define BATTERY_UPDATE_INTERVAL`
-        - `#define BATTERY_SAMPLES`
-      - Check `options.h` for detailed notes
-    - Telnet formatting looks great!
-
-### 2026.02.06
-  - Online Flasher introduced
-  - Workflows make forking and building your own firmware easier
-  - Improv mode added to firmware so if Wi-fi doesn't connect, use a WebUI to send Wi-fi information
-
-### 2026.02.04
-  - Thanks to [kasperaitis](https://github.com/kasperaitis) for [PR 37](https://github.com/trip5/ehRadio/pull/37)
-    - adds support for ES8311 + FM8002E I2C decoder and FT6336 touchscreen on the [ES3C28](https://www.lcdwiki.com/2.8inch_ESP32-S3_Display) ([Aliexpress](https://www.aliexpress.com/item/1005010338765126.html))
-    - localization fix: weather now uses `LANG::weatherFmt` and `LANG::wind` instead of hardcoded strings
-    - RGB LED (WS2812) can now do visual feedback for player state:
-      - 🟢 green = playing
-      - 🔴 red = stopped
-      - 🔵 blue flash = track change
-  - added option to scan for and connect to the strongest available RSSI from saved networks
-    - will attempt to connect by BSSID (the AP's MAC address) in order of best signal to worst signal
-    - useful for environments with multiple APs (ie. mesh networks)
-    - adds a non-insignificant time to initial boot
-    - add `#define WIFI_SCAN_BEST_RSSI true` in `myoptions.h` to set the default to true (otherwise false)
-    - can be changed in the WebUI
-  - added System Overrides that may be used in `myoptions.h`
-    - `#define LOOP_TASK_STACK_SIZE 16` sets the stack size for the FreeRTOS task that runs the main loop
-      - 16KB is OK for ESP32-S3 but maybe 8KB for ESP32?
-      - 8KB is safe when using a VS1053 decoder
-    - `#define CONFIG_ASYNC_TCP_QUEUE_SIZE 64` - maybe 32 for ESP32?
-  - Removed outdated local libraries to use PlatformIO libraries
-    - most were fairly easy to incorporate but some minor changes were made to code when needed
-    - AsyncTCP library https://github.com/ESP32Async/AsyncTCP
-      - former source: https://github.com/me-no-dev/AsyncTCP/
-    - ESPAsyncWebServer https://github.com/ESP32Async/ESPAsyncWebServer
-      - former source: https://github.com/me-no-dev/ESPAsyncWebServer
-    - OneButton https://github.com/mathertel/OneButton
-      - same dev, minor version bump
-    - IRRemoteESP8266 https://github.com/crankyoldgit/IRremoteESP8266
-      - untested but dev same, version bump minor, and source code 99.99% similar
-    - AsyncMqttClient https://github.com/marvinroger/async-mqtt-client
-      - this one has some 'deprecated' warnings but still functional
-    - ESPFileUpdater https://github.com/trip5/ESPFileUpdater
-      - mine, created for ehRadio, just involved releasing it to PlatformIO
-    - Adafruit GC9A01A https://github.com/adafruit/Adafruit_GC9A01A
-      - previous internal one was identical to 1.1.0
-    - yoEncoder https://github.com/igorantolic/ai-esp32-rotary-encoder
-      - Ai Esp32 Rotary Encoder appears to be the original (and works well)
-    - GT911 Touchscreen https://github.com/tamctec/gt911-arduino
-      - same dev, minor version bump
-  - These could not be replaced so were moved to `libraries` folder
-    - Adafruit GC9106 https://github.com/prenticedavid/Adafruit_GC9102_kbv
-      - not on Platformio (and not actually an Adafruit library)
-    - Adafruit ST7796S https://github.com/prenticedavid/Adafruit_ST7796S_kbv
-      - not on Platformio (and not actually an Adafruit library)
-    - FT6336_Touchscreen
-      - made by https://github.com/kasperaitis for ehRadio
-    - ILI9225Fix https://github.com/arduinopavlodar/TFT_22_ILI9225
-      - not on Platformio and also highly-modified from an unknown version
-    - ILI9488 https://github.com/ZinggJM/ILI9486_SPI
-      - highly-modified from version 1.0.5?
-    - LiquidCrystalI2C https://github.com/johnrickman/LiquidCrystal_I2C
-      - slightly-modified from version 1.1.3
-    - SSD1322 https://github.com/JamesHagerman/Jamis_SSD1322
-      - slightly-modified from initial commit
-    - ST7920 https://github.com/BornaBiro/ST7920_GFX_Library
-      - very similar or modified (or perhaps share a common source)
-      - may be worth looking at as well: https://github.com/BornaBiro/ST7920_GFX_Library
-  - Audio decoder drivers also moved to `libraries` folder (with some renaming)
-    - ES8311_Audio
-      - made by https://github.com/kasperaitis for ehRadio
-    - I2S_Audio https://github.com/schreibfaul1/ESP32-audioI2S
-      - from Maleksm's yoRadio mod v0.9.512m: https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
-      - Maleksm says source from Wolle (schreibfaul1) 3.3.2l on 2025.07.09
-    - VS1053_Audio https://github.com/schreibfaul1/ESP32-vs1053_ext
-      - possibly from https://github.com/nstepanets/ESP32-vs1053_ext
-      - from Maleksm's yoRadio mod v0.9.512m: https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
-      - Maleksm says source from Wolle (schreibfaul1) 3.0.13t on 2024.11.16
-  - these notes and more added to `libraries` folder for future upgrading
-
-### 2025.08.31
-  - Display fixes and other fixes from yoRadio up to v0.9.693 which should include:
-    - fixed incorrect behavior of the `HIDE_VU` setting
-    - fixed `CORRUPT HEAP` error when playing "invalid links"
-    - optimized code of utfToAscii
-    - fixed artifacts in scrolling text
-    - fixed SD card connection bug in configurations with `SD_SPIPINS` defined
-    - time synchronization setting (maybe?)
-    - fixed bug with redundant epoch time being added to the tag in SD mode (maybe?)
-    - fixed clock display bug when exiting screensaver in playback mode
-    - increased number of SD card initialization attempts when switching mode
-    - fixed bug with incorrect text clipping on scrolling widgets
-    - display performance optimization
-    - to improve rendering smoothness, a framebuffer has been added for TFT SPI displays ST7735, ST7789, ILI9341, GC9106, ST7796, GC9A01A, ILI9488, ILI9486
-      - the framebuffer is applied only to moving elements (scrolling text, VU meter, clock)
-      - the framebuffer works on modules with additional PSRAM
-      - on such modules, the framebuffer is enabled automatically, no extra steps required
-      - to disable the framebuffer, add #define USE_FBUFFER false in myoptions.h
-      - on modules without PSRAM, the framebuffer is disabled by default. It can be forced on by adding `#define SFBUFFER` in `myoptions.h`
-      - but in that case, free memory (as well as HTTPS streams) will be severely limited
-    - fixed compilation error for Nextion displays
-    - code cleanup, optimization, and refactoring (actually with 2 different codebases, it may have been made more spaghettified)
-    - fixed compilation error for certain displays when `#define DSP_INVERT_TITLE false` is set
-    - fixed compilation error for `DSP_DUMMY`
-
-### 2025.08.20
-  - Major fixes to online updater (if running an older version, need to manually flash)
-  - WebUI fixed for mobile displays
-  - MQTT added to WebUI options / defaults set by adding defines to `myoptions.h`
-    - `#define MQTT_ENABLE` to enable (will not be available otherwise)
-    - defaults can be set with (Still editable in WebUI):
-      - `#define MQTT_HOST "192.168.1.2"`
-      - `#define MQTT_PORT 1883`
-      - `#define MQTT_USER "mqttuser"`
-      - `#define MQTT_PASS ""`
-      - `#define MQTT_TOPIC "ehradio/myradio/"`
-  - Home Assistant integration fixed
-  - Display On toggle removed from WebUI
-
-### 2025.08.12
-
-  - new folder `builds/trip5` that contain my `platformio.ini`, `myoptions.h`, `mytheme.h`
-    - these files are used by the workflow that generates the automatic builds
-    - using VSCode extension, can be automatically synced from root to builds/username (see notes in build folder)
-    - for forks, just make a sub-folder in `builds` using their github name
-      - must contain `platformio.ini` at a minimum or the workflow will abort
-    - automatic builds into Releases are triggered by tags
-      - `git tag 2025.08.12`
-      - `git push origin 2025.08.12`
-    - this way, we can share configuration and platformio.ini working codes
-  - `.gitignore` file now included by default that ignores certain files
-    - you can still use `platformio.ini`, `myoptions.h`, `mytheme.h` in your root locally
-      - but put them in `builds` if you want the automatic builds to work
-  - fixes to hotspot AP mode
-    - default AP is `ehRadio` with no password
-    - can use `#define AP_SSID ssidname` and `#define AP_PASSWORD password` in `myoptions.h`
-    - a bit faster reponse time
-  - 12-hour mode fixed on color screens (space is now the same width as numbers)
-  - some more options can have their defaults set by adding defines to `myoptions.h`
-    - `#define SOUND_VOLUME 12` sets the default of the sound volume (0 to 254, otherwise 12)
-    - `#define SOUND_BALANCE true` sets the default of the sound balance (-16 to 16, otherwise 0)
-    - `#define EQ_TREBLE 0` sets the default of the EQ treble (-16 to 16, otherwise 0)
-    - `#define EQ_MIDDLE 0` sets the default of the EQ middle  (-16 to 16, otherwise 0)
-    - `#define EQ_BASS 0` sets the default of EQ bass (-16 to 16, otherwise 0)
-    - `#define SD_SHUFFLE true` sets the default of SD shuffle (otherwise false)
-    - `#define SMART_START true` sets the default of smart start (otherwise false)
-    - `#define SHOW_AUDIO_INFO true` sets the default of audio info (otherwise false)
-    - `#define SHOW_VU_METER true` sets the default of the VU meter (otherwise false)
-    - `#define SOFTAP_REBOOT_DELAY 0` sets the default of the soft AP reboot delay (0 to 20 minutes, otherwise 0)
-    - `#define SCREEN_FLIP true` sets the default of flip screen (otherwise false)
-    - `#define SCREEN_INVERT true` sets the default of invert display (otherwise false)
-    - `#define NUMBERED_PLAYLIST true` sets the default of numbered playlist (otherwise false)
-    - `#define CLOCK_TWELVE true` sets the default of the 12-hour clock (otherwise false)
-    - `#define VOLUME_PAGE true` sets the default of the volume page (otherwise false)
-    - `#define SCREEN_BRIGHTNESS true` sets the default of the screen brightness (otherwise 100)
-    - `#define SCREEN_CONTRAST true` sets the default of screen brightness (otherwise 55)
-      - not yet editable in the UI but it should be soon.
-    - screensaver options (while not playing):
-      - `#define SS_NOTPLAYING true` to set the default state (otherwise false)
-      - `#define SS_NOTPLAYING_BLANK true` sets the default of blank (otherwise false)
-      - `#define SS_NOTPLAYING_TIME 20` sets the default of the timeout (5 to 65520 seconds, otherwise 20)
-    - screensaver options (while playing):
-      - `#define SS_PLAYING true` to set the default state (otherwise false)
-      - `#define SS_PLAYING_BLANK true` sets the default of blank (otherwise false)
-      - `#define SS_PLAYING_TIME 5` sets the default of the timeout (1 to 1080 minutes, otherwise 5)
-    - `#define VOLUME_STEPS 1` sets the default of volume steps (1 to 10, otherwise 1)
-    - `#define TOUCH_FLIP true` sets the default of touchscreen debug (otherwise false)
-    - `#define TOUCH_DEBUG true` sets the default of touchscreen debug (otherwise false)
-    - `#define ROTARY_ACCEL 200` sets the default of the rotary encoder acceleration (1 to 700, otherwise 200)
-    - `#define ONE_CLICK_SWITCH true` sets the default of one-click station switching (otherwise false)
-    - `#define IR_TOLERANCE 35` sets the default of IR tolerance (10 to 80, otherwise 35)
-    - during this process I also deleted many store keys that were leftover from much earlier versions of yoRadio
-  - WebUI colors tweaked (more changes later)
-  - Displays ST7796 (480x320) and ILI9488 (480x320) can have a bigger boot logo
-    - add `#define BIG_BOOT_LOGO` to `myoptions.h`
-      - this takes up a not-small amount of flash memory so not recommended for plain ESP32
-  - improvements from yoRadio v0.9.574 (latest as of this date)
-    - ST7789_76 2.25" display
-    - MQTT & HA improvements
-    - AsyncTCP & WebSockets
-    - vortigont's PRs (thanks!)
-      - display task - optimize taks delay and message handling
-      - page class migrated from LinkedList to std::list
-    - other bug fixes and optimizations
-    - some fixes ignored due to ongoing restructuring of yoRadio code
-    - probably the last time to update core functionality from yoRadio
-      - display code remains the same so those can be updated easily
-
-### 2025.08.10
-
-- Forked from yoRadio 0.9.533
-  - was geting tired of PRs not being accepted and as you can see below (many were made previous to 2025.07.20)
-- source folder structure moved up (makes more sense especially with VSCode and Platformio)
-- Re-branding & Styling
-  - logos added to boot screens and WebUI
-  - color changes to display and WebUI (not 100% satisfied but good enough for now)
-- replacement font with icons added into builds using `platformio.ini`
-  - `#define YO_FIX` removed (maybe never needed?)
-- data files will no longer be compressed in the repository
-  - but they will be available in `Releases` as .gz files for automatic updating of SPIFFS
-    - which means if you really wish to compress them and upload them to SPIFFs, you can
-      - except `rb_srvrs.json` which is obtained automatically anyways
-- a Github workflow is used to automatically update `timezones.json.gz` and `rb_srvrs.json`
-  - added to the repo automatically whenever a commit is made
-
-### 0.9.533 Trip5/2025.07.23
-
-- minor additions to UI / display options
-  - one-click option ignores long-press right/left
-  - 12-hour clock
-  - hide volume page (instead of using a `#define`)
-
-### 0.9.533 Trip5/2025.07.20
-
-- BREAKING CHANGES
-  - requires larger app partitions
-    - if using 4MB flash sizeESP32, use the `ESP32-4MB.csv` as your partition file (see the text file for more)
-  - many settings will be reset to defaults
-  - notes were added to `config.cpp` how to handle breaking and non-breaking store updates in the future
-  - future re-flashes should not lose settings after this update
-  - capability to update firmware and download SPIFFS files from online has been added
-- library dependency: `bblanchon/ArduinoJson@^6.21.3`
-  - https://github.com/bblanchon/ArduinoJson
-- EEProm storage removed in favor of Preferences
-  - config.store variables may still be used as before
-  - no need to handle store version changes except by adding old ones to the "remove" list in `config.cpp`
-    - char handling improved throughout (size may be changed later with 1 edit to `config.h`)
-      - affects timezone, mdnsname, weather coordinate variables
-- shorter searching for Wi-fi message
-- LED_INVERT fixed (`#define LED_INVERT`)
-- fixes for screens that can't display certain characters (add to `myoptions.h`)
-  - `#define YO_FIX` // changes ёRadio to yoRadio for screens that can't print ё
-  - `#define PRINT_FIX` // fix Chinese certain screens so they don't display gibberish
-    - hijacks `utf8RusGFX.h` (which is meant for Russian model displays?)
-      - does not interrupt this function unless `PRINT_FIX` defined
-    - will transliterate as many European characters as possible by dropping accents
-    - will transliterate Cyrillic... probably badly
-    - will transliterate various punctuation and currency symbols
-    - any characters that can't be handled will be replaced by a space
-- ESPFileUpdater can update and download files (used in multiple places)
-  - a new library created for this project
-  - this may be used to download / update any file from online to SPIFFS
-  - add `#define ESPFILEUPDATER_DEBUG` to `myoptions.h` to get verbose output
-- Online updating for pre-built BIN files and other assets
-  - Uses ESPFileUpdater when SPIFFS is empty or incomplete if the running program is a pre-built firmware
-  - the online URL path used to download SPIFFS file assets (for the running version):
-    - `#define FILESURL "https://github.com/trip5/yoradio/releases/download/2025.07.19/"`
-  - the online URL path used to OTA update firmware:
-    - `#define UPDATEURL "https://github.com/trip5/yoradio/releases/latest/download/"`
-  - the online file that the current version can compare it's version against:
-    - `#define CHECKUPDATEURL "https://raw.githubusercontent.com/trip5/yoradio/refs/heads/trip5/yoRadio/src/core/options.h"`
-  - the above file must contain a line that is defined by this setting:
-    - `#define VERSIONSTRING "#define RADIOVERSION"` (followed by a version string)
-  - which `.bin` file to be used for online OTA updates can be specified as:
-    - `#define FIRMWARE "firmware_sh1106_pcm_remote.bin"`
-  - all of these can be automatically defined by `platformio.ini` amd `myoptions.h`
-    - an example of this automatic building is at `https://github.com/trip5/yoradio/tree/trip5/`
-    - check out `platformio-trip5-builds.yml` to see how firmwares are built and files made available online
-      - First commit your changes to Github
-      - Tag your local most recent commit and push it to Github:
-        - `git tag 2025.07.20`
-        - `git push origin 2025.07.20`
-      - Re-doing a tagged release:
-        - `git tag -d 2025.07.20`
-        - `git tag -a 2025.07.20 -m "2025.07.20"`
-        - `git push origin 2025.07.20 --force`
-    - this means you can just download a .bin file and flash from a command line (see the Release page for detailed instructions)
-- implements proper timezones
-  - uses ESPFileUpdater to download an up-to-date json to be used as a selector in the WebUI
-  - fetches from https://raw.githubusercontent.com/trip5/timezones.json/refs/heads/master/timezones.gz.json
-    - this can be a gzipped or regular json
-    - uses github workflow to automatically update whenever tzdb has changed
-    - also created for this project
-    - another json.gz can be used by a define in `myoptions.h` (default in quotes)
-      - `#define TIMEZONES_JSON_URL "https://raw.githubusercontent.com/trip5/timezones.json/master/timezones.json.gz"`
-  - will handle Daylight Savings Times
-    - does not affect timed functions that use ticks (screensaver, weather)
-    - may have side-effects on other timed functions that don't use ticks
-  - timezone offset completely removed
-  - timezones may be changed through WebUI or telnet
-  - telnet has some extra functions added
-    - `TZO ±X` now just changes to a GMT-type (non-standard is OK)
-    - `TZO ±X:XX` now just changes to a custom timezone (based on GMT-type)
-    - `TZPOSIX` command can create a custom timezone (be careful)
-    - `PLAY url` can play a station not on the playlist
-  - Nextion displays only show timezone now, cannot change timezone
-    - there may be a good way to implement with + & - with GMT timezones (see `telnet.cpp` for some idea)
-    - I have no Nextion display to test (sorry!)
-- regional defaults now be defined in `myoptions.h` (defaults in quotes):
-  - `#define TIMEZONE_NAME "Europe/Moscow"`
-  - `#define TIMEZONE_POSIX "MSK-3"`
-  - `#define SNTP_1 "pool.ntp.org"`
-  - `#define SNTP_2 "0.ru.pool.ntp.org"`
-  - `#define WEATHER_LAT "55.7512"`
-  - `#define WEATHER_LON "37.6184"`
-  - all can still be edited using WebUI
-- Radio station search via Radio Browser API
-  - performs search queries to a https://www.radio-browser.info/ server
-  - uses ESPFileUpdater to download an up-to-date json of API servers
-    - another json can be used by a define in options.h
-      - `#define RADIO_BROWSER_SERVERS_URL "https://all.api.radio-browser.info/json/servers"` in `myoptions.h`
-  - handles down API servers gracefully (and they do go down fairly often)
-  - uses ESPFileUpdater to download JSON search results directly from the API to the ESP's file system
-    - previous searches are saved and not lost on reboot (100 results, page number)
-    - saved searches will be deleted on reboot if they are older than 24 hours
-  - search results shows station name, country code, codec, bitrate
-  - stations can be previewed (through the radio) with a play button that does not add it to the playlist
-    - if matches URL in the playlist will play the station from the playlist
-  - stations can be added with a plus button
-    - will not add a station which has the same URL as one already in the playlist (http & https considered same)
-- Playback queue (either from playlist, search, or telnet) put into an RTOS task that runs in the background
-  - stability improved but slight delay added
-- Improved JSON and CSV file importing
-  - CSV import made more resilient
-    - can import any type of list with fields separated by tabs or spaces
-    - missing name or ovol fields will continue to be imported
-    - for example, all of these are valid:
-      - space-separated values:
-        - `nap.casthost.net:8793/stream Intra Nature Radio`
-        - `Ambient Sleeping Pill http://radio.stereoscenic.com/asp-s`
-        - `Super Relax FM https://streams.radio.menu/listen/super-relax-fm/radio.mp3 0`
-      - tab-separated values:
-        - `Traxx FM - Ambient	http://traxx011.ice.infomaniak.ch/traxx011-low.mp3	0`
-        - `Positively Meditation	0	https://streaming.positivity.radio/pr/posimeditation/icecast.audio`
-        - `0	Cryosleep	http://streams.echoesofbluemars.org/8000/cryosleep`
-        - `https://ice4.somafm.com/darkzone-128-mp3	Soma FM - Dark Zone 0`
-      - just the URL
-        - `https://ice4.somafm.com/dronezone-128-mp3`
-    - the old CSV parser is still used for the yoRadio playlist internally
-  - JSON import made more resilient
-    - can handle line-by-line files that are not enclosed in [ ]
-      - ie. each line looks like
-        - `{"name":"Swinging radio 60s","host":"http://s2.xrad.io","file":"/8058/stream","port":"0","ovol":"0"}`
-    - can handle proper json files where all entries are enclosed in [ ]
-      - the field "url_resolved" will be preferred
-      - fallback to "url"
-      - finally, fallback to "host" and "file" and "port" - which will be combined into a url
-  - in both parsers, only the url is mandatory
-    - if "name" is absent, it will be assumed to be the url even without http(s)://
-    - if "ovol" is absent, is will be assumed to be 0
-- Added some of Maleksm's additions and changes from v0.9.434m (04.04.25) (with some changes)
-  - includes improved decoding for VS1053 and PCM decoder and various codecs
-  - ESP8266 support completely removed
-  - includes idle screen dimming
-    - dims the display after inactivity when `BRIGHTNESS_PIN` is set in `myoptions.h`
-    - brightness, dimmed brightness, and timeout are now regular screen settings instead of extra board-only tuning macros
-  - use `#define HIDE_VOLPAGE` to hide the separate page showing volume (uses the progress bar instead)
-
-
-
-
----
-
-## Original yoRadio Readme below (for now)
-
----
-
 # ёRadio
-<img src="images/yologo.png" width="190" height="142">
+<img src="images/yoradio/yologo.png" width="190" height="142">
 
 ##### Web-radio based on [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) or/and [ESP32-vs1053_ext](https://github.com/schreibfaul1/ESP32-vs1053_ext) library
 ---
@@ -562,12 +21,12 @@ Documentation will be improved at some point... Until then, check this page and 
 ---
 #### NEW!
 ##### yoRadio Printed Circuit Boards repository:
-[<img src="images/yopcb.jpg" width="830" height="auto" />](https://github.com/e2002/yopcb)
+[<img src="images/yoradio/yopcb.jpg" width="830" height="auto" />](https://github.com/e2002/yopcb)
 
 https://github.com/e2002/yopcb
 
 ---
-<img src="images/img0_2.jpg" width="830" height="467">
+<img src="images/yoradio/img0_2.jpg" width="830" height="467">
 
 ##### More images in [Images.md](Images.md)
 
@@ -627,7 +86,7 @@ https://www.aliexpress.com/item/33009687492.html
 ---
 ## Connection tables
 ##### Use [this tool](https://e2002.github.io/docs/myoptions-generator.html) to build your own connection table and myoptions.h file.
-<img src="images/myoptions-generator.png" width="830" height="527"><br />
+<img src="images/yoradio/myoptions-generator.png" width="830" height="527"><br />
 
 https://e2002.github.io/docs/myoptions-generator.html
 
@@ -683,7 +142,7 @@ Rotation of the display:
 
 ---
 ## Quick start
-<img src="images/board4.jpg" width="830" height="473"><br />
+<img src="images/yoradio/board4.jpg" width="830" height="473"><br />
 
 - <span style="color: red; font-weight: bold; font-size: 22px;text-decoration: underline;">Arduino IDE version 2.x.x is not supported. Use Arduino IDE 1.8.19</span>
 - <span style="color: red; font-weight: bold; font-size: 22px;text-decoration: underline;">ESP32 core version 2.0.0 or higher is [required](https://github.com/espressif/arduino-esp32)!</span>
@@ -692,7 +151,7 @@ Rotation of the display:
 2. Put myoptions.h file next to ehRadio.ino.
 3. Replace file Arduino/libraries/Adafruit_GFX_Library/glcdfont.c with file [yoRadio/fonts/glcdfont.c](yoRadio/fonts/glcdfont.c)
 4. Restart Arduino IDE.
-5. In ArduinoIDE - upload sketch data via Tools→ESP32 Sketch Data Upload ([it's here](images/board2.jpg))
+5. In ArduinoIDE - upload sketch data via Tools→ESP32 Sketch Data Upload ([it's here](images/yoradio/board2.jpg))
 6. Upload the sketch to the board
 7. Connect to yoRadioAP access point with password 12345987, go to http://192.168.4.1/ configure and wifi connections.  \
 _\*this step can be skipped if you add WiFiSSID WiFiPassword pairs to the [yoRadio/data/data/wifi.csv](yoRadio/data/data/wifi.csv) file (tab-separated values, one line per access point) before uploading the sketch data in step 1_
@@ -717,7 +176,7 @@ download _http://\<yoradioip\>/data/playlist.csv_ and _http://\<yoradioip\>/data
 3. Get SPIFFS binary: disconnect ESP32 from your computer, click on **ESP32 Data Sketch Upload**. \
  You will get an error and file path
 
- <img src="images/getspiffs.jpg" width="830" height="208">
+ <img src="images/yoradio/getspiffs.jpg" width="830" height="208">
 
 4. Go to page _http://\<yoradioip\>/update_ and upload ehRadio.ino.esp32.bin and yoRadio.spiffs.bin in turn, checking the appropriate upload options.
 5. Well done!
@@ -730,7 +189,7 @@ download _http://\<yoradioip\>/data/playlist.csv_ and _http://\<yoradioip\>/data
 
 ---
 ## Home Assistant
-<img src="images/ha.jpg" width="500" height="270"><br />
+<img src="images/yoradio/ha.jpg" width="500" height="270"><br />
 
 0. Requires [MQTT integration](https://www.home-assistant.io/integrations/mqtt/)
 1. Copy directory HA/custom_components/yoradio to .homeassistant/custom_components/
@@ -1218,7 +677,7 @@ _On red boards and normally working green boards, nothing else needs to be done.
 #### v0.7.330
 **!!! a [full update](#update-over-web-interface) with Sketch data upload is required. After updating please press CTRL+F5 in browser !!!** \
 **Please backup playlist.csv and wifi.csv before updating.**
-- added the ability to configure parameters through the [web interface](images/settings.png)
+- added the ability to configure parameters through the [web interface](images/yoradio/settings.png)
 - new parameter BRIGHTNESS_PIN - pin for adjusting the brightness of the display. Details in [examples/myoptions.h](examples/myoptions.h#L105)
 - the weather plugin is integrated into the code, the settings are made through the web interface
 
@@ -1409,7 +868,7 @@ _will have to be configured again through the web interface. Please understand a
 #### v0.4.320
 - MQTT support
 
-<img src="images/mqtt.jpg" width="680" height="110">
+<img src="images/yoradio/mqtt.jpg" width="680" height="110">
 
 #### v0.4.315
 - added support for digital buttons for the IR control \

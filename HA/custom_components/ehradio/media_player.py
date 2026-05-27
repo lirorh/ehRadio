@@ -8,6 +8,7 @@ from homeassistant.components import mqtt, media_source
 from homeassistant.components.media_player.browse_media import async_process_play_media_url
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -44,13 +45,15 @@ DEFAULT_NAME = 'myradio'
 CONF_MAX_VOLUME = 'max_volume'
 CONF_ROOT_TOPIC = 'root_topic'
 CONF_FALLBACK_IMAGE = 'fallback_image'
+CONF_DEVICE_URL = 'device_url'
 DEFAULT_FALLBACK_IMAGE = 'https://trip5.github.io/ehRadio/images/logo-color-square.png'
 
 MEDIA_PLAYER_PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend({
   vol.Required(CONF_ROOT_TOPIC, default="ehradio"): cv.string,
   vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
   vol.Optional(CONF_MAX_VOLUME, default='254'): cv.string,
-  vol.Optional(CONF_FALLBACK_IMAGE, default=DEFAULT_FALLBACK_IMAGE): cv.string
+  vol.Optional(CONF_FALLBACK_IMAGE, default=DEFAULT_FALLBACK_IMAGE): cv.string,
+  vol.Optional(CONF_DEVICE_URL, default=''): cv.string
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -58,17 +61,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
   name = config.get(CONF_NAME)
   max_volume = int(config.get(CONF_MAX_VOLUME, 254))
   fallback_image = config.get(CONF_FALLBACK_IMAGE, DEFAULT_FALLBACK_IMAGE)
+  device_url = config.get(CONF_DEVICE_URL, '')
   playlist = []
-  api = ehradioApi(root_topic, hass, playlist)
-  add_devices([ehradioDevice(name, max_volume, fallback_image, api)], True)
+  api = ehradioApi(root_topic, hass, playlist, device_url)
+  add_devices([ehradioDevice(name, max_volume, fallback_image, device_url, api)], True)
 
 class ehradioApi():
-  def __init__(self, root_topic, hass, playlist):
+  def __init__(self, root_topic, hass, playlist, device_url):
     self.hass = hass
     self.mqtt = mqtt
     self.root_topic = root_topic.strip('/')
     self.playlist = playlist
     self.playlisturl = ""
+    self.device_url = device_url  # user-configured; auto-detected from playlist if empty
 
   async def set_command(self, command):
     try:
@@ -108,6 +113,11 @@ class ehradioApi():
   async def load_playlist(self, msg):
     try:
       self.playlisturl = msg.payload
+      # Auto-detect device URL from playlist URL if not configured
+      if not self.device_url and self.playlisturl.startswith('http'):
+        from urllib.parse import urlparse
+        parsed = urlparse(self.playlisturl)
+        self.device_url = f"{parsed.scheme}://{parsed.netloc}/"
       file = await self.hass.async_add_executor_job(self.fetch_data)
     except uException as e:
       _LOGGER.error(f"Error load_playlist from {self.playlisturl}")
@@ -123,7 +133,7 @@ class ehradioApi():
           counter=counter+1
 
 class ehradioDevice(MediaPlayerEntity):
-  def __init__(self, name, max_volume, fallback_image, api):
+  def __init__(self, name, max_volume, fallback_image, device_url, api):
     self._name = name
     self.api = api
     self._state = MediaPlayerState.OFF
@@ -135,6 +145,18 @@ class ehradioDevice(MediaPlayerEntity):
     self._volume = 0
     self._max_volume = max_volume
     self._fallback_image = fallback_image
+    self._device_url = device_url
+
+  @property
+  def device_info(self) -> DeviceInfo:
+    device_url = self.api.device_url or self._device_url
+    return DeviceInfo(
+        identifiers={("ehradio", self._name)},
+        name=self._name,
+        manufacturer="ehRadio",
+        model="ESP32 Internet Radio",
+        configuration_url=device_url if device_url else None,
+    )
 
   async def async_added_to_hass(self):
     await asyncio.sleep(5)
@@ -203,6 +225,18 @@ class ehradioDevice(MediaPlayerEntity):
   @property
   def media_image_remotely_accessible(self):
     return True
+
+  @property
+  def unique_id(self):
+    return f"ehradio_{self._name}"
+
+  @property
+  def extra_state_attributes(self):
+    attrs = {}
+    device_url = self.api.device_url or self._device_url
+    if device_url:
+        attrs["device_url"] = device_url
+    return attrs
 
   @property
   def state(self):

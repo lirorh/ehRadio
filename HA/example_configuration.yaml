@@ -17,3 +17,4 @@ media_player:
     name: My ehRadio
     root_topic: ehradio/myradio/
     # fallback_image: "https://example.com/my-custom-logo.png"  # optional: override default logo shown when no station art is available
+    # device_url: "http://192.168.1.100/"  # optional: link to device web UI; auto-detected from playlist if not set

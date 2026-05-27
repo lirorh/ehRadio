@@ -15,11 +15,11 @@ I prefer to build with ESP32-S3 boards but ESP32 or ESP32-C3 boards are possible
 In some cases, like for the ES3C28P, no peripherals are even needed.
 
 To develop, I prefer [VS Code](https://code.visualstudio.com/) but you may try other IDEs.
-I compiled using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well.
+I compile using [Platformio](https://platformio.org/) but it may compile in Arduino IDE as well.
 Some libraries may only be available from [Platformio Registry](https://registry.platformio.org/).
 
-If you have zero desire to use VS Code but still want to build a radio?  That's OK, too.
-But I would suggest you read the documentation a bit to make sure you get the right firmware for your radio.
+If you have zero desire to use VS Code but still want to build a radio, that's OK, too.
+I would suggest you read the documentation a bit to make sure you get the right firmware for your radio.
 
 ehRadio is a fork of [ёRadio](https://github.com/e2002/yoradio/) / yoRadio v0.9.533 and would not exist without
 the years of work e2002 put into it.  Read the [A History of ESP Radios](#a-history-of-esp-radios).
@@ -91,7 +91,7 @@ Information on how the controls function detailed are [here](Controls.md).
 
 ## WebUI
 
-The WebUI is optimized for mobile browsers but will look great on PCs, too.
+The WebUI is optimized for mobile browsers but looks great on PCs, too.
 
 ![image](images/WebUI_player_editor.jpg)
 
@@ -106,12 +106,13 @@ This can assist in making a very good `myoptions.h` file, which should be placed
 It contains almost all supported hardware and peripherals which can be used when building an ehRadio.
 
 If you need to get more advanced options, a lot of build options and comments and notes are actually in `options.h`.
-Contained within are notes on numerous notes on how to further customize your `myoptions.h`.
+Contained within are numerous notes on how to further customize your `myoptions.h`.
 Some hardware questions may also be answered within this file.
 
 Want to get even more advanced? There are bunches of notes and tools in the codebase including font editors & builders, localization scripts, and more.
 
 As of `2026.05.25` I've done a lot of work to clean up the codebase and organize it.  I think that part is done.
+
 More work remains to be done and the `Feature Freeze` will remain in place at least until the "de-fork" of the audio libraries is finished.
 
 ---
@@ -119,13 +120,13 @@ More work remains to be done and the `Feature Freeze` will remain in place at le
 ## Radio Creations
 
 I can't 100% confirm this, but I am pretty sure all devices built for other ESP-based radio projects will run ehRadio, as long as the hardware is supported.
-And although (as of 2026), ehRadio has been reworked so an ESP32-S3 can be wired with an SPI display and a VS1053 (which ёRadio & ESP32-RadioV2 wouldn't be able to do),
+And although (as of `2026.05.26`), ehRadio has been reworked so an ESP32-S3 can be wired with an SPI display and a VS1053 (which ёRadio & ESP32-RadioV2 can't),
 I haven't actually built a radio like that yet.
 
 Below here are some sketches and helpful hints to building one of the "prebuilt" firmwares as available in the Releases and the
 [online flasher](https://trip5.github.io/ehRadio/firmware.html).
 
-If you don't want to mess around with the code, already have a good idea on how the hardware works, and would just like to use a prebuilt binary,
+If you already have a good idea on how the hardware works and would just like to use a prebuilt binary,
 check out the [Releases](https://github.com/trip5/ehRadio/releases/) and click on a link to open the generator with that binary's profile,
 which includes hardware needed, pins to connect, and more.
 
@@ -155,6 +156,8 @@ And painter's tape keeps the components from making contact with each other when
 
 Of course, switches will still require some soldering.
 
+For more notes about this build, check out [my Notebook](images/notebook/notebook.md), which contains notes about various components.
+
 At some point, I will make a more beautiful radio, perhaps taking inspiration from:
 
 - [ThomasH358](https://www.instructables.com/How-to-Build-a-Portable-Bluetooth-Tube-Amplifier/)
@@ -162,8 +165,6 @@ At some point, I will make a more beautiful radio, perhaps taking inspiration fr
 - [Peppy Radio Woodware](https://github.com/project-owner/Peppy.doc/wiki/Woodware)
 - [Peppy Player on DIY Audio](https://www.diyaudio.com/community/threads/peppy-player.288412/)
 - [Google Image Search](https://www.google.com/search?q=diy+arduino+radio+project&tbm=isch)
-
-For more notes, check out [my Notebook](images/notebook/notebook.md), which contains notes about various components and a sketch of one of my builds.
 
 ### ёRadio Builds
 

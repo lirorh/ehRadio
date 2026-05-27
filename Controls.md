@@ -79,12 +79,16 @@ You can use a joystick [like this](https://aliexpress.com/item/4000681560472.htm
 
 ## Home Assistant Component
 
-![image](images/HomeAssistant.jpg)
-
 A Home Assistant custom integration is available in the `HA` folder.
-Copy `ehradio` folder into your Home Assistant's `custom_components` folder.
+Copy `ehradio` and its contents into Home Assistant's `custom_components` folder.
 
-MQTT must be enabled.
+![image](images/HomeAssistant1.png)
+
+It will pull artwork when available in the stream.
+
+![image](images/HomeAssistant2.png)
+
+MQTT must be enabled with `#define MQTT_ENABLE` in `myoptions.h`.
 
 Add this to your `configuration.yaml`.
 ```

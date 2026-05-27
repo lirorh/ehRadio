@@ -35,6 +35,9 @@ jobs:
       - name: Copy README and images to docs
         run: |
           cp README.md docs/index.md
+          for f in *.md; do
+            [ "$f" != "README.md" ] && cp "$f" docs/
+          done
           cp -r images docs/
 
       - name: Update GitHub link in documentation index

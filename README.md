@@ -43,14 +43,14 @@ especially in terms of how they are used and how they are built.
 | - touchscreen control (basic swipes and taps) | - same | 
 | - IR remote control                           | - same |
 | - Nextion uses advanced control               | - Nextion support is incomplete or broken |
-| Must be flashed using VS Code / Arduino IDE   | OTA updates make getting a new version easy-peasy |
+| Must be flashed using VS Code / Arduino IDE   | Web flasher & Internet OTA updates make getting a new version easy-peasy |
 | English or Russian display                    | 37 Display languages (Latin & Cyrillic) (builder's choice)
 | MQTT, Telnet, HTTP                            | MQTT, Telnet, HTTP |
-| - mostly used for playback                    | - uses the same command set |
+| - mostly used for playback                    | - all WebUI commands are available |
 | Home Assistant integration (through MQTT)     | Home Assistant integration (through MQTT) - improved |
-| WebUI interface, includes control playback    | WebUI similar but with added functionality |
+| WebUI interface, includes control playback    | WebUI mobile-first re-design |
 | - change certain settings                     | - change many settings |
-| - edit/import/export playlists                | - edit/import/export/merge playlists (mobile-first design) |
+| - edit/import/export playlists                | - edit/import/export/merge playlists |
 | - English UI                                  | - 50 Languages (easily changeable)
 |                                               | - easy to locate with [ehDP](https://github.com/trip5/eh-Device-Scanner) |
 |                                               | - Radio Station search using Radio-browser API | 
@@ -77,7 +77,7 @@ especially in terms of how they are used and how they are built.
 | - ESP32 defines VSPI/SPI3 bus or HSPI/SPI2 bus       | - it is still recommended to use default pins wherever possible |
 | - ESP32-S3 defines FSPI/SPI2 but no second bus       | - ESP32-S3's FSPI pins should be assigned as Bus A but any pins can be assigned to Bus B  |
 | - no way to use VS1053 and SPI display together      | - Recommended: SPI display on A, VS1053 and other devices on B OR VS1053 on A and others on B |
-| Most default settings hardcoded                      | Almost all user default settings can be set in `myoptions.h` |
+| Most default settings hardcoded                      | Almost all system and user default settings can be set in `myoptions.h` |
 
 ---
 
@@ -130,13 +130,12 @@ If you already have a good idea on how the hardware works and would just like to
 check out the [Releases](https://github.com/trip5/ehRadio/releases/) and click on a link to open the generator with that binary's profile,
 which includes hardware needed, pins to connect, and more.
 
-Note that for inputs and peripherals, you can just ignore the hardware as the radio will still function perfectly without it.
-Buttons and and SD card can especially be ignored (but it won't work well without a rotary encoder).
-Caveat: your WebUI may show links to peripherals that don't exist (like the SD card or IR encoder).
+Note that if following this path, you don't necessarily to attach all peripherals (rotary, buttons, IR Receiver, SD card, display).
+The radio needs only the ESP board and the audio decoder to function... although your WebUI may show links to peripherals that don't exist.
 
 If don't want to mess around with VS Code but would still like your own build added to the Releases, you can make a
 [firmware request](https://github.com/trip5/ehRadio/discussions/categories/firmware-requests).
-I would ask that you do a bit of research before just requesting a firmware.  Building releases is non-trivial.
+Please also do some research before requesting a firmware.
 
 ### Trip5's Radios
 

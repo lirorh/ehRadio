@@ -810,7 +810,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define DSP_TASK_CORE_ID 1
   #else
     #if (DSP_TASK_CORE_ID!=0)
-	    #error Only add #define DSP_TASK_CORE_ID 0 to options.h to move Netserver to CPU core 0. Leave it undefined for core 1.
+	    #error Only add #define DSP_TASK_CORE_ID 0 to options.h to move display process to CPU core 0. Leave it undefined for core 1.
     #endif
   #endif
 #endif

@@ -111,10 +111,6 @@ Some hardware questions may also be answered within this file.
 
 Want to get even more advanced? There are bunches of notes and tools in the codebase including font editors & builders, localization scripts, and more.
 
-As of `2026.05.25` I've done a lot of work to clean up the codebase and organize it.  I think that part is done.
-
-More work remains to be done and the `Feature Freeze` will remain in place at least until the "de-fork" of the audio libraries is finished.
-
 ---
 
 ## Radio Creations
@@ -238,7 +234,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ------------------ |
-| 2026.05.27 | `Feature Freeeze` `Not a release` IR fixed, HA component updated, documentation completely overhauled |
+| 2026.05.29 | IR fixed, HA component updated, playlist page mode added for ILI9486/9488, playing current station does nothing, documentation completely overhauled |
 | 2026.05.26 | `Feature Freeze` `De-fork from ёRadio` Theme updated, Chunky6 font, fixes to `options.h`: `BTN_*` fixed & `ENC_*` renamed, screensaver fixes, battery widgets, ILI9225 from ёRadio v0.9.710, generator updated, partitions changed |
 | 2026.05.19 | `Feature Freeze` This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
 | 2026.05.08 | `Feature Freeze` SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
@@ -252,7 +248,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 | 2025.08.31 | Display fixes and other fixes from ёRadio up to v0.9.693 including framebuffer |
 | 2025.08.20 | Online updater fixed, WebUI fixes for mobile displays, MQTT added to WebUI |
 | 2025.08.12 | `builds\` folder added to share configurations, hotspot AP mode fixed, preferences in `myoptions.h`, improvements from ёRadio v0.9.574 |
-| 2025.08.10 | ehRadio fork begins, folders restructured, `data\` files stay uncompressed (compressed in from Releases, which radio can download), timezones.json updated automatically |
+| 2025.08.10 | `ehRadio begins`, folders restructured, `data\` files stay uncompressed (compressed in from Releases, which radio can download), timezones.json updated automatically |
 | 2025.07.23 | more options in WebUI |
 | 2025.07.19 | PR to ёRadio v0.9.533: EEProm storage changed to Preferences, fixes for screens that can't display certain characters, ESPFileUpdater added (updates timezones and Radio Browser servers), proper timezones, many macros added to `myoptions.h`, Radio station search, Playback queue now RTOS background task, improved JSON and CSV file importing, maleksm's backlightdown and decoder improvements, ESP8266 support removed |
 

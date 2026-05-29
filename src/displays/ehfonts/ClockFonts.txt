@@ -33,48 +33,48 @@ font70: DS_DIGI/DS_DIGI56pt7b, DS_DIGI/DS_DIGI56pt7b_mono, Chunky6_15, Chunky6_1
 displayILI9488.h
 displayST7796.h
 
-The DS_DIGI fonts marked as 56pt7b are actually 70 pixels tall
-                         ...42pt is 52 pixels tall
-                         ...28pt is 35 pixels tall
-                         ...15pt is 19 pixels tall
-Likely it's what size of a true type font it was derived from (which originally included some below the baseline).
+The DS_DIGI fonts marked as 56pt7b actual height: 70 pixels / width: 54 pixels (colon: 24) - non-mono 1 is 29px
+                         ...42pt7b actual height: 52 pixels / width: 40 pixels (colon: 15) - non-mono 1 is 15px
+                         ...28pt7b actual height: 35 pixels / width: 27 pixels (colon: 11) - non-mono 1 is 12px
+                         ...15pt7b actual height: 19 pixels / width: 14 pixels (colon: 6) - non-mono 1 is 6px
+So likely the point size relates to the true type font it was derived from (which may include below the baseline).
 
 The link https://tchapi.github.io/Adafruit-GFX-Font-Customiser/ originally appeared in the comments for the font*.h files.
 It is a font editor but not enjoyable to use.
 
-So, let's generate a font from a PNG...
-0123456789:
-numbers are a fixed-width and the colon is half of that width - this including spaces
-The result is the total width will be divisible by 21
+Chunky6 is a Trip5 font designed for pixel displays: https://github.com/trip5/Matrix-Fonts
 
-Used my own tool to make the graphic for 70: https://trip5.github.io/Matrix-Fonts/renderer.html
-(note that it adds a 1 or 2 pixel border all around and we then add black borders and trim
-so that there are equal numbers of black pixels left-right and top-bottom,
-odd ones getting extra space on left and bottom)
+Let's generate a font from a PNG using my own tool to make the "0123456789:" graphic: https://trip5.github.io/Matrix-Fonts/renderer.html
+Numbers are a fixed-width and the colon is half of that width - this including spaces.  The result is the total width will be divisible by 21.
+Nnote that it adds a 1 or 2 pixel border all around and we then add black borders and trim
+so that there are equal numbers of black pixels left-right and top-bottom, odd ones getting extra space on left and bottom
 
 Chunky6_70:    pixel size 14
 Chunky6_70_px: pixel size 11 + 3 pixels space
        height: 5 * 14 = 70 pixels
-       length: 4 (includes 1 empty column) * 14 = 56 (per digit) x 10.5 = 588 pixels
+        width: 4 (includes 1 empty column) * 14 = 56 pixels (per digit) x 10.5 = 588 pixels
+- Time is longer than DS_DIGI56pt7b_mono by 12 pixels
 
 Chunky6_52:    pixel size 10
 Chunky6_52_px: pixel size 8 + 2 pixels space
        height: 5 * 10 = 50 + 1 blank top + 1 blank bottom = 52 pixels
-       length: 4 (includes 1 empty column) * 10 = 40 (per digit) x 10.5 = 420 pixels
+        width: 4 (includes 1 empty column) * 10 = 40 pixels (per digit) x 10.5 = 420 pixels
+- Time is longer than DS_DIGI42pt7b_mono by 5 pixels
 
 Chunky6_35:    pixel size 7
 Chunky6_35_px: pixel size 6 + 1 pixels space
        height: 5 * 7 = 35 pixels
-       length: 4 (includes 1 empty column) * 7 = 35 (per digit) x 10.5 = 294 pixels
+        width: 4 (includes 1 empty column) * 7 = 28 pixels (per digit) x 10.5 = 294 pixels
+- Time is longer than DS_DIGI28pt7b_mono by 7 pixels
 
 Chunky6_15:    pixel size 3
 Chunky6_15_px: pixel size 2 + 1 pixels space
        height: 5 * 3 = 15 pixels
-       length: 4 (includes 1 empty column) * 3 = 12 (per digit) x 10.5 = 126 pixels
+        width: 4 (includes 1 empty column) * 3 = 12 pixels (per digit) x 10.5 = 126 pixels
+- Time is shorter than DS_DIGI15pt7b_mono by 8 pixels
 
 This is the tool that can do it...
 py .\png_to_gfxfont.py Chunky6_70_px.png Chunky6_70_px.h --glow-char /
 That glow-char switch makes the "glow" character
 
-
-Chunky6 is part of https://github.com/trip5/Matrix-Fonts and now lives under Chunky6/
+There is some risk that these slightly wider fonts may not fully fit on all displays...

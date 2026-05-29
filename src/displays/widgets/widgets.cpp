@@ -918,88 +918,185 @@ void BitrateWidget::_clear() {
 void PlayListWidget::init(ScrollWidget* current){
   Widget::init({0, 0, 0, WA_LEFT}, 0, 0);
   _current = current;
-  #ifndef DSP_LCD
-    _plItemHeight = playlistConf.widget.textsize*(CHARHEIGHT-1)+playlistConf.widget.textsize*4;
-    _plTtemsCount = round((float)dsp.height()/_plItemHeight);
-    if(_plTtemsCount%2==0) _plTtemsCount++;
-    _plCurrentPos = _plTtemsCount/2;
-    _plYStart = (dsp.height() / 2 - _plItemHeight / 2) - _plItemHeight * (_plTtemsCount - 1) / 2 + playlistConf.widget.textsize*2;
-  #else
-    _plTtemsCount = PLMITEMS;
-    _plCurrentPos = 1;
-  #endif
+#if DSP_LCD
+  _plTtemsCount = PLMITEMS;
+  _plCurrentPos = 1;
+#elif PLAYLIST_MODE_PAGED
+  _plItemHeight = playlistConf.widget.textsize*(CHARHEIGHT-1)+playlistConf.widget.textsize*4;
+  _plPlaylistTop = TFT_FRAMEWDT;
+  _plPlaylistBottom = dsp.height() - TFT_FRAMEWDT;
+  uint16_t available = _plPlaylistBottom - _plPlaylistTop;
+  _plPageSize = available / _plItemHeight;
+  if (_plPageSize < 1) _plPageSize = 1;
+  uint16_t totalHeight = _plPageSize * _plItemHeight;
+  _plYStart = _plPlaylistTop + (available - totalHeight) / 2;
+  _plPageStart = 0;
+  _plPrevItem = 0;
+#else
+  _plItemHeight = playlistConf.widget.textsize*(CHARHEIGHT-1)+playlistConf.widget.textsize*4;
+  _plTtemsCount = round((float)dsp.height()/_plItemHeight);
+  if(_plTtemsCount%2==0) _plTtemsCount++;
+  _plCurrentPos = _plTtemsCount/2;
+  _plYStart = (dsp.height() / 2 - _plItemHeight / 2) - _plItemHeight * (_plTtemsCount - 1) / 2 + playlistConf.widget.textsize*2;
+#endif
 }
 
+// --- Dispatcher ---
+void PlayListWidget::drawPlaylist(uint16_t currentItem) {
+#if DSP_LCD
+  _drawOneLine(currentItem);
+#elif PLAYLIST_MODE_PAGED
+  _drawPaged(currentItem);
+#else
+  _drawFade(currentItem);
+#endif
+}
+
+// ==================== FADE MODE (original centered) ====================
+#if !DSP_LCD && !PLAYLIST_MODE_PAGED
+
 uint8_t PlayListWidget::_fillPlMenu(int from, uint8_t count) {
-  // Static buffer avoids VLA stack pressure on DspTask (4–8KB stack).
-  // 31 slots × 85 bytes = 2635 bytes BSS; covers textsize=1 on up to ~320px tall displays.
   static char names[31][STATION_FIELD_LENGTH / 2];
   uint8_t safeCount = min(count, (uint8_t)31);
   uint16_t stationsCount = utility.fillPlaylistRange(from, safeCount, names);
-  if (stationsCount == 0) {
-    return 0;
-  }
-
+  if (stationsCount == 0) return 0;
   for (uint8_t c = 0; c < safeCount; ++c) {
     int stationId = from + c;
-    if (stationId < 1 || stationId > stationsCount) {
-      _printPLitem(c, "");
-      continue;
-    }
-
+    if (stationId < 1 || stationId > stationsCount) { _printPLitem(c, ""); continue; }
     if (config.store.numplaylist && names[c][0] != '\0') {
       String label = String(stationId) + " " + names[c];
       _printPLitem(c, label.c_str());
-    } else {
-      _printPLitem(c, names[c]);
-    }
+    } else { _printPLitem(c, names[c]); }
   }
-
   return safeCount;
 }
 
-#ifndef DSP_LCD
-  void PlayListWidget::drawPlaylist(uint16_t currentItem) {
-    uint8_t lastPos = _fillPlMenu(currentItem - _plCurrentPos, _plTtemsCount);
-    if(lastPos<_plTtemsCount){
-      dsp.fillRect(0, lastPos*_plItemHeight+_plYStart, dsp.width(), dsp.height()/2, config.theme.background);
+void PlayListWidget::_drawFade(uint16_t currentItem) {
+  uint8_t lastPos = _fillPlMenu(currentItem - _plCurrentPos, _plTtemsCount);
+  if(lastPos<_plTtemsCount){
+    dsp.fillRect(0, lastPos*_plItemHeight+_plYStart, dsp.width(), dsp.height()/2, config.theme.background);
+  }
+}
+
+void PlayListWidget::_printPLitem(uint8_t pos, const char* item){
+  dsp.setTextSize(playlistConf.widget.textsize);
+  if (pos == _plCurrentPos) {
+    _current->setText(item);
+  } else {
+    uint8_t plColor = (abs(pos - _plCurrentPos)-1)>4?4:abs(pos - _plCurrentPos)-1;
+    dsp.setTextColor(config.theme.playlist[plColor], config.theme.background);
+    dsp.setCursor(TFT_FRAMEWDT, _plYStart + pos * _plItemHeight);
+    dsp.fillRect(0, _plYStart + pos * _plItemHeight - 1, dsp.width(), _plItemHeight - 2, config.theme.background);
+    dsp.print(utf8To(item, true));
+  }
+}
+
+#endif // FADE MODE
+
+// ==================== ONE-LINE MODE (LCD) ====================
+#if DSP_LCD
+
+uint8_t PlayListWidget::_fillPlMenu(int from, uint8_t count) {
+  static char names[31][STATION_FIELD_LENGTH / 2];
+  uint8_t safeCount = min(count, (uint8_t)31);
+  uint16_t stationsCount = utility.fillPlaylistRange(from, safeCount, names);
+  if (stationsCount == 0) return 0;
+  for (uint8_t c = 0; c < safeCount; ++c) {
+    int stationId = from + c;
+    if (stationId < 1 || stationId > stationsCount) { _printPLitem(c, ""); continue; }
+    if (config.store.numplaylist && names[c][0] != '\0') {
+      String label = String(stationId) + " " + names[c];
+      _printPLitem(c, label.c_str());
+    } else { _printPLitem(c, names[c]); }
+  }
+  return safeCount;
+}
+
+void PlayListWidget::_drawOneLine(uint16_t currentItem) {
+  dsp.clear();
+  _fillPlMenu(currentItem - _plCurrentPos, _plTtemsCount);
+  dsp.setCursor(0,1);
+  dsp.write(uint8_t(126));
+}
+
+void PlayListWidget::_printPLitem(uint8_t pos, const char* item){
+  if (pos == _plCurrentPos) {
+    _current->setText(item);
+  } else {
+    dsp.setCursor(1, pos);
+    char tmp[dsp.width()] = {0};
+    strlcpy(tmp, utf8To(item, true), dsp.width());
+    dsp.print(tmp);
+  }
+}
+
+#endif // ONE-LINE MODE
+
+// ==================== PAGED MODE ====================
+#if PLAYLIST_MODE_PAGED && !DSP_LCD
+
+void PlayListWidget::_printPLitemPaged(uint16_t stationId, uint16_t y, bool selected, const char* name){
+  dsp.setTextSize(playlistConf.widget.textsize);
+  uint8_t charH = CHARHEIGHT * playlistConf.widget.textsize;
+  int16_t textY = y + ((int16_t)_plItemHeight - (int16_t)charH) / 2 + playlistConf.widget.textsize;
+  if (selected) {
+    dsp.fillRect(0, y, dsp.width(), _plItemHeight, config.theme.plcurrentfill);
+    dsp.fillRect(TFT_FRAMEWDT, y, MAX_WIDTH, _plItemHeight, config.theme.plcurrentbg);
+    dsp.setTextColor(config.theme.plcurrent, config.theme.plcurrentbg);
+  } else {
+    dsp.fillRect(0, y, dsp.width(), _plItemHeight, config.theme.background);
+    dsp.setTextColor(config.theme.playlist[0], config.theme.background);
+  }
+  dsp.setCursor(TFT_FRAMEWDT, textY);
+  if (name && name[0] != '\0') {
+    if (config.store.numplaylist) {
+      char label[STATION_FIELD_LENGTH / 2 + 6];
+      snprintf(label, sizeof(label), "%d %s", stationId, name);
+      dsp.print(utf8To(label, true));
+    } else {
+      dsp.print(utf8To(name, true));
     }
+  }
+}
+
+void PlayListWidget::_drawPaged(uint16_t currentItem) {
+  if (currentItem < 1) currentItem = 1;
+  uint16_t cs = utility.playlistLength();
+  if (cs == 0) return;
+
+  uint8_t page = (currentItem - 1) / _plPageSize;
+  uint16_t newPageStart = page * _plPageSize + 1;
+  uint8_t safeCount = min(_plPageSize, (uint8_t)31);
+  static char names[31][STATION_FIELD_LENGTH / 2];
+
+  // Same-page partial update: redraw just the two changed slots
+  if (_plPrevItem != 0 && _plPageStart == newPageStart) {
+    utility.fillPlaylistRange(_plPageStart, safeCount, names);
+    uint8_t prevSlot = (_plPrevItem - _plPageStart);
+    uint8_t newSlot  = (currentItem - _plPageStart);
+    if (prevSlot < safeCount) {
+      _printPLitemPaged(_plPrevItem, _plYStart + prevSlot * _plItemHeight, false, names[prevSlot]);
+    }
+    if (newSlot < safeCount) {
+      _printPLitemPaged(currentItem, _plYStart + newSlot * _plItemHeight, true, names[newSlot]);
+    }
+    _plPrevItem = currentItem;
+    return;
   }
 
-  void PlayListWidget::_printPLitem(uint8_t pos, const char* item){
-    dsp.setTextSize(playlistConf.widget.textsize);
-    if (pos == _plCurrentPos) {
-      _current->setText(item);
-    } else {
-      uint8_t plColor = (abs(pos - _plCurrentPos)-1)>4?4:abs(pos - _plCurrentPos)-1;
-      dsp.setTextColor(config.theme.playlist[plColor], config.theme.background);
-      dsp.setCursor(TFT_FRAMEWDT, _plYStart + pos * _plItemHeight);
-      dsp.fillRect(0, _plYStart + pos * _plItemHeight - 1, dsp.width(), _plItemHeight - 2, config.theme.background);
-      #ifdef WIDGET_DEBUG
-        FUNCTIONLOG("Widget.Playlist", "%s", item);
-      #endif
-      dsp.print(utf8To(item, true));
-    }
+  // Full page draw: clear area, draw all items, selector is just another item
+  _plPageStart = newPageStart;
+  _plPrevItem = currentItem;
+  dsp.fillRect(0, _plPlaylistTop, dsp.width(), _plPlaylistBottom - _plPlaylistTop, config.theme.background);
+  uint16_t stationsCount = utility.fillPlaylistRange(_plPageStart, safeCount, names);
+  for (uint8_t i = 0; i < safeCount; i++) {
+    uint16_t itemIndex = _plPageStart + i;
+    if (itemIndex > stationsCount) break;
+    _printPLitemPaged(itemIndex, _plYStart + i * _plItemHeight, itemIndex == currentItem, names[i]);
   }
-#else //#ifndef DSP_LCD
-  void PlayListWidget::_printPLitem(uint8_t pos, const char* item){
-    if (pos == _plCurrentPos) {
-      _current->setText(item);
-    } else {
-      dsp.setCursor(1, pos);
-      char tmp[dsp.width()] = {0};
-      strlcpy(tmp, utf8To(item, true), dsp.width());
-      dsp.print(tmp);
-    }
-  }
-  
-  void PlayListWidget::drawPlaylist(uint16_t currentItem) {
-    dsp.clear();
-    _fillPlMenu(currentItem - _plCurrentPos, _plTtemsCount);
-    dsp.setCursor(0,1);
-    dsp.write(uint8_t(126));
-  }
-#endif //#ifndef DSP_LCD
+}
+
+#endif // PAGED MODE
 
 
 #endif // #if DSP_MODEL!=DSP_DUMMY

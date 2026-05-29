@@ -116,6 +116,7 @@ void Player::_stop(bool alreadyStopped) {
   log_i("%s called", __func__);
   if (config.getMode()==PM_SDCARD && !alreadyStopped) config.sdResumePos = player.getFilePos();
   _status = STOPPED;
+  _playingStationId = 0;
   setOutputPins(false);
   if (audioHandlers.clearArtwork()) netserver.requestOnChange(ARTWORK, 0);
   if (!hasError()) config.setTitle((display.mode()==LOST || display.mode()==UPDATING)?"":LANG::const_PlStopped);
@@ -248,6 +249,7 @@ void Player::setOutputPins(bool isPlaying) {
 
 void Player::_play(uint16_t stationId) {
   log_i("%s called, stationId=%d", __func__, stationId);
+  if (_status == PLAYING && stationId > 0 && stationId == _playingStationId) return;
   setError("");
   setDefaults();
   remoteStationName = false;
@@ -286,6 +288,7 @@ void Player::_play(uint16_t stationId) {
   if (isConnected) {
   //if (config.store.play_mode==PM_WEB?connecttohost(config.station.url):connecttoFS(SD,config.station.url,config.sdResumePos==0?_resumeFilePos:config.sdResumePos-player.sd_min)) {
     _status = PLAYING;
+    _playingStationId = stationId;
     if (config.getMode()==PM_SDCARD) {
       config.sdResumePos = 0;
       config.saveValue(&config.store.lastSdStation, stationId);

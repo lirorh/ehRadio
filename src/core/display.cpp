@@ -258,14 +258,14 @@ void Display::_buildPager() {
   #if !defined(DSP_LCD) && DSP_MODEL!=DSP_NOKIA5110
     pages[PG_DIALOG]->addPage(_footer);
   #endif
-  #if !defined(DSP_LCD)
+  #if !defined(DSP_LCD) && !PLAYLIST_MODE_PAGED
     if (_plbackground) {
       pages[PG_PLAYLIST]->addWidget(_plbackground);
       _plbackground->setHeight(_plwidget->itemHeight());
       _plbackground->moveTo({0,(uint16_t)(_plwidget->currentTop()-playlistConf.widget.textsize*2), (int16_t)playlBGConf.width});
     }
+    pages[PG_PLAYLIST]->addWidget(_plcurrent);
   #endif
-  pages[PG_PLAYLIST]->addWidget(_plcurrent);
   pages[PG_PLAYLIST]->addWidget(_plwidget);
   for(const auto& p: pages) _pager->addPage(p);
 }
@@ -453,6 +453,9 @@ void Display::_swichMode(displayMode_e newmode) {
     _pager->setPage(pages[PG_PLAYLIST]);
     _plcurrent->setText("");
     currentPlItem = config.lastStation();
+    #if PLAYLIST_MODE_PAGED
+    _plwidget->resetState();
+    #endif
     _drawPlaylist();
   }
   

@@ -95,7 +95,7 @@ The WebUI is optimized for mobile browsers but looks great on PCs, too.
 
 ![image](images/WebUI_player_editor.jpg)
 
-More screenshots from the WebUI are [here](WebUI).
+More screenshots from the WebUI are [here](WebUI.md).
 
 ---
 

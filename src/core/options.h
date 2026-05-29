@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.05.26"
+#define RADIOVERSION "2026.05.29"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -216,12 +216,27 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #endif
 #endif
 
-/* This makes the characters get an LED/VFD background color that makes it look like a real clock */
+/* This makes the characters get an LED/VFD background color that makes it look like a real clock (only has an effect on color displays) */
 #ifndef CLOCKGLOW // CLOCKGLOW uses a special character to color COLOR_CLOCK_BG behind the clock for a glow effect
   #if CLOCKFONT == YO_MONO || CLOCKFONT == CHUNKY6_PX
     #define CLOCKGLOW true
   #else
     #define CLOCKGLOW false // with YO_CLASSIC, this effect looks super-terrible, with CHUNKY6 it is not great
+  #endif
+#endif
+
+/* Playlist Mode: some displays have trouble displaying the fancy "fade" playlist - this list may be incomplete */
+// ILI9488 uses 24 bits per pixel instead of 16 or 8, resulting in a 33% slower refresh rate... making a nasty slowdown on a big display when it needs to redraw the entire screen
+// use PLAYLIST_MODE_PAGED true if your display has issues on the playlist screen or if you just want to use page mode (but it doesn't scroll long station names)
+#if DSP_MODEL==DSP_1602 || DSP_MODEL==DSP_1602IC || DSP_MODEL==DSP_2004I || DSP_MODEL==DSP_2004I2C // LCD tiny displays can't do different playlist modes
+  #undef PLAYLIST_MODE_PAGED
+#elif DSP_MODEL==DSP_ILI9488 || DSP_MODEL==DSP_ILI9486 // These screens are known to be slow to refresh and benefit from a simpler playlist mode
+  #ifndef PLAYLIST_MODE_PAGED
+    #define PLAYLIST_MODE_PAGED true
+  #endif
+#else
+  #ifndef PLAYLIST_MODE_PAGED
+    #define PLAYLIST_MODE_PAGED false
   #endif
 #endif
 

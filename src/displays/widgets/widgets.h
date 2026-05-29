@@ -262,16 +262,37 @@ class PlayListWidget: public Widget {
     void init(ScrollWidget* current);
     void drawPlaylist(uint16_t currentItem);
     inline uint16_t itemHeight(){ return _plItemHeight; }
-    inline uint16_t currentTop(){ return _plYStart+_plCurrentPos*_plItemHeight; }
+
+    #if PLAYLIST_MODE_PAGED
+      void resetState() { _plPrevItem = 0; }
+      inline uint16_t currentTop(){ 
+        if (_plPrevItem == 0) return _plYStart;
+        uint8_t slot = (_plPrevItem - _plPageStart);
+        return _plYStart + slot * _plItemHeight; 
+      }
+    #else
+      inline uint16_t currentTop(){ return _plYStart+_plCurrentPos*_plItemHeight; }
+    #endif
+
   private:
     ScrollWidget* _current;
-    uint16_t _plItemHeight, _plTtemsCount, _plCurrentPos;
+    uint16_t _plItemHeight;
     int _plYStart;
     uint8_t _fillPlMenu(int from, uint8_t count);
     void _printPLitem(uint8_t pos, const char* item);
-    
-};
 
+    #if PLAYLIST_MODE_PAGED
+      uint8_t  _plPageSize;
+      uint16_t _plPageStart, _plPrevItem;
+      uint16_t _plPlaylistTop, _plPlaylistBottom;
+      void _drawPaged(uint16_t currentItem);
+      void _printPLitemPaged(uint16_t stationId, uint16_t y, bool selected, const char* name);
+    #else
+      uint16_t _plTtemsCount, _plCurrentPos;
+      void _drawFade(uint16_t currentItem);
+      void _drawOneLine(uint16_t currentItem);
+    #endif
+};
 
 #endif
 #endif

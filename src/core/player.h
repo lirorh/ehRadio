@@ -55,6 +55,7 @@ class Player: public Audio {
   private:
     uint32_t    _resumeFilePos = 0;
     plStatus_e  _status = STOPPED;
+    uint16_t    _playingStationId = 0;
     char        _plError[PLERR_LN];
 
     void _stop(bool alreadyStopped = false);

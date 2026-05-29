@@ -22,7 +22,7 @@ If you have zero desire to use VS Code but still want to build a radio, that's O
 I would suggest you read the documentation a bit to make sure you get the right firmware for your radio.
 
 ehRadio is a fork of [ёRadio](https://github.com/e2002/yoradio/) / yoRadio v0.9.533 and would not exist without
-the years of work e2002 put into it.  Read the [A History of ESP Radios](#a-history-of-esp-radios).
+the years of work e2002 put into it.  Read [A History of ESP Radios](#a-history-of-esp-radios) for more.
 
 ---
 
@@ -259,6 +259,7 @@ A full history of ёRadio from v0.4.177 to v0.9.533 can be seen in the [old Read
 ### Credit
 
 Thanks to:
+
   - [Kasperaitis](https://github.com/kasperaitis) - for work initiating locales (WebUI and display language, display fonts, etc.) and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
   - [e2002](https://github.com/e2002) - for [ёRadio](https://github.com/e2002/yoradio/) without which ehRadio would not be possible
 

@@ -4,7 +4,7 @@
 
 ### Rotary Encoders
 
-A rotary encoders is the recommended first choice of input.  One encoder is enough to control the device.
+A rotary encoder is the recommended first choice of input.  One encoder is enough to control the device.
 
 | Encoder Action             | Player Mode             | Playlist Mode |
 | -------------------------- | ----------------------- | ------------- |
@@ -37,14 +37,14 @@ Button Actions
 | BTN_PREV | previous station/track  | -                       | quick next * nothing if no display |
 | BTN_MODE | toggle stations/SD mode | -                       | enter sleep (wake up may be another button)
 
-Turning on `One-click Station Switching`  in the WebUI makes `BTN_NEXT` and `BTN_PREV` act instantly instead of switching to Playlist Mode first.
+Turning on `One-click Station Switching` in the WebUI makes `BTN_NEXT` and `BTN_PREV` act instantly instead of switching to Playlist Mode first.
 It also essentially disables Long-press.
 
 ### IR receiver
 
 IR receivers can be configured from the WebUI. Up to 3 remotes can be used.
 
-1. Go to Settings,  controls, IR Recorder
+1. Go to Settings, controls, IR Recorder.
 2. Press the button you need on the left to record the IR code.
 3. Select the slot on the right and press the button on the physical IR remote. Avoid `UNKNOWN`.
 

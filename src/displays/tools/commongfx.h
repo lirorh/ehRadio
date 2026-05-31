@@ -6,11 +6,11 @@
 
 // Define missing macros for SSD1306x32 if not already defined
 #ifndef CHARWIDTH
-#define CHARWIDTH 6
+  #define CHARWIDTH 6
 #endif
 #if !defined(TFT_FG) && !defined(TFT_BG)
-#define TFT_FG 1
-#define TFT_BG 0
+  #define TFT_FG 1
+  #define TFT_BG 0
 #endif
 
 #define ADAFRUIT_CLIPPING !defined(DSP_LCD)
@@ -36,24 +36,24 @@ class DspCore: public yoDisplay {
     void clearDsp(bool black=false);
     void printClock(){}
     #ifdef DSP_OLED
-    inline void loop(bool force=false){
-      #if DSP_MODEL==DSP_NOKIA5110
-        if(digitalRead(TFT_CS)==LOW) return;
+      inline void loop(bool force=false){
+        #if DSP_MODEL==DSP_NOKIA5110
+          if(digitalRead(TFT_CS)==LOW) return;
+          display();
+        #else
+          display();
+          //delay(DSP_MODEL==DSP_ST7920?20:5);
+          vTaskDelay(DSP_MODEL==DSP_ST7920?10:0);
+        #endif
+      }
+      inline void drawLogo(uint16_t top) {
+        #if !(DSP_MODEL==DSP_SSD1306 && DSP_HEIGHT==32)
+          drawBitmap((width()  - LOGO_WIDTH ) / 2, top, logo, LOGO_WIDTH, LOGO_HEIGHT, 1);
+        #else
+          setTextSize(1); setCursor((width() - 6*CHARWIDTH) / 2, 0); setTextColor(TFT_FG, TFT_BG); print(utf8To("ehRadio", false));
+        #endif
         display();
-      #else
-        display();
-        //delay(DSP_MODEL==DSP_ST7920?20:5);
-        vTaskDelay(DSP_MODEL==DSP_ST7920?10:0);
-      #endif
-    }
-    inline void drawLogo(uint16_t top) {
-      #if DSP_MODEL!=DSP_SSD1306x32
-        drawBitmap((width()  - LOGO_WIDTH ) / 2, top, logo, LOGO_WIDTH, LOGO_HEIGHT, 1);
-      #else
-        setTextSize(1); setCursor((width() - 6*CHARWIDTH) / 2, 0); setTextColor(TFT_FG, TFT_BG); print(utf8To("ehRadio", false));
-      #endif
-      display();
-    }
+      }
     #else
       #ifndef DSP_LCD
       inline void loop(bool force=false){}
@@ -104,7 +104,7 @@ class DspCore: public yoDisplay {
     inline void clearClipping(){
       _clipping = false;
       #ifdef DSP_LCD
-      setClipping({0, 0, width(), height()});
+        setClipping({0, 0, width(), height()});
       #endif
     }
   private:
@@ -112,7 +112,7 @@ class DspCore: public yoDisplay {
     clipArea _cliparea;
     void * _scrollid;
     #ifdef PSFBUFFER
-    psFrameBuffer* _fb=nullptr;
+      psFrameBuffer* _fb=nullptr;
     #endif
 };
 

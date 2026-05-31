@@ -21,6 +21,22 @@
     "info": "This must be checked to enable MQTT"
   },
   {
+    "name": "IR Receiver",
+    "pins": [ "IR_PIN" ],
+    "defines": [
+      { "define": "IR_TIMEOUT", "type": "numeric", "default": 80, "comment": "kTimeout, see IRremoteESP8266 documentation" }
+    ]
+  },
+  {
+    "name": "Real-Time Clock",
+    "type": "I2C",
+    "pins": [ "RTC_SDA", "RTC_SCL" ],
+    "defines": [
+      { "define": "RTC_MODULE", "type": "enum", "options": ["DS3231", "DS1307"], "default": "DS3231", "optional": false }
+    ],
+    "lib_deps": "${library.rtclib}"
+  },
+  {
     "name": "SD Card Reader",
     "pins": [ "SD_CS" ],
     "defines": [

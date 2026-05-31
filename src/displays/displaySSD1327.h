@@ -4,8 +4,6 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1327.h>
-#include "bootlogo/62x40.h"
-#include "ehfonts/font35.h"
 
 typedef GFXcanvas1 Canvas;
 typedef Adafruit_SSD1327 yoDisplay;
@@ -16,8 +14,10 @@ typedef Adafruit_SSD1327 yoDisplay;
       0x07, 0x08, 0x10, 0x18, 0x20, 0x2f, 0x38, 0x3f,
       */
 
+#include "dspfont.h"
+
 #include "tools/commongfx.h"
 
-#include "conf/displayOLED128x128conf.h"
+#include "dspconf.h"
 
 #endif

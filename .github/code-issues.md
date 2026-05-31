@@ -500,7 +500,7 @@ If we do that, we should initiate cleanup on every boot (well, initiate cleanup 
 
 ## [ ] 5. Can Display Be Improved?
 
-This section is a deep-dive into how the display system works today, using three representative examples (ILI9488, SH1106, DSP_1602I2C), followed by a candid evaluation of what works well and what genuinely could be improved.
+This section is a deep-dive into how the display system works today, using three representative examples (ILI9488, SH1106, DSP_1602), followed by a candid evaluation of what works well and what genuinely could be improved.
 
 ---
 
@@ -512,14 +512,18 @@ Everything starts at build time. The hardware is not detected at runtime — the
 platformio.ini          → selects environment
   └─ myoptions.h        → #defines DSP_MODEL (e.g. DSP_ILI9488)
        └─ options.h     → normalizes DSP_MODEL, resolves fallback defaults
-            └─ dspcore.h (huge #elif chain)
-                 │  Sets: TIME_SIZE, PSFBUFFER / DSP_OLED / DSP_LCD flags
+                          → sets DSP_WIDTH, DSP_HEIGHT per controller
+            └─ dspcore.h (one #elif per controller)
+                 │  Sets: PSFBUFFER / DSP_OLED / DSP_LCD flags
                  └─ displayXXX.h
                       │  typedef Canvas      (GFXcanvas16 / GFXcanvas1 / n/a)
                       │  typedef yoDisplay   (e.g. ILI9486_SPI / Adafruit_SH1106G / LiquidCrystal_I2C)
+                      ├─ dspfont.h
+                      │    └─ bootlogo, font, TIME_SIZE by resolution
                       ├─ tools/commongfx.h
                       │    └─ class DspCore : public yoDisplay  (hardware-independent API)
-                      └─ conf/displayXXXconf.h   (layout constants in PROGMEM)
+                      └─ dspconf.h
+                           └─ conf/displayXXXconf.h   (layout constants, by resolution × category)
 ```
 
 The final product of this chain is a single `DspCore` class whose parent type is the hardware library, and a pile of PROGMEM constants (`metaConf`, `title1Conf`, `clockConf`, etc.) that define every widget's pixel position and size.
@@ -556,7 +560,7 @@ The I2C clock for SH1106 is `I2CFREQ_HZ = 4,000,000` (4MHz Fast-mode+). A 128×6
 
 Features hidden by conf file (`displayOLED128x64conf.h`) for the SH1106 branch: `HIDE_VU`, `HIDE_BUFFERBAR`, `HIDE_VOL` — because there is simply no room on a 128×64 canvas for a VU meter or buffer bar. `HIDE_TITLE2` is **not** set (title2 at row 28 fits). Bitrate shows right-aligned at size-1 on the same row as title1 (row 19). The footer collapses to just IP and RSSI on row 55.
 
-#### Class 3: LCD Character Display (DSP_1602I2C, DSP_2004I2C, DSP_1602, DSP_2004)
+#### Class 3: LCD Character Display (DSP_1602, DSP_2004)
 
 **Distinguishing flag:** `DSP_LCD` defined. `CHARWIDTH = 1`, `CHARHEIGHT = 1` (character units not pixels).
 
@@ -680,7 +684,7 @@ At 128×64 the display is small enough that there is no practical need for psFra
 
 ---
 
-### 5.7 DSP_1602I2C — Nothing To Improve (Hardware-Limited)
+### 5.7 LCD Character Displays — Nothing To Improve (Hardware-Limited)
 
 The LCD character display is already at the ceiling of what the hardware can do. Character writes are inherently atomic (one character at a time). No tearing is possible. The widget system's reuse here is clever and correct.
 
@@ -709,7 +713,7 @@ This `if` statement is **unreachable** — `default: break;` exits the switch un
 
 For all **TFT displays** (ST7735, ILI9341, ILI9488, ST7789, ST7796, etc.) `dsp.loop()` is an **empty inline** — a no-op. Moving the check to after the switch has zero practical effect on any TFT. The dead code is still worth fixing for correctness and for OLED, but it does **not** explain visual differences between TFT models.
 
-For **LCD** character displays (`DSP_1602I2C`, etc.) `dsp.loop()` is also a no-op — no benefit.
+For **LCD** character displays (`DSP_1602`, `DSP_2004`) `dsp.loop()` is also a no-op — no benefit.
 
 ---
 

@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.05.29"
+#define RADIOVERSION "2026.05.31"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -44,35 +44,32 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* ============================== DISPLAY ============================== */
 
 /* --- DISPLAYS ENUM --- */
+// DSP_MODEL identifies the controller / driver chip.
+// Resolution variants use DSP_WIDTH / DSP_HEIGHT (see below).
+// Interface (I2C vs SPI/parallel) is auto-detected from pin definitions.
+// If I2C_SDA != 255 && I2C_SCL != 255 → I2C, otherwise SPI/parallel.
+// ST7735 sub-models uses DTYPE (required by Adafruit_ST7735 library).
 
-#define DSP_DUMMY       0 // without display
-#define DSP_ST7735      1 // 160x128  1.8"  or 128x128  1.44"  or 160x80   0.96"  https://aliexpress.com/item/1005002822797745.html
-#define DSP_SSD1306     2 // 128x64   0.96" https://aliexpress.com/item/1005001621806398.html
-#define DSP_NOKIA5110   3 // 84x48    1.6"  https://aliexpress.com/item/1005001621837569.html
-#define DSP_ST7789      4 // 320x240  2.4"  https://aliexpress.com/item/32960241206.html 
-#define DSP_SH1106      5 // 128x64   1.3"  https://aliexpress.com/item/32683094040.html
-#define DSP_1602I2C     6 // 16x2           https://aliexpress.com/item/32305776560.html
-#define DSP_SSD1306x32  7 // 128x32   0.91" https://aliexpress.com/item/32798439084.html
-#define DSP_SSD1327     8 // 128x128  1.5"  https://aliexpress.com/item/1005001414175498.html
-#define DSP_ILI9341     9 // 320x240  3.2"  https://aliexpress.com/item/33048191074.html
-#define DSP_SSD1305     10 // 128x64   2.4"  SSD1305 and SSD1309 SPI https://aliexpress.com/item/32950307344.html
-#define DSP_SH1107      11 // 128x64   1.3"  https://aliexpress.com/item/4000551696674.html
-#define DSP_1602        12 // 16x2           https://aliexpress.com/item/32685016568.html
-#define DSP_GC9106      13 // 160x80   0.96" (looks like ST7735S, but it"s not him) https://aliexpress.com/item/32947890530.html
-#define DSP_2004I2C     14 // 20x4           https://aliexpress.com/item/32783128355.html
-#define DSP_2004        15 // 20x4           https://aliexpress.com/item/32783128355.html
-#define DSP_SSD1305I2C  16 // 128x64   2.4"  SSD1305 and SSD1309 I2C https://aliexpress.com/item/32950307344.html
-#define DSP_ILI9225     17 // 220x176  2.0"  https://aliexpress.com/item/32952021835.html
-#define DSP_ST7789_240  18 // 240x240  1.3"  https://aliexpress.com/item/32996979276.html
-/* !!! DSP_ST7789_240 requires further development when used in conjunction with the VS1053 module !!! See the link https://www.instructables.com/Adding-CS-Pin-to-13-LCD/ */
-#define DSP_ST7796      19 // 480x320  3.5"  https://aliexpress.com/item/1005004632953455.html?sku_id=12000029911293172
-#define DSP_GC9A01A     20 // 240x240  1.28" https://aliexpress.com/item/1005004069703494.html?sku_id=12000029869654615
-#define DSP_ILI9488     21 // 480x320  3.5"  https://aliexpress.com/item/1005001999296476.html?sku_id=12000018365356570
-#define DSP_ILI9486     22 // (Testing mode) 480x320  3.5"  https://aliexpress.com/item/1005001999296476.html?sku_id=12000018365356568
-#define DSP_SSD1322     23 // 256x64   2.8"  https://aliexpress.com/item/1005003480981568.html
-#define DSP_ST7920      24 // 128x64   2.6"  https://aliexpress.com/item/32699482638.html
-#define DSP_ST7789_76   25 // 284x76 2.25"   https://aliexpress.ru/item/1005009016973081.html
-#define DSP_CUSTOM      101 // your display
+#define DSP_DUMMY       0 // no display
+#define DSP_1602        1 // 16x2 (fixed in displayLC1602.h): Parallel or I2C (auto-detected from pins)
+#define DSP_2004        2 // 20x4 (fixed in displayLC1602.h): Parallel or I2C (auto-detected from pins)
+#define DSP_GC9A01A     3 // 240x240 round (fixed in displayGC9A01A.h)
+#define DSP_GC9106      4 // 160x80 (fixed in displayGC9106.h)
+#define DSP_ILI9225     5 // 220x176 (default)
+#define DSP_ILI9341     6 // 320x240 (fixed in displayILI9341.h)
+#define DSP_ILI9488     7 // 480x320 (default)
+#define DSP_ILI9486     8 // 480x320 (default) (not fully tested - see notes inside the library regarding gamma correction)
+#define DSP_NOKIA5110   9 // 84x48 (fixed in displayN5110.h)
+#define DSP_SH1106      10 // 128x64 (default): SPI or I2C  (auto-detected from pins)
+#define DSP_SH1107      11 // 128x64 (default): SPI or I2C  (auto-detected from pins)
+#define DSP_SSD1305     12 // 128x64 (default): SPI or I2C  (auto-detected from pins)
+#define DSP_SSD1306     13 // 128x64 (default): SPI or I2C  (auto-detected from pins)
+#define DSP_SSD1322     14 // 256x64 (default): SPI
+#define DSP_SSD1327     15 // 128x128 (default): I2C
+#define DSP_ST7735      16 // 160x128 / 128x128 / 160x80 (fixed, derived from DTYPE in displayST7735.h)
+#define DSP_ST7789      17 // 320x240 (default)
+#define DSP_ST7796      18 // 480x320 (default)
+#define DSP_ST7920      19 // 128x64 (fixed in displayST7920.h)
 
 /* Define your display as #define DSP_MODEL DSP_ILI9488 */
 #ifndef DSP_MODEL
@@ -80,6 +77,49 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #if DSP_MODEL==DSP_DUMMY
   #define DUMMYDISPLAY
+#endif
+
+/* --- DISPLAY RESOLUTION --- */
+// DSP_WIDTH / DSP_HEIGHT set the panel resolution in pixels.
+// Displays whose constructor accepts dimensions have defaults below - override in myoptions.h for variants
+// Some displays have a constructor that does NOT accept dimensions - they have fixed values in their display*.h header (see notes above)
+// These values are consumed by dspconf.h (conf file) and dspfont.h (fonts/bootlogo).
+
+#if DSP_MODEL==DSP_ILI9225
+  #ifndef DSP_WIDTH
+    #define DSP_WIDTH  220
+  #endif
+  #ifndef DSP_HEIGHT
+    #define DSP_HEIGHT 176
+  #endif
+#elif DSP_MODEL==DSP_ILI9488 || DSP_MODEL==DSP_ILI9486 || DSP_MODEL==DSP_ST7796
+  #ifndef DSP_WIDTH
+    #define DSP_WIDTH  480
+  #endif
+  #ifndef DSP_HEIGHT
+    #define DSP_HEIGHT 320
+  #endif
+#elif DSP_MODEL==DSP_SH1106 || DSP_MODEL==DSP_SH1107 || DSP_MODEL==DSP_SSD1305 || DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SSD1327
+  #ifndef DSP_WIDTH
+    #define DSP_WIDTH  128
+  #endif
+  #ifndef DSP_HEIGHT
+    #define DSP_HEIGHT 64
+  #endif
+#elif DSP_MODEL==DSP_SSD1322
+  #ifndef DSP_WIDTH
+    #define DSP_WIDTH  256
+  #endif
+  #ifndef DSP_HEIGHT
+    #define DSP_HEIGHT 64
+  #endif
+#elif DSP_MODEL==DSP_ST7789
+  #ifndef DSP_WIDTH
+    #define DSP_WIDTH  320
+  #endif
+  #ifndef DSP_HEIGHT
+    #define DSP_HEIGHT 240
+  #endif
 #endif
 
 /* --- TFT DISPLAY --- */
@@ -186,13 +226,14 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define BITRATE_FULL true // display bitrate badge
 #endif
 
-/* Use #define BIG_BOOT_LOGO with 480x320 displays if you want a bigger boot logo */
-#if DSP_MODEL==DSP_ST7796 || DSP_MODEL==DSP_ILI9488 || DSP_MODEL!=DSP_ILI9486
+/* Use #define BIG_BOOT_LOGO with big displays (480x320) displays if you want a bigger boot logo */
+#if DSP_WIDTH >= 480
   #ifndef BIG_BOOT_LOGO
     #if defined(CONFIG_IDF_TARGET_ESP32) // ESP32 is already low on flash size and this is huge
       #define BIG_BOOT_LOGO false
-    #endif
+    #else
       #define BIG_BOOT_LOGO true
+    #endif
   #endif
 #endif
 
@@ -208,7 +249,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 
 /* Chunky6 with spaces between pixels is the default (except on smaller displays) */
 #ifndef CLOCKFONT
-  #if DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SH1106 || DSP_MODEL==DSP_SH1107 || DSP_MODEL==DSP_SSD1305 || DSP_MODEL==DSP_SSD1305I2C
+  #if DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SH1106 || DSP_MODEL==DSP_SH1107 || DSP_MODEL==DSP_SSD1305
   // note that using YO_MONO or YO_CLASSIC on the above list of displays will revert to glcd font (the common font)
     #define CLOCKFONT CHUNKY6
   #else
@@ -228,7 +269,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* Playlist Mode: some displays have trouble displaying the fancy "fade" playlist - this list may be incomplete */
 // ILI9488 uses 24 bits per pixel instead of 16 or 8, resulting in a 33% slower refresh rate... making a nasty slowdown on a big display when it needs to redraw the entire screen
 // use PLAYLIST_MODE_PAGED true if your display has issues on the playlist screen or if you just want to use page mode (but it doesn't scroll long station names)
-#if DSP_MODEL==DSP_1602 || DSP_MODEL==DSP_1602IC || DSP_MODEL==DSP_2004I || DSP_MODEL==DSP_2004I2C // LCD tiny displays can't do different playlist modes
+#if DSP_MODEL==DSP_1602 || DSP_MODEL==DSP_2004 // LCD tiny displays can't do different playlist modes
   #undef PLAYLIST_MODE_PAGED
 #elif DSP_MODEL==DSP_ILI9488 || DSP_MODEL==DSP_ILI9486 // These screens are known to be slow to refresh and benefit from a simpler playlist mode
   #ifndef PLAYLIST_MODE_PAGED
@@ -313,7 +354,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 
 /* Override SPI, I2C Speeds and Addresses with myoptions.h */
 // may not work for all display drivers, especially if custom libraries are included. ie. ILI9488 which is fixed to 40000000UL
-// #define DEF_SPI_FREQ 8000000UL // defaults usually OK; may range from 8000000UL (8 MHz) to 80000000UL (80 MHz); check your datasheet before changing! set to 0 
+// #define DEF_SPI_FREQ 8000000UL // defaults usually OK; may range from 8000000UL (8 MHz) to 80000000UL (80 MHz); check your datasheet before changing! set to 0 for factory default (will override codebase default)
 // #define I2CFREQ_HZ   400000UL // OLED driver default is 4000000UL (4 MHz); lower e.g. to 400000UL (400 kHz) if display is glitchy; range: 100000UL (100 kHz) to 4000000UL (4 MHz)
 // #define SCREEN_ADDRESS 0x3C // see datasheet for address or scan it https://create.arduino.cc/projecthub/abdularbi17/how-to-scan-i2c-address-in-arduino-eaadda
 
@@ -794,8 +835,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #ifndef AUDIO_CORE
     #define AUDIO_CORE 0
   #else
-    #if (AUDIO_CORE!=1)
-	    #error Only add #define AUDIO_CORE 1 to options.h to move Audio to CPU core 1. Leave it undefined for core 0.
+    #if (AUDIO_CORE==0)
+	    #warning Only add #define AUDIO_CORE 1 to options.h to move Audio to CPU core 1. Leave it undefined for core 0.
     #endif
   #endif
 #endif
@@ -809,8 +850,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #ifndef NETWORK_CORE
     #define NETWORK_CORE 1
   #else
-    #if (NETWORK_CORE!=0)
-	    #error Only add #define NETWORK_CORE 0 to options.h to move Netserver to CPU core 0. Leave it undefined for core 1.
+    #if (NETWORK_CORE==1)
+	    #warning Only add #define NETWORK_CORE 0 to options.h to move Netserver to CPU core 0. Leave it undefined for core 1.
     #endif
   #endif
 #endif
@@ -824,8 +865,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #ifndef DSP_TASK_CORE_ID
     #define DSP_TASK_CORE_ID 1
   #else
-    #if (DSP_TASK_CORE_ID!=0)
-	    #error Only add #define DSP_TASK_CORE_ID 0 to options.h to move display process to CPU core 0. Leave it undefined for core 1.
+    #if (DSP_TASK_CORE_ID==1)
+	    #warning Only add #define DSP_TASK_CORE_ID 0 to options.h to move display process to CPU core 0. Leave it undefined for core 1.
     #endif
   #endif
 #endif
@@ -1370,7 +1411,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define SD_SHUFFLE false
 #endif
 #ifndef SMART_START
-  #define SMART_START false
+  #define SMART_START true
 #endif
 #ifndef SHOW_AUDIO_INFO
   #define SHOW_AUDIO_INFO false
@@ -1379,7 +1420,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define SHOW_VU_METER false
 #endif
 #ifndef WIFI_SCAN_BEST_RSSI
-  #define WIFI_SCAN_BEST_RSSI false
+  #define WIFI_SCAN_BEST_RSSI true
 #endif
 #ifndef EHDP
   #define EHDP true
@@ -1508,7 +1549,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define TIMEZONE_POSIX "AST4ADT,M3.2.0,M11.1.0"
 #endif
 #ifndef SNTP_1
-  #define SNTP_1 "ca.pool.ntp.org"
+  #define SNTP_1 "0.pool.ntp.or"
 #endif
 #ifndef SNTP_2
   #define SNTP_2 "pool.ntp.org"

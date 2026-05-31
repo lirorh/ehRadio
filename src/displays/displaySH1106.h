@@ -4,8 +4,6 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
-#include "bootlogo/110x32mono.h"
-#include "ehfonts/font15.h"
 
 typedef GFXcanvas1 Canvas;
 
@@ -15,8 +13,10 @@ typedef GFXcanvas1 Canvas;
   typedef Adafruit_SH1107 yoDisplay;
 #endif
 
+#include "dspfont.h"
+
 #include "tools/commongfx.h"
 
-#include "conf/displayOLED128x64conf.h"
+#include "dspconf.h"
 
 #endif

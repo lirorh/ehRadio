@@ -5,7 +5,6 @@
 #ifndef displayTFT240x240conf_h
 #define displayTFT240x240conf_h
 
-#define DSP_WIDTH       240
 #define TFT_FRAMEWDT    8
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
 #define PLMITEMS        11

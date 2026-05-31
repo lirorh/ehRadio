@@ -5,8 +5,6 @@
 #ifndef displayTFT220x176conf_h
 #define displayTFT220x176conf_h
 
-#define DSP_WIDTH       220
-#define DSP_HEIGHT      176
 #define TFT_FRAMEWDT    4
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
 

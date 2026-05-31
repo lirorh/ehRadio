@@ -15,7 +15,7 @@
 
 TwoWire tw = TwoWire(0);
 
-DspCore::DspCore(): Adafruit_SSD1327(128, 128, &tw, I2C_RST/*, I2CFREQ_HZ*/) {}
+DspCore::DspCore(): Adafruit_SSD1327(DSP_WIDTH, DSP_HEIGHT, &tw, I2C_RST/*, I2CFREQ_HZ*/) {}
 
 #define CLR_ITEM1    0xA
 #define CLR_ITEM2    0x8

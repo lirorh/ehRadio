@@ -1,5 +1,5 @@
 #include "../core/options.h"
-#if DSP_MODEL==DSP_SSD1305 || DSP_MODEL==DSP_SSD1305I2C
+#if DSP_MODEL==DSP_SSD1305
 #include "dspcore.h"
 #include "../core/config.h"
 #include "../core/logging.h"
@@ -12,18 +12,19 @@
   #define DEF_SPI_FREQ        8000000UL      /*  set it to 0 for system default */
 #endif
 
-#if DSP_MODEL==DSP_SSD1305
-  DspCore::DspCore(): Adafruit_SSD1305(128, 64, &SPI, TFT_DC, TFT_RST, TFT_CS, DEF_SPI_FREQ) {}
-#else
+// Auto-detect interface from pins: I2C if both I2C pins defined, else SPI
+#if I2C_SDA!=255 && I2C_SCL!=255
 #include <Wire.h>
 TwoWire I2CSSD1305 = TwoWire(0);
-DspCore::DspCore(): Adafruit_SSD1305(128, 64, &I2CSSD1305, -1){
+DspCore::DspCore(): Adafruit_SSD1305(DSP_WIDTH, DSP_HEIGHT, &I2CSSD1305, -1){
 
 }
+#else
+  DspCore::DspCore(): Adafruit_SSD1305(DSP_WIDTH, DSP_HEIGHT, &SPI, TFT_DC, TFT_RST, TFT_CS, DEF_SPI_FREQ) {}
 #endif
 
 void DspCore::initDisplay() {
-#if DSP_MODEL==DSP_SSD1305I2C
+#if I2C_SDA!=255 && I2C_SCL!=255
   I2CSSD1305.begin(I2C_SDA, I2C_SCL);
 #endif
   if (!begin(SCREEN_ADDRESS)) {

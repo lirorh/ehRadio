@@ -5,14 +5,20 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include "../libraries/Adafruit_GC9106Ex/Adafruit_GC9106Ex.h"       // https://github.com/prenticedavid/Adafruit_GC9102_kbv
-#include "bootlogo/62x40.h"
-#include "ehfonts/font35.h"
+
+// GC9106 — hardware-fixed resolution.
+#undef DSP_WIDTH
+#undef DSP_HEIGHT
+#define DSP_WIDTH  160
+#define DSP_HEIGHT 80
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_GC9106Ex yoDisplay;
 
+#include "dspfont.h"
+
 #include "tools/commongfx.h"
 
-#include "conf/displayTFT160x80conf.h"
+#include "dspconf.h"
 
 #endif

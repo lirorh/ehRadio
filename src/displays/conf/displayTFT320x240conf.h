@@ -5,7 +5,6 @@
 #ifndef displayTFT320x240conf_h
 #define displayTFT320x240conf_h
 
-#define DSP_WIDTH       320
 #define TFT_FRAMEWDT    8
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
 

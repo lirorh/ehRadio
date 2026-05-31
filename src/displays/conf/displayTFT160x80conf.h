@@ -5,7 +5,7 @@
 #ifndef displayTFT160x80conf_h
 #define displayTFT160x80conf_h
 
-#define DSP_WIDTH       160
+
 #define TFT_FRAMEWDT    1
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
 

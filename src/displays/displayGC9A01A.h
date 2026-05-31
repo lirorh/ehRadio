@@ -5,14 +5,20 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_GC9A01A.h>
-#include "bootlogo/99x64.h"
-#include "ehfonts/font52.h"
+
+// GC9A01A — hardware-fixed round display.
+#undef DSP_WIDTH
+#undef DSP_HEIGHT
+#define DSP_WIDTH  240
+#define DSP_HEIGHT 240
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_GC9A01A yoDisplay;
 
+#include "dspfont.h"
+
 #include "tools/commongfx.h"
 
-#include "conf/displayTFT240x240roundconf.h"
+#include "dspconf.h"
 
 #endif

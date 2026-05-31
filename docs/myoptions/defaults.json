@@ -1,31 +1,51 @@
 [ "User Defaults",
   {
+    "name": "Clock 12 Hour Mode",
+    "define": "CLOCK_TWELVE", "type": "boolean", "optional": true, "default": false
+  },
+  {
+    "name": "Numbered Playlist",
+    "define": "NUMBERED_PLAYLIST", "type": "boolean", "optional": true, "default": false
+  },
+  {
     "name": "One Click Switch",
-    "define": "ONE_CLICK_SWITCH", "type": "boolean", "default": false, "optional": true
+    "define": "ONE_CLICK_SWITCH", "type": "boolean", "optional": true, "default": false
   },
   {
     "name": "Playlist Default URL",
     "define": "PLAYLIST_DEFAULT_URL", "type": "text", "optional": true, "comment": "downloaded on fresh install"
   },
   {
+    "name": "Screen Flip",
+    "define": "SCREEN_FLIP", "type": "boolean", "optional": true, "default": false
+  },
+  {
     "name": "Screen Saver When Playing",
-    "define": "SS_PLAYING", "type": "boolean", "default": false, "optional": true
+    "define": "SS_PLAYING", "type": "boolean", "optional": true, "default": false
+  },
+    {
+    "name": "Screen Saver When Not Playing",
+    "define": "SS_NOTPLAYING", "type": "boolean", "optional": true, "default": false
   },
   {
     "name": "Screen Flip",
-    "define": "SCREEN_FLIP", "type": "boolean", "default": false, "optional": true
+    "define": "SCREEN_FLIP", "type": "boolean", "optional": true, "default": false
+  },
+  {
+    "name": "SD Shuffle",
+    "define": "SD_SHUFFLE", "type": "boolean", "optional": true, "default": false
   },
   {
     "name": "Show Audio Info",
-    "define": "SHOW_AUDIO_INFO", "type": "boolean", "default": false, "optional": true
+    "define": "SHOW_AUDIO_INFO", "type": "boolean", "optional": true, "default": false
   },
   {
     "name": "Show VU Meter",
-    "define": "SHOW_VU_METER", "type": "boolean", "default": false, "optional": true
+    "define": "SHOW_VU_METER", "type": "boolean", "optional": true, "default": false
   },
   {
     "name": "Smart Start",
-    "define": "SMART_START", "type": "boolean", "default": false, "optional": true
+    "define": "SMART_START", "type": "boolean", "optional": true, "default": true
   },
   {
     "name": "SNTP Time Server 1",
@@ -36,23 +56,31 @@
     "define": "SNTP_2", "type": "text", "optional": true, "default": "pool.ntp.org"
   },
   {
+    "name": "Touch Flip",
+    "define": "TOUCH_FLIP", "type": "text", "optional": true, "default": false
+  },
+  {
+    "name": "Volume Page",
+    "define": "VOLUME_PAGE", "type": "boolean", "optional": true, "default": false
+  },
+  {
     "name": "Volume Steps",
-    "define": "VOLUME_STEPS", "type": "numeric", "default": 1, "min": 1, "max": 25, "optional": true
+    "define": "VOLUME_STEPS", "type": "numeric", "min": 1, "max": 25, "optional": true, "default": 1
   },
   {
     "name": "Weather Metric",
-    "define": "WEATHER_METRIC", "type": "boolean", "default": false, "optional": true
+    "define": "WEATHER_METRIC", "type": "boolean", "optional": true, "default": true
   },
   {
     "name": "Weather - Latitude",
-    "define": "WEATHER_LAT", "type": "text", "optional": true, "comment": "latitude"
+    "define": "WEATHER_LAT", "type": "text", "optional": true, "comment": "latitude", "default": "44.64738"
   },
   {
     "name": "Weather - Longitude",
-    "define": "WEATHER_LON", "type": "text", "optional": true, "comment": "longitude"
+    "define": "WEATHER_LON", "type": "text", "optional": true, "comment": "longitude", "default": "-63.58029"
   },
   {
     "name": "Wifi Scan for Best RSSI",
-    "define": "WIFI_SCAN_BEST_RSSI", "type": "boolean", "default": false, "optional": true
+    "define": "WIFI_SCAN_BEST_RSSI", "type": "boolean", "optional": true, "default": true
   }
 ]

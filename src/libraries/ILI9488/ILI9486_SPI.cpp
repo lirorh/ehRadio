@@ -341,7 +341,7 @@ void ILI9486_SPI::init(void)
     _writeCommand(0x36);
     _writeData(0x48);  // MX, BGR == rotation 0
     // PGAMCTRL(Positive Gamma Control)
-#if DSP_MODEL==DSP_ILI9486 && false
+#if DSP_MODEL==DSP_ILI9486 && false // gamma correction for ILI9486 (false disables it... needs testing!)
     _writeCommand(0xE0);
     _writeData(0x0F);
     _writeData(0x1F);

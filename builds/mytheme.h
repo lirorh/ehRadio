@@ -6,7 +6,7 @@
 /*        ************************************************************************      */
 
 /* Theming of color displays:                                                           */
-/*         DSP_ST7735, DSP_ST7789, DSP_ILI9341, DSP_GC9106, DSP_ILI9225, DSP_ST7789_240 */
+/*         DSP_ST7735, DSP_ST7789, DSP_ILI9341, DSP_GC9106, DSP_ILI9225, DSP_GC9A01A    */
 /* Uncomment (remove double slash //) from desired line to apply color                  */
 
 /* This file contains the ehRadio theme colors (blue & red & more)                      */

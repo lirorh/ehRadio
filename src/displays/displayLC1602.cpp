@@ -1,5 +1,5 @@
 #include "../core/options.h"
-#if DSP_MODEL==DSP_1602I2C || DSP_MODEL==DSP_1602 || DSP_MODEL==DSP_2004 || DSP_MODEL==DSP_2004I2C
+#if DSP_MODEL==DSP_1602 || DSP_MODEL==DSP_2004
 #include "dspcore.h"
 #include <WiFi.h>
 #include "../core/config.h"
@@ -17,7 +17,7 @@ void DspCore::apScreen() {
   print(utf8To(const_lcdApMode, false));
   setCursor(0,1);
   print(utility.ipToStr(WiFi.softAPIP()));
-#ifdef LCD_2004
+#if DSP_WIDTH==20 && DSP_HEIGHT==4
   setCursor(0, 2);
   print(utf8To(const_lcdApName, false));
   print(apSsid);
@@ -32,7 +32,7 @@ void DspCore::initDisplay() {
   init();
   backlight();
 #else
-  #ifdef LCD_2004
+  #if DSP_WIDTH==20 && DSP_HEIGHT==4
     begin(20, 4);
   #else
     begin(16, 2);
@@ -51,7 +51,7 @@ void DspCore::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
 }
 
 uint16_t DspCore::width(){
-#ifdef LCD_2004
+#if DSP_WIDTH==20 && DSP_HEIGHT==4
   return 20;
 #else
   return 16;
@@ -59,7 +59,7 @@ uint16_t DspCore::width(){
 }
 
 uint16_t DspCore::height(){
-#ifdef LCD_2004
+#if DSP_WIDTH==20 && DSP_HEIGHT==4
   return 4;
 #else
   return 2;

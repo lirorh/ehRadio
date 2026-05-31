@@ -1,5 +1,5 @@
 #include "../core/options.h"
-#if DSP_MODEL==DSP_ST7789 || DSP_MODEL==DSP_ST7789_240 || DSP_MODEL==DSP_ST7789_76
+#if DSP_MODEL==DSP_ST7789
 #include "dspcore.h"
 #include "../core/config.h"
 
@@ -10,11 +10,7 @@
 DspCore::DspCore(): Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST) {}
 
 void DspCore::initDisplay() {
-  if(DSP_MODEL==DSP_ST7789_76){
-    init(76,284);
-  }else{
-    init(240,(DSP_MODEL==DSP_ST7789)?320:240);
-  }
+  init(DSP_HEIGHT, DSP_WIDTH);
   if(DEF_SPI_FREQ > 0) setSPISpeed(DEF_SPI_FREQ);
   invert();
   cp437(true);
@@ -26,15 +22,14 @@ void DspCore::initDisplay() {
 
 void DspCore::clearDsp(bool black){ fillScreen(black?0:config.theme.background); }
 void DspCore::flip(){
-#if DSP_MODEL==DSP_ST7789 || DSP_MODEL==DSP_ST7789_76
-  setRotation(config.store.flipscreen?3:1);
-#endif
-#if DSP_MODEL==DSP_ST7789_240
+#if DSP_WIDTH==240 && DSP_HEIGHT==240
   if(ROTATE_90){
     setRotation(config.store.flipscreen?3:1);
   }else{
     setRotation(config.store.flipscreen?2:0);
   }
+#else
+  setRotation(config.store.flipscreen?3:1);
 #endif
 }
 void DspCore::invert(){ invertDisplay(config.displayIsInverted != DSP_INVERT_QUIRK); }

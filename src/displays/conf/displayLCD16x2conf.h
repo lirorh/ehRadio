@@ -5,7 +5,6 @@
 #ifndef displayLCD16x2conf_h
 #define displayLCD16x2conf_h
 
-#define DSP_WIDTH       16
 #define TFT_FRAMEWDT    0
 #define MAX_WIDTH       16
 #define PLMITEMS        2

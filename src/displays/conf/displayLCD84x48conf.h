@@ -5,7 +5,7 @@
 #ifndef displayLCD84x48conf_h
 #define displayLCD84x48conf_h
 
-#define DSP_WIDTH       84
+
 #define TFT_FRAMEWDT    0
 #define MAX_WIDTH       DSP_WIDTH
 #define SCROLLDELAY     180

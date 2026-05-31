@@ -5,7 +5,7 @@
 #ifndef displayOLED128x32conf_h
 #define displayOLED128x32conf_h
 
-#define DSP_WIDTH       128
+
 #define TFT_FRAMEWDT    1
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
 

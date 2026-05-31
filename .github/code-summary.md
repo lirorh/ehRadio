@@ -141,6 +141,14 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
   - I2S audio path vs VS1053 path are mutually exclusive — enforced via `#error` in `options.h`.
 - Display backend:
   - selected display model changes driver implementation and capabilities.
+  - **Resolution/interface system**: `DSP_MODEL` = controller chip, `DSP_WIDTH`/`DSP_HEIGHT` = panel resolution, SPI or I2C type may be detected by `I2C_SDA` and `I2C_SCL` pins defines. Resolution defaults per DSP_MODEL in `options.h`, overridable in `myoptions.h`.
+  - **dspcore.h**: one `#elif` per DSP_MODEL, sets feature flags (`PSFBUFFER`, `DSP_OLED`, `DSP_LCD`).
+  - **dspfont.h** (new): selects bootlogo, clock font, TIME_SIZE by resolution.
+  - **dspconf.h** (new): selects `conf/display*conf.h` by resolution × display category.
+  - Display `.h` files now delegate conf/font/bootlogo to these central files — no per-file branches for resolution.
+  - Conf files no longer define DSP_WIDTH/DSP_HEIGHT (set upstream in options.h).
+  - **Removed enum values** (collapsed into resolution variants): DSP_ST7789_240, DSP_ST7789_76, DSP_SSD1306x32, DSP_SSD1305I2C, DSP_1602I2C, DSP_2004I2C, DSP_SSD1327_64. I2C variants detected by `I2C_SDA` and `I2C_SCL`.
+  - ST7735 DTYPE still required for library; resolution auto-derived from DTYPE in displayST7735.h.
   - Nextion is a special path (`src/displays/nextion.cpp`) with its own command protocol and UI assumptions.
 - Network/update features:
   - some online update and service behavior is compiled out by feature flags.

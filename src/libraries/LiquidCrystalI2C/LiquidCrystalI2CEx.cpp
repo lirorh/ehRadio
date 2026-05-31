@@ -1,7 +1,7 @@
 // Based on the work by DFRobot
 // Based on the LiquidCrystal_I2C library https://github.com/johnrickman/LiquidCrystal_I2C
 #include "../../core/options.h"
-#if DSP_MODEL==DSP_1602I2C || DSP_MODEL==DSP_2004I2C
+#if (I2C_SDA!=255 && I2C_SCL!=255) && (DSP_MODEL==DSP_1602 || DSP_MODEL==DSP_2004)
 
 #include "LiquidCrystalI2CEx.h"
 #include <inttypes.h>
@@ -319,5 +319,5 @@ void LiquidCrystal_I2C::draw_horizontal_graph(uint8_t row, uint8_t column, uint8
 void LiquidCrystal_I2C::draw_vertical_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_row_end){}
 void LiquidCrystal_I2C::setContrast(uint8_t new_val){}
 
-#endif // if DSP_MODEL==DSP_1602I2C
+#endif // if I2C pins defined && LCD
 

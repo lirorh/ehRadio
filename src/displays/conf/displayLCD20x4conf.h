@@ -5,7 +5,6 @@
 #ifndef displayLCD20x4conf_h
 #define displayLCD20x4conf_h
 
-#define DSP_WIDTH       20
 #define TFT_FRAMEWDT    0
 #define MAX_WIDTH       20
 #define PLMITEMS        4

@@ -4,15 +4,20 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_PCD8544.h>
-#include "ehfonts/TinyFont5.h"
-#include "ehfonts/TinyFont6.h"
-#include "bootlogo/36x32mono.h"
+
+// Nokia 5110 — hardware-fixed resolution.
+#undef DSP_WIDTH
+#undef DSP_HEIGHT
+#define DSP_WIDTH  84
+#define DSP_HEIGHT 48
 
 typedef GFXcanvas1 Canvas;
 typedef Adafruit_PCD8544 yoDisplay;
 
+#include "dspfont.h"
+
 #include "tools/commongfx.h"
 
-#include "conf/displayLCD84x48conf.h"
+#include "dspconf.h"
 
 #endif

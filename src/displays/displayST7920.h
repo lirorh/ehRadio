@@ -4,13 +4,20 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 #include "../libraries/ST7920/ST7920.h"
-#include "bootlogo/110x32mono.h"
+
+// ST7920 — hardware-fixed resolution.
+#undef DSP_WIDTH
+#undef DSP_HEIGHT
+#define DSP_WIDTH  128
+#define DSP_HEIGHT 64
 
 typedef GFXcanvas1 Canvas;
 typedef ST7920 yoDisplay;
 
+#include "dspfont.h"
+
 #include "tools/commongfx.h"
 
-#include "conf/displayLCD128x64conf.h"
+#include "dspconf.h"
 
 #endif

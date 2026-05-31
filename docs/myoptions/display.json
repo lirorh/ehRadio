@@ -2,7 +2,7 @@
   {
     "name": "Dummy (no physical display)",
     "type": "",
-    "info": "Note that overriding default width and height must be supported!\nSupported OLED resolutions: 256x64, 128x128, 128x64, or 128x32\nSupported TFT resolutions: 480x320, 320x240, 284x76, 240x240, 220x176, 160x128, 160x80, or 128x128.",
+    "info": "",
     "define": "DSP_MODEL DSP_DUMMY"
   },
   {
@@ -62,7 +62,7 @@
   {
     "name": "ILI9225 (SPI 220x176 TFT)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 480x320, 320x240, 284x76, 240x240, 220x176, 160x128, 160x80, or 128x128",
     "define": "DSP_MODEL DSP_ILI9225",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -79,7 +79,7 @@
   {
     "name": "ILI9341 (SPI 320x240 TFT)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 480x320, 320x240, 284x76, 240x240, 220x176, 160x128, 160x80, or 128x128",
     "define": "DSP_MODEL DSP_ILI9341",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -94,7 +94,7 @@
   {
     "name": "ILI9488 (SPI 480x320 TFT)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 480x320, 320x240, 284x76, 240x240, 220x176, 160x128, 160x80, or 128x128",
     "define": "DSP_MODEL DSP_ILI9488",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -112,7 +112,7 @@
   {
     "name": "ILI9486 (SPI 480x320 TFT)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\n⚠ Untested! Use ILI9488 unless you know what you're doing\nSee notes inside the library regarding gamma correction",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 480x320, 320x240, 284x76, 240x240, 220x176, 160x128, 160x80, or 128x128\n⚠ Untested! Use ILI9488 unless you know what you're doing\nSee notes inside the library regarding gamma correction",
     "define": "DSP_MODEL DSP_ILI9486",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -141,6 +141,7 @@
   {
     "name": "SH1106 (I2C 128x64 OLED)",
     "type": "I2C",
+    "info": "Supported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SH1106",
     "pins": [ "I2C_SDA", "I2C_SCL" ],
     "defines": [
@@ -153,7 +154,7 @@
   {
     "name": "SH1106 (SPI 128x64 OLED)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SH1106",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -167,6 +168,7 @@
   {
     "name": "SH1107 (I2C 128x64 OLED)",
     "type": "I2C",
+    "info": "Supported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SH1107",
     "pins": [ "I2C_SDA", "I2C_SCL" ],
     "defines": [
@@ -179,7 +181,7 @@
   {
     "name": "SH1107 (SPI 128x64 OLED)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SH1107",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -193,6 +195,7 @@
   {
     "name": "SSD1305 (I2C 128x64 OLED)",
     "type": "I2C",
+    "info": "Supported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SSD1305",
     "pins": [ "I2C_SDA", "I2C_SCL" ],
     "defines": [
@@ -205,7 +208,7 @@
   {
     "name": "SSD1305 (SPI 128x64 OLED)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SSD1305",
     "pins": [ "TFT_DC", "TFT_CS" ],
     "defines": [
@@ -218,7 +221,7 @@
   {
     "name": "SSD1306 (I2C 128x64 OLED)",
     "type": "I2C",
-    "info": "Known variant: 128x32",
+    "info": "Supported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SSD1306",
     "pins": [ "I2C_SDA", "I2C_SCL" ],
     "defines": [
@@ -231,7 +234,7 @@
   {
     "name": "SSD1306 (SPI 128x64 OLED)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nKnown variant: 128×32",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SSD1306",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -244,7 +247,7 @@
   {
     "name": "SSD1322 (SPI 256x64 OLED)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SSD1322",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -258,7 +261,7 @@
   {
     "name": "SSD1327 (I2C 128x64 OLED)",
     "type": "I2C",
-    "info": "Known variant: 128x128",
+    "info": "Supported resolutions: 256x64, 128x128, 128x64, or 128x32",
     "define": "DSP_MODEL DSP_SSD1327",
     "pins": [ "I2C_SDA", "I2C_SCL" ],
     "defines": [
@@ -271,7 +274,7 @@
   {
     "name": "ST7735 (SPI 160x128 TFT)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nINITR_BLACKTAB, INITR_GREENTAB, INITR_REDTAB are 160×128\nINITR_144GREENTAB is 128×128, INITR_MINI160x80 is 160×80",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nINITR_BLACKTAB, INITR_GREENTAB, INITR_REDTAB are 160x128\nINITR_144GREENTAB is 128x128, INITR_MINI160x80 is 160x80",
     "define": "DSP_MODEL DSP_ST7735",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -285,7 +288,7 @@
   {
     "name": "ST7789 (SPI 320x240 TFT)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nKnown variants: 240×240, 284×76\nSee https://www.instructables.com/Adding-CS-Pin-to-13-LCD/ if your display has no CS pin",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 480x320, 320x240, 284x76, 240x240, 220x176, 160x128, 160x80, or 128x128\nSee https://www.instructables.com/Adding-CS-Pin-to-13-LCD/ if your display has no CS pin",
     "define": "DSP_MODEL DSP_ST7789",
     "pins": [ "TFT_DC" ],
     "defines": [
@@ -301,7 +304,7 @@
   {
     "name": "ST7796 (SPI 480x320 TFT)",
     "type": "SPI",
-    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\n(set SPIA_MISO = 255)\nSupported resolutions: 480x320, 320x240, 284x76, 240x240, 220x176, 160x128, 160x80, or 128x128",
     "define": "DSP_MODEL DSP_ST7796",
     "pins": [ "TFT_DC" ],
     "defines": [

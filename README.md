@@ -111,6 +111,26 @@ Some hardware questions may also be answered within this file.
 
 Want to get even more advanced? There are bunches of notes and tools in the codebase including font editors & builders, localization scripts, and more.
 
+### Audio Libraries and Other Issues
+
+ehRadio currently uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.512m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
+likely mostly from schreibfaul1's library [3.1.0 January 7, 2025](https://github.com/schreibfaul1/ESP32-audioI2S/releases/tag/3.1.0).
+
+ehRadio also currently uses the `ESP32-vs1053_ext` library from Maleksm's ёRadio mod v0.9.512m, likely mostly from schreibfaul1's [final version](https://github.com/schreibfaul1/ESP32-vs1053_ext).
+These libraries are so intertwined with the codebase that it may be impossible to migrate to newer versions, but... I will try.
+
+Until this "de-fork" is complete, I'm trying to avoid any major changes to the audio handling.
+It may take a significant amount of time to accomplish this.
+
+For that and other major needed changes to the codebase, there is a `code-issues.md` file which may be a messy file to look at, depending on how these efforts are going.
+
+### Languages
+
+If using a display other than English (either on the display or in the WebUI), there be errors in the translation.
+They are really there as proof-of-concept.  They were translated by machines.  Fixes or additions are absolutely welcome.
+
+There are tools in the codebase to assist with translation work.
+
 ---
 
 ## Radio Creations
@@ -215,13 +235,6 @@ That PR started [June 13, 2025](https://github.com/e2002/yoradio/pull/184) was a
 In retrospect, proposing thousands of lines of changes was rude and unrealistic.  After some thought, ehRadio was forked August 10, 2025.
 On May 21, 2026, ehRadio was officially deforked from ёRadio on Github.
 
-ehRadio currently uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.512m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
-likely mostly from schreibfaul1's library [3.1.0 January 7, 2025](https://github.com/schreibfaul1/ESP32-audioI2S/releases/tag/3.1.0).
-ehRadio also currently uses the `ESP32-vs1053_ext` library from Maleksm's ёRadio mod v0.9.512m, likely mostly from schreibfaul1's [final version](https://github.com/schreibfaul1/ESP32-vs1053_ext).
-These libraries are so intertwined with the codebase that it may be impossible to migrate to newer versions, but... I will try.
-
-For that and other major needed changes to the codebase, I maintain a `code-issues.md` file which may be a messy file to look at, depending on how these efforts are going.
-
 I will add a note here that although I do use AI-assisted coding, I am not a "vibe-coder" - except for python scripts.
 I welcome all pull requests but please follow the rules as laid out in `copilot-instructions.md` and `code-summary.md`,
 the former of which is a set of hard rules for AI-assisted coding, the latter of which is an AI-generated `Bible` of the codebase to help an LLM maintain codebase consistancy.
@@ -234,7 +247,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ------------------ |
-| 2026.05.31 | `Not a Release` Displays overhauled to support more displays more easily, generator updated |
+| 2026.06.01 | `Not a Release` Displays overhauled to support more displays more easily, generator updated |
 | 2026.05.29 | IR fixed, HA component updated, playlist page mode added for ILI9486/9488, playing current station does nothing, documentation completely overhauled |
 | 2026.05.26 | `Feature Freeze` `De-fork from ёRadio` Theme updated, Chunky6 font, fixes to `options.h`: `BTN_*` fixed & `ENC_*` renamed, screensaver fixes, battery widgets, ILI9225 from ёRadio v0.9.710, generator updated, partitions changed |
 | 2026.05.19 | `Feature Freeze` This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |

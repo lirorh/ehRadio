@@ -1,7 +1,7 @@
 [ "SPI Bus Pins",
   {
     "name": "SPI Bus A",
-    "info": "Required by SPI Display",
+    "info": "Required by SPI Display\nIf display ties CS to GND then it must be the only device on SPI Bus A\nIf display is the only device on this bus, set SPIA_MISO = 255",
     "spi": "A",
     "pins": [ "SPIA_SCK", "SPIA_MISO", "SPIA_MOSI" ]
   },

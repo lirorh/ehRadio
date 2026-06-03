@@ -29,4 +29,4 @@
 ### Web Assets
   - all other files are needed for the WebUI functionality
   - they are available here to allow automatic downloading to SPIFFS
-  - it is NOT necessary to download them (or the SPIFFS bin) - the radio will download them automatically after network connection is established
+  - it is NOT necessary to download them - the radio will download them automatically after network connection is established

@@ -452,7 +452,7 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       printf(clientId, "  quit | bye             Disconnect this telnet session\r\n");
       printf(clientId, "  toggle                 Play/Pause\r\n");
       printf(clientId, "  next | prev            Change station\r\n");
-      printf(clientId, "  volume <0-254>         Set volume\r\n");
+      printf(clientId, "  volume <0-%d>          Set volume\r\n", VOLUME_SCALE);
       printf(clientId, "  volup | voldown        Step volume\r\n");
       printf(clientId, "  play <index>           Play station number\r\n");
       printf(clientId, "  start | stop           Start/Stop playback\r\n");

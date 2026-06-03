@@ -148,7 +148,7 @@ void Controls::loop() {
       if (first) {
         int nv = config.store.volume+encoderDelta;
         if (nv<0) nv=0;
-        if (nv>254) nv=254;
+        if (nv>VOLUME_SCALE) nv=VOLUME_SCALE;
         player.setVol((uint8_t)nv);  
       } else {
         if (encoderDelta > 0) player.next(); else player.prev();
@@ -454,7 +454,7 @@ void Controls::controlsEvent(bool toRight, int8_t volDelta) {
     if (volDelta!=0) {
       int nv = config.store.volume+volDelta;
       if (nv<0) nv=0;
-      if (nv>254) nv=254;
+      if (nv>VOLUME_SCALE) nv=VOLUME_SCALE;
       player.setVol((uint8_t)nv);
     } else {
       player.stepVol(toRight);

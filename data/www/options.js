@@ -34,9 +34,9 @@ if (document.readyState === 'loading') {
 /** SCREEN DIMMING **/
 function syncDimmingUi(sendClampCommand = false) {
   const brightness = getId('br');
-  const dimmingToggle = getId('dimmingenabled');
-  const dimmingTimeout = getId('dimmingtimeout');
-  const dimmingBrightness = getId('dimmingbrightness');
+  const dimmingToggle = getId('dim');
+  const dimmingTimeout = getId('dimto');
+  const dimmingBrightness = getId('dimbr');
   if (!brightness || !dimmingToggle || !dimmingTimeout || !dimmingBrightness) {
     return false;
   }
@@ -63,8 +63,8 @@ function syncDimmingUi(sendClampCommand = false) {
 
 function setupDimmingControls() {
   const brightness = getId('br');
-  const dimmingToggle = getId('dimmingenabled');
-  const dimmingBrightness = getId('dimmingbrightness');
+  const dimmingToggle = getId('dim');
+  const dimmingBrightness = getId('dimbr');
   if (!brightness || !dimmingToggle || !dimmingBrightness) {
     return;
   }
@@ -74,7 +74,7 @@ function setupDimmingControls() {
     if (typeof previousAfterSetupElement === 'function') {
       previousAfterSetupElement(id, value, element);
     }
-    if (id === 'br' || id === 'dimmingbrightness' || id === 'dimmingenabled' || id === 'dimmingtimeout') {
+    if (id === 'br' || id === 'dimbr' || id === 'dim' || id === 'dimto') {
       syncDimmingUi();
     }
   };

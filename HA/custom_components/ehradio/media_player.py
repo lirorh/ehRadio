@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 
-VERSION = '2026.05.27'
+VERSION = '2026.06.03'
 
 _LOGGER      = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ DEFAULT_FALLBACK_IMAGE = 'https://trip5.github.io/ehRadio/images/logo-color-squa
 MEDIA_PLAYER_PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend({
   vol.Required(CONF_ROOT_TOPIC, default="ehradio"): cv.string,
   vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-  vol.Optional(CONF_MAX_VOLUME, default='254'): cv.string,
+  vol.Optional(CONF_MAX_VOLUME, default='42'): cv.string,
   vol.Optional(CONF_FALLBACK_IMAGE, default=DEFAULT_FALLBACK_IMAGE): cv.string,
   vol.Optional(CONF_DEVICE_URL, default=''): cv.string
 })
@@ -59,7 +59,7 @@ MEDIA_PLAYER_PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
   root_topic = config.get(CONF_ROOT_TOPIC)
   name = config.get(CONF_NAME)
-  max_volume = int(config.get(CONF_MAX_VOLUME, 254))
+  max_volume = int(config.get(CONF_MAX_VOLUME, 42))
   fallback_image = config.get(CONF_FALLBACK_IMAGE, DEFAULT_FALLBACK_IMAGE)
   device_url = config.get(CONF_DEVICE_URL, '')
   playlist = []
@@ -177,6 +177,7 @@ class ehradioDevice(MediaPlayerEntity):
         self._state = MediaPlayerState.PLAYING if js['status']==1 else MediaPlayerState.OFF
       self._current_source = str(js['station']) + '. ' + js['name']
       self._entity_picture = js.get('image_url') or None
+      self._max_volume = js.get('max_volume', self._max_volume)
       try:
         self.async_schedule_update_ha_state()
       except:

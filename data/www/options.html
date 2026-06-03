@@ -23,26 +23,15 @@
               <div class="checkbox" id="sst" data-command="smartstart"><div class="knob"></div></div>
             </div>
             <div class="inputwrap center">
-              <span class="inputtitle" data-i18n="lbl_audio_info">Audio Info</span>
-              <div class="checkbox" id="aif" data-command="audioinfo"><div class="knob"></div></div>
-            </div>
-            <div class="inputwrap center group group_vu hidden">
-              <span class="inputtitle" data-i18n="lbl_vu_meter">VU Meter</span>
-              <div class="checkbox" id="vu" data-command="vumeter"><div class="knob"></div></div>
-            </div>
-          </div>
-          <div class="flex-row">
-            <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_wifi_scan">Scan for Best Wi-Fi on Boot</span>
               <div class="checkbox" id="wifiscan" data-command="wifiscan"><div class="knob"></div></div>
             </div>
-            <div class="inputwrap center">
+          </div>
+          <div class="flex-row">
+            <div class="inputwrap center group group_update hidden">
               <span class="inputtitle" data-i18n="lbl_auto_update">Auto Update on Boot</span>
               <div class="checkbox" id="autoupdate" data-command="autoupdate"><div class="knob"></div></div>
             </div>
-          </div>
-
-          <div class="flex-row">
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_eh_discovery">eh Discovery Protocol</span>
               <div class="checkbox" id="ehdp" data-command="ehdp"><div class="knob"></div></div>
@@ -55,7 +44,6 @@
             </div>
             <div class="fb hl local" data-command="ehdpsave" style=" margin-top: 24px; height: 37px;" data-i18n="btn_save">Save</div>
           </div>
-
           <div class="flex-row">
             <div class="inputwrap pad">
               <span class="inputtitle" data-i18n="lbl_softap_delay">Soft AP Reboot Delay (min)</span>
@@ -129,8 +117,18 @@
           </div>
           <div class="flex-row">
             <div class="inputwrap center">
+              <span class="inputtitle" data-i18n="lbl_audio_buffer">Audio Buffer</span>
+              <div class="checkbox" id="bufbar" data-command="bufferbar"><div class="knob"></div></div>
+            </div>
+            <div class="inputwrap center group group_vu hidden">
+              <span class="inputtitle" data-i18n="lbl_vu_meter">VU Meter</span>
+              <div class="checkbox" id="vu" data-command="vumeter"><div class="knob"></div></div>
+            </div>
+          </div>
+          <div class="flex-row">
+            <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_volume_page">Volume Page</span>
-              <div class="checkbox" id="volumepage" data-command="volumepage"><div class="knob"></div></div>
+              <div class="checkbox" id="volpg" data-command="volumepage"><div class="knob"></div></div>
             </div>
           </div>
           <div class="flex-row group group_brightness hidden">
@@ -186,18 +184,18 @@
           <div class="flex-row group group_dimming hidden">
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_enable_dimming">Enable Dimming</span>
-              <div class="checkbox ssoption" id="dimmingenabled" data-command="dimmingenabled"><div class="knob"></div></div>
+              <div class="checkbox ssoption" id="dim" data-command="dimmingenabled"><div class="knob"></div></div>
             </div>
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_timeout_sec">Timeout (sec)</span>
-              <input type="number" id="dimmingtimeout" data-command="dimmingtimeout" value="" maxlength="3" min="5" max="65520" />
+              <input type="number" id="dimto" data-command="dimmingtimeout" value="" maxlength="3" min="5" max="65520" />
             </div>
           </div>
           <div class="flex-row group group_dimming hidden">
             <div class="inputwrap">
               <span class="inputtitle" data-i18n="lbl_dimmed_brightness">Dimmed Brightness</span>
               <span class="inputinfo" id="sldimbrightnessinfo">0</span>
-              <input type="range" id="dimmingbrightness" data-slaveid="sldimbrightnessinfo" data-command="dimmingbrightness" min="0" max="100" value="100">
+              <input type="range" id="dimbr" data-slaveid="sldimbrightnessinfo" data-command="dimmingbrightness" min="0" max="100" value="100">
             </div>
           </div>
         </section>
@@ -205,13 +203,6 @@
         <section class="group group_controls hidden" id="group_controls">
           <div class="title"><span data-i18n="ttl_controls">Controls</span></div>
           <div class="reset" data-name="controls" title="reset"></div>
-          <div class="flex-row">
-            <div class="inputwrap">
-              <span class="inputtitle" data-i18n="lbl_vol_steps">Volume Steps</span>
-              <span class="inputinfo" id="slvolstepsinfo">0</span>
-              <input type="range" id="vols" data-command="volsteps" data-slaveid="slvolstepsinfo" min="1" max="10" value="1">
-            </div>
-          </div>
           <div class="flex-row group group_touch hidden">
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_flip_touch">Flip touch</span>
@@ -229,7 +220,7 @@
               <input type="range" id="enca" data-command="encacc" data-slaveid="slencaccelerationinfo" min="0" max="700" value="200">
             </div>
           </div>
-          <div class="flex-row">
+          <div class="flex-row group group_stnbuttons hidden">
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_oneclick">One-click Station Switching</span>
               <div class="checkbox" id="skipup" data-command="oneclickswitching"><div class="knob"></div></div>

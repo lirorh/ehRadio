@@ -272,7 +272,7 @@ Audio::Audio(bool internalDAC /* = false */, uint8_t channelEnabled /* = I2S_SLO
         m_filter[i].b1 = 0;
         m_filter[i].b2 = 0;
     }
-    computeLimit();  		// first init, vol = 21, vol_steps = 254
+    computeLimit();  		// first init, vol = 12, vol_steps = VOLUME_SCALE
     startAudioTask();
 //setAudioTaskCore(1);  // Recommendation:If the ARDUINO RUNNING CORE is 1, the audio task should be core 0 or vice versa
 }
@@ -5391,7 +5391,7 @@ void Audio::setVolume(uint8_t vol) {
     uint16_t v = ESP_ARDUINO_VERSION_MAJOR * 100 + ESP_ARDUINO_VERSION_MINOR * 10 + ESP_ARDUINO_VERSION_PATCH;
     if(v < 207) AUDIO_INFO("Do not use this ancient Adruino version V%d.%d.%d", ESP_ARDUINO_VERSION_MAJOR, ESP_ARDUINO_VERSION_MINOR, ESP_ARDUINO_VERSION_PATCH);
 
-    if(vol > 254) vol = 254;
+    if(vol > VOLUME_SCALE) vol = VOLUME_SCALE;
     if(vol < 0) vol = 0;
     m_vol = vol;
     computeLimit();
@@ -5409,6 +5409,8 @@ void Audio::computeLimit() {    	// is calculated when the volume or balance cha
     if(m_balance < 0) { r -= (float)abs(m_balance) / 16; }
     else if(m_balance > 0) { l -= (float)(m_balance) / 16; }
 
+/* Probably maleksm's mod to yoRadio here:
+
 //    if(m_balance < 0) r = (double)(m_vol - m_vol * abs(m_balance) / 16);
 //    if(m_balance > 0) l = (double)(m_vol - m_vol * m_balance / 16);
 //    m_limit_right = r / 254;
@@ -5423,6 +5425,27 @@ void Audio::computeLimit() {    	// is calculated when the volume or balance cha
 
     m_limit_left = m_vol * l / 254;
     m_limit_right = m_vol * r / 254;
+
+*/
+
+    // Cubic polynomial volume curve for perceptual loudness
+    // dB = -112t³ + 172t² - 60  (where t = vol/VOLUME_SCALE)
+    // This produces a smooth loudness curve matching human hearing:
+    //   t=0.0 →  -∞ dB (true silence)
+    //   t=0.5 → -31 dB (2.8% amplitude)
+    //   t=0.8 →  -7 dB (43% amplitude)
+    //   t=1.0 →   0 dB (full scale)
+
+    float volOut = 0.0f;
+    if (m_vol > 0) {
+        float t = (float)m_vol / (float)VOLUME_SCALE;
+        float dB = -112.0f * t * t * t + 172.0f * t * t - 60.0f;
+        volOut = powf(10.0f, dB / 20.0f);
+    }
+    m_limit_left = volOut * l;
+    m_limit_right = volOut * r;
+
+/* Below: Maleksm edits? */
 
 //            v = (double)pow(m_vol, 2) / pow(254, 2); 	// square (default)
 //            v = (double)m_vol / 254; 				// linnear

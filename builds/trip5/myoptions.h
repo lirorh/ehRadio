@@ -184,7 +184,6 @@
 #elif defined(SH1106_PCM_1BUTTON)
   #define BTN_NEXT           17
 #elif defined(SH1106_PCM_REMOTE)
-  #define VOLUME_STEPS       2
   #define BTN_PREV           17
   #define BTN_NEXT           16
   #define BTN_PLAY           18
@@ -192,7 +191,7 @@
   #define BTN_UP             15
   #define WAKE_PIN           18
 #elif defined(ST7735_PCM_1BUTTON) || defined(ILI9488_PCM_1BUTTON)
-  #define BTN_NEXT		       42
+  #define BTN_NEXT           42
 #elif defined(ES3C28P)
   #define TS_MODEL           TS_MODEL_FT6336
   #define TS_SDA             16
@@ -260,7 +259,7 @@
 #define ONE_CLICK_SWITCH     true
 #define SMART_START          true
 #define SD_SHUFFLE           true
-#define SHOW_AUDIO_INFO      true
+#define SHOW_BUFFERBAR       true
 #define SHOW_VU_METER        true
 #define SS_PLAYING           true
 #define WIFI_SCAN_BEST_RSSI  true

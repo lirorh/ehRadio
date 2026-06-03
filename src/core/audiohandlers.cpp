@@ -173,11 +173,8 @@ void AudioHandlers::handleInfo(const char* info) {
     publishArtworkIfChanged(setArtworkUrl(metadataUrlBuffer));
   }
 
-  if (config.store.audioinfo) {
-    if (strcmp(info, "StreamTitle=''") != 0) {
-      FUNCTIONLOG("Audio.info", "%s", info);
-    }
-  }
+  if (strcmp(info, "StreamTitle=''") != 0) FUNCTIONLOG("Audio.info", "%s", info);
+  
   #ifdef USE_NEXTION
     nextion.audioinfo(info);
   #endif
@@ -204,7 +201,7 @@ void AudioHandlers::handleInfo(const char* info) {
 }
 
 void AudioHandlers::handleBitrate(const char* info) {
-  if (config.store.audioinfo) FUNCTIONLOG("Audio.bitrate", "%s", info);
+  FUNCTIONLOG("Audio.bitrate", "%s", info);
   config.station.bitrate = atoi(info) / 1000;
   display.putRequest(DBITRATE);
   #ifdef USE_NEXTION

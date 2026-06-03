@@ -423,8 +423,13 @@ void NetServer::processQueue() {
                                                                 act += F("\"group_locale\",");
             if (SHOW_WEATHER || dbgact)                         act += F("\"group_weather\",");
                                                                 act += F("\"group_controls\",");
+            if (BTN_UP != 255 || BTN_DOWN != 255 || dbgact)     act += F("\"group_volbuttons\",");
+            if (BTN_NEXT != 255 || BTN_PREV != 255 || dbgact)   act += F("\"group_stnbuttons\",");
             if (ENC_DT != 255 || ENC2_DT != 255 || dbgact)      act += F("\"group_encoder\",");
             if (IR_PIN != 255 || dbgact)                        act += F("\"group_ir\",");
+                                                              #ifdef UPDATEURL
+                                                                act += F("\"group_update\",");
+                                                              #endif
           }
                                                                 act = act.substring(0, act.length() - 1);
           snprintf(wsbuf, sizeof(wsbuf), "{\"act\":[%s]}", act.c_str());
@@ -445,10 +450,8 @@ void NetServer::processQueue() {
           return; 
           break;
         }
-      case GETSYSTEM:     snprintf(wsbuf, sizeof(wsbuf), "{\"sst\":%d,\"aif\":%d,\"vu\":%d,\"wifiscan\":%d,\"softr\":%d,\"ehdp\":%d,\"ehdpname\":\"%s\",\"vut\":%d,\"autoupdate\":%d,\"mdns\":\"%s\"}", 
+      case GETSYSTEM:     snprintf(wsbuf, sizeof(wsbuf), "{\"sst\":%d,\"wifiscan\":%d,\"softr\":%d,\"ehdp\":%d,\"ehdpname\":\"%s\",\"vut\":%d,\"autoupdate\":%d,\"mdns\":\"%s\"}", 
                                   config.store.smartstart,
-                                  config.store.audioinfo,
-                                  config.store.vumeter,
                                   config.store.wifiscanbest,
                                   config.store.softapdelay,
                                   config.store.ehdp,
@@ -457,7 +460,7 @@ void NetServer::processQueue() {
                                   config.store.autoupdate,
                                   config.store.mdnsname);
                                   break;
-      case GETSCREEN:     snprintf(wsbuf, sizeof(wsbuf), "{\"flip\":%d,\"inv\":%d,\"nump\":%d,\"tsf\":%d,\"tsd\":%d,\"dspon\":%d,\"br\":%d,\"con\":%d,\"scre\":%d,\"scrb\":%d,\"scrt\":%d,\"scrpe\":%d,\"scrpb\":%d,\"scrpt\":%d,\"scrfull\":%d,\"dimmingenabled\":%d,\"dimmingtimeout\":%d,\"dimmingbrightness\":%d,\"volumepage\":%d,\"clock12\":%d}",
+      case GETSCREEN:     snprintf(wsbuf, sizeof(wsbuf), "{\"flip\":%d,\"inv\":%d,\"nump\":%d,\"tsf\":%d,\"tsd\":%d,\"dspon\":%d,\"br\":%d,\"con\":%d,\"scre\":%d,\"scrb\":%d,\"scrt\":%d,\"scrpe\":%d,\"scrpb\":%d,\"scrpt\":%d,\"scrfull\":%d,\"bufbar\":%d,\"vu\":%d,\"dim\":%d,\"dimto\":%d,\"dimbr\":%d,\"volpg\":%d,\"clock12\":%d}",
                                   config.store.flipscreen,
                                   config.store.invertdisplay,
                                   config.store.numplaylist,
@@ -473,6 +476,8 @@ void NetServer::processQueue() {
                                   config.store.screensaverPlayingBlank,
                                   config.store.screensaverPlayingTimeout,
                                   config.store.screensaverFullDateTime,
+                                  config.store.bufferbar,
+                                  config.store.vumeter,
                                   config.store.dimmingEnabled,
                                   config.store.dimmingTimeout,
                                   config.store.dimmingBrightness,
@@ -513,18 +518,18 @@ void NetServer::processQueue() {
                                   config.store.mqttpass,
                                   config.store.mqtttopic);
                                   break;
-      case GETCONTROLS:   snprintf(wsbuf, sizeof(wsbuf), "{\"vols\":%d,\"enca\":%d,\"irtl\":%d,\"skipup\":%d}",
-                                  config.store.volsteps,
+      case GETCONTROLS:   snprintf(wsbuf, sizeof(wsbuf), "{\"enca\":%d,\"irtl\":%d,\"skipup\":%d,\"maxVol\":%d}",
                                   config.store.encacc,
                                   config.store.irtlp,
-                                  config.store.skipPlaylistUpDown);
+                                  config.store.skipPlaylistUpDown,
+                                  VOLUME_SCALE);
                                   break;
       case DSPON:         snprintf(wsbuf, sizeof(wsbuf), "{\"dspontrue\":%d}", 1); break;
       case STATION:       requestOnChange(STATIONNAME, clientId); requestOnChange(ITEM, clientId); break;
       case STATIONNAME:   snprintf(wsbuf, sizeof(wsbuf), "{\"payload\":[{\"id\":\"nameset\", \"value\": \"%s\"}]}", config.station.name); break;
       case ITEM:          snprintf(wsbuf, sizeof(wsbuf), "{\"current\": %d}", config.lastStation()); break;
       case TITLE:         snprintf(wsbuf, sizeof(wsbuf), "{\"payload\":[{\"id\":\"meta\", \"value\": \"%s\"}]}", config.station.title); break;
-      case VOLUME:        snprintf(wsbuf, sizeof(wsbuf), "{\"payload\":[{\"id\":\"volume\", \"value\": %d}]}", config.store.volume); break;
+      case VOLUME:        snprintf(wsbuf, sizeof(wsbuf), "{\"payload\":[{\"id\":\"volume\", \"value\": %d, \"max\": %d}]}", config.store.volume, VOLUME_SCALE); break;
       case NRSSI:         snprintf(wsbuf, sizeof(wsbuf), "{\"payload\":[{\"id\":\"rssi\", \"value\": %d}]}", rssi); /*rssi = 255;*/ break;
       case SDPOS:         snprintf(wsbuf, sizeof(wsbuf), "{\"sdpos\": %d,\"sdend\": %d,\"sdtpos\": %d,\"sdtend\": %d}",
                                   player.getFilePos(),
@@ -751,11 +756,11 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
   switch (type) {
     case WS_EVT_CONNECT:
-        if (config.store.audioinfo) FUNCTIONLOG("Websocket", "client #%u connected from %s", client->id(), client->remoteIP().toString().c_str());
+        FUNCTIONLOG("Websocket", "client #%u connected from %s", client->id(), client->remoteIP().toString().c_str());
         /* Send current battery status to the newly connected client immediately */
         netserver.requestOnChange(GETBATTERY, client->id());
         break;
-    case WS_EVT_DISCONNECT: if (config.store.audioinfo) FUNCTIONLOG("Websocket", "client #%u disconnected", client->id()); break;
+    case WS_EVT_DISCONNECT: FUNCTIONLOG("Websocket", "client #%u disconnected", client->id()); break;
     case WS_EVT_DATA: netserver.onWsMessage(arg, data, len, client->id()); break;
     case WS_EVT_PONG:
     case WS_EVT_ERROR:

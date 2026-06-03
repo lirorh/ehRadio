@@ -94,12 +94,11 @@
 #define ONE_CLICK_SWITCH     true
 #define SS_PLAYING           true
 #define SCREEN_FLIP          true
-#define SHOW_AUDIO_INFO      true
+#define SHOW_BUFFERBAR       true
 #define SHOW_VU_METER        true
 #define SMART_START          true
 #define SNTP_1               "lt.pool.ntp.org"
 #define SNTP_2               "pool.ntp.org"
-#define VOLUME_STEPS         5
 #define WEATHER_LAT          "55.721924" /* latitude */
 #define WEATHER_LON          "21.117868" /* longitude */
 #define WIFI_SCAN_BEST_RSSI  true

@@ -79,7 +79,7 @@ void Player::init() {
   _loadVol(config.store.volume);
   #ifdef USE_ES8311
     uint8_t i2sVol_init = volToI2S(config.store.volume); /* Also apply stored volume to codec (respecting station ovol via volToI2S) */
-    es.setVolume((uint8_t)map(i2sVol_init, 0, 254, 0, 100)); /* Map I2S volume (0..254) to codec volume 0..100 */
+    es.setVolume((uint8_t)map(i2sVol_init, 0, VOLUME_SCALE, 0, 100)); /* Map I2S volume (0..VOLUME_SCALE) to codec volume 0..100 */
   #endif
   #ifdef CONNECT_HTTP_HTTPS_TIMEOUT // macro must be two numbers separated by a comma, ie: 1700, 3700
     setConnectionTimeout(CONNECT_HTTP_HTTPS_TIMEOUT);
@@ -173,7 +173,7 @@ void Player::loop() {
         uint8_t i2sVol = volToI2S(requestP.payload);
         Audio::setVolume(i2sVol);
         #ifdef USE_ES8311
-          es.setVolume((uint8_t)map(i2sVol, 0, 254, 0, 100)); /* Map I2S volume (already adjusted for station ovol) 0..254 -> codec 0..100 */
+          es.setVolume((uint8_t)map(i2sVol, 0, VOLUME_SCALE, 0, 100)); /* Map I2S volume (already adjusted for station ovol) 0..VOLUME_SCALE -> codec 0..100 */
         #endif
         break;
       }
@@ -379,14 +379,14 @@ void Player::toggle() {
 
 void Player::stepVol(bool up) {
   if (up) {
-    if (config.store.volume <= 254 - config.store.volsteps) {
-      setVol(config.store.volume + config.store.volsteps);
+    if (config.store.volume < VOLUME_SCALE) {
+      setVol(config.store.volume + 1);
     } else {
-      setVol(254);
+      setVol(VOLUME_SCALE);
     }
   } else {
-    if (config.store.volume >= config.store.volsteps) {
-      setVol(config.store.volume - config.store.volsteps);
+    if (config.store.volume > 0) {
+      setVol(config.store.volume - 1);
     } else {
       setVol(0);
     }
@@ -396,7 +396,7 @@ void Player::stepVol(bool up) {
 uint8_t Player::volToI2S(uint8_t volume) {
   #ifdef USE_ES8311
     // Apply gamma curve for ES3C28P to make low volumes more audible
-    int maxIn = 254 - config.station.ovol * 3;
+    int maxIn = VOLUME_SCALE - config.station.ovol * 3;
     if (maxIn < 1) maxIn = 1; // avoid division by zero; treat invalid ovol as no reduction
     if (volume > (uint8_t)maxIn) volume = (uint8_t)maxIn;
     float vnorm = (float)volume / (float)maxIn; // 0..1
@@ -405,13 +405,13 @@ uint8_t Player::volToI2S(uint8_t volume) {
     /* Apply gamma curve (sqrt) to make low volumes more audible and top end less aggressive */
     const float gamma = 0.5f;
     float vout = powf(vnorm, gamma);
-    int vol = (int)(vout * 254.0f + 0.5f);
-    if (vol > 254) vol = 254;
+    int vol = (int)(vout * (float)VOLUME_SCALE + 0.5f);
+    if (vol > VOLUME_SCALE) vol = VOLUME_SCALE;
     if (vol < 0) vol = 0;
     return (uint8_t)vol;
   #else
-    int vol = map(volume, 0, 254 - config.station.ovol * 3 , 0, 254);
-    if (vol > 254) vol = 254;
+    int vol = map(volume, 0, VOLUME_SCALE - config.station.ovol * 3 , 0, VOLUME_SCALE);
+    if (vol > VOLUME_SCALE) vol = VOLUME_SCALE;
     if (vol < 0) vol = 0;
     return vol;
   #endif

@@ -48,7 +48,25 @@ using namespace std;
 #include "vs1053b-patches-flac.h"
 
 #define VS1053VOLM 128				// 128 or 96 only
-#define VS1053VOL(v) (VS1053VOLM==128?log10(((float)v+1)) * 50.54571334 + 128:log10(((float)v+1)) * 64.54571334 + 96)
+
+// previous curve used a similar curve but max volume 254 (hardcoded)
+//#define VS1053VOL(v) (VS1053VOLM==128?log10(((float)v+1)) * 50.54571334 + 128:log10(((float)v+1)) * 64.54571334 + 96)
+
+// Cubic polynomial volume curve for perceptual loudness (replaces log10 curve)
+// dB = -112t³ + 172t² - 60  (where t = v/VOLUME_SCALE, then converted to VS1053 register format)
+// Generic formula — correct for any VOLUME_SCALE value.
+#define VS1053VOL(v) ({ \
+    uint8_t _r; \
+    if ((v) == 0) { _r = VS1053VOLM; } \
+    else { \
+        float _t = (float)(v) / (float)VOLUME_SCALE; \
+        float _t2 = _t * _t; \
+        float _dB = -112.0f * _t2 * _t + 172.0f * _t2 - 60.0f; \
+        float _reg = -_dB * 2.0f; \
+        _r = (uint8_t)(254.0f - _reg * 254.0f / 248.0f); \
+    } \
+    _r; \
+})
 
 extern __attribute__((weak)) void audio_info(const char*);
 extern __attribute__((weak)) void audio_showstreamtitle(const char*);
@@ -185,7 +203,7 @@ public:
 //    void setBufsize(int rambuf_sz, int psrambuf_sz);
     void     begin() ;                                // Begin operation.  Sets pins correctly and prepares SPI bus.
 //    uint32_t stop_mp3client();	// Not used
-    void     setVolume(uint8_t vol);            // Set the player volume.Level from 0-255, higher is louder.
+    void     setVolume(uint8_t vol);            // Set the player volume. Level from 0-VOLUME_SCALE, higher is louder.
     void     setBalance(int8_t bal = 0);	 // Adjusting the left and right volume balance, higher - right, lower - left side.
     void     setTone(int8_t* rtone);           // Set the player baas/treble, 4 nibbles for treble gain/freq and bass gain/freq
     void     setTone(int8_t gainLowPass, int8_t gainBandPass, int8_t gainHighPass);

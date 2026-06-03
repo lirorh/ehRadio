@@ -36,8 +36,8 @@
     "define": "SD_SHUFFLE", "type": "boolean", "optional": true, "default": false
   },
   {
-    "name": "Show Audio Info",
-    "define": "SHOW_AUDIO_INFO", "type": "boolean", "optional": true, "default": false
+    "name": "Show Buffer Bar",
+    "define": "SHOW_BUFFERBAR", "type": "boolean", "optional": true, "default": false
   },
   {
     "name": "Show VU Meter",
@@ -62,10 +62,6 @@
   {
     "name": "Volume Page",
     "define": "VOLUME_PAGE", "type": "boolean", "optional": true, "default": false
-  },
-  {
-    "name": "Volume Steps",
-    "define": "VOLUME_STEPS", "type": "numeric", "min": 1, "max": 25, "optional": true, "default": 1
   },
   {
     "name": "Weather Metric",

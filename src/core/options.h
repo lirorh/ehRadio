@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.05.29"
+#define RADIOVERSION "2026.06.03"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -446,7 +446,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* requires I2S DOUT BCLK LRC (and MCLK probably too) pins defined */
 #ifdef USE_ES8311
   #ifndef ES8311_MAX_I2S
-    #define ES8311_MAX_I2S 180 // Maximum I2S value to allow when mapping to ES8311 codec (0..254)
+    #define ES8311_MAX_I2S 180 // Maximum I2S value to allow when mapping to ES8311 codec (0..VOLUME_SCALE)
   #endif
   #ifndef PLAYER_FORCE_MONO
     #define PLAYER_FORCE_MONO true // forces the VU meter mono (setting false doesn't change hardware capability)
@@ -1237,7 +1237,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* And thank you to e2002 for making yoRadio */
 
 
-/* ============================== DUBUG ============================== */
+/* ============================== DEBUG ============================== */
 
 /* Enable all the debug logs with #define ALL_DEBUG_LOGS */
 /* BATTERY_DEBUG is included elsewhere */
@@ -1372,12 +1372,19 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 
 /* ============================== USER DEFAULTS ============================== */
 /* Sets defaults but still editable in WebUI */
-#if defined(SOUND_VOLUME) && ((SOUND_VOLUME < 0) || (SOUND_VOLUME > 254))
-  #warning "define warning in myoptions.h: SOUND_VOLUME is out of range (0-254), reverting to default 12"
+
+#ifndef VOLUME_SCALE // Default 42 doubles future upstream library's scale of 21; 50-100 gives extremely fine control
+  #define VOLUME_SCALE 42
+#endif
+#if (VOLUME_SCALE < 21) || (VOLUME_SCALE > 255)
+  #error VOLUME_SCALE must be between 21 and 255
+#endif
+#if defined(SOUND_VOLUME) && ((SOUND_VOLUME < 0) || (SOUND_VOLUME > VOLUME_SCALE))
+  #warning "define warning in myoptions.h: SOUND_VOLUME is out of range (0-" #VOLUME_SCALE "), reverting to a safe default"
   #undef SOUND_VOLUME
 #endif
 #ifndef SOUND_VOLUME
-  #define SOUND_VOLUME 12
+  #define SOUND_VOLUME (VOLUME_SCALE / 21 * 9) // a little below middle
 #endif
 #if defined(SOUND_BALANCE) && ((SOUND_BALANCE < -16) || (SOUND_BALANCE > 16))
   #warning "define warning in myoptions.h: SOUND_BALANCE is out of range (-16 to 16), reverting to default 0"
@@ -1413,8 +1420,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef SMART_START
   #define SMART_START true
 #endif
-#ifndef SHOW_AUDIO_INFO
-  #define SHOW_AUDIO_INFO false
+#ifndef SHOW_BUFFERBAR
+  #define SHOW_BUFFERBAR false
 #endif
 #ifndef SHOW_VU_METER
   #define SHOW_VU_METER false
@@ -1511,13 +1518,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #ifndef DIMMING_BRIGHTNESS
   #define DIMMING_BRIGHTNESS 50
-#endif
-#if defined(VOLUME_STEPS) && ((VOLUME_STEPS < 1) || (VOLUME_STEPS > 10))
-  #warning "define warning in myoptions.h: VOLUME_STEPS is out of range (1-10), reverting to default 1"
-  #undef VOLUME_STEPS
-#endif
-#ifndef VOLUME_STEPS
-  #define VOLUME_STEPS 1
 #endif
 #ifndef TOUCH_FLIP
   #define TOUCH_FLIP false

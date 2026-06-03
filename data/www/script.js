@@ -281,6 +281,11 @@ function onMessage(event) {
           return; // Skip normal setupElement for 'battery' id
         }
         setupElement(item.id, item.value);
+        // Update slider max if provided (e.g. volume max from device config)
+        if (typeof item.max !== 'undefined') {
+          var el = getId(item.id);
+          if (el && el.type === 'range') { el.max = item.max; fillSlider(el); }
+        }
       });
     }else{
       if(typeof data.current !== 'undefined') { setCurrentItem(data.current); return; }
@@ -291,6 +296,11 @@ function onMessage(event) {
           return;
         }
       if(typeof data.act !== 'undefined'){ data.act.forEach(showclass=> { classEach(showclass, function(el) { el.classList.remove("hidden"); }); }); return; }
+      // Apply maxVol to volume slider if present in flat config data
+      if (typeof data.maxVol !== 'undefined') {
+        var volSlider = getId('volume');
+        if (volSlider) { volSlider.max = data.maxVol; fillSlider(volSlider); }
+      }
       Object.keys(data).forEach(key=>{
         setupElement(key, data[key]);
       });

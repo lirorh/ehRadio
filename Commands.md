@@ -17,7 +17,7 @@ Order and sections match that file.
 | `treble` | Set treble (-16..16). |
 | `middle` | Set middle (-16..16). |
 | `bass` | Set bass (-16..16). |
-| `volume`, `vol` | Set absolute volume (clamped 0..254). |
+| `volume`, `vol` | Set absolute volume (clamped 0..VOLUME_SCALE). |
 | `turnoff` | Turn display off, stop playback, and preserve smartstart value. |
 | `turnon` | Turn display on, optionally resume smartstart playback. |
 | `burl`, `playurl` | Play direct stream URL (http/https). |
@@ -57,7 +57,7 @@ Order and sections match that file.
 | Command(s) | Action |
 | --- | --- |
 | `smartstart` | Enable/disable smartstart. |
-| `audioinfo` | Enable/disable audio info UI and refresh display state. |
+| `bufferbar` | Enable/disable the buffer bar on the display. |
 | `vumeter` | Enable/disable VU meter and refresh display state. |
 | `wifiscan` | Enable/disable best-RSSI WiFi scan behavior. |
 | `autoupdate` | Enable/disable auto update checks. |
@@ -101,7 +101,6 @@ Order and sections match that file.
 
 | Command(s) | Action |
 | --- | --- |
-| `volsteps` | Set volume step size. |
 | `fliptouch` | Toggle touchscreen axis flip and apply touch config. |
 | `dbgtouch` | Enable/disable touch debug mode. |
 | `encacc` | Set encoder acceleration value. |

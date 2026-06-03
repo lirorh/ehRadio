@@ -169,7 +169,7 @@ void Display::_buildPager() {
     _vuwidget = new VuWidget(vuConf, bandsConf, config.theme.vumax, config.theme.vumin, config.theme.background);
   #endif
   #ifndef HIDE_VOLBAR
-    _volbar = new SliderWidget(volbarConf, config.theme.volbarin, config.theme.background, 254, config.theme.volbarout);
+    _volbar = new SliderWidget(volbarConf, config.theme.volbarin, config.theme.background, VOLUME_SCALE, config.theme.volbarout);
   #endif
   #ifndef HIDE_BUFFERBAR
     _bufferbarMax = psramInit() ? 300000 : 1600 * 10;
@@ -323,7 +323,7 @@ void Display::_start() {
   _mode = PLAYER;
   config.setTitle(LANG::const_PlReady);
   
-  if (_bufferbar)  _bufferbar->lock(!config.store.audioinfo);
+  if (_bufferbar)  _bufferbar->lock(!config.store.bufferbar);
   
   if (_weather)  _weather->lock(!config.store.showweather);
   if (_weather && config.store.showweather) network.buildWeatherString();
@@ -610,8 +610,8 @@ void Display::loop() {
             } 
           }
           break;
-        case AUDIOINFO: if (_bufferbar)  {
-            _bufferbar->lock(!config.store.audioinfo);
+        case SHOWBUFFERBAR: if (_bufferbar)  {
+            _bufferbar->lock(!config.store.bufferbar);
             _bufferbar->setValue(normalizeBufferbarValue(player.inBufferFilled(), _bufferbarMax));
           }
           break;
@@ -676,7 +676,7 @@ void Display::loop() {
         }
         case DSPRSSI:
           if (_rssi) { _setRSSI(request.payload); }
-          if (_bufferbar && config.store.audioinfo) {
+          if (_bufferbar && config.store.bufferbar) {
             _bufferbar->setValue(normalizeBufferbarValue(player.isRunning() ? player.inBufferFilled() : 0, _bufferbarMax));
           }
           break;

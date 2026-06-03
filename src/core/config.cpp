@@ -406,8 +406,6 @@ void Config::loadTheme() {
 void Config::defaultSettings(const char *val, uint8_t clientId) {
   if (strcmp(val, "system") == 0) {
     saveValue(&store.smartstart, (bool)SMART_START);
-    saveValue(&store.audioinfo, (bool)SHOW_AUDIO_INFO);
-    saveValue(&store.vumeter, (bool)SHOW_VU_METER);
     saveValue(&store.wifiscanbest, (bool)WIFI_SCAN_BEST_RSSI);
     saveValue(&store.autoupdate, false);
     saveValue(&store.ehdp, (bool)EHDP);
@@ -422,6 +420,8 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     saveValue(&store.flipscreen, (bool)SCREEN_FLIP);
     saveValue(&store.volumepage, (bool)VOLUME_PAGE);
     saveValue(&store.clock12, (bool)CLOCK_TWELVE);
+    saveValue(&store.bufferbar, (bool)SHOW_BUFFERBAR);
+    saveValue(&store.vumeter, (bool)SHOW_VU_METER);
     display.flip();
     saveValue(&store.invertdisplay, (bool)SCREEN_INVERT);
     display.invert();
@@ -489,7 +489,6 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     return;
   }
   if (strcmp(val, "controls") == 0) {
-    saveValue(&store.volsteps, (uint8_t)VOLUME_STEPS);
     saveValue(&store.fliptouch, (bool)TOUCH_FLIP);
     controls.flipTS();
     saveValue(&store.dbgtouch, (bool)TOUCH_DEBUG);
@@ -663,7 +662,7 @@ void Config::bootInfo() {
   }
   BOOTLOG("display locale :\t%s", DSP_LOCALE);
   BOOTLOG("webui locale :\t%s", store.locale_webui);
-  BOOTLOG("audioinfo:\t%s", store.audioinfo?"true":"false");
+  BOOTLOG("bufferbar:\t%s", store.bufferbar?"true":"false");
   BOOTLOG("smartstart:\t%s", store.smartstart ? "true" : "false");
   BOOTLOG("vumeter:\t%s", store.vumeter?"true":"false");
   BOOTLOG("softapdelay:\t%d", store.softapdelay);
@@ -706,7 +705,7 @@ const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(sdshuffle, "sdshuffle"),
   CONFIG_KEY_ENTRY(smartstart, "smartstartx"),
   CONFIG_KEY_ENTRY(autoupdate, "autoupdate"),
-  CONFIG_KEY_ENTRY(audioinfo, "audioinfo"),
+  CONFIG_KEY_ENTRY(bufferbar, "audioinfo"),
   CONFIG_KEY_ENTRY(vumeter, "vumeter"),
   CONFIG_KEY_ENTRY(wifiscanbest, "wifiscan"),
   CONFIG_KEY_ENTRY(ehdp, "ehdp"),
@@ -732,7 +731,6 @@ const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(dimmingEnabled, "dimmingen"),
   CONFIG_KEY_ENTRY(dimmingTimeout, "dimmingto"),
   CONFIG_KEY_ENTRY(dimmingBrightness, "dimmingbr"),
-  CONFIG_KEY_ENTRY(volsteps, "vsteps"),
   CONFIG_KEY_ENTRY(fliptouch, "fliptouch"),
   CONFIG_KEY_ENTRY(dbgtouch, "dbgtouch"),
   CONFIG_KEY_ENTRY(encacc, "encacc"),
@@ -771,5 +769,6 @@ const configKeyMap Config::keyMap[] = {
 void Config::deleteOldKeys() {
   // List any old/legacy keys to remove here (they will be deleted from prefs if found)
   prefs.remove("smartstart"); // previous smartstart was numeric 0, 1, 2
+  prefs.remove("vsteps"); // volume steps was needed when volume was 0 to 254
   // prefs.remove("removedkey"); // note
 }

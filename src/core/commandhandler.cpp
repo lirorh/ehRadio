@@ -55,7 +55,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "treble"))      { int v = atoi(value); v = (v < -16) ? -16 : (v > 16 ? 16 : v); config.setTone(config.store.bass, config.store.middle, (int8_t)v); return true; }
   if (cmdIs(command, "middle"))      { int v = atoi(value); v = (v < -16) ? -16 : (v > 16 ? 16 : v); config.setTone(config.store.bass, (int8_t)v, config.store.treble); return true; }
   if (cmdIs(command, "bass"))        { int v = atoi(value); v = (v < -16) ? -16 : (v > 16 ? 16 : v); config.setTone((int8_t)v, config.store.middle, config.store.treble); return true; }
-  if (cmdIs(command, "volume", "vol")) { int v = atoi(value); config.store.volume = v < 0 ? 0 : (v > 254 ? 254 : v); player.setVol(v); return true; }
+  if (cmdIs(command, "volume", "vol")) { int v = atoi(value); v = v < 0 ? 0 : (v > VOLUME_SCALE ? VOLUME_SCALE : v); config.store.volume = v; player.setVol(v); return true; }
   if (cmdIs(command, "turnoff"))     { bool sst = config.store.smartstart; config.setDspOn(false); backlightControls.restart(); player.sendCommand({PR_STOP, 0}); delay(100); config.saveValue(&config.store.smartstart, sst); return true; }
   if (cmdIs(command, "turnon"))      { config.setDspOn(true); backlightControls.restart(); if (config.store.smartstart) { if (config.getMode() == PM_WEB) player.resumeLastWebSource(); else player.sendCommand({PR_PLAY, config.lastStation()}); } return true; }
   if (cmdIs(command, "burl", "playurl")) {
@@ -120,7 +120,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
 
   /* Options: System */
   if (cmdIs(command, "smartstart"))  { config.saveValue(&config.store.smartstart, static_cast<bool>(atoi(value))); return true; }
-  if (cmdIs(command, "audioinfo"))   { config.saveValue(&config.store.audioinfo, static_cast<bool>(atoi(value))); display.putRequest(AUDIOINFO); return true; }
+  if (cmdIs(command, "bufferbar"))   { config.saveValue(&config.store.bufferbar, static_cast<bool>(atoi(value))); display.putRequest(SHOWBUFFERBAR); return true; }
   if (cmdIs(command, "vumeter"))     { config.saveValue(&config.store.vumeter, static_cast<bool>(atoi(value))); display.putRequest(SHOWVUMETER); return true; }
   if (cmdIs(command, "wifiscan"))    { config.saveValue(&config.store.wifiscanbest, static_cast<bool>(atoi(value))); return true; }
   if (cmdIs(command, "autoupdate"))  { config.saveValue(&config.store.autoupdate, static_cast<bool>(atoi(value))); return true; }
@@ -179,7 +179,6 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "dimmingtimeout"))            { config.saveValue(&config.store.dimmingTimeout, static_cast<uint16_t>(constrain(atoi(value), 5, 65520))); backlightControls.restart(); return true; }
 
   /* Options: Controls */
-  if (cmdIs(command, "volsteps"))          { config.saveValue(&config.store.volsteps, static_cast<uint8_t>(atoi(value))); return true; }
   if (cmdIs(command, "fliptouch"))         { config.saveValue(&config.store.fliptouch, static_cast<bool>(atoi(value))); controls.flipTS(); return true; }
   if (cmdIs(command, "dbgtouch"))          { config.saveValue(&config.store.dbgtouch, static_cast<bool>(atoi(value))); return true; }
   if (cmdIs(command, "encacc"))            { controls.setEncAcceleration(static_cast<uint16_t>(atoi(value))); return true; }

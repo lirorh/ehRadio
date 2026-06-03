@@ -100,7 +100,7 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   bool      sdshuffle = SD_SHUFFLE;
   bool      smartstart = SMART_START;
   bool      autoupdate = false;
-  bool      audioinfo = SHOW_AUDIO_INFO;
+  bool      bufferbar = SHOW_BUFFERBAR;
   bool      vumeter = SHOW_VU_METER;
   bool      wifiscanbest = WIFI_SCAN_BEST_RSSI;
   bool      ehdp = EHDP;
@@ -125,7 +125,6 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   bool      dimmingEnabled = DIMMING_ENABLED;
   uint16_t  dimmingTimeout = DIMMING_TIMEOUT;
   uint8_t   dimmingBrightness = DIMMING_BRIGHTNESS;
-  uint8_t   volsteps = VOLUME_STEPS;
   bool      fliptouch = TOUCH_FLIP;
   bool      dbgtouch = TOUCH_DEBUG;
   uint16_t  encacc = ROTARY_ACCEL;

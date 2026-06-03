@@ -206,7 +206,7 @@ void Nextion::loop() {
           }
           if(strcmp(scanBuf, "sys") == 0) {
             putcmd("smartstart.val", config.store.smartstart ? 1 : 0);
-            putcmd("audioinfo.val", config.store.audioinfo);
+            putcmd("bufferbar.val", config.store.bufferbar);
             display.putRequest(NEWMODE, SETTINGS);
           }
         }
@@ -272,7 +272,7 @@ void Nextion::loop() {
           timekeeper.forceTimeSync = true;
         }
         if (sscanf(rxbuf, "audioinfo=%d", &scanDigit) == 1){
-          config.saveValue(&config.store.audioinfo, static_cast<bool>(scanDigit));
+          config.saveValue(&config.store.bufferbar, static_cast<bool>(scanDigit));
         }
         if (sscanf(rxbuf, "smartstart=%d", &scanDigit) == 1){
           config.saveValue(&config.store.smartstart, (bool)(scanDigit != 0));

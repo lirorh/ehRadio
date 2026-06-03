@@ -30,7 +30,7 @@ EXAMPLES:
     py scan_www_check_json.py fr_FR
 
     # Interactive check of each key with translation (cleaned & sorted file)
-
+    py scan_www_check_json.py * --translate --clean --sort
 
     # Fast mode WITH translation (auto-translate all missing keys in all files)
     py scan_www_check_json.py * --translate --fast --clean --sort

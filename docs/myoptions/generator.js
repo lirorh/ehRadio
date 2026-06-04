@@ -251,12 +251,8 @@ function onBoardChange(reset) {
     gData.boardData = data[0]; // boards json files are arrays with one item
     updateBoardImageArea();
     updateSPISections();
-    if (reset) {
-      applyDefaultPins();
-    } else {
-      applyDefaultPins();  // always apply defaults when board changes
-    }
     validateAllPins();
+    updateAllResetButtons();
     updatePreview();
   }).catch(function(err) {
     console.error('Board file error:', err);
@@ -300,11 +296,54 @@ function updateBoardImageArea() {
     link.textContent = 'click here for more information';
     area.appendChild(link);
   }
+
+  // Reset-all-pins ↶ link (only if board has default_pins)
+  if (bd.default_pins && bd.default_pins[0]) {
+    var rstDiv = document.createElement('div');
+    rstDiv.style.marginTop = '8px';
+    rstDiv.style.textAlign = 'center';
+
+    var rstBtn = document.createElement('span');
+    rstBtn.className = 'bulk-reset-btn';
+    rstBtn.textContent = '↶';
+    rstBtn.title = 'Reset all pins to board defaults';
+    rstBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      resetPins();
+    };
+
+    var rstText = document.createElement('div');
+    rstText.style.color = '#888';
+    rstText.style.fontSize = '0.9rem';
+    rstText.style.marginTop = '4px';
+    rstText.textContent = 'reset all pins to board defaults';
+
+    rstDiv.appendChild(rstBtn);
+    rstDiv.appendChild(rstText);
+    area.appendChild(rstDiv);
+  }
 }
 
 function updateSPISections() {
   var bd = gData.boardData;
   var container = document.getElementById('spi-sections');
+
+  // Snapshot current SPI state before clearing (preserve across board changes)
+  var spiState = {};
+  container.querySelectorAll('[id^="spi-chk-"]').forEach(function(chk) {
+    var bus = chk.dataset.spiBus;
+    spiState[bus] = { checked: chk.checked, pins: {} };
+  });
+  container.querySelectorAll('[id^="spi-pins-"] input[data-type="pin"]').forEach(function(inp) {
+    var bus = inp.closest('[id^="spi-pins-"]');
+    if (!bus) return;
+    var busKey = bus.id.replace('spi-pins-', '');
+    if (spiState[busKey]) {
+      spiState[busKey].pins[inp.dataset.pin || inp.dataset.define] = inp.value;
+    }
+  });
+
   container.innerHTML = '';
   if (!bd || !bd.spi) return;
 
@@ -363,12 +402,27 @@ function updateSPISections() {
         nameLbl.style.color = '';
       }
       validateAllPins();
+      updateAllResetButtons();
     });
     header.addEventListener('click', function(e) {
       if (e.target === chk) return;
       chk.checked = !chk.checked;
       chk.dispatchEvent(new Event('change'));
     });
+
+    // Restore saved state for this bus (preserves across board changes)
+    var saved = spiState[busKey];
+    if (saved) {
+      if (saved.checked) {
+        chk.checked = true;
+        pinsWrap.classList.remove('hidden');
+        nameLbl.style.color = '#fff';
+      }
+      Object.keys(saved.pins).forEach(function(pn) {
+        var pinEl = pinsWrap.querySelector('[data-pin="' + pn + '"]');
+        if (pinEl) pinEl.value = saved.pins[pn];
+      });
+    }
   });
 
   // Update SPI selectors in display/audio/input/peripherals sections
@@ -384,6 +438,309 @@ function applyDefaultPins() {
     els.forEach(function(el) {
       el.value = defaults[pinName];
     });
+  });
+}
+
+// ============================================================
+// Apply board default_selects (non-pin settings: sections, dropdowns, define values)
+// Called before applyDefaultPins so section rebuilds happen before pin fill
+// ============================================================
+function applyDefaultSelects() {
+  var bd = gData.boardData;
+  if (!bd) return;
+
+  // Process explicit default_selects if present
+  if (bd.default_selects && bd.default_selects.length) {
+    var selects = bd.default_selects;
+
+    // First pass: strings — enable sections, select dropdown items
+    selects.forEach(function(item) {
+      if (typeof item === 'string') applyDefaultSelectString(item);
+    });
+
+    // Second pass: objects — set individual define values (after sections are built)
+    selects.forEach(function(item) {
+      if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+        applyDefaultSelectObject(item);
+      }
+    });
+  }
+
+  // Auto-enable input/peripheral items whose pins appear in default_pins
+  if (bd.default_pins && bd.default_pins[0]) {
+    autoEnablePinnedItems();
+  }
+}
+
+function applyDefaultSelectString(str) {
+  // SPI bus checkbox (single uppercase letter, e.g. "A", "B")
+  if (/^[A-Z]$/.test(str)) {
+    var spiChk = document.getElementById('spi-chk-' + str);
+    if (spiChk) {
+      spiChk.checked = true;
+      var pinsWrap = document.getElementById('spi-pins-' + str);
+      if (pinsWrap) pinsWrap.classList.remove('hidden');
+      var nl = spiChk.nextElementSibling;
+      if (nl && nl.tagName === 'SPAN') nl.style.color = '#fff';
+    }
+    return;
+  }
+
+  // Display item (matches by item.define)
+  var dspItems = gData.display.slice(1);
+  var dspIdx = dspItems.findIndex(function(d) { return d.define === str; });
+  if (dspIdx >= 0) {
+    var dspSel = document.getElementById('dsp-sel');
+    if (dspSel && parseInt(dspSel.value) !== dspIdx) {
+      dspSel.value = dspIdx;
+      onDisplayChange();
+    }
+    return;
+  }
+
+  // Audio item (matches by item.define)
+  var audItems = gData.audio.slice(1);
+  var audIdx = audItems.findIndex(function(a) { return a.define === str; });
+  if (audIdx >= 0) {
+    var audSel = document.getElementById('aud-sel');
+    if (audSel && parseInt(audSel.value) !== audIdx) {
+      audSel.value = audIdx;
+      onAudioChange();
+    }
+    return;
+  }
+
+  // Input item (matches by item.define or item.name)
+  var inpItems = gData.input.slice(1);
+  var inpIdx = inpItems.findIndex(function(item) { return item.define === str || item.name === str; });
+  if (inpIdx >= 0) {
+    revealCheckItem('input-section-item-' + inpIdx);
+    return;
+  }
+
+  // Peripheral item (matches by item.define or item.name)
+  var perItems = gData.peripherals.slice(1);
+  var perIdx = perItems.findIndex(function(item) { return item.define === str || item.name === str; });
+  if (perIdx >= 0) {
+    revealCheckItem('peripherals-section-item-' + perIdx);
+    return;
+  }
+}
+
+function revealCheckItem(itemId) {
+  var chk = document.getElementById(itemId + '-chk');
+  if (!chk || chk.checked) return;
+  chk.checked = true;
+  var body = document.getElementById(itemId + '-body');
+  if (body && body.children.length > 0) {
+    body.classList.remove('hidden');
+    var nl = chk.nextElementSibling;
+    if (nl && nl.tagName === 'SPAN') nl.style.color = '#fff';
+  }
+}
+
+// Auto-enable input/peripheral items whose pins appear in board default_pins
+function autoEnablePinnedItems() {
+  var bd = gData.boardData;
+  if (!bd || !bd.default_pins || !bd.default_pins[0]) return;
+  var defaults = bd.default_pins[0];
+
+  Object.keys(defaults).forEach(function(pinName) {
+    // Check input items
+    gData.input.slice(1).forEach(function(item, idx) {
+      var pins = item.pins;
+      if (!pins) return;
+      if (typeof pins === 'string') pins = [pins];
+      if (pins.indexOf(pinName) >= 0) {
+        revealCheckItem('input-section-item-' + idx);
+      }
+    });
+
+    // Check peripheral items
+    gData.peripherals.slice(1).forEach(function(item, idx) {
+      var pins = item.pins;
+      if (!pins) return;
+      if (typeof pins === 'string') pins = [pins];
+      if (pins.indexOf(pinName) >= 0) {
+        revealCheckItem('peripherals-section-item-' + idx);
+      }
+    });
+  });
+}
+
+function applyDefaultSelectObject(obj) {
+  Object.keys(obj).forEach(function(defName) {
+    var val = obj[defName];
+
+    // Optional sub-define checkbox (data-opt-for)
+    var optChk = document.querySelector('input[type="checkbox"][data-opt-for="' + defName + '"]');
+    if (optChk) {
+      var enable = (val !== false && val !== 'false');
+      if (enable !== optChk.checked) {
+        optChk.checked = enable;
+        var ctrlCell = optChk.closest('.ctrl-cell');
+        if (ctrlCell) {
+          var innerDiv = ctrlCell.querySelector('div[id]');
+          var lbl = ctrlCell.querySelector('.opt-label');
+          if (innerDiv) innerDiv.classList[enable ? 'remove' : 'add']('hidden');
+          if (lbl) lbl.classList[enable ? 'add' : 'remove']('checked');
+        }
+      }
+      if (!enable) return; // explicitly disabled — nothing more to do
+      // Fall through to set the control value below
+    }
+
+    // Default item checkbox (data-def-item)
+    var defChk = document.querySelector('input[type="checkbox"][data-def-item="' + defName + '"]');
+    if (defChk) {
+      var enable2 = (val !== false && val !== 'false');
+      if (enable2 !== defChk.checked) {
+        defChk.checked = enable2;
+        var defItem = defChk.closest('.default-item');
+        if (defItem) {
+          var defCtrl = defItem.querySelector('.default-item-ctrl');
+          if (defCtrl) defCtrl.classList[enable2 ? 'remove' : 'add']('hidden');
+          var defLbl = defChk.nextElementSibling;
+          if (defLbl) defLbl.style.color = enable2 ? '#fff' : '';
+        }
+      }
+      if (!enable2) return; // explicitly disabled — nothing more to do
+      // Fall through to set the control value below
+    }
+
+    // Generic control: find all elements with matching data-define
+    var controls = document.querySelectorAll('[data-define="' + defName + '"]');
+    controls.forEach(function(ctrl) {
+      if (ctrl.tagName === 'SELECT') {
+        ctrl.value = String(val);
+      } else if (ctrl.type === 'radio') {
+        ctrl.checked = (ctrl.value === String(val));
+      } else if (ctrl.type === 'checkbox') {
+        ctrl.checked = (val === true || val === 'true');
+      } else {
+        ctrl.value = val;
+      }
+    });
+  });
+}
+
+// ============================================================
+// Reset buttons (↶) — show for pins+selects that have board defaults
+// ============================================================
+function updateAllResetButtons() {
+  var bd = gData.boardData;
+  var pinDefaults = (bd && bd.default_pins && bd.default_pins[0]) ? bd.default_pins[0] : null;
+  var selectDefaults = getSelectDefaults();
+
+  // 1. Pin inputs — show ↶ if pin name is in default_pins
+  var allPinInputs = document.querySelectorAll('input[data-type="pin"]');
+  allPinInputs.forEach(function(inp) {
+    var pinName = inp.dataset.pin || inp.dataset.define;
+    var rstBtn = findRstBtn(inp);
+    if (!pinName || !rstBtn) return;
+
+    if (pinDefaults && pinDefaults.hasOwnProperty(pinName)) {
+      rstBtn.classList.remove('hidden');
+      rstBtn.onclick = function(e) {
+        e.preventDefault(); e.stopPropagation();
+        inp.value = pinDefaults[pinName];
+        validateAllPins();
+        updatePreview();
+      };
+    } else {
+      rstBtn.classList.add('hidden');
+      rstBtn.onclick = null;
+    }
+  });
+
+  // 2. All controls from default_selects object (pins + non-pins)
+  if (selectDefaults) {
+    Object.keys(selectDefaults).forEach(function(defName) {
+      var val = selectDefaults[defName];
+      var controls = document.querySelectorAll('[data-define="' + defName + '"]');
+      controls.forEach(function(ctrl) {
+        var rstBtn = findRstBtn(ctrl);
+        if (!rstBtn) return;
+        rstBtn.classList.remove('hidden');
+        rstBtn.onclick = function(e) {
+          e.preventDefault(); e.stopPropagation();
+          setSingleControlValue(defName, val);
+          validateAllPins();
+          updatePreview();
+        };
+      });
+    });
+  }
+}
+
+// Extract the merged object from default_selects array
+function getSelectDefaults() {
+  var bd = gData.boardData;
+  if (!bd || !bd.default_selects || !bd.default_selects.length) return null;
+  var merged = {};
+  bd.default_selects.forEach(function(item) {
+    if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+      Object.assign(merged, item);
+    }
+  });
+  return Object.keys(merged).length ? merged : null;
+}
+
+// Find the ↶ button associated with a control element
+function findRstBtn(ctrl) {
+  // Try parent node first (flex row wrapper for default items & define cells)
+  var parent = ctrl.parentNode;
+  if (parent) {
+    var btn = parent.querySelector('.pin-reset-btn');
+    if (btn) return btn;
+  }
+  // Fall back: search .ctrl-cell ancestor
+  var cell = ctrl.closest('.ctrl-cell');
+  if (cell) {
+    var btn2 = cell.querySelector('.pin-reset-btn');
+    if (btn2) return btn2;
+  }
+  return null;
+}
+
+// Set a single control's value (used by individual ↶ buttons)
+function setSingleControlValue(defName, val) {
+  // Optional sub-define checkbox
+  var optChk = document.querySelector('input[type="checkbox"][data-opt-for="' + defName + '"]');
+  if (optChk && !optChk.checked) {
+    optChk.checked = true;
+    var ctrlCell = optChk.closest('.ctrl-cell');
+    if (ctrlCell) {
+      var innerDiv = ctrlCell.querySelector('div[id]');
+      var lbl = ctrlCell.querySelector('.opt-label');
+      if (innerDiv) innerDiv.classList.remove('hidden');
+      if (lbl) lbl.classList.add('checked');
+    }
+  }
+  // Default item checkbox
+  var defChk = document.querySelector('input[type="checkbox"][data-def-item="' + defName + '"]');
+  if (defChk && !defChk.checked) {
+    defChk.checked = true;
+    var defItem = defChk.closest('.default-item');
+    if (defItem) {
+      var defCtrl = defItem.querySelector('.default-item-ctrl');
+      if (defCtrl) defCtrl.classList.remove('hidden');
+      var defLbl = defChk.nextElementSibling;
+      if (defLbl) defLbl.style.color = '#fff';
+    }
+  }
+  // Set the control value
+  var controls = document.querySelectorAll('[data-define="' + defName + '"]');
+  controls.forEach(function(ctrl) {
+    if (ctrl.tagName === 'SELECT') {
+      ctrl.value = String(val);
+    } else if (ctrl.type === 'radio') {
+      ctrl.checked = (ctrl.value === String(val));
+    } else if (ctrl.type === 'checkbox') {
+      ctrl.checked = (val === true || val === 'true');
+    } else {
+      ctrl.value = val;
+    }
   });
 }
 
@@ -491,6 +848,7 @@ function onDisplayChange() {
     detail.appendChild(infoDiv);
   }
   renderItemDetail(detail, item, 'display');
+  updateAllResetButtons();
 }
 
 function onAudioChange() {
@@ -510,6 +868,7 @@ function onAudioChange() {
     detail.appendChild(infoDiv);
   }
   renderItemDetail(detail, item, 'audio');
+  updateAllResetButtons();
 }
 
 // ============================================================
@@ -599,7 +958,19 @@ function makeDefineCell(def, scopeId, extraClass, parentCheckId) {
     var ctrlDiv = document.createElement('div');
     ctrlDiv.id = uid('ctrl');
     ctrlDiv.className = 'hidden';
-    ctrlDiv.appendChild(makeControl(def, scopeId));
+    // Flex row for control + ↶
+    var ctrlRow = document.createElement('div');
+    ctrlRow.style.display = 'flex';
+    ctrlRow.style.alignItems = 'center';
+    ctrlRow.style.gap = '2px';
+    var ctrlWidget = makeControl(def, scopeId);
+    ctrlRow.appendChild(ctrlWidget);
+    var rstBtn3 = document.createElement('span');
+    rstBtn3.className = 'pin-reset-btn hidden';
+    rstBtn3.textContent = '↶';
+    rstBtn3.title = 'Reset to default';
+    ctrlRow.appendChild(rstBtn3);
+    ctrlDiv.appendChild(ctrlRow);
     cell.appendChild(ctrlDiv);
 
     chk.addEventListener('change', function() {
@@ -625,7 +996,19 @@ function makeDefineCell(def, scopeId, extraClass, parentCheckId) {
       lblDiv.appendChild(helpBtn2);
     }
     cell.appendChild(lblDiv);
-    cell.appendChild(makeControl(def, scopeId));
+    // Flex row for control + ↶
+    var ctrlRow2 = document.createElement('div');
+    ctrlRow2.style.display = 'flex';
+    ctrlRow2.style.alignItems = 'center';
+    ctrlRow2.style.gap = '2px';
+    var ctrlWidget2 = makeControl(def, scopeId);
+    ctrlRow2.appendChild(ctrlWidget2);
+    var rstBtn4 = document.createElement('span');
+    rstBtn4.className = 'pin-reset-btn hidden';
+    rstBtn4.textContent = '↶';
+    rstBtn4.title = 'Reset to default';
+    ctrlRow2.appendChild(rstBtn4);
+    cell.appendChild(ctrlRow2);
   }
 
   return cell;
@@ -643,6 +1026,12 @@ function makePinCell(pinName, scopeId) {
   lbl.textContent = pinName;
   cell.appendChild(lbl);
 
+  // Row for input + ↶ reset button
+  var row = document.createElement('div');
+  row.style.display = 'flex';
+  row.style.alignItems = 'center';
+  row.style.gap = '2px';
+
   var inp = document.createElement('input');
   inp.type = 'number';
   inp.value = '';
@@ -652,8 +1041,15 @@ function makePinCell(pinName, scopeId) {
   inp.dataset.type = 'pin';
   inp.dataset.defaultVal = ''; // top-level pins have no JSON default
   inp.addEventListener('input', function() { validateAllPins(); });
-  cell.appendChild(inp);
+  row.appendChild(inp);
 
+  var rstBtn = document.createElement('span');
+  rstBtn.className = 'pin-reset-btn hidden';
+  rstBtn.textContent = '↶';
+  rstBtn.title = 'Reset to board default';
+  row.appendChild(rstBtn);
+
+  cell.appendChild(row);
   return cell;
 }
 
@@ -874,6 +1270,7 @@ function toggleCheckItemBody(chk, body) {
     if (nameEl2) nameEl2.style.color = '';
   }
   validateAllPins();
+  updateAllResetButtons();
 }
 
 // ============================================================
@@ -978,11 +1375,21 @@ function buildDefaultsSection() {
     div.appendChild(header);
 
     if (item.type !== 'flag') {
-      // Non-flag items: create a collapsible control div
+      // Non-flag items: create a collapsible control div with ↶
       var ctrlDiv = document.createElement('div');
       ctrlDiv.className = 'default-item-ctrl hidden';
       ctrlDiv.id = uid('defctrl');
-      ctrlDiv.appendChild(makeControl(item, 'defaults'));
+      var defCtrlRow = document.createElement('div');
+      defCtrlRow.style.display = 'flex';
+      defCtrlRow.style.alignItems = 'center';
+      defCtrlRow.style.gap = '2px';
+      defCtrlRow.appendChild(makeControl(item, 'defaults'));
+      var defRstBtn = document.createElement('span');
+      defRstBtn.className = 'pin-reset-btn hidden';
+      defRstBtn.textContent = '↶';
+      defRstBtn.title = 'Reset to default';
+      defCtrlRow.appendChild(defRstBtn);
+      ctrlDiv.appendChild(defCtrlRow);
       div.appendChild(ctrlDiv);
 
       chk.addEventListener('change', function() {
@@ -1218,9 +1625,12 @@ function resetPins() {
   document.querySelectorAll('input[data-type="pin"]').forEach(function(el) {
     el.value = (el.dataset.defaultVal !== undefined) ? el.dataset.defaultVal : '';
   });
-  // Step 2: Apply board-specific default_pins (overrides matching pins)
+  // Step 2: Apply board default_selects (enables sections, sets dropdowns/values)
+  applyDefaultSelects();
+  // Step 3: Apply board-specific default_pins (overrides matching pins)
   applyDefaultPins();
   validateAllPins();
+  updateAllResetButtons();
   updatePreview(); // immediate update on reset (no debounce)
   showAlert('info', 'Pins reset to defaults.', 2000);
 }
@@ -2242,6 +2652,7 @@ function applyState(state) {
     gData.boardData = data[0];
     updateBoardImageArea();
     updateSPISections();
+    applyDefaultSelects();
     applyDefaultPins();
 
     // Display: compact (dd/dn) → old verbose (dsp_define/dsp_name) → numeric legacy (dsp_sel)

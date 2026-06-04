@@ -2,13 +2,18 @@
 /*  ehRadio myoptions Generator - generator.js
  *  Reads JSON config files and builds a dynamic hardware configuration page.
  *  State is serialized via LZ-string into the URL hash for shareable links.
+ * 
+ * Sorry if it looks vibe-coded... it pretty much is.
+ * 
+ * The .json architecture is more important than how well-coded this javascript / html is
+ * - Trip5
  */
 
 'use strict';
 
 // ============================================================
 // State encoding helpers (base64 + URI encoding for URL-safe storage)
-// URL hash can hold thousands of characters; typical config ~500-900 chars.
+// URL hash can hold thousands of characters; typical config ~1500-2000 chars.
 // ============================================================
 var LZString = {
   compressToBase64: function(str) {
@@ -1618,9 +1623,106 @@ function isElementVisible(el) {
 }
 
 // ============================================================
+// Clear all sections — uncheck/deselect everything before reset
+// ============================================================
+function clearAllSections() {
+  // SPI bus checkboxes
+  document.querySelectorAll('input[type="checkbox"][data-spi-bus]').forEach(function(chk) {
+    if (chk.checked) {
+      chk.checked = false;
+      var bus = chk.dataset.spiBus;
+      var pinsWrap = document.getElementById('spi-pins-' + bus);
+      if (pinsWrap) pinsWrap.classList.add('hidden');
+      var nl = chk.nextElementSibling;
+      if (nl && nl.tagName === 'SPAN') nl.style.color = '';
+    }
+  });
+
+  // Display dropdown — reset to first item
+  var dspSel = document.getElementById('dsp-sel');
+  if (dspSel && parseInt(dspSel.value) !== 0) {
+    dspSel.value = 0;
+    onDisplayChange();
+  }
+
+  // Audio dropdown — reset to first item
+  var audSel = document.getElementById('aud-sel');
+  if (audSel && parseInt(audSel.value) !== 0) {
+    audSel.value = 0;
+    onAudioChange();
+  }
+
+  // Input item checkboxes
+  document.querySelectorAll('#input-section input[type="checkbox"]').forEach(function(chk) {
+    if (chk.checked) {
+      chk.checked = false;
+      var itemId = chk.dataset.itemId;
+      var body = document.getElementById(itemId + '-body');
+      if (body) body.classList.add('hidden');
+      var nl = chk.nextElementSibling;
+      if (nl && nl.tagName === 'SPAN') nl.style.color = '';
+    }
+  });
+
+  // Peripheral item checkboxes
+  document.querySelectorAll('#peripherals-section input[type="checkbox"]').forEach(function(chk) {
+    if (chk.checked) {
+      chk.checked = false;
+      var itemId = chk.dataset.itemId;
+      var body = document.getElementById(itemId + '-body');
+      if (body) body.classList.add('hidden');
+      var nl = chk.nextElementSibling;
+      if (nl && nl.tagName === 'SPAN') nl.style.color = '';
+    }
+  });
+
+  // Optional sub-define checkboxes
+  document.querySelectorAll('input[type="checkbox"][data-opt-for]').forEach(function(chk) {
+    if (chk.checked) {
+      chk.checked = false;
+      var ctrlCell = chk.closest('.ctrl-cell');
+      if (ctrlCell) {
+        var innerDiv = ctrlCell.querySelector('div[id]');
+        var lbl = ctrlCell.querySelector('.opt-label');
+        if (innerDiv) innerDiv.classList.add('hidden');
+        if (lbl) lbl.classList.remove('checked');
+      }
+    }
+  });
+
+  // Default item checkboxes
+  document.querySelectorAll('input[type="checkbox"][data-def-item]').forEach(function(chk) {
+    if (chk.checked) {
+      chk.checked = false;
+      var defItem = chk.closest('.default-item');
+      if (defItem) {
+        var defCtrl = defItem.querySelector('.default-item-ctrl');
+        if (defCtrl) defCtrl.classList.add('hidden');
+        var defLbl = chk.nextElementSibling;
+        if (defLbl) defLbl.style.color = '';
+      }
+    }
+  });
+
+  // Locale, timezone, extra defines
+  ['locale-chk', 'tz-chk', 'extra-defines-chk'].forEach(function(id) {
+    var chk = document.getElementById(id);
+    if (chk && chk.checked) chk.checked = false;
+    var ctrl = document.getElementById(id.replace('-chk', '-ctrl'));
+    if (ctrl) ctrl.classList.add('hidden');
+    if (chk) {
+      var nl = chk.nextElementSibling;
+      if (nl && nl.tagName === 'SPAN') nl.style.color = '';
+    }
+  });
+}
+
+// ============================================================
 // Reset pins button
 // ============================================================
 function resetPins() {
+  // Step 0: Clear all sections (uncheck/deselect everything)
+  clearAllSections();
   // Step 1: Reset all pin inputs to their stored JSON defaults (or blank)
   document.querySelectorAll('input[data-type="pin"]').forEach(function(el) {
     el.value = (el.dataset.defaultVal !== undefined) ? el.dataset.defaultVal : '';

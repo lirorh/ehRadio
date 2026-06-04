@@ -28,10 +28,6 @@
     "define": "SS_NOTPLAYING", "type": "boolean", "optional": true, "default": false
   },
   {
-    "name": "Screen Flip",
-    "define": "SCREEN_FLIP", "type": "boolean", "optional": true, "default": false
-  },
-  {
     "name": "SD Shuffle",
     "define": "SD_SHUFFLE", "type": "boolean", "optional": true, "default": false
   },

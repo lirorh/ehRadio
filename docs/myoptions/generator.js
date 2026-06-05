@@ -311,7 +311,7 @@ function updateBoardImageArea() {
     var rstBtn = document.createElement('span');
     rstBtn.className = 'bulk-reset-btn';
     rstBtn.textContent = '↶';
-    rstBtn.title = 'Reset all pins to board defaults';
+    rstBtn.title = 'Reset all to board defaults';
     rstBtn.onclick = function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -322,7 +322,7 @@ function updateBoardImageArea() {
     rstText.style.color = '#888';
     rstText.style.fontSize = '0.9rem';
     rstText.style.marginTop = '4px';
-    rstText.textContent = 'reset all pins to board defaults';
+    rstText.textContent = 'reset all to board defaults';
 
     rstDiv.appendChild(rstBtn);
     rstDiv.appendChild(rstText);

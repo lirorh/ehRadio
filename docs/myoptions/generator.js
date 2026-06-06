@@ -1733,7 +1733,7 @@ function resetPins() {
   validateAllPins();
   updateAllResetButtons();
   updatePreview(); // immediate update on reset (no debounce)
-  showAlert('info', 'Pins reset to defaults.', 2000);
+  showAlert('info', 'Reset to board defaults.', 2000);
 }
 
 // ============================================================

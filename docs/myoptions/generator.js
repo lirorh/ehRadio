@@ -2754,8 +2754,6 @@ function applyState(state) {
     gData.boardData = data[0];
     updateBoardImageArea();
     updateSPISections();
-    applyDefaultSelects();
-    applyDefaultPins();
 
     // Display: compact (dd/dn) → old verbose (dsp_define/dsp_name) → numeric legacy (dsp_sel)
     // Lookup priority within each: define+name → name → define → numeric

@@ -128,16 +128,16 @@
       vertical-align: middle;
       font-family: Times, serif;
     }
-    .pin-reset-btn:hover { background: #555; color: #000; }
+    .pin-reset-btn:hover { background: #b00000; border-color: #b00000; color: #fff; }
     .bulk-reset-btn {
       display: inline-block;
-      background: #000;
-      border: #555 2px solid;
+      background: #8a0000;
+      border: #b00000 2px solid;
       width: 36px;
       height: 36px;
       border-radius: 50%;
       line-height: 36px;
-      color: #555;
+      color: #fff;
       font-weight: bold;
       text-align: center;
       font-size: 1.6rem;
@@ -145,7 +145,7 @@
       vertical-align: middle;
       font-family: Times, serif;
     }
-    .bulk-reset-btn:hover { background: #555; color: #000; }
+    .bulk-reset-btn:hover { background: #b00000; color: #fff; }
 
     /* Optional checkbox inline with label */
     .opt-label {
@@ -545,9 +545,6 @@
   <div id="gen-root"></div>
 
   <!-- Buttons -->
-  <div class="buttons-row" id="buttons-area" style="display:none">
-    <button class="gen-btn red" onclick="resetPins()">Reset Pins</button>
-  </div>
   <div class="buttons-row" id="buttons-area2" style="display:none">
     <button class="gen-btn" onclick="getFile('options')">Get myoptions.h</button>
     <button class="gen-btn" onclick="getFile('platformio')">Get platformio.ini</button>

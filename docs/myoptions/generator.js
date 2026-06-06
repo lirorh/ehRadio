@@ -180,7 +180,6 @@ function buildPage() {
   root.appendChild(buildExtraDefinesSection());
 
   // Show buttons
-  document.getElementById('buttons-area').style.display = 'flex';
   document.getElementById('buttons-area2').style.display = 'flex';
 
   // Wire up preview debounce (document-level, one-time setup)
@@ -247,7 +246,7 @@ function buildBoardSection() {
   return sec;
 }
 
-function onBoardChange(reset) {
+function onBoardChange() {
   var sel = document.getElementById('board-sel');
   var boardEntry = gData.boards[parseInt(sel.value)];
   if (!boardEntry) return;
@@ -319,8 +318,8 @@ function updateBoardImageArea() {
     };
 
     var rstText = document.createElement('div');
-    rstText.style.color = '#888';
-    rstText.style.fontSize = '0.9rem';
+    rstText.style.color = '#cc6666';
+    rstText.style.fontSize = '1.1rem';
     rstText.style.marginTop = '4px';
     rstText.textContent = 'reset all to board defaults';
 
@@ -1738,7 +1737,7 @@ function resetPins() {
 }
 
 // ============================================================
-// Pin Configuration Preview (live, debounced 5 s)
+// Pin Configuration Preview (live, debounced 2 s)
 // ============================================================
 var _previewTimer = null;
 
@@ -1781,7 +1780,7 @@ function updatePreview() {
 
 function schedulePreviewUpdate() {
   if (_previewTimer) clearTimeout(_previewTimer);
-  _previewTimer = setTimeout(updatePreview, 5000);
+  _previewTimer = setTimeout(updatePreview, 2000);
 }
 
 // ============================================================
@@ -2736,88 +2735,62 @@ function loadStateFromHash() {
 }
 
 function applyState(state) {
-  // Board resolution: compact new (bn) → old verbose (board_name) → numeric legacy (board)
+  // Board resolution by name
   var resolvedBoardIdx = 0;
-  var _bn = state.bn || state.board_name;
-  if (_bn) {
-    var nameIdx = gData.boards.findIndex(function(b) { return b.name === _bn; });
-    resolvedBoardIdx = nameIdx >= 0 ? nameIdx : (state.board !== undefined ? state.board : 0);
-  } else if (state.board !== undefined) {
-    resolvedBoardIdx = state.board;
+  if (state.bn) {
+    var nameIdx = gData.boards.findIndex(function(b) { return b.name === state.bn; });
+    if (nameIdx >= 0) resolvedBoardIdx = nameIdx;
   }
   var boardSel = document.getElementById('board-sel');
   if (boardSel) boardSel.value = resolvedBoardIdx;
 
-  // Load board data first, then apply rest
+  // Load board data, then apply state
   var boardEntry = gData.boards[resolvedBoardIdx];
   fetchJSON(boardEntry.file).then(function(data) {
     gData.boardData = data[0];
     updateBoardImageArea();
     updateSPISections();
 
-    // Display: compact (dd/dn) → old verbose (dsp_define/dsp_name) → numeric legacy (dsp_sel)
-    // Lookup priority within each: define+name → name → define → numeric
-    var _dd = state.dd || state.dsp_define;
-    var _dn = state.dn || state.dsp_name;
-    if (_dd !== undefined || _dn !== undefined || state.dsp_sel !== undefined) {
+    // Display: resolve by define + name
+    if (state.dd !== undefined || state.dn !== undefined) {
       var dspSel = document.getElementById('dsp-sel');
       if (dspSel) {
         var _dsp = gData.display.slice(1);
         var dspIdx = -1;
-        if (_dd && _dn) dspIdx = _dsp.findIndex(function(d) { return d.define === _dd && d.name === _dn; });
-        if (dspIdx < 0 && _dn) dspIdx = _dsp.findIndex(function(d) { return d.name === _dn; });
-        if (dspIdx < 0 && _dd) dspIdx = _dsp.findIndex(function(d) { return d.define === _dd; });
-        dspSel.value = dspIdx >= 0 ? dspIdx : (state.dsp_sel || 0);
+        if (state.dd && state.dn) dspIdx = _dsp.findIndex(function(d) { return d.define === state.dd && d.name === state.dn; });
+        if (dspIdx < 0 && state.dn) dspIdx = _dsp.findIndex(function(d) { return d.name === state.dn; });
+        if (dspIdx < 0 && state.dd) dspIdx = _dsp.findIndex(function(d) { return d.define === state.dd; });
+        if (dspIdx >= 0) dspSel.value = dspIdx;
         onDisplayChange();
       }
     } else {
       onDisplayChange();
     }
 
-    // Audio: compact (ad/an) → old verbose (aud_define/aud_name) → numeric legacy (aud_sel)
-    var _ad = state.ad || state.aud_define;
-    var _an = state.an || state.aud_name;
-    if (_ad !== undefined || _an !== undefined || state.aud_sel !== undefined) {
+    // Audio: resolve by define + name
+    if (state.ad !== undefined || state.an !== undefined) {
       var audSel = document.getElementById('aud-sel');
       if (audSel) {
         var _aud = gData.audio.slice(1);
         var audIdx = -1;
-        if (_ad && _an) audIdx = _aud.findIndex(function(a) { return a.define === _ad && a.name === _an; });
-        if (audIdx < 0 && _an) audIdx = _aud.findIndex(function(a) { return a.name === _an; });
-        if (audIdx < 0 && _ad) audIdx = _aud.findIndex(function(a) { return a.define === _ad; });
-        audSel.value = audIdx >= 0 ? audIdx : (state.aud_sel || 0);
+        if (state.ad && state.an) audIdx = _aud.findIndex(function(a) { return a.define === state.ad && a.name === state.an; });
+        if (audIdx < 0 && state.an) audIdx = _aud.findIndex(function(a) { return a.name === state.an; });
+        if (audIdx < 0 && state.ad) audIdx = _aud.findIndex(function(a) { return a.define === state.ad; });
+        if (audIdx >= 0) audSel.value = audIdx;
         onAudioChange();
       }
     } else {
       onAudioChange();
     }
 
-    // Apply all control values
-    setTimeout(function() {
-      applyStateValues(state);
-    }, 50);
-  });
-}
-
-// Detect format and dispatch to the appropriate restore handler
-function applyStateValues(state) {
-  var isNew = (state.ci !== undefined || state.cp !== undefined || state.co !== undefined ||
-               state.cd !== undefined || state.p  !== undefined || state.v  !== undefined ||
-               state.xe !== undefined || state.xd !== undefined);
-  var isOld = !isNew && Object.keys(state).some(function(k) {
-    return k.startsWith('item_') || k.startsWith('i_') || k.startsWith('opt_') || k.startsWith('def_');
-  });
-
-  if (isNew) {
+    // Apply control values and finish
     applyStateNew(state);
-  } else if (isOld) {
-    applyStateOld(state);
-  }
-  validateAllPins();
-  updatePreview();
+    validateAllPins();
+    updatePreview();
+  });
 }
 
-// ---- New compact format restore ----
+// ---- Compact format restore ----
 function applyStateNew(state) {
   // 0. Check SPI buses (cs = array of checked bus letters, e.g. ["A","B"])
   if (state.cs) {
@@ -2956,91 +2929,6 @@ function applyStateNew(state) {
     if (xCtrl) xCtrl.classList.remove('hidden');
     var xLbl = xChk.nextElementSibling;
     if (xLbl) xLbl.style.color = '#fff';
-  }
-}
-
-// ---- Old verbose format restore (backwards compatibility) ----
-function applyStateOld(state) {
-  // Section item checkboxes (reveal bodies first)
-  Object.keys(state).forEach(function(k) {
-    if (!k.startsWith('item_')) return;
-    if (!state[k]) return;
-    var itemId = k.substring(5);
-    var chk = document.getElementById(itemId + '-chk');
-    if (!chk) return;
-    chk.checked = true;
-    var body = document.getElementById(itemId + '-body');
-    if (body) {
-      body.classList.remove('hidden');
-      var nameEl = chk.nextElementSibling;
-      if (nameEl) nameEl.style.color = '#fff';
-    }
-  });
-
-  // Input values (i_ prefix)
-  Object.keys(state).forEach(function(k) {
-    if (!k.startsWith('i_')) return;
-    var defName = k.substring(2);
-    var val = state[k];
-    document.querySelectorAll('[data-define="' + defName + '"]').forEach(function(el) {
-      if (el.type === 'radio') { if (el.value === String(val)) el.checked = true; }
-      else if (el.type === 'checkbox') { el.checked = !!val; }
-      else { el.value = val; }
-    });
-  });
-
-  // Optional checkboxes (opt_ prefix)
-  Object.keys(state).forEach(function(k) {
-    if (!k.startsWith('opt_')) return;
-    var defName = k.substring(4);
-    document.querySelectorAll('input[type="checkbox"][data-opt-for="' + defName + '"]').forEach(function(chk) {
-      chk.checked = !!state[k];
-      var ctrlDiv = chk.closest('.ctrl-cell').querySelector('div[id]');
-      var lbl = chk.closest('.opt-label');
-      if (chk.checked) {
-        if (ctrlDiv) ctrlDiv.classList.remove('hidden');
-        if (lbl) lbl.classList.add('checked');
-      } else {
-        if (ctrlDiv) ctrlDiv.classList.add('hidden');
-        if (lbl) lbl.classList.remove('checked');
-      }
-    });
-  });
-
-  // Default item checkboxes (def_ prefix)
-  Object.keys(state).forEach(function(k) {
-    if (!k.startsWith('def_')) return;
-    if (!state[k]) return;
-    var defName = k.substring(4);
-    var chk = document.querySelector('input[type="checkbox"][data-def-item="' + defName + '"]');
-    if (!chk) return;
-    chk.checked = true;
-    var ctrlDiv = chk.closest('.default-item').querySelector('.default-item-ctrl');
-    if (ctrlDiv) ctrlDiv.classList.remove('hidden');
-    var lbl = chk.nextElementSibling;
-    if (lbl) lbl.style.color = '#fff';
-  });
-
-  // Locale
-  if (state.locale_enabled) {
-    var locChk = document.getElementById('locale-chk');
-    var locCtrl = document.getElementById('locale-ctrl');
-    if (locChk) { locChk.checked = true; if (locCtrl) locCtrl.classList.remove('hidden'); }
-  }
-  if (state.locale_val) {
-    var locSel = document.getElementById('locale-sel');
-    if (locSel) locSel.value = state.locale_val;
-  }
-
-  // Timezone
-  if (state.tz_enabled) {
-    var tzChk = document.getElementById('tz-chk');
-    var tzCtrl = document.getElementById('tz-ctrl');
-    if (tzChk) { tzChk.checked = true; if (tzCtrl) tzCtrl.classList.remove('hidden'); }
-  }
-  if (state.tz_val) {
-    var tzSel = document.getElementById('tz-sel');
-    if (tzSel) tzSel.value = state.tz_val;
   }
 }
 

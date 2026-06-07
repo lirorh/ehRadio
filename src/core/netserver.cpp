@@ -200,7 +200,13 @@ void handleSearchPost(AsyncWebServerRequest *request) {
     } else { // add it and play it
       File playlistfile = SPIFFS.open(PLAYLIST_PATH, "a");
       if (playlistfile) {
-        playlistfile.printf("%s\t%s\t%d\r\n", sName.c_str(), sUrl.c_str(), sOvol);
+        // can't use printf because of buffer overflow in Arduino's Print::printf (was adding CR+LF to files, corrupting the playlist.csv)
+        playlistfile.print(sName);
+        playlistfile.print('\t');
+        playlistfile.print(sUrl);
+        playlistfile.print('\t');
+        playlistfile.print(sOvol);
+        playlistfile.print('\n');
         playlistfile.close();
         esp_task_wdt_reset(); // Reset watchdog before heavy operations
         uint16_t newIdx = cs + 1;

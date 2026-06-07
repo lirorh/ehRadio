@@ -764,11 +764,15 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* ============================== SYSTEM OVERRIDES ============================== */
 
 /* --- SYSTEM TWEAKS --- */
-#ifndef WIFI_ATTEMPTS
+#ifndef WIFI_ATTEMPTS // about 2 attempts per second
   #define WIFI_ATTEMPTS 16
 #endif
 #if WIFI_ATTEMPTS < 1
   #error define error in myoptions.h: WIFI_ATTEMPTS must be at least 1
+#endif
+ // How many seconds to wait after boot completed (including smart start) to consider successful, if rebooted during that time, will enter safe mode (disables smart start, autoupdate)
+#ifndef BOOT_SAFE_TIME
+  #define  BOOT_SAFE_TIME 10
 #endif
 #ifndef SEARCHRESULTS_BUFFER
  // Buffer for chunked HTTP transfers from radio-browser.info. Defined in KB; conversion to bytes done in netserver.cpp.

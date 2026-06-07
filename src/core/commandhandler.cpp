@@ -39,15 +39,23 @@ bool CommandHandler::isBlockedForSource(const char *command, CommandSource sourc
   );
 }
 
+static void cancelStreamRetry() {
+  if (streamRetryTaskHandle != NULL) {
+    network.lostPlaying = false;
+    vTaskDelete(streamRetryTaskHandle);
+    streamRetryTaskHandle = NULL;
+  }
+}
+
 bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, CommandSource source) {
   if (isBlockedForSource(command, source)) {
     return false;
   }
 
   /* Websockets for Player */
-  if (cmdIs(command, "toggle"))      { player.toggle(); return true; }
-  if (cmdIs(command, "prev"))        { player.prev(); return true; }
-  if (cmdIs(command, "next"))        { player.next(); return true; }
+  if (cmdIs(command, "toggle"))      { cancelStreamRetry(); player.toggle(); return true; }
+  if (cmdIs(command, "prev"))        { cancelStreamRetry(); player.prev(); return true; }
+  if (cmdIs(command, "next"))        { cancelStreamRetry(); player.next(); return true; }
   if (cmdIs(command, "voldown", "volumedown", "volm", "vol-")) { player.stepVol(false); return true; }
   if (cmdIs(command, "volup",   "volumeup",   "volp", "vol+")) { player.stepVol(true);  return true; }
   if (cmdIs(command, "newmode"))     { config.newConfigMode = atoi(value); netserver.requestOnChange(CHANGEMODE, cid); return true; }
@@ -56,9 +64,10 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "middle"))      { int v = atoi(value); v = (v < -16) ? -16 : (v > 16 ? 16 : v); config.setTone(config.store.bass, (int8_t)v, config.store.treble); return true; }
   if (cmdIs(command, "bass"))        { int v = atoi(value); v = (v < -16) ? -16 : (v > 16 ? 16 : v); config.setTone((int8_t)v, config.store.middle, config.store.treble); return true; }
   if (cmdIs(command, "volume", "vol")) { int v = atoi(value); v = v < 0 ? 0 : (v > VOLUME_SCALE ? VOLUME_SCALE : v); config.store.volume = v; player.setVol(v); return true; }
-  if (cmdIs(command, "turnoff"))     { bool sst = config.store.smartstart; config.setDspOn(false); backlightControls.restart(); player.sendCommand({PR_STOP, 0}); delay(100); config.saveValue(&config.store.smartstart, sst); return true; }
+  if (cmdIs(command, "turnoff"))     { cancelStreamRetry(); bool sst = config.store.smartstart; config.setDspOn(false); backlightControls.restart(); player.sendCommand({PR_STOP, 0}); delay(100); config.saveValue(&config.store.smartstart, sst); return true; }
   if (cmdIs(command, "turnon"))      { config.setDspOn(true); backlightControls.restart(); if (config.store.smartstart) { if (config.getMode() == PM_WEB) player.resumeLastWebSource(); else player.sendCommand({PR_PLAY, config.lastStation()}); } return true; }
   if (cmdIs(command, "burl", "playurl")) {
+    cancelStreamRetry();
     return player.queueResolvedUrl(value);
   }
   if (cmdIs(command, "sdpos")) {
@@ -69,10 +78,10 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
     }
     return true;
   }
-  if (cmdIs(command, "playstation", "play")) { uint16_t id = atoi(value); uint16_t cs = utility.playlistLength(); id = (id < 1) ? 1 : (id > cs ? cs : id); player.sendCommand({PR_PLAY, id}); return true; }
+  if (cmdIs(command, "playstation", "play")) { cancelStreamRetry(); uint16_t id = atoi(value); uint16_t cs = utility.playlistLength(); id = (id < 1) ? 1 : (id > cs ? cs : id); player.sendCommand({PR_PLAY, id}); return true; }
   if (cmdIs(command, "shuffle"))         { config.saveValue(&config.store.sdshuffle, static_cast<bool>(atoi(value))); if (config.store.sdshuffle) player.next(); return true; }
   if (cmdIs(command, "start"))           { if (config.getMode() == PM_WEB) return player.resumeLastWebSource(); player.sendCommand({PR_PLAY, config.lastStation()}); return true; }
-  if (cmdIs(command, "stop"))            { player.sendCommand({PR_STOP, 0}); return true; }
+  if (cmdIs(command, "stop"))            { cancelStreamRetry(); player.sendCommand({PR_STOP, 0}); return true; }
   if (cmdIs(command, "sleep")) {
     int sfor = 0;
     int safter = 0;
@@ -84,8 +93,8 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
     utility.sleepForAfter(static_cast<uint16_t>(sfor), static_cast<uint16_t>(safter));
     return true;
   }
-  if (cmdIs(command, "mode"))            { config.changeMode(atoi(value)); return true; }
-  if (cmdIs(command, "submitplaylist"))  { player.sendCommand({PR_STOP, 0}); return true; }
+  if (cmdIs(command, "mode"))            { cancelStreamRetry(); config.changeMode(atoi(value)); return true; }
+  if (cmdIs(command, "submitplaylist"))  { cancelStreamRetry(); player.sendCommand({PR_STOP, 0}); return true; }
   if (cmdIs(command, "submitplaylistdone")) {
     char currentUrl[STATION_FIELD_LENGTH];
     strncpy(currentUrl, config.station.url, STATION_FIELD_LENGTH);

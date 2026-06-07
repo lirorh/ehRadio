@@ -300,10 +300,10 @@ void Player::_play(uint16_t stationId) {
     setOutputPins(true);
     display.putRequest(NEWMODE, PLAYER);
     display.putRequest(PSTART);
-    network.lostPlaying = false;  // Clear flag - we're playing again!
     #ifdef RADIO_BROWSER_SEND_CLICKS
-      if (config.getMode()==PM_WEB) radioBrowserSendClick(config.station.url);
+      if (config.getMode()==PM_WEB && !network.lostPlaying) radioBrowserSendClick(config.station.url);
     #endif
+    network.lostPlaying = false;  // Clear flag - we're playing again!
     rgbled.playing();
     backlightControls.restart();
   } else {
@@ -336,7 +336,7 @@ void Player::playUrl(const char* url) {
     setOutputPins(true);
     display.putRequest(PSTART);
     #ifdef RADIO_BROWSER_SEND_CLICKS
-      radioBrowserSendClick(url);
+      if (!network.lostPlaying) radioBrowserSendClick(url);
     #endif
     rgbled.playing();
     backlightControls.restart();

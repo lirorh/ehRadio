@@ -14,6 +14,46 @@
 
 Startup startup;
 
+void Startup::checkSafeMode() {
+  Preferences prefs;
+  prefs.begin("ehradio", false);
+  bool lastBootGood = prefs.getBool("lastbootgood", false);
+  if (!lastBootGood) {
+    bootInSafeMode();
+  }
+  // Mark this boot as in-progress (not yet proven stable)
+  prefs.putBool("lastbootgood", false);
+  prefs.end();
+  _bootStablePending = true;
+  // _bootStartMs set lazily on first loop() call, after setup() completes
+}
+
+void Startup::bootInSafeMode() {
+  BOOTLOG("SAFE MODE: smartstart and autoupdate disabled for this session");
+  config.store.smartstart = false;
+  config.store.autoupdate = false;
+}
+
+void Startup::markBootStable() {
+  Preferences prefs;
+  prefs.begin("ehradio", false);
+  prefs.putBool("lastbootgood", true);
+  prefs.end();
+  BOOTLOG("Boot stable after %lu ms", millis() - _bootStartMs);
+}
+
+void Startup::loop() {
+  if (!_bootStablePending) return;
+  if (_bootStartMs == 0) {
+    _bootStartMs = millis();  // First loop() call — setup() (including smartstart) is done
+    return;
+  }
+  if (millis() - _bootStartMs > (BOOT_SAFE_TIME * 1000UL)) {
+    markBootStable();
+    _bootStablePending = false;
+  }
+}
+
 namespace {
 
 bool requiredWebFilesExist() {
@@ -47,6 +87,10 @@ void Startup::checkVerAndSpiffs() {
   } else if (!SPIFFS.exists(VERSION_PATH)) {
     BOOTLOG("New install detected.");
     config.wwwFilesExist = requiredWebFilesExist();
+    // New install — prevent false Safe Mode on first boot
+    { Preferences prefs; prefs.begin("ehradio", false);
+    prefs.putBool("lastbootgood", true);
+    prefs.end(); }
   } else {
     BOOTLOG("Version mismatch detected (stored: %s, current: %s)", storedVersion.c_str(), RADIOVERSION);
     config.wwwFilesExist = false;
@@ -82,7 +126,11 @@ void Startup::initNetwork() {
   char ssidValue[sizeof(config.ssids[0].ssid)] = {0};
   char passValue[sizeof(config.ssids[0].password)] = {0};
   while (file.available() && config.ssidsCount < 5) {
-    if (utility.parseSsid(file.readStringUntil('\n').c_str(), ssidValue, passValue)) {
+    String line = file.readStringUntil('\n');
+    if (line.length() > 0 && line[line.length()-1] == '\r') {
+      line = line.substring(0, line.length()-1);
+    }
+    if (utility.parseSsid(line.c_str(), ssidValue, passValue)) {
       strlcpy(config.ssids[config.ssidsCount].ssid, ssidValue, sizeof(config.ssids[0].ssid));
       strlcpy(config.ssids[config.ssidsCount].password, passValue, sizeof(config.ssids[0].password));
       config.ssidsCount++;

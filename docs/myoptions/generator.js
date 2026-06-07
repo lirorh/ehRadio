@@ -2407,13 +2407,11 @@ function buildBoardSection_pio(bd) {
   out += 'extends = ehradio\n';
   out += 'board = ' + bd.board + '\n';
 
-  // board_build.* and board_upload.* fields
-  var skipFields = ['name', 'env', 'board', 'build_flags', 'default_pins', 'spi', 'valid_pins', 'left_pins', 'right_pins', 'image', 'info', 'url'];
+  // board_build.*, board_upload.*, and any other generic platformio.ini fields
+  var skipFields = ['name', 'env', 'board', 'build_flags', 'default_pins', 'default_selects', 'spi', 'valid_pins', 'left_pins', 'right_pins', 'image', 'info', 'url'];
   Object.keys(bd).forEach(function(key) {
     if (skipFields.includes(key)) return;
-    if (key.startsWith('board_') || key.startsWith('build_')) {
-      out += key + ' = ' + bd[key] + '\n';
-    }
+    out += key + ' = ' + bd[key] + '\n';
   });
 
   // build_flags

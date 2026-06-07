@@ -405,6 +405,9 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #endif
 #endif
 
+// This may be needed later if the new VS1053 library needs the name VS1053_SPI for its own SPISettings member variable
+// #undef VS1053_SPI
+
 /* Actually upstream in the library - by default enables improved decoding */
 #ifndef VS_PATCH_ENABLE
   //#define VS_PATCH_ENABLE false /* For the 2.5V boards with wrong voltage regulator.  See here: https://github.com/e2002/yoradio/issues/108 */

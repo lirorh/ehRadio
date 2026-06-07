@@ -3,6 +3,7 @@
     "name": "ESP32-S3 ES3C28P (ESP32-S3-N16R8)",
     "env": "es3c28p",
     "board": "esp32-s3-devkitc-1",
+    "upload_speed": "921600",
     "build_flags": "-DBOARD_HAS_PSRAM -DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT=1",
     "board_build.arduino.memory_type": "qio_opi",
     "board_build.flash_mode": "qio",

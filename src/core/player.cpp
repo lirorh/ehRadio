@@ -348,6 +348,11 @@ void Player::playUrl(const char* url) {
 }
 
 void Player::prev() {
+  if (streamRetryTaskHandle != NULL) {
+    network.lostPlaying = false;
+    vTaskDelete(streamRetryTaskHandle);
+    streamRetryTaskHandle = NULL;
+  }
   uint16_t lastStation = config.lastStation();
   if (config.getMode()==PM_WEB || !config.store.sdshuffle) {
     if (lastStation == 1) config.lastStation(utility.playlistLength()); else config.lastStation(lastStation-1);
@@ -356,6 +361,11 @@ void Player::prev() {
 }
 
 void Player::next() {
+  if (streamRetryTaskHandle != NULL) {
+    network.lostPlaying = false;
+    vTaskDelete(streamRetryTaskHandle);
+    streamRetryTaskHandle = NULL;
+  }
   uint16_t lastStation = config.lastStation();
   if (config.getMode()==PM_WEB || !config.store.sdshuffle) {
     if (lastStation == utility.playlistLength()) config.lastStation(1); else config.lastStation(lastStation+1);
@@ -366,6 +376,11 @@ void Player::next() {
 }
 
 void Player::toggle() {
+  if (streamRetryTaskHandle != NULL) {
+    network.lostPlaying = false;
+    vTaskDelete(streamRetryTaskHandle);
+    streamRetryTaskHandle = NULL;
+  }
   if (_status == PLAYING) {
     sendCommand({PR_STOP, 0});
   } else {

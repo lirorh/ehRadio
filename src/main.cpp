@@ -109,11 +109,11 @@ void loop() {
   battery.loop();
   battery.applyPowerPolicy();
 
+  controls.loop();
   if (network.status == CONNECTED || network.status==SDREADY) {
     player.loop();
     config.processDeferredSaves();
   }
-  controls.loop();
   startup.loop();
   #ifdef CORE_MONITOR
     cmMainCount++;

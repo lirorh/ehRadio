@@ -354,6 +354,43 @@ When replacing the audio library, look for: (a) an exposed ring buffer size defi
 
 ---
 
+### 1.14 Connection Timeout Notes
+
+During migration to the upstream audio libraries, the following timeout-related changes were made to both `src/libraries/I2S_Audio/Audio.cpp` and `src/libraries/VS1053_Audio/audioVS1053Ex.cpp`. The upstream libraries hardcode timeout values that are not configurable, so these diffs will need to be re-applied after migration.
+
+**Changes made (2026-06-07):**
+
+| Change | Detail |
+|---|---|
+| `_client->setTimeout()` moved after `_client->connect()` | On ESP32/lwIP, `SO_RCVTIMEO` can only be set on a connected socket; calling it before `connect()` was a silent no-op. Both libraries' `connecttohost()`, `httpPrint()`, and other connect paths are fixed. |
+| Hardcoded `timeout = 3000` in `parseHttpResponseHeader()` | Replaced with `STREAM_TIMEOUT_MS` (default 3000, defined in `options.h`). Separated from socket-level timeouts so the library defaults (250/2700ms) are used for connect/read, and this controls only the header parsing deadline. |
+| Hardcoded `count < 3` retry loop in `Audio::loop()` | Replaced with `MAX_STREAM_RETRIES` (default 2, defined in `options.h`) |
+| Hardcoded connect timeouts `10000 : 5000` (VS1053) | Replaced with `m_timeout_ms_ssl : m_timeout_ms` |
+| Hardcoded `connect(host, 80, 5000)` (VS1053 TTS) | Replaced with `connect(host, 80, m_timeout_ms)` |
+
+**New macros in `options.h`:**
+- `MAX_STREAM_RETRIES` (default 2) — controls the retry loop in `Audio::loop()`
+- `STREAM_TIMEOUT_MS` (default 3000) — timeout for HTTP response header parsing (`parseHttpResponseHeader`); separate from socket-level timeouts
+- `CONNECT_HTTP_HTTPS_TIMEOUT` — left commented out in `options.h`; library defaults (250ms HTTP, 2700ms SSL) are used unless overridden in `myoptions.h`. Still consumed by `player.cpp` → `setConnectionTimeout()` → `m_timeout_ms`/`m_timeout_ms_ssl` for socket connect/read operations in both audio libraries.
+
+**Upstream library audit (ESP32-audioI2S schreibfaul1 3.4.5):**
+- `connecttohost()`: still calls `setTimeout()` before `connect()` — **needs fix**
+- `httpPrint()`: already fixed — calls `setTimeout()` after `connect()` ✅
+- `parseHttpResponseHeader()`: hardcoded `timeout = 3000` — **needs fix**
+- `Audio::loop()`: hardcoded `count < 3` — **needs fix**
+
+**Upstream library audit (VS1053 nsteplanets):**
+- Not yet audited — assume similar hardcoded values exist and will need the same review.
+
+**Watch points for migration:**
+1. Any new library version must be checked for `setTimeout()` ordering (must be after `connect()`)
+2. Any hardcoded numeric timeouts in response header parsing or retry loops must be replaced with configurable macros
+3. `m_timeout_ms` / `m_timeout_ms_ssl` naming may differ in upstream versions — verify the member variable names
+4. VS1053's `connect()` calls that pass a third argument (connect timeout) should use the configured timeout, not a hardcoded value
+5. The `m_f_timeout` flag in `Audio::loop()` controls whether retries happen at all — verify it's properly set in upstream versions
+
+---
+
 ## [ ] 2. Dead / Unreachable Code
 
 ### [ ] 2.1 `|| true` dead branch in `player.cpp` `[LOW]`

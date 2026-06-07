@@ -66,10 +66,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "volume", "vol")) { int v = atoi(value); v = v < 0 ? 0 : (v > VOLUME_SCALE ? VOLUME_SCALE : v); config.store.volume = v; player.setVol(v); return true; }
   if (cmdIs(command, "turnoff"))     { cancelStreamRetry(); bool sst = config.store.smartstart; config.setDspOn(false); backlightControls.restart(); player.sendCommand({PR_STOP, 0}); delay(100); config.saveValue(&config.store.smartstart, sst); return true; }
   if (cmdIs(command, "turnon"))      { config.setDspOn(true); backlightControls.restart(); if (config.store.smartstart) { if (config.getMode() == PM_WEB) player.resumeLastWebSource(); else player.sendCommand({PR_PLAY, config.lastStation()}); } return true; }
-  if (cmdIs(command, "burl", "playurl")) {
-    cancelStreamRetry();
-    return player.queueResolvedUrl(value);
-  }
+  if (cmdIs(command, "burl", "playurl")) { cancelStreamRetry(); return player.queueResolvedUrl(value); }
   if (cmdIs(command, "sdpos")) {
     if (config.getMode()==PM_SDCARD) {
       uint32_t sdval = static_cast<uint32_t>(atoi(value)); config.sdResumePos = 0;

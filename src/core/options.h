@@ -808,12 +808,19 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #if STATION_FIELD_LENGTH < 64
   #error define error in myoptions.h: STATION_FIELD_LENGTH is too small (minimum 64, default 170)
 #endif
+// How many times to retry a failed stream connection before giving up
+#ifndef MAX_STREAM_RETRIES
+  #define MAX_STREAM_RETRIES 3
+#endif
+// Connection timeouts for socket connect/read (consumed by setConnectionTimeout() in player.cpp).
+// Leave undefined for library defaults (250ms HTTP, 2700ms SSL), or define in myoptions.h.
 #ifndef CONNECT_HTTP_HTTPS_TIMEOUT
- // Connection timeout in milliseconds: HTTP, HTTPS(SSL)
- // Library defaults: 250ms HTTP, 2700ms SSL
- // Conservative values for slower networks: 1700ms HTTP, 3700ms SSL
- // #define CONNECT_HTTP_HTTPS_TIMEOUT 1700, 3700 /* For ESP32? */
- // undefined means using library defaults (preferred)
+  #define CONNECT_HTTP_HTTPS_TIMEOUT 1700, 3700
+#endif
+// Timeout in ms for receiving HTTP response headers (server redirects, slow streams).
+// Separate from socket-level timeouts above and only includes final hop in redirects
+#ifndef STREAM_TIMEOUT_MS
+  #define STREAM_TIMEOUT_MS 3000
 #endif
 // Since the buffer can never technically fill up, the visual buffer bar should look "full"
 // when the buffer is near to maximum potential, estimating that 80% to 85% is good.

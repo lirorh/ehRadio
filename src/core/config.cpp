@@ -320,7 +320,6 @@ void Config::initPlaylistMode() {
     _lastStation = store.lastStation;
   #endif //ifdef USE_SD
   if (getMode()==PM_WEB && _wwwFilesExist()) {
-    utility.cleanPlaylist();
     utility.initPlaylist();
     cs = utility.playlistLength();
   }

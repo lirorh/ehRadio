@@ -22,6 +22,7 @@
 void logToTelnetLine(const char* text);
 void logToTelnetRaw(const char* text);
 void serialLog(const char* fmt, ...) LOG_PRINTF_ATTR(1, 2);
+void serialLogX(const char* fmt, ...) LOG_PRINTF_ATTR(1, 2);
 void functionLog(const char* category, const char* fmt, ...) LOG_PRINTF_ATTR(2, 3);
 void bootLog(const char* fmt, ...) LOG_PRINTF_ATTR(1, 2);
 void bootLogX(const char* fmt, ...) LOG_PRINTF_ATTR(1, 2);
@@ -32,6 +33,11 @@ void audioLog(const char* category, const char* fmt, ...) LOG_PRINTF_ATTR(2, 3);
 #define SERIALLOG(fmt, ...) \
   do { \
     serialLog(fmt, ##__VA_ARGS__); \
+  } while (0)
+
+  #define SERIALLOGX(fmt, ...) \
+  do { \
+    serialLogX(fmt, ##__VA_ARGS__); \
   } while (0)
 
 #define FUNCTIONLOG(category, fmt, ...) \

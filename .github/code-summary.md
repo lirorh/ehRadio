@@ -47,6 +47,7 @@ Grouped (not one-by-one deep explained) areas:
 - The public usage pattern remains uppercase macros at call sites, but they now wrap function-backed implementations (`serialLog`, `functionLog`, `bootLog`, `bootLogX`, `errorLog`, `serialLogDot`, `audioLog`) so formatting happens in one backend instead of nested macro layers.
 - Core macros:
   - `SERIALLOG(...)`: writes one formatted line to both serial and telnet sinks.
+  - `SERIALLOGX(...)`: writes one formatted line to both serial and telnet sinks without line-ending (useful after `BOOTLOGX`).
   - `FUNCTIONLOG(category, ...)`: category-tagged wrapper over `SERIALLOG`.
   - `BOOTLOG(...)` / `BOOTLOGX(...)`: boot-sequence logging helpers. `BOOTLOG` ends with a line-wrapper, `BOOTLOGX` does not.
   - `ERRORLOG(...)`: error-category wrapper.

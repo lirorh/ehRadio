@@ -51,6 +51,13 @@ void serialLog(const char* fmt, ...) {
   va_end(args);
 }
 
+void serialLogX(const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  emitLogMessage(nullptr, false, fmt, args);
+  va_end(args);
+}
+
 void functionLog(const char* category, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);

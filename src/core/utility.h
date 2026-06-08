@@ -20,6 +20,7 @@ public:
   bool importWifi();
   void indexPlaylist();
   void initPlaylist();
+  bool cleanPlaylist();
   uint16_t playlistLength();
   bool loadStation(uint16_t stationId);
   uint16_t findStationByUrl(const char* url);

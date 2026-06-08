@@ -105,7 +105,11 @@ void SDManager::listSD(File &plSDfile, File &plSDindex, const char* dirname, uin
       if (_endsWith(strlwr((char*)fn), ".mp3") || _endsWith(fn, ".m4a") || _endsWith(fn, ".aac") ||
           _endsWith(fn, ".wav") || _endsWith(fn, ".flac")) {
         pos = plSDfile.position();
-        plSDfile.printf("%s\t%s\t0\n", fn, filePath);
+        // can't use printf — Arduino's Print::printf has a 64-byte stack buffer that overflows on long URLs
+        plSDfile.print(fn);
+        plSDfile.print('\t');
+        plSDfile.print(filePath);
+        plSDfile.write((const uint8_t*)"\t0\r\n", 4);
         plSDindex.write((uint8_t*)&pos, 4);
         SERIALLOGDOT();
         if (display.mode()==SDCHANGE) display.putRequest(SDFILEINDEX, _sdFCount+1);

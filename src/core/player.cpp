@@ -300,10 +300,10 @@ void Player::_play(uint16_t stationId) {
     setOutputPins(true);
     display.putRequest(NEWMODE, PLAYER);
     display.putRequest(PSTART);
-    network.lostPlaying = false;  // Clear flag - we're playing again!
     #ifdef RADIO_BROWSER_SEND_CLICKS
-      if (config.getMode()==PM_WEB) radioBrowserSendClick(config.station.url);
+      if (config.getMode()==PM_WEB && !network.lostPlaying) radioBrowserSendClick(config.station.url);
     #endif
+    network.lostPlaying = false;  // Clear flag - we're playing again!
     rgbled.playing();
     backlightControls.restart();
   } else {
@@ -336,7 +336,7 @@ void Player::playUrl(const char* url) {
     setOutputPins(true);
     display.putRequest(PSTART);
     #ifdef RADIO_BROWSER_SEND_CLICKS
-      radioBrowserSendClick(url);
+      if (!network.lostPlaying) radioBrowserSendClick(url);
     #endif
     rgbled.playing();
     backlightControls.restart();
@@ -348,6 +348,11 @@ void Player::playUrl(const char* url) {
 }
 
 void Player::prev() {
+  if (streamRetryTaskHandle != NULL) {
+    network.lostPlaying = false;
+    vTaskDelete(streamRetryTaskHandle);
+    streamRetryTaskHandle = NULL;
+  }
   uint16_t lastStation = config.lastStation();
   if (config.getMode()==PM_WEB || !config.store.sdshuffle) {
     if (lastStation == 1) config.lastStation(utility.playlistLength()); else config.lastStation(lastStation-1);
@@ -356,6 +361,11 @@ void Player::prev() {
 }
 
 void Player::next() {
+  if (streamRetryTaskHandle != NULL) {
+    network.lostPlaying = false;
+    vTaskDelete(streamRetryTaskHandle);
+    streamRetryTaskHandle = NULL;
+  }
   uint16_t lastStation = config.lastStation();
   if (config.getMode()==PM_WEB || !config.store.sdshuffle) {
     if (lastStation == utility.playlistLength()) config.lastStation(1); else config.lastStation(lastStation+1);
@@ -366,6 +376,11 @@ void Player::next() {
 }
 
 void Player::toggle() {
+  if (streamRetryTaskHandle != NULL) {
+    network.lostPlaying = false;
+    vTaskDelete(streamRetryTaskHandle);
+    streamRetryTaskHandle = NULL;
+  }
   if (_status == PLAYING) {
     sendCommand({PR_STOP, 0});
   } else {

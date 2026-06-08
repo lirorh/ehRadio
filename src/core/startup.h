@@ -9,14 +9,21 @@ public:
   void checkVerAndSpiffs();
   void initNetwork();
   void startupServices();
+  void checkSafeMode();
+  void loop();
 
 private:
+  void bootInSafeMode();
+  void markBootStable();
   void cleanStaleSearchResults();
   void fixPlaylistFileEnding();
   void getRequiredFiles();
   void checkNewVersionFile();
   bool checkLocaleFile();
   static void startupServicesAsync(void* param);
+
+  uint32_t _bootStartMs = 0;
+  bool _bootStablePending = false;
 };
 
 extern Startup startup;

@@ -319,7 +319,10 @@ void Config::initPlaylistMode() {
     store.play_mode=PM_WEB;
     _lastStation = store.lastStation;
   #endif //ifdef USE_SD
-  if (getMode()==PM_WEB && _wwwFilesExist()) utility.initPlaylist();
+  if (getMode()==PM_WEB && _wwwFilesExist()) {
+    utility.initPlaylist();
+    cs = utility.playlistLength();
+  }
   log_i("%d" ,_lastStation);
   // Validate station number is within range
   if (cs == 0) {

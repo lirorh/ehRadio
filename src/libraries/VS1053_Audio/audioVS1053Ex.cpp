@@ -1026,7 +1026,7 @@ void Audio::loop(){
            case HTTP_RESPONSE_HEADER:
                 static uint8_t count = 0;
                 if(!parseHttpResponseHeader()) {
-                    if(m_f_timeout && count < 3) {m_f_timeout = false; count++; connecttohost(m_lastHost);}
+                    if(m_f_timeout && count < MAX_STREAM_RETRIES) {m_f_timeout = false; count++; connecttohost(m_lastHost);}
                 }
                 else{
                     count = 0;
@@ -1053,7 +1053,7 @@ void Audio::loop(){
             case HTTP_RESPONSE_HEADER:
                 static uint8_t count = 0;
                 if(!parseHttpResponseHeader()) {
-                    if(m_f_timeout && count < 3) {m_f_timeout = false; count++; connecttohost(m_lastHost);}
+                    if(m_f_timeout && count < MAX_STREAM_RETRIES) {m_f_timeout = false; count++; connecttohost(m_lastHost);}
                 }
                 else{
                     count = 0;
@@ -3566,7 +3566,7 @@ bool Audio::parseHttpResponseHeader() { 		// this is the response to a GET / req
     if(!m_lastHost) {log_e("m_lastHost is NULL"); return false;}
 
     uint32_t ctime = millis();
-    uint32_t timeout = 3000; 				// ms
+    uint32_t timeout = STREAM_TIMEOUT_MS; 				// ms
 
     static uint32_t stime;
     static bool     f_time = false;
@@ -4142,10 +4142,9 @@ bool Audio::connecttohost(const char* host, const char* user, const char* pwd) {
     else        { _client = static_cast<WiFiClient*>(&client); }
 
     timestamp = millis();
-    _client->setTimeout(m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
 
     AUDIO_INFO("connect to: \"%s\" on port %d path \"/%s\"", h_host + hostwoext_begin, port, h_host + pos_slash + 1);
-    res = _client->connect(h_host + hostwoext_begin, port, m_f_ssl ? 10000 : 5000);  // Connection timeout: 5s HTTP, 10s HTTPS
+    res = _client->connect(h_host + hostwoext_begin, port, m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
 
     if(pos_slash > 0) h_host[pos_slash] = '/';
     if(pos_colon > 0) h_host[pos_colon] = ':';
@@ -4154,6 +4153,7 @@ bool Audio::connecttohost(const char* host, const char* user, const char* pwd) {
     m_expectedPlsFmt = FORMAT_NONE;
 
     if(res) {
+        _client->setTimeout(m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
         uint32_t dt = millis() - timestamp;
         x_ps_free(&m_lastHost);
         m_lastHost = x_ps_strdup(c_host);
@@ -4267,11 +4267,12 @@ bool Audio::httpPrint(const char* host) {
          if(m_f_ssl) { _client = static_cast<WiFiClient*>(&clientsecure); if(m_f_ssl && port == 80) port = 443;}
          else        { _client = static_cast<WiFiClient*>(&client); }
         AUDIO_INFO("The host has disconnected, reconnecting");
-        if(!_client->connect(hostwoext, port, m_f_ssl ? 10000 : 5000)) {  // Connection timeout: 5s HTTP, 10s HTTPS
+        if(!_client->connect(hostwoext, port, m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms)) {
             log_e("connection lost");
             stopSong();
             return false;
         }
+        _client->setTimeout(m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
     }
     _client->print(rqh);
 
@@ -4380,11 +4381,12 @@ log_e("%s", rqh);
     if(m_f_ssl) { _client = static_cast<WiFiClient*>(&clientsecure); if(m_f_ssl && port == 80) port = 443;}
     else        { _client = static_cast<WiFiClient*>(&client); }
     AUDIO_INFO("The host has disconnected, reconnecting");
-    if(!_client->connect(hostwoext, port, m_f_ssl ? 10000 : 5000)) {  // Connection timeout: 5s HTTP, 10s HTTPS
+    if(!_client->connect(hostwoext, port, m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms)) {
         log_e("connection lost");
         stopSong();
         return false;
     }
+    _client->setTimeout(m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
     _client->print(rqh);
     if(endsWith(extension, ".mp3"))       m_expectedCodec  = CODEC_MP3;
     if(endsWith(extension, ".aac"))       m_expectedCodec  = CODEC_AAC;
@@ -4585,11 +4587,12 @@ bool Audio::connecttospeech(const char* speech, const char* lang) {
 
     _client = static_cast<WiFiClient*>(&client);
     AUDIO_INFO("connect to \"%s\"", host);
-    if(!_client->connect(host, 80, 5000)) {  // Connection timeout: 5s for HTTP
+    if(!_client->connect(host, 80, m_timeout_ms)) {
         log_e("Connection failed");
         xSemaphoreGiveRecursive(mutex_playAudioData);
         return false;
     }
+    _client->setTimeout(m_timeout_ms);
     _client->print(resp);
 
     m_streamType = ST_WEBFILE;

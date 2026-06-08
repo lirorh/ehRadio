@@ -405,6 +405,9 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #endif
 #endif
 
+// This may be needed later if the new VS1053 library needs the name VS1053_SPI for its own SPISettings member variable
+// #undef VS1053_SPI
+
 /* Actually upstream in the library - by default enables improved decoding */
 #ifndef VS_PATCH_ENABLE
   //#define VS_PATCH_ENABLE false /* For the 2.5V boards with wrong voltage regulator.  See here: https://github.com/e2002/yoradio/issues/108 */
@@ -764,11 +767,15 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* ============================== SYSTEM OVERRIDES ============================== */
 
 /* --- SYSTEM TWEAKS --- */
-#ifndef WIFI_ATTEMPTS
+#ifndef WIFI_ATTEMPTS // about 2 attempts per second
   #define WIFI_ATTEMPTS 16
 #endif
 #if WIFI_ATTEMPTS < 1
   #error define error in myoptions.h: WIFI_ATTEMPTS must be at least 1
+#endif
+ // How many seconds to wait after boot completed (including smart start) to consider successful, if rebooted during that time, will enter safe mode (disables smart start, autoupdate)
+#ifndef BOOT_SAFE_TIME
+  #define  BOOT_SAFE_TIME 10
 #endif
 #ifndef SEARCHRESULTS_BUFFER
  // Buffer for chunked HTTP transfers from radio-browser.info. Defined in KB; conversion to bytes done in netserver.cpp.
@@ -804,12 +811,19 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #if STATION_FIELD_LENGTH < 64
   #error define error in myoptions.h: STATION_FIELD_LENGTH is too small (minimum 64, default 170)
 #endif
+// How many times to retry a failed stream connection before giving up
+#ifndef MAX_STREAM_RETRIES
+  #define MAX_STREAM_RETRIES 3
+#endif
+// Connection timeouts for socket connect/read (consumed by setConnectionTimeout() in player.cpp).
+// Leave undefined for library defaults (250ms HTTP, 2700ms SSL), or define in myoptions.h.
 #ifndef CONNECT_HTTP_HTTPS_TIMEOUT
- // Connection timeout in milliseconds: HTTP, HTTPS(SSL)
- // Library defaults: 250ms HTTP, 2700ms SSL
- // Conservative values for slower networks: 1700ms HTTP, 3700ms SSL
- // #define CONNECT_HTTP_HTTPS_TIMEOUT 1700, 3700 /* For ESP32? */
- // undefined means using library defaults (preferred)
+  #define CONNECT_HTTP_HTTPS_TIMEOUT 1700, 3700
+#endif
+// Timeout in ms for receiving HTTP response headers (server redirects, slow streams).
+// Separate from socket-level timeouts above and only includes final hop in redirects
+#ifndef STREAM_TIMEOUT_MS
+  #define STREAM_TIMEOUT_MS 3000
 #endif
 // Since the buffer can never technically fill up, the visual buffer bar should look "full"
 // when the buffer is near to maximum potential, estimating that 80% to 85% is good.

@@ -294,7 +294,11 @@ bool Utility::addSsid(const char* ssid, const char* password) {
   if (!file) return false;
   for (int i = 0; i < config.ssidsCount; i++) {
     if (strlen(config.ssids[i].ssid) > 0) {
-      file.printf("%s\t%s\n", config.ssids[i].ssid, config.ssids[i].password);
+      // can't use printf — Arduino's Print::printf has a 64-byte stack buffer that overflows on long URLs
+      file.print(config.ssids[i].ssid);
+      file.print('\t');
+      file.print(config.ssids[i].password);
+      file.write((const uint8_t*)"\r\n", 2);
     }
   }
   file.close();
@@ -333,7 +337,87 @@ void Utility::indexPlaylist() {
 }
 
 void Utility::initPlaylist() {
-  if (!SPIFFS.exists(INDEX_PATH)) indexPlaylist();
+  if (!SPIFFS.exists(INDEX_PATH)) {
+    cleanPlaylist();
+    indexPlaylist();
+  }
+}
+
+bool Utility::cleanPlaylist() {
+  // Phase 1: Quick scan for blank lines or bare-LF (non-CRLF) line endings
+  File playlist = SPIFFS.open(PLAYLIST_PATH, "r");
+  if (!playlist) return false;
+
+  bool needsClean = false;
+  while (playlist.available()) {
+    String line = playlist.readStringUntil('\n');
+    // Check for bare LF (no preceding CR) — should be CRLF
+    if (line.length() == 0 || line[line.length()-1] != '\r') {
+      needsClean = true;
+      break;
+    }
+    // Check for blank/whitespace-only lines (just "\r")
+    const char* p = line.c_str();
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (*p == '\0') {
+      needsClean = true;
+      break;
+    }
+  }
+  playlist.close();
+
+  if (!needsClean) {
+    BOOTLOG("Playlist verified");
+    return false;  // File is already clean
+  }
+
+  // Phase 2: Rewrite clean version with CRLF line endings
+  playlist = SPIFFS.open(PLAYLIST_PATH, "r");
+  File tmpFile = SPIFFS.open(TMP_PATH, "w");
+  if (!playlist || !tmpFile) {
+    if (playlist) playlist.close();
+    if (tmpFile) tmpFile.close();
+    return false;
+  }
+
+  char stationName[STATION_FIELD_LENGTH] = {0};
+  char stationUrl[STATION_FIELD_LENGTH] = {0};
+  int stationOvol = 0;
+
+  while (playlist.available()) {
+    String line = playlist.readStringUntil('\n');
+    // Strip trailing \r (normalize to bare content)
+    if (line.length() > 0 && line[line.length()-1] == '\r') {
+      line = line.substring(0, line.length()-1);
+    }
+    // Skip blank/whitespace-only lines
+    const char* p = line.c_str();
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (*p == '\0') continue;
+    // Write only valid CSV lines with CRLF ending
+    if (parseCSV(line.c_str(), stationName, stationUrl, stationOvol)) {
+      tmpFile.print(line);
+      tmpFile.write((const uint8_t*)"\r\n", 2);
+    }
+  }
+
+  playlist.close();
+  tmpFile.close();
+
+  // Replace original with cleaned version
+  SPIFFS.remove(PLAYLIST_PATH);
+  if (!SPIFFS.rename(TMP_PATH, PLAYLIST_PATH)) {
+    BOOTLOG("Failed to rename cleaned playlist");
+    SPIFFS.remove(TMP_PATH);
+    return false;
+  }
+
+  // Rebuild index from clean file
+  SPIFFS.remove(INDEX_PATH);
+  indexPlaylist();
+
+  BOOTLOG("Cleaned playlist.csv (blank lines removed, bare LF converted to CRLF)");
+  return true;
 }
 
 uint16_t Utility::playlistLength() {

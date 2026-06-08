@@ -276,6 +276,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - required WebUI asset download and recovery flow
   - version-file parsing for online-update detection
   - startup background update scheduling (`startupServicesAsync`)
+  - safe mode boot crash-loop detection (`checkSafeMode`, `bootInSafeMode`, `markBootStable`, `loop`): reads NVS key `lastbootgood` at boot — if previous boot did not complete successfully, disables `smartstart` and `autoupdate` in memory only for this session so the device does not auto-reconnect to a crash-causing stream; marks boot stable after `BOOT_SAFE_TIME` seconds of uptime
 - Coupling:
   - drives `utility` for shared update/download helpers
   - reads Config-owned asset allowlists during required-file recovery
@@ -305,6 +306,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - weather cache and formatting logic
   - centralized runtime logging for reconnect/weather/boot progress/time-sync via `FUNCTIONLOG`/`SERIALLOG`/`BOOTLOGX`
   - web-stream reconnect now resumes through `player.resumeLastWebSource()` so direct URL sources can recover via `/data/laststation.url` instead of always falling back to `lastStation`
+  - `retryStreamConnection` task (40 attempts × 15 s) can be externally cancelled by `commandhandler.cpp` `cancelStreamRetry()` when the user issues any playback-changing command; the task also cleans itself up when conditions change (user stops, WiFi drops, or playback resumes)
 - Coupling:
   - pushes display updates (`display.putRequest(...)`)
   - calls player/netserver hooks
@@ -327,7 +329,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 - Coupling:
   - updates display queue and websocket state
   - uses `config` station and mode state
-  - interacts with radio-browser click reporting
+  - interacts with radio-browser click reporting (clicks are gated on `!network.lostPlaying` so automatic retry reconnections do not fire clicks; only explicit user-initiated plays do)
   - calls `rgbled` and `backlightControls` directly during playback start/stop
 
 ## `src/core/audiohandlers.h` / `audiohandlers.cpp`
@@ -403,6 +405,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - own shared command aliases across ingress channels (`playstation`/`play`, `boot`/`reboot`, `vol+`/`volup`, `dim`/`brightness`, `dspon`/`screenon`)
   - player-command parity helpers (including exact-match-first direct URL playback command routing for `playurl` / `burl`)
   - trigger curated operations and locale update tasks
+  - cancel the stream retry task (`cancelStreamRetry()`) before executing user-initiated playback commands (`stop`, `playstation`, `prev`, `next`, `toggle`, `turnoff`, `burl`, `mode`, `submitplaylist`) so explicit user actions always interrupt automatic reconnection loops
 - Critical coupling file for setting changes.
 
 ## `src/core/controls.h` / `controls.cpp`

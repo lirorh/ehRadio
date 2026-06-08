@@ -1,6 +1,6 @@
 {
   "name": "ehRadio - OLED with 1-Button",
-  "version": "2026.06.07",
+  "version": "2026.06.08",
   "funding_url": "https://github.com/sponsors/trip5",
   "builds": [
     {

@@ -247,7 +247,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.06.07 | Fixed Search/Curated additions corrupting the playlist, changing stations faster, connect errors fail faster, safe mode entered after unsuccessful boot (disables smartstart, autoupdate) |
+| 2026.06.08 | Fixed Search/Curated additions corrupting the playlist, changing stations faster, connect errors fail faster, safe mode entered after unsuccessful boot (disables smartstart, autoupdate) |
 | 2026.06.03 | Displays overhauled to support more displays more easily, volume now cubic polynomial, `VOLUME_SCALE 42` reduces volume increments from 254, volume steps removed, generator updated |
 | 2026.05.29 | IR fixed, HA component updated, playlist page mode added for ILI9486/9488, playing current station does nothing, documentation completely overhauled |
 | 2026.05.26 | `Feature Freeze` `De-fork from ёRadio` Theme updated, Chunky6 font, fixes to `options.h`: `BTN_*` fixed & `ENC_*` renamed, screensaver fixes, battery widgets, ILI9225 from ёRadio v0.9.710, generator updated, partitions changed |

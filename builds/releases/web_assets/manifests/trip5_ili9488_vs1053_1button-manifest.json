@@ -1,5 +1,5 @@
 {
-  "name": "ehRadio - OLED with Remote",
+  "name": "ehRadio - Big Color Screen with 1-Button Redux",
   "version": "2026.06.07",
   "funding_url": "https://github.com/sponsors/trip5",
   "builds": [
@@ -15,7 +15,7 @@
           "offset": 32768
         },
         {
-          "path": "../firmware/trip5_sh1106_pcm_remote.bin",
+          "path": "../firmware/trip5_ili9488_vs1053_1button.bin",
           "offset": 65536
         }
       ]

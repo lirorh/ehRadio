@@ -65,7 +65,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #define DSP_SSD1305     12 // 128x64 (default): SPI or I2C  (auto-detected from pins)
 #define DSP_SSD1306     13 // 128x64 (default): SPI or I2C  (auto-detected from pins)
 #define DSP_SSD1322     14 // 256x64 (default): SPI
-#define DSP_SSD1327     15 // 128x128 (default): I2C
+#define DSP_SSD1327     15 // 128x128 (default): SPI or I2C (auto-detected from pins)
 #define DSP_ST7735      16 // 160x128 / 128x128 / 160x80 (fixed, derived from DTYPE in displayST7735.h)
 #define DSP_ST7789      17 // 320x240 (default)
 #define DSP_ST7796      18 // 480x320 (default)

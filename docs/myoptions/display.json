@@ -274,6 +274,20 @@
     "lib_deps": "${library.ssd1327}"
   },
   {
+    "name": "SSD1327 (SPI OLED)",
+    "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\nDefault resolution: 128x64\nSupported resolutions: 256x64, 128x128, 128x64, or 128x32",
+    "define": "DSP_MODEL DSP_SSD1327",
+    "pins": [ "TFT_DC" ],
+    "defines": [
+      { "define": "TFT_CS", "type": "pin", "default": 255, "optional": false, "comment": "pin CS is attached to (255 = tied to GND)" },
+      { "define": "DSP_WIDTH", "type": "numeric", "default": 128, "optional": true, "comment": "override default width (128)" },
+      { "define": "DSP_HEIGHT", "type": "numeric", "default": 64, "optional": true, "comment": "override default height (64)" },
+      { "define": "TFT_RST", "type": "pin", "default": -1, "optional": true, "comment": "pin RST is attached to (-1 = EN pin)" }
+    ],
+    "lib_deps": "${library.ssd1327}"
+  },
+  {
     "name": "ST7735 (SPI TFT)",
     "type": "SPI",
     "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI\nINITR_BLACKTAB, INITR_GREENTAB, INITR_REDTAB are 160x128\nINITR_144GREENTAB is 128x128, INITR_MINI160x80 is 160x80",

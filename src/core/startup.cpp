@@ -71,6 +71,24 @@ bool requiredWebFilesExist() {
 
 } // namespace
 
+void Startup::deassertCsPins() {
+  // Deassert all known SPI chip-select pins before any device init.
+  // If a CS pin floats LOW, the device responds to traffic intended for
+  // other devices on the same SPI bus, corrupting detection/communication.
+  #if VS1053_CS != 255
+    pinMode(VS1053_CS, OUTPUT); digitalWrite(VS1053_CS, HIGH);
+  #endif
+  #if SD_CS != 255
+    pinMode(SD_CS, OUTPUT); digitalWrite(SD_CS, HIGH);
+  #endif
+  #if TFT_CS != 255
+    pinMode(TFT_CS, OUTPUT); digitalWrite(TFT_CS, HIGH);
+  #endif
+  #if TS_CS != 255
+    pinMode(TS_CS, OUTPUT); digitalWrite(TS_CS, HIGH);
+  #endif
+}
+
 void Startup::checkVerAndSpiffs() {
   String storedVersion = "";
   if (SPIFFS.exists(VERSION_PATH)) {

@@ -152,14 +152,14 @@ public:
 
 protected:
 //    size_t m_buffSizePSRAM    = 327675;   // most webstreams limit the advance to 100...300Kbytes
-    size_t m_buffSizePSRAM    = UINT16_MAX * 10;   // most webstreams limit the advance to 100...300Kbytes
+    size_t m_buffSizePSRAM    = PSRAM_BUFSIZE;
     size_t m_buffSizeRAM      = 1600 * AUDIOBUFFER_MULTIPLIER2;
     size_t       m_buffSize         = 0;
     size_t       m_freeSpace        = 0;
     size_t       m_writeSpace       = 0;
     size_t       m_dataLength       = 0;
     size_t       m_resBuffSizeRAM   = 2048;     // reserved buffspace, >= one mp3  frame
-    size_t   m_resBuffSizePSRAM = 4096 * 6; // reserved buffspace, >= one flac frame
+    size_t   m_resBuffSizePSRAM = PSRAM_RES_BUFSIZE;
     size_t       m_maxBlockSize     = 1600;
     uint8_t*     m_buffer           = NULL;
     uint8_t*     m_writePtr         = NULL;

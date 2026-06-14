@@ -319,19 +319,17 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 
 /* Bus B / Secondary SPI Bus is less-important to use default pins (and may not be needed at all) */
-/* Nevertheless, shorthand #define SPIB_DEFAULT may be used to set defaults */
+/* Nevertheless, shorthand #define SPIB_DEFAULT may be used to set defaults for ESP32 */
 #if defined(SPIB_DEFAULT)
   #if !defined(SPIB_SCK) && !defined(SPIB_MISO) && !defined(SPIB_MOSI)
     #if defined(CONFIG_IDF_TARGET_ESP32) // ESP32 default VSPI/SPI3
       #define SPIB_SCK 14
       #define SPIB_MISO 12
       #define SPIB_MOSI 13
-    #elif defined(CONFIG_IDF_TARGET_ESP32S3) // ESP32-S3 default FSPI/SPI2
-      #define SPIB_SCK 36
-      #define SPIB_MISO 37
-      #define SPIB_MOSI 35
     #elif defined(CONFIG_IDF_TARGET_ESP32C3) // ESP32-C3 default FSPI/SPI2
       #error SPIB_DEFAULT defined but ESP32-C3 can not use a secondary SPI bus!
+    #else defined(CONFIG_IDF_TARGET_ESP32S3)
+      #error SPIB_DEFAULT defined but ESP32-S3 does not have default secondary SPI pins!
     #endif
   #endif
 #endif
@@ -341,15 +339,18 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 //       #define SD_SPI     'B' // SD card on Bus B
 //       #define TS_SPI     'B' // Touchscreen on Bus B
 //
-// Internal macros SPIA, SPI_BUS_SECONDARY, VS1053_SPIBUS are auto-derived below - do not set them in myoptions.h
+// Internal macros SPIA, SPI_BUS_PRIMARY, SPI_BUS_SECONDARY, VS1053_SPIBUS are
+// auto-derived below.  DO NOT SET THESE in myoptions.h.
 #define SPIA SPI // Bus A alias — always the default &SPI instance
-/* Auto-derive Bus B controller number when Bus B pins are set. DO NOT SET THIS IN myoptions.h */
-#if defined(SPIB_SCK)
-  #if defined(CONFIG_IDF_TARGET_ESP32)
-    #define SPI_BUS_SECONDARY 2 // peripheral formerly called HSPI on ESP32
-  #else
-    #define SPI_BUS_SECONDARY 1 // peripheral called HSPI on ESP32-S3/C3
-  #endif
+/* Auto-derive SPI bus controller numbers. Use symbolic constants (FSPI, HSPI, VSPI)
+   defined by the Arduino framework so the correct hardware peripheral is used. */
+#if defined(CONFIG_IDF_TARGET_ESP32)
+  #define SPI_BUS_PRIMARY   VSPI  // 3 — default &SPI bus on ESP32
+  #define SPI_BUS_SECONDARY HSPI  // 2 — secondary bus on ESP32
+#else
+  // ESP32-S3/C3: FSPI=SPI2_HOST (default), HSPI=SPI3_HOST (secondary)
+  #define SPI_BUS_PRIMARY   FSPI
+  #define SPI_BUS_SECONDARY HSPI
 #endif
 
 /* Override SPI, I2C Speeds and Addresses with myoptions.h */
@@ -825,6 +826,24 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef STREAM_TIMEOUT_MS
   #define STREAM_TIMEOUT_MS 3000
 #endif
+
+// PSRAM Buffer
+#ifndef PSRAM_BUFSIZE
+  #if defined(ARDUINO_ESP32S3_DEV)
+    #define PSRAM_BUFSIZE UINT16_MAX * 10 // ~655KB
+  #else
+    #define PSRAM_BUFSIZE UINT16_MAX * 20 // 1310KB
+  #endif
+#endif
+// FLAC Reserved Buffer
+#ifndef PSRAM_RES_BUFSIZE
+  #if defined(ARDUINO_ESP32S3_DEV)
+    #define PSRAM_RES_BUFSIZE 4096 * 6 // 24KB
+  #else
+    #define PSRAM_RES_BUFSIZE 4096 * 18 // 72KB
+  #endif
+#endif
+
 // Since the buffer can never technically fill up, the visual buffer bar should look "full"
 // when the buffer is near to maximum potential, estimating that 80% to 85% is good.
 #ifndef BUFFERBAR_VISUAL_FULL_PERCENT // value where buffer bar appears visually full

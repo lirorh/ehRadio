@@ -368,6 +368,12 @@ void Audio::begin(){
     if(VS_PATCH_ENABLE) loadUserCode(); // load in VS1053B if you want to play flac
     setVUmeter();
 
+    // Re-assert SCI_MODE after patch loading — the flac plugin may have
+    // overwritten it (clearing SM_LINE1 among other bits), which can
+    // prevent analog audio output on some hardware configurations.
+    write_register(SCI_MODE, _BV(SM_SDINEW) | _BV(SM_LINE1));
+    await_data_request();
+
 //    startSong();
     startAudioTask();
 }
@@ -400,17 +406,22 @@ void Audio::setVUmeter() {
     return;
   }
   _vuInitalized = true;
-    FUNCTIONLOG("VS1053", "status: OK!");
+    SERIALLOGX("patch applied\t");
   write_register(SCI_STATUS, VSstatus | _BV(9));
 }
 //###################################################################
-const uint8_t everyn = 4;
+// VU meter thresholds and decay
+const uint8_t everyn = 4;            // SCI_AICTRL3 read throttling: 1 of every N computeVUlevel() calls reads the register
+const uint8_t VU_THRESHOLD_DECAY = 1; // vuThreshold decrement per decay interval
+const uint8_t VU_DECAY_INTERVAL = 20; // number of computeVUlevel() calls between threshold decays
+
 void Audio::computeVUlevel() {
 
 // * \brief get current measured VU Meter
-// * Returns the calculated peak sample values from both channels in 3 dB increaments through.
-// * Where the high byte represent the left channel, and the low bytes the right channel.
-// * Values from 0 to 31 are valid for both channels.
+// * Returns the calculated peak sample values from both channels in 1 dB increments.
+// * Where the high byte represent the left channel, and the low byte the right channel.
+// * Values from 0 to 95 are valid for both channels (0 dB = silent, 95 dB = max).
+// * The vuThreshold peak-hold decays slowly so the VU display tracks dynamic range.
 // *
 // * \warning This feature is only available with patches that support VU meter.
 
@@ -419,11 +430,34 @@ void Audio::computeVUlevel() {
   cc++;
   if(!_vuInitalized || !config.store.vumeter || cc!=everyn) return;
   if(cc==everyn) cc=0;
-  int16_t reg = read_register(SCI_AICTRL3); 	 // returns the values in 1 dB resolution from 0 (lowest) 95 (highest)
-  vuLeft = map((uint8_t)(reg & 0x00FF), 85, 95, 0, 255);
-  vuRight = map((uint8_t)(reg >> 8), 85, 95, 0, 255);
-  if(vuLeft>config.vuThreshold) config.vuThreshold = vuLeft;
-  if(vuRight>config.vuThreshold) config.vuThreshold=vuRight;
+  int16_t reg = read_register(SCI_AICTRL3);  // returns 0..95 dB per channel (1 dB resolution)
+
+  // Map the full 0..95 dB range to 0..255 so audio at any level produces visible VU movement
+  vuLeft  = map((uint8_t)(reg & 0x00FF), 0, 95, 0, 255);
+  vuRight = map((uint8_t)(reg >> 8),     0, 95, 0, 255);
+
+  // Clamp to valid range (safeguard against out-of-range register values)
+  if(vuLeft  > 255) vuLeft  = 255;
+  if(vuRight > 255) vuRight = 255;
+
+  // Peak-hold detector with slow decay.
+  // vuThreshold rises instantly to the current peak, then decays gradually.
+  // This allows get_VUlevel() to map the current level relative to a recent
+  // peak, giving dynamic bars instead of a permanently pinned 100%.
+  if(vuLeft > config.vuThreshold) {
+    config.vuThreshold = vuLeft;
+  } else if(vuRight > config.vuThreshold) {
+    config.vuThreshold = vuRight;
+  } else if(config.vuThreshold > 0) {
+    static uint8_t decayCnt = 0;
+    if(++decayCnt >= VU_DECAY_INTERVAL) {
+      decayCnt = 0;
+      if(config.vuThreshold >= VU_THRESHOLD_DECAY)
+        config.vuThreshold -= VU_THRESHOLD_DECAY;
+      else
+        config.vuThreshold = 0;
+    }
+  }
 }
 
 uint16_t Audio::get_VUlevel(uint16_t dimension){
@@ -549,38 +583,46 @@ uint32_t Audio::stopSong(){
             pos = getFilePos() - inBufferFilled();
         }
         // if(_client->connected()) _client->stop();
+
+        // Send SM_CANCEL only when a song was actually playing.
+        // If m_f_running was already false (e.g. stopSong() called from
+        // setDefaults() before connecttohost()), the chip has no frame
+        // to cancel — writing SM_CANCEL would stall permanently because
+        // no decode pipeline is active to clear it.
+        sdi_send_fillers(2052);
+    //    sdi_send_fillers(vs1053_chunk_size * 54);
+        delay(10);
+        write_register(SCI_MODE, _BV (SM_SDINEW) | _BV(SM_CANCEL));
+        for(i=0; i < 200; i++) {
+            sdi_send_fillers(32);
+            modereg = read_register(SCI_MODE);  			// Read status
+            if((modereg & _BV(SM_CANCEL)) == 0) {
+                sdi_send_fillers(2052);
+                sprintf(m_chbuf, "Song stopped correctly after %d msec", i * 10);
+                audio_info(m_chbuf);
+                break;
+            }
+            delay(10);
+        }
+        if(i >= 200) {
+            audio_info("Song stopped incorrectly!");
+            printDetails("after song stopped incorrectly");
+        }
     }
+
     if(audiofile) {
         // added this before putting 'm_f_localfile = false' in stopSong(); should never occur....
         AUDIO_INFO("Closing audio file \"%s\"", audiofile.name());
         audiofile.close();
     }
 
-    sdi_send_fillers(2052);
-//    sdi_send_fillers(vs1053_chunk_size * 54);
-    delay(10);
-    write_register(SCI_MODE, _BV (SM_SDINEW) | _BV(SM_CANCEL));
-    for(i=0; i < 200; i++) {
-        sdi_send_fillers(32);
-        modereg = read_register(SCI_MODE);  			// Read status
-        if((modereg & _BV(SM_CANCEL)) == 0) {
-            sdi_send_fillers(2052);
-            sprintf(m_chbuf, "Song stopped correctly after %d msec", i * 10);
-            audio_info(m_chbuf);
-            m_validSamples = 0;
-            m_audioCurrentTime = 0;
-            m_audioFileDuration = 0;
-            m_codec = CODEC_NONE;
-            m_dataMode = AUDIO_NONE;
-            m_f_lockInBuffer = false;
-            return pos;
-//            return;
-        }
-        delay(10);
-    }
-    audio_info("Song stopped incorrectly!");
-    printDetails("after song stopped incorrectly");
-    return 0;
+    m_validSamples = 0;
+    m_audioCurrentTime = 0;
+    m_audioFileDuration = 0;
+    m_codec = CODEC_NONE;
+    m_dataMode = AUDIO_NONE;
+    m_f_lockInBuffer = false;
+    return pos;
 }
 //###################################################################
 /*//void Audio::softReset()

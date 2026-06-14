@@ -1,7 +1,7 @@
 [ "Audio Decoder",
   {
     "name": "VS1053 (SPI Audio Decoder)",
-    "info": "If using SPI display, don't put on Bus A\nIf no SPI display, put VS1053 alone on Bus A",
+    "info": "VS1053 must be the sole device on the SPI bus\nOther SPI devices can share a bus",
     "pins": [ "VS1053_CS", "VS1053_DCS", "VS1053_DREQ" ],
     "defines": [
       { "define": "VS1053_SPI", "type": "spi", "comment": "assign VS1053 to SPI bus" },

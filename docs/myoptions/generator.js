@@ -1555,11 +1555,12 @@ function validateAllPins() {
 
   // Clear ALL pin classes
   allPinInputs.forEach(function(el) {
-    el.classList.remove('pin-error', 'pin-ok', 'pin-dup', 'pin-i2c', 'pin-en');
+      el.classList.remove('pin-error', 'pin-ok', 'pin-dup', 'pin-i2c', 'pin-en', 'pin-safe');
   });
 
   var bd = gData.boardData;
   var validPins = bd ? bd.valid_pins : null;
+  var safePins = bd ? bd.safe_pins : null;
 
   // Map of value -> [{el, define}] for duplicate detection
   var pinValueMap = {};
@@ -1607,8 +1608,12 @@ function validateAllPins() {
       return;
     }
 
-    // All good — green
-    el.classList.add('pin-ok');
+    // All good — blue if safe, green if valid
+    if (safePins && safePins.includes(val)) {
+      el.classList.add('pin-safe'); // recommended safe pin
+    } else {
+      el.classList.add('pin-ok');   // valid but requires caution
+    }
   });
 }
 
@@ -2408,7 +2413,7 @@ function buildBoardSection_pio(bd) {
   out += 'board = ' + bd.board + '\n';
 
   // board_build.*, board_upload.*, and any other generic platformio.ini fields
-  var skipFields = ['name', 'env', 'board', 'build_flags', 'default_pins', 'default_selects', 'spi', 'valid_pins', 'left_pins', 'right_pins', 'image', 'info', 'url'];
+  var skipFields = ['name', 'env', 'board', 'build_flags', 'default_pins', 'default_selects', 'spi', 'valid_pins', 'safe_pins', 'left_pins', 'right_pins', 'image', 'info', 'url'];
   Object.keys(bd).forEach(function(key) {
     if (skipFields.includes(key)) return;
     out += key + ' = ' + bd[key] + '\n';

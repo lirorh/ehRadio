@@ -81,11 +81,16 @@
   #define SPIB_SCK           21        /* Bus B pins (SD) */
   #define SPIB_MISO          2
   #define SPIB_MOSI          1
-#elif defined(ILI9488_PCM_1BUTTON) || defined(ILI9488_VS1053_1BUTTON)
+#elif defined(ILI9488_PCM_1BUTTON)
   #define SPIA_DEFAULT_XMISO           /* SCK/CLK 12 and MOSI/SDA 11 (no MISO) */
   #define SPIB_SCK           21        /* Bus B pins (SD & VS1053) */
   #define SPIB_MISO          2
   #define SPIB_MOSI          1
+#elif defined(ILI9488_VS1053_1BUTTON)
+  #define SPIA_DEFAULT                /* SCK/CLK 12, MOSI/SDA 11, MISO 13 (Display and SD)*/
+  #define SPIB_SCK           8        /* Bus B pins (VS1053) */
+  #define SPIB_MISO          17
+  #define SPIB_MOSI          18
 #elif defined(SH1106_PCM_REMOTE) || defined(SH1106_PCM_1BUTTON)
   #define SPIA_SCK           21        /* Bus A pins (SD) - no Bus B device, no need for default pins */
   #define SPIA_MISO          13
@@ -238,13 +243,14 @@
 #endif
 
 #if defined(ST7735_PCM_1BUTTON) || defined(SH1106_VS1053_3BUTTONS) ||\
-   defined(ILI9488_PCM_1BUTTON) || defined(ILI9488_VS1053_1BUTTON) || defined(ES3C28P)
+   defined(ILI9488_PCM_1BUTTON) || defined(ES3C28P)
   #define SD_SPI          'B'     /* assign SD to Bus B */
   #define SD_CS           47
-#elif defined(SH1106_PCM_REMOTE) || defined(SH1106_PCM_1BUTTON)
+#elif defined(ILI9488_VS1053_1BUTTON) || defined(SH1106_PCM_REMOTE) || defined(SH1106_PCM_1BUTTON)
   #define SD_SPI          'A'     /* assign SD to Bus B */
   #define SD_CS           47
 #endif
+
 
 #define MQTT_ENABLE
 
@@ -330,5 +336,13 @@
 //#define CLOCKFONT CHUNKY6
 //#define CLOCKFONT YO_MONO
 //#define CLOCKFONT YO_CLASSIC
+
+#if defined(ILI9488_VS1053_1BUTTON) // debugging & fixes
+  //#undef VS_PATCH_ENABLE
+  //#define VS_PATCH_ENABLE true
+  //#undef SD_SPI
+  //#undef SD_CS
+  //#define ALL_DEBUG_LOGS
+#endif
 
 #endif // myoptions_h

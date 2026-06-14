@@ -404,7 +404,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define VS1053_SPIBUS SPIA // VS1053 on Bus A
   #endif
 #endif
-/* Actually upstream in the library - enables flac decoding - will be disabled unless explicitly set true in myoptions.h */
+/* Enables flac decoding on true VS1053B boards - will be disabled unless explicitly set true in myoptions.h */
 #ifndef VS_PATCH_ENABLE
   #define VS_PATCH_ENABLE false /* Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V. */
 #endif

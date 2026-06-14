@@ -39,6 +39,7 @@ class MyNetwork {
 void ticks();
 void retryStreamConnection(void * pvParameters);
 void searchWiFi(void * pvParameters);
+void wifiReconnectionTask(void * pvParameters);
 void rebootTime();
 void doSync(void * pvParameters);
 bool getWeather(char *wstr);

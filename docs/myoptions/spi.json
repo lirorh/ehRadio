@@ -7,7 +7,7 @@
   },
   {
     "name": "SPI Bus B",
-    "info": "The recommended bus for VS1053 when using an SPI display\nSafe non-strapping pins will be blue color",
+    "info": "The recommended bus for VS1053 when using an SPI display\nUse safe non-strapping pins only!",
     "spi": "B",
     "pins": [ "SPIB_SCK", "SPIB_MISO", "SPIB_MOSI" ]
   }

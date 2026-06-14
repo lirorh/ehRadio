@@ -195,13 +195,49 @@
       box-sizing: border-box;
     }
     input[type="number"]:focus, input[type="text"]:focus { outline: none; border-color: #888; }
-    input.pin-error { border-color: #C80C02 !important; background: #2a0000 !important; color: #ff8888 !important; }
-    input.pin-ok    { border-color: #2a9d2a !important; background: #002a00 !important; color: #88ff88 !important; }
-    input.pin-dup   { border-color: #c8c000 !important; background: #2a2a00 !important; color: #ffff88 !important; }
-    input.pin-i2c   { border-color: #cc7700 !important; background: #2a1800 !important; color: #ffcc88 !important; }
-    input.pin-en    { border-color: #7b2fbe !important; background: #1a0028 !important; color: #cc88ff !important; }
-    input.pin-safe  { border-color: #2a9dd9 !important; background: #002a40 !important; color: #88ddff !important; }
-    input.wide-text { width: 600px; }
+    
+    input.pin-ok, .pin-ok      { border-color: #2a9d2a !important; background: #002a00 !important; color: #88ff88 !important; }
+    input.pin-safe, .pin-safe  { border-color: #2a9dd9 !important; background: #002a40 !important; color: #88ddff !important; }
+    input.pin-en, .pin-en      { border-color: #7b2fbe !important; background: #1a0028 !important; color: #cc88ff !important; }
+    input.pin-i2c, .pin-i2c   { border-color: #cc7700 !important; background: #2a1800 !important; color: #ffcc88 !important; }
+    input.pin-dup, .pin-dup   { border-color: #c8c000 !important; background: #2a2a00 !important; color: #ffff88 !important; }
+    input.pin-error, .pin-error { border-color: #C80C02 !important; background: #2a0000 !important; color: #ff8888 !important; }
+    input.w ide-text { width: 600px; }
+
+    /* Pin color legend — non-bordered help area */
+    .pin-legend {
+      text-align: center;
+      margin: 16px 0;
+      padding: 8px 12px;
+    }
+    .pin-legend-title {
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+    .pin-legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px 20px;
+      margin-bottom: 6px;
+    }
+    .pin-legend-box {
+      display: inline-block;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #555;
+      width: 105px;
+      box-sizing: border-box;
+      background: #1a1a2e;
+      color: #ccc;
+      cursor: default;
+      user-select: none;
+    }
 
     /* Select dropdowns */
     select {

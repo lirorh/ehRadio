@@ -1,12 +1,12 @@
 [ "Audio Decoder",
   {
     "name": "VS1053 (SPI Audio Decoder)",
-    "info": "VS1053 must be the sole device on the SPI bus\nOther SPI devices can share a bus",
+    "info": "Highly recommended to make VS1053 the sole device on the SPI bus\nIf VS_PATCH_ENABLE is true, it is required\nOther SPI devices can share a bus\nVS1003 will work but only decode MP3",
     "pins": [ "VS1053_CS", "VS1053_DCS", "VS1053_DREQ" ],
     "defines": [
       { "define": "VS1053_SPI", "type": "spi", "comment": "assign VS1053 to SPI bus" },
       { "define": "VS1053_RST", "type": "pin", "default": -1, "optional": true, "comment": "pin RST is attached to (-1 for EN pin"},
-      { "define": "VS_PATCH_ENABLE", "type": "boolean", "default": false, "comment": "enables FLAC playback but should be false for 2.5V boards with wrong voltage regulator: https://github.com/e2002/yoradio/issues/108}" }
+      { "define": "VS_PATCH_ENABLE", "type": "boolean", "default": false, "comment": "Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V." }
     ],
     "lib_deps": "",
     "build_src_filter": "+<libraries/VS1053_Audio/*>"

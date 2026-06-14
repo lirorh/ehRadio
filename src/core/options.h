@@ -394,8 +394,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define VS1053_MOSI SPIB_MOSI
   #endif
 #endif
-// This next bit should not be needed later when upgrading the VS1053 library
-// Do not set VS1053_SPIBUS in myoptions.h
+/* Do not set VS1053_SPIBUS in myoptions.h */
 #if VS1053_CS != 255
   #if !defined(VS1053_SCK)
     #error define error in myoptions.h: VS1053 enabled (VS1053_CS != 255) but VS1053_SCK not defined. Set VS1053_SPI 'A' or 'B' with matching SPIA_/SPIB_ bus pins, or define VS1053_SCK/MISO/MOSI directly.
@@ -405,13 +404,9 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define VS1053_SPIBUS SPIA // VS1053 on Bus A
   #endif
 #endif
-
-// This may be needed later if the new VS1053 library needs the name VS1053_SPI for its own SPISettings member variable
-// #undef VS1053_SPI
-
-/* Actually upstream in the library - by default enables improved decoding */
+/* Actually upstream in the library - enables flac decoding - will be disabled unless explicitly set true in myoptions.h */
 #ifndef VS_PATCH_ENABLE
-  //#define VS_PATCH_ENABLE false /* For the 2.5V boards with wrong voltage regulator.  See here: https://github.com/e2002/yoradio/issues/108 */
+  #define VS_PATCH_ENABLE false /* Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V. */
 #endif
 
 /* --- ESP32 INTERNAL DAC --- */

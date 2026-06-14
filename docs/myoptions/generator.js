@@ -150,33 +150,36 @@ function buildPage() {
   // 2. Board section
   root.appendChild(buildBoardSection());
 
-  // 3. SPI Bus sections (rendered inside board section update)
+  // 3. Pin color legend
+  root.appendChild(buildPinLegend());
+
+  // 4. SPI Bus sections (rendered inside board section update)
   var spiDiv = document.createElement('div');
   spiDiv.id = 'spi-sections';
   root.appendChild(spiDiv);
 
-  // 4. Display section
+  // 5. Display section
   root.appendChild(buildSingleSelectSection(gData.display, 'display-section', 'dsp-sel', onDisplayChange));
 
-  // 5. Audio section
+  // 6. Audio section
   root.appendChild(buildSingleSelectSection(gData.audio, 'audio-section', 'aud-sel', onAudioChange));
 
-  // 6. Input section
+  // 7. Input section
   root.appendChild(buildCheckboxGroupSection(gData.input, 'input-section'));
 
-  // 7. Peripherals section
+  // 8. Peripherals section
   root.appendChild(buildCheckboxGroupSection(gData.peripherals, 'peripherals-section'));
 
-  // 8. Locale section
+  // 9. Locale section
   root.appendChild(buildLocaleSection());
 
-  // 9. User Defaults section
+  // 10. User Defaults section
   root.appendChild(buildDefaultsSection());
 
-  // 10. Timezone section
+  // 11. Timezone section
   root.appendChild(buildTimezoneSection());
 
-  // 11. Extra custom defines section
+  // 12. Extra custom defines section
   root.appendChild(buildExtraDefinesSection());
 
   // Show buttons
@@ -244,6 +247,47 @@ function buildBoardSection() {
   sec.appendChild(imgArea);
 
   return sec;
+}
+
+// ============================================================
+// Pin color legend — non-bordered help area between Board and SPI
+// ============================================================
+function buildPinLegend() {
+  var wrap = document.createElement('div');
+  wrap.className = 'pin-legend';
+  wrap.id = 'pin-legend';
+
+  var title = document.createElement('div');
+  title.className = 'pin-legend-title';
+  title.textContent = 'PIN COLOR LEGEND';
+  wrap.appendChild(title);
+
+  var items = [
+    { label: 'Safe',   cls: 'pin-safe' },
+    { label: 'Valid',  cls: 'pin-ok' },
+    { label: 'EN/RST', cls: 'pin-en' },
+    { label: 'I2C Reuse', cls: 'pin-i2c' },
+    { label: 'Duplicate', cls: 'pin-dup' },
+    { label: 'Invalid', cls: 'pin-error' }
+  ];
+
+  // Two rows of three
+  for (var ri = 0; ri < 2; ri++) {
+    var row = document.createElement('div');
+    row.className = 'pin-legend-row';
+    for (var ci = 0; ci < 3; ci++) {
+      var idx = ri * 3 + ci;
+      if (idx >= items.length) break;
+      var it = items[idx];
+      var box = document.createElement('span');
+      box.className = 'pin-legend-box ' + it.cls;
+      box.textContent = it.label;
+      row.appendChild(box);
+    }
+    wrap.appendChild(row);
+  }
+
+  return wrap;
 }
 
 function onBoardChange() {

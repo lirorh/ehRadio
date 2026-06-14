@@ -247,7 +247,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.06.15 | SPI architecture fixed so SPI Display and VS1053 are possible, generator indicates safe pins | 
+| 2026.06.15 | SPI fixed so SPI Display and VS1053 are possible, generator indicates safe pins |
 | 2026.06.08 | Fixed Search/Curated additions corrupting the playlist, changing stations faster, connect errors fail faster, safe mode entered after unsuccessful boot (disables smartstart, autoupdate) |
 | 2026.06.03 | Displays overhauled to support more displays more easily, volume now cubic polynomial, `VOLUME_SCALE 42` reduces volume increments from 254, volume steps removed, generator updated |
 | 2026.05.29 | IR fixed, HA component updated, playlist page mode added for ILI9486/9488, playing current station does nothing, documentation completely overhauled |

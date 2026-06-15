@@ -16,6 +16,7 @@ See more about this below.
 
 I don't like the idea of using a bunch of custom libraries... But...
 I did a deep investigation into ILI9486/8 library to see if I could use another library and... it's irreplaceable.
+Most of the libraries that remain here probably are - if simply because they are not available as libraries on platformio.
 
 If you have trouble with one of these custom libraries or an online library...
 Sorry and good luck.
@@ -83,4 +84,5 @@ Sorry and good luck.
 
 See also this issue: https://github.com/trip5/ehRadio/issues/39
 
-This investigation is continued in code-issues.md
+Other folders (especially those with notes in brackets) are not compatible with the current codebase.
+They are for study purposes and meant for further advancements of the existing audio libraries.

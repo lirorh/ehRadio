@@ -68,7 +68,7 @@ especially in terms of how they are used and how they are built.
 | Multiple audio decoders supported                    | Multiple audio decoders supported (based on ёRadio) | 
 | - I2S PCM decoder                                    | - I2S and VS1053 updated (for higher bitrate streams) |
 | - VS1053 (or VS1003)                                 | - ES8311 works (a common codec on ESP32-S3 display boards) |
-| - ESP32's builtin DAC                                | - Future updates will support more by using external libraries |
+| - ESP32's builtin DAC                                |   |
 | Multiple displays                                    | Uses 'ёRadio' display architecture |
 | - see `options.h` for a full list                    | - ёRadio and ehRadio display configs should be compatible with each other |
 | SPI buses use default pins                           | SPI buses can use custom pins |
@@ -76,7 +76,7 @@ especially in terms of how they are used and how they are built.
 | - VSPI and HSPI are in board definition files        | - bus pins defined in `myoptions.h` |
 | - ESP32 defines VSPI/SPI3 bus or HSPI/SPI2 bus       | - it is still recommended to use default pins wherever possible |
 | - ESP32-S3 defines FSPI/SPI2 but no second bus       | - ESP32-S3's FSPI pins should be assigned as Bus A but any pins can be assigned to Bus B  |
-| - no way to use VS1053 and SPI display together      | - Recommended: SPI display on A, VS1053 and other devices on B OR VS1053 on A and others on B |
+| - no way to use VS1053 and SPI display together      | - SPI display must be on A, recommended to put VS1053 alone (on B with SPI display) |
 | Most default settings hardcoded                      | Almost all system and user default settings can be set in `myoptions.h` |
 
 ---
@@ -104,6 +104,7 @@ More screenshots from the WebUI are [here](WebUI.md).
 The best starting point (after reading this page) is the [myoptions Generator](https://trip5.github.io/ehRadio/myoptions/generator.html).
 This can assist in making a very good `myoptions.h` file, which should be placed in the root of the build folder next to `platformio.ini` (which the generator also makes). 
 It contains almost all supported hardware and peripherals which can be used when building an ehRadio.
+It can generate a shareable link (json is encoded in the URL) and can even contain advanced options and notes.
 
 If you need to get more advanced options, a lot of build options and comments and notes are actually in `options.h`.
 Contained within are numerous notes on how to further customize your `myoptions.h`.
@@ -119,9 +120,7 @@ likely mostly from schreibfaul1's library [3.1.0 January 7, 2025](https://github
 ehRadio also currently uses the `ESP32-vs1053_ext` library from Maleksm's ёRadio mod v0.9.512m, likely mostly from schreibfaul1's [final version](https://github.com/schreibfaul1/ESP32-vs1053_ext).
 These libraries are so intertwined with the codebase that it may be impossible to migrate to newer versions, but... I will try.
 
-Until this "de-fork" is complete, I'm trying to avoid any major changes to the audio handling.
-It may take a significant amount of time to accomplish this.
-
+Both libraries have been further optimized to get the best playback possible... and further optimization is possible.
 For that and other major needed changes to the codebase, there is a `code-issues.md` file which may be a messy file to look at, depending on how these efforts are going.
 
 ### Languages
@@ -235,7 +234,7 @@ That PR started [June 13, 2025](https://github.com/e2002/yoradio/pull/184) was a
 In retrospect, proposing thousands of lines of changes was rude and unrealistic.  After some thought, ehRadio was forked August 10, 2025.
 On May 21, 2026, ehRadio was officially deforked from ёRadio on Github.
 
-I will add a note here that although I do use AI-assisted coding, I am not a "vibe-coder" - except for python scripts.
+I will add a note here that although I do use AI-assisted coding, I am not a "vibe-coder" - except for python and javascript.
 I welcome all pull requests but please follow the rules as laid out in `copilot-instructions.md` and `code-summary.md`,
 the former of which is a set of hard rules for AI-assisted coding, the latter of which is an AI-generated `Bible` of the codebase to help an LLM maintain codebase consistancy.
 

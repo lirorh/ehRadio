@@ -6,11 +6,14 @@
 /*        ************************************************************************      */
 /*        . . .  CHECK options.h for full options, examples, and overrides   . . .      */
 
-/* - - - = = = - - - Choose the Radio (defined by platformio.ini env) - - - = = = - - - */
-/* automatic builds define the board -- be sure to comment these lines if not debugging */
+/* --- Trip5 Note --- */
 
-// in VSCode, the first environment in platformio.ini is used to evaluate the #ifdef chains
-// The build_flags = -DSH1106_PCM_REMOTE is a #define... so to debug, we need to undefine it first:
+// If you're looking at this file, you can see how I use it to contain various builds inside one myoptions.h file.
+// It's a messy file, organized as best as I could keep it as my number of builds expands.
+// The pins used are not neccessarily "best practice" as some pre-date my generator and correct knowledge of ESP32-S3.
+
+// In VSCode, the first environment in platformio.ini is used to evaluate the #ifdef chains
+// The first "build_flags = -DSH1106_PCM_REMOTE" is a #define... so to debug, we need to undefine it first:
 //
 //#undef SH1106_PCM_REMOTE
 //
@@ -21,9 +24,8 @@
 //#define SH1106_VS1053_3BUTTONS       // Ali Speaker with OLED, VS1053, 3 Buttons
 //#define ST7735_PCM_1BUTTON           // Color TFT (red board) with PCM I2S, 1 Button
 //#define ILI9488_PCM_1BUTTON          // Big Screen with PCM, 1 button
-//#define ILI9488_VS1053_1BUTTON
+//#define ILI9488_VS1053_1BUTTON       // the same but with a VS1053 decoder
 //#define ES3C28P                      // ESP32-S3 ES3C28P Dev Board (attached 240x320 screen and ES8311 + FM8002E Decoder)
-
 
 /* --- Firmware File & Board --- */
 

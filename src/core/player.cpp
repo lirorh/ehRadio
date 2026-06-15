@@ -46,7 +46,7 @@ void Player::init() {
   BOOTLOGX("player.init\t");
   playerQueue=NULL;
   //_resumeFilePos = 0;
-  playerQueue = xQueueCreate(5, sizeof(playerRequestParams_t));
+  playerQueue = xQueueCreate(10, sizeof(playerRequestParams_t));
   setOutputPins(false);
   delay(50);
   memset(_plError, 0, PLERR_LN);

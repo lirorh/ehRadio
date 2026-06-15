@@ -98,7 +98,7 @@ Grouped (not one-by-one deep explained) areas:
   - **Exception**: locale and language options are handled by locale.h
   - **SPI architecture — Named Bus System** (auto-derived internals — do NOT define `SPI_BUS_SECONDARY`, `SPIA`, or `VS1053_SPIBUS` in `myoptions.h`):
   - **Bus A** = `SPIA` (alias for `&SPI`, the default ESP32 SPI instance). Pins configured by `SPI.begin(SPIA_SCK, SPIA_MISO, SPIA_MOSI)` in `Config::init()` when `SPIA_SCK` is defined; otherwise `SPI.begin()` uses hardware defaults.
-  - **Bus B** = `SPIB` (`SPIClass SPIB(SPI_BUS_SECONDARY)` declared and initialized in `config.cpp`). Only exists when `SPIB_SCK` is defined. `SPI_BUS_SECONDARY` is auto-derived: ESP32 → `2`, ESP32-S3/C3 → `1`.
+  - **Bus B** = `SPIB` (`SPIClass SPIB(SPI_BUS_SECONDARY)` declared and initialized in `config.cpp`). Only exists when `SPIB_SCK` is defined. `SPI_BUS_SECONDARY` uses symbolic constants: `VSPI` (ESP32) / `FSPI` (ESP32-S3/C3) for the primary bus, `HSPI` for the secondary bus on all targets.
   - **Bus pin defines** (set in `myoptions.h`): `SPIA_SCK/MISO/MOSI` manually, or use shorthands: `SPIA_DEFAULT` (chip default pins), `SPIA_DEFAULT_XMISO` (chip default SCK/MOSI, MISO=255 — for display-only Bus A). `SPIB_SCK/MISO/MOSI` manually, or `SPIB_DEFAULT` (chip default secondary-bus pins). `SPI.begin()` / `SPIB.begin()` are only called when the respective SCK is defined and `!= 255`; I2C-only builds skip SPI init entirely.
   - **Per-peripheral bus assignment** (char literals `'A'` or `'B'` — NOT strings): `SD_SPI`, `TS_SPI`, `VS1053_SPI`. `VS1053_SPI` resolves `VS1053_SCK/MISO/MOSI` from the matching bus pins in `options.h` (soft — does not override direct pin defines). SD and TS use the bus *object* directly (`SPIA`/`SPIB`) — no separate SCK/MISO/MOSI derivation needed.
   - **`VSPI FSPI` shim** — defined when target is not ESP32 (`!CONFIG_IDF_TARGET_ESP32`) for third-party library compatibility.
@@ -117,6 +117,7 @@ Grouped (not one-by-one deep explained) areas:
   - `static_assert` with `__builtin_strcmp` for enumerated string options (e.g. `WEATHER_API`, `WEATHER_WIND_SPEED_UNITS`). **Update the `static_assert` whenever a new provider/value is added.**
   - `/* PREVENT BOARD-DEFINED PIN RE-USE */` section lives after the `/* ESP DEVBOARD */` LED block (requires `LED_PIN` and `ESP_S3C3` to be defined first). Covers LED vs RST pin conflicts only — keep it narrowly scoped.
 - **What is intentionally NOT guarded**: booleans (compiler error is obvious), pin numbers (board-dependent range), free-form strings (`AP_SSID`, `MQTT_*`, URLs), color macros (R,G,B triplets), `AUTOBACKLIGHT(x)` (C macro function), `BATTERY_CURVE_MV/PCT` (already has `static_assert` in `battery.cpp`).
+- **PSRAM buffer sizing** — `PSRAM_BUFSIZE` / `PSRAM_RES_BUFSIZE` macros control the audio input buffer and FLAC reserved buffer sizes. Defaults differ by board: ESP32-S3 gets `UINT16_MAX*10` (~655KB) / `4096*6` (24KB); ESP32 gets `UINT16_MAX*25` (~1.6MB) / `4096*90` (360KB). Both `I2S_Audio/Audio.h` and `VS1053_Audio/audioVS1053Ex.h` now delegate to these macros with local `#ifndef` fallbacks.
 - Buffer bar visual mapping:
   - `BUFFERBAR_VISUAL_FULL_PERCENT` controls where input-buffer fill is rendered as visually full.
   - default `82` means 82% raw fill maps to 100% bar width; set `100` to keep direct 1:1 mapping.
@@ -277,6 +278,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - required WebUI asset download and recovery flow
   - version-file parsing for online-update detection
   - startup background update scheduling (`startupServicesAsync`)
+  - `deassertCsPins()` — called from `main.cpp` `setup()` before any device init. Sets all known SPI CS pins (`VS1053_CS`, `SD_CS`, `TFT_CS`, `TS_CS`) to `OUTPUT` + `HIGH` to prevent floating CS from causing bus contention during peripheral detection.
   - safe mode boot crash-loop detection (`checkSafeMode`, `bootInSafeMode`, `markBootStable`, `loop`): reads NVS key `lastbootgood` at boot — if previous boot did not complete successfully, disables `smartstart` and `autoupdate` in memory only for this session so the device does not auto-reconnect to a crash-causing stream; marks boot stable after `BOOT_SAFE_TIME` seconds of uptime
 - Coupling:
   - drives `utility` for shared update/download helpers
@@ -325,6 +327,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - volume conversion (`volToI2S`) including ES8311 path
   - SD/web mode specific playback behavior
   - error reporting and display/net updates
+  - command queue depth: `xQueueCreate(10, ...)` — increased from 5 to prevent queue overflow during rapid mode-switch sequences (SD→web transitions) where multiple commands (PR_STOP, PR_PLAY, PR_VUTONUS) arrive before the first finishes processing.
   - direct playback lifecycle side effects for `rgbled` and `backlightControls` (start/stop + initial stopped-state sync)
 - VS1053 SPI: `Player::Player()` constructor passes `&VS1053_SPIBUS` to the `Audio(CS, DCS, DREQ, SPIClass*)` constructor. `VS1053_SPIBUS` is the `SPIB` or `SPIA` object resolved by `options.h`. No `SPIClass` declared in `player.cpp` or `player.h`.
 - Coupling:
@@ -855,8 +858,8 @@ These are **not** third-party packages installable via PlatformIO's registry. Th
 - `ST7920/` — ST7920 GLCD driver
 
 ### Audio decoder libraries
-- `I2S_Audio/` — software I2S audio decoder (adapted from schreibfaul1/ESP32-audioI2S via Maleksm's yoRadio mod)
-- `VS1053_Audio/` — VS1053 hardware decoder driver (adapted from schreibfaul1/ESP32-vs1053_ext via Maleksm's yoRadio mod)
+- `I2S_Audio/` — software I2S audio decoder (adapted from schreibfaul1/ESP32-audioI2S via Maleksm's yoRadio mod). PSRAM buffer size now configurable via `PSRAM_BUFSIZE`/`PSRAM_RES_BUFSIZE` macros.
+- `VS1053_Audio/` — VS1053 hardware decoder driver (adapted from schreibfaul1/ESP32-vs1053_ext via Maleksm's yoRadio mod). PSRAM buffer size now configurable via `PSRAM_BUFSIZE`/`PSRAM_RES_BUFSIZE` macros. `stopSong()` SM_CANCEL sequence now guarded by `if(m_f_running)` — prevents permanently stuck CANCEL bit when stop is called during init with no song playing. `VS_PATCH_ENABLE` forced `false` on this hardware — FLAC patches produce audio silence on this VS1053 variant.
 - `ES8311_Audio/` — ES8311 codec driver (written for ehRadio by kasperaitis)
 
 ### Touchscreen library

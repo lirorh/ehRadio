@@ -418,8 +418,14 @@ void NetServer::processQueue() {
                                                                 act += F("\"group_oled\",");
                                                               #endif
                                                               #ifndef HIDE_VU
-                                                                act += F("\"group_vu\",");
+                                                                #if (I2S_BCLK!=255 || (VS1053_CS != 255 && VS_PATCH_ENABLE == true))
+                                                                  act += F("\"group_vu\",");
+                                                                #endif
                                                               #endif
+                                                              #ifndef HIDE_BUFFERBAR
+                                                                act += F("\"group_buffer\",");
+                                                              #endif
+
             if (BRIGHTNESS_PIN != 255 || nxtn || dbgact)        act += F("\"group_brightness\",");
             if (DSP_DIMMING_ENABLED || dbgact)                  act += F("\"group_dimming\",");
             if (DSP_CAN_FLIPPED || dbgact)                      act += F("\"group_tft\",");

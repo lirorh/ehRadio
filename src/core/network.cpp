@@ -204,9 +204,11 @@ void MyNetwork::WiFiLostConnection(WiFiEvent_t event, WiFiEventInfo_t info) {
         display.putRequest(NEWMODE, LOST);
       }
     }
+    network.beginReconnect = true;
+    // Spawn background task to run the full scan-best + sequential fallback strategy
+    // instead of just retrying the same AP via WiFi.reconnect()
+    xTaskCreatePinnedToCore(wifiReconnectionTask, "wifiReconn", NETWORK_TASK_STACK_BYTES, NULL, NET_TASK_PRIORITY, NULL, NETWORK_CORE);
   }
-  network.beginReconnect = true;
-  WiFi.reconnect();
 }
 
 bool MyNetwork::wifiBegin(bool silent) {
@@ -383,6 +385,31 @@ void searchWiFi(void * pvParameters) {
     telnet.begin(true);
     network.setWifiParams();
     display.putRequest(NEWIP, 0);
+  }
+  vTaskDelete(NULL);
+}
+
+void wifiReconnectionTask(void * pvParameters) {
+  SERIALLOG("WiFiReconnectionTask: starting smart reconnection (scan + sequential fallback)");
+  while (network.beginReconnect && network.status != SOFT_AP) {
+    // Run the full wifiBegin strategy: scan, match against saved SSIDs, sort by RSSI,
+    // connect to strongest by BSSID, fall back to sequential trial of all saved SSIDs
+    if (network.wifiBegin(true)) {
+      // Connection established. The ARDUINO_EVENT_WIFI_STA_GOT_IP event fires,
+      // WiFiReconnected() handles display restore, stream resume, MQTT reconnect, etc.
+      SERIALLOG("WiFiReconnectionTask: reconnected successfully");
+      break;
+    }
+    // Full cycle failed — wait 5 seconds (checking periodically if we should abort)
+    // before scanning and retrying from scratch
+    SERIALLOG("WiFiReconnectionTask: no known networks available, retrying in 5s...");
+    for (int i = 0; i < 5; i++) {
+      if (!network.beginReconnect || network.status == SOFT_AP) {
+        vTaskDelete(NULL);
+        return;
+      }
+      delay(1000);
+    }
   }
   vTaskDelete(NULL);
 }

@@ -1,13 +1,16 @@
 #include "../core/options.h"
 #if DSP_MODEL==DSP_SSD1327
 #include "dspcore.h"
-#include <Wire.h>
 #include "../core/config.h"
 #include "../core/logging.h"
 
 #ifndef SCREEN_ADDRESS
   #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; or scan it https://create.arduino.cc/projecthub/abdularbi17/how-to-scan-i2c-address-in-arduino-eaadda
 #endif
+
+// Auto-detect interface from pins
+#if I2C_SDA!=255 && I2C_SCL!=255
+#include <Wire.h>
 
 #ifndef I2CFREQ_HZ
   #define I2CFREQ_HZ   6000000UL
@@ -26,6 +29,22 @@ void DspCore::initDisplay() {
     ERRORLOG("SSD1327 allocation failed");
     for (;;);
   }
+#else
+#ifndef DEF_SPI_FREQ
+  #define DEF_SPI_FREQ        8000000UL      /*  set it to 0 for system default */
+#endif
+
+DspCore::DspCore(): Adafruit_SSD1327(DSP_WIDTH, DSP_HEIGHT, &SPI, TFT_DC, TFT_RST, TFT_CS, DEF_SPI_FREQ) {}
+
+#define CLR_ITEM1    0xA
+#define CLR_ITEM2    0x8
+#define CLR_ITEM3    0x5
+void DspCore::initDisplay() {
+  if (!begin(SCREEN_ADDRESS)) {
+    ERRORLOG("SSD1327 allocation failed");
+    for (;;);
+  }
+#endif
   config.theme.background = TFT_BG;
   config.theme.meta       = TFT_BG;
   config.theme.metabg     = TFT_LOGO;

@@ -128,7 +128,7 @@ function onMessage(event) {
     if(typeof data.playermode !== 'undefined') { //Web, SD
       modesd = data.playermode=='modesd';
       classEach('modeitem', function(el){ el.classList.add('hidden') });
-      if(modesd) showById(['modesd', 'sdsvg'],['plsvg']); else showById(['modeweb','plsvg','bitinfo'],['sdsvg','shuffle']);
+      if(modesd) { getId('toggleplaylist').classList.add('sd-mode'); showById(['modesd', 'sdsvg'],['plsvg']); } else { getId('toggleplaylist').classList.remove('sd-mode'); showById(['modeweb','plsvg','bitinfo'],['sdsvg','shuffle']); }
       showById(['volslider'],['sdslider']);
       getId('toggleplaylist').classList.remove('active');
       generatePlaylist(`http://${hostname}/data/playlist.csv`+"?"+new Date().getTime());
@@ -993,6 +993,8 @@ let pleditorTimeout = null;
 function toggleTarget(el, id){
   const target = getId(id);
   if(id=='pleditorwrap'){
+    // SD mode: the SD card icon should do nothing
+    if(modesd) return;
     // Clear any active preview states
     classEach('pleitem', function(el){ el.classList.remove('active') });
     // If opening editor (not closing), refresh playlist first to ensure fresh data
@@ -1016,12 +1018,7 @@ function toggleTarget(el, id){
     clearImportReviewFlags();
   }
   if(target){
-    if(id=='pleditorwrap' && modesd) {
-      getId('sdslider').classList.toggle('hidden');
-      getId('volslider').classList.toggle('hidden');
-      getId('bitinfo').classList.toggle('hidden');
-      getId('shuffle').classList.toggle('hidden');
-    }else target.classList.toggle("hidden");
+    target.classList.toggle("hidden");
     getId(target.dataset.target).classList.toggle("active");
   }
 }

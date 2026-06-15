@@ -6,6 +6,7 @@
 
 class Startup {
 public:
+  void deassertCsPins();
   void checkVerAndSpiffs();
   void initNetwork();
   void startupServices();

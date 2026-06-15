@@ -69,6 +69,7 @@ input[type=range] {
                -webkit-tap-highlight-color:  rgba(255, 255, 255, 0); stroke: var(--accent-color); display: flex; justify-content: center; align-items: center; 
                -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
 .gb.nb { border-color: transparent; }
+#toggleplaylist.sd-mode { pointer-events: none; }
 @media (hover: hover) and (pointer: fine) { /* mouse only */
   .gb:hover, .fb:hover { background-color: var(--accent-dark); border-color: var(--accent-color); }
   .gb:hover svg { stroke: var(--main-bg-color); fill: none; }

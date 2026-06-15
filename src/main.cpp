@@ -33,13 +33,14 @@ SET_LOOP_TASK_STACK_SIZE(LOOP_TASK_STACK_SIZE * 1024);
 
 void setup() {
   Serial.begin(115200);
-  #if CORE_DEBUG_LEVEL > 0
+  #if (CORE_DEBUG_LEVEL > 0) || defined(ALL_DEBUG_LOGS)
     if (esp_reset_reason() == ESP_RST_POWERON || esp_reset_reason() == ESP_RST_EXT) { // checking if this is a poweron boot
       delay(1000);
-      BOOTLOG("Delay 1 second after cold boot to ensure serial logs are completely available (only when CORE_DEBUG_LEVEL > 0)...");
+      BOOTLOG("Delay 1 second after cold boot to ensure serial logs are completely available (only when CORE_DEBUG_LEVEL > 0 or ALL_DEBUG_LOGS is defined)...");
     }
   #endif
 
+  startup.deassertCsPins();
   if (LED_PIN!=255) pinMode(LED_PIN, OUTPUT);
   rgbled.init();
   // Initialize battery monitoring

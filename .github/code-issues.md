@@ -16,7 +16,7 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 ## Overview of Issues
 
 
-- [ ] 1. Audio Library Migration / De-Forking
+- [ ] 1. Audio Library Updating
 - [ ] 2. Dead / Unreachable Code
 - [ ] 3. Smaller SPIFFS than expected could break workflows
 - [ ] 4. Display conf.h Files With Unchecked Battery Widget
@@ -27,367 +27,56 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 
 ---
 
-## [ ] 1. Audio Library Migration / De-Forking `[MEDIUM]`
+## [ ] 1. Audio Library Updating (goal changed from de-fork) `[MEDIUM]`
 
-### 1.1 Background and Goal
+### 1.1 Background
 
-The vendored audio folders `src/libraries/I2S_Audio/` and `src/libraries/VS1053_Audio/` are no longer simple upstream copies. Both were reshaped to expose a unified `class Audio` API (renaming the VS1053 class and its `vs1053_*` callbacks to match the I2S naming convention) so that `src/core/player.h` could compile against one local API. `class Player : public Audio` inherited this vendor class directly.
+The vendored audio folders `src/libraries/I2S_Audio/` and `src/libraries/VS1053_Audio/` are local forks of schreibfaul1's ESP32-audioI2S (~3.1.0) and nsteplanets' ESP32-vs1053_ext (2025-11-10). Both were reshaped to expose a unified `class Audio` API so that `class Player : public Audio` could compile against a single interface.
 
-**The goal** is to decouple ehRadio from the modified vendor forks and use the three upstream library snapshots kept in `src/libraries/` directly, with all ehRadio-specific adaptations living in ehRadio-owned shim files instead of inside the vendor library source.
+**Original goal** (abandoned June 2026): Replace both local forks with unmodified upstream copies via an `AudioEncoderShim` abstraction layer. This was prototyped, built, and tested, then reverted.
 
-The three upstream library folders to use (do not delete these):
-- `src/libraries/ESP32-audioI2S (schreibfaul1 3.1.0)/` — target for I2S and ES8311 environments
-- `src/libraries/ESP32-audioI2S (schreibfaul1 3.4.5)/` — deferred; requires larger API rewrite (see §1.10)
-- `src/libraries/ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/` — target for VS1053 environments
+**Current goal**: Keep the existing local libraries. Selectively merge useful fixes and features from upstream sources into them, rather than replacing them outright.
 
 ---
 
-### 1.2 Current State of Local Libraries
+### 1.2 What Was Learned During the Attempt
 
-**`src/libraries/I2S_Audio/Audio.cpp`** (`I2S_Audio/Audio.h`)
-- Provenance: schreibfaul1 `ESP32-audioI2S` circa 3.1.0, locally modified Apr 2025 (labelled `3.1.0n`)
-- Class: `class Audio` (upstream name retained)
-- Callbacks: `audio_*` weak functions (upstream names retained)
-- ehRadio modifications: `#include "../../core/options.h"` and other project includes added; internal DAC path enabled
-- Compiled by: all I2S and ES8311 `platformio.ini` environments via `+<libraries/I2S_Audio/*>` in `build_src_filter`
+**AudioEncoderShim** (`src/core/audioencodershim.h`) was created as a single ehRadio-owned header that would isolate `Player` from vendor library internals. `class AudioEncoderShim` inherited `class Audio` (I2S) or `class VS1053` (nsteplanets) depending on the build environment. The shim was functional — both VS1053 and I2S environments compiled and ran through it — but it was ultimately reverted when upstream replacement was abandoned. The file has been deleted; `class Player : public Audio` direct inheritance restored.
 
-**`src/libraries/VS1053_Audio/audioVS1053Ex.cpp`** (`audioVS1053Ex.h`)
-- Provenance: nsteplanets `ESP32-vs1053_ext-master` @ 2025-11-10, locally modified Apr 2025 ("Maleksm")
-- Class: renamed from `class VS1053` → `class Audio` (to match I2S naming)
-- Callbacks: renamed from `vs1053_*` → `audio_*` (to match I2S naming)
-- Constructor: changed from 7-param `(cs, dcs, dreq, spi_num, mosi, miso, sclk)` to `(cs, dcs, dreq, SPIClass*)`
-- API additions over upstream: `setBalance(int8_t)`, `setTone(int8_t, int8_t, int8_t)` (3-param overload), `forceMono(bool)`, `eofHeader` (public bool field), `setDefaults()` made public, `connecttoSD()` added
-- Callback model today: the local fork already exposes normalized `audio_*` callbacks directly; the live tree does **not** currently contain a separate `vs1053_*` bridge-stub block that can simply be moved out during E2
-- Compiled by: all VS1053 `platformio.ini` environments via `+<libraries/VS1053_Audio/*>` in `build_src_filter`
+**Key discoveries:**
 
----
+| Finding | Impact |
+|---------|--------|
+| VS1053B FLAC patches (`vs1053b-patches290.zip`) are **incompatible** with Trip5's VS1053 variants | Patches cause complete audio silence. `VS_PATCH_ENABLE` now defaults to `false`. VU meter (which requires patches) is unavailable on VS1053 builds. |
+| `stopSong()` wrote `SM_CANCEL` to SCI_MODE unconditionally, even when no song was running | The CANCEL bit got permanently stuck because no decoder pipeline was active to clear it. Subsequent audio data was never decoded. Fixed by guarding SM_CANCEL with `if(m_f_running)`. Also eliminated 2-second "Song stopped incorrectly!" boot delay. |
+| The local VS1053 library has valuable ehRadio additions absent from upstream: `setBalance(int8_t)`, `setTone(int8_t,int8_t,int8_t)` (3-param), `forceMono(bool)`, `connecttoSD()`, SPI bus support via `SPIClass*` constructor, and normalized `audio_*` callbacks | Upstream replacement would require re-adding all of these in the shim. Not worth the maintenance burden. |
+| PSRAM buffer sizes were hardcoded in both library headers | Now configurable via `PSRAM_BUFSIZE` / `PSRAM_RES_BUFSIZE` macros in `options.h` / `myoptions.h`. Both I2S and VS1053 libraries use them. |
+| SPI bus re-initialization (`end()` + `begin()` dance) needed in `sdmanager.cpp` | SD library internally calls `SPI.begin()` which overrides bus pins. The re-init restores correct pins after SD init. Touchscreen libraries don't need this — they use the bus as-is. |
 
-### 1.3 The ehRadio Audio Contract
-
-This is the live API surface that `src/core/player.cpp`, `src/displays/*`, and the app-owned callback sink in `src/core/audiohandlers.h` depend on today. `Player` still inherits the local vendor class directly (`class Player : public Audio`), so `AudioEncoderShim` needs to preserve this contract while moving ownership into ehRadio-owned code.
-
-**Constructor / hardware init:**
-- I2S / ES8311: `AudioEncoderShim()` — no params; the internal DAC path is now selected by `USE_AUDIO_ESP32_DAC` (not the older `I2S_INTERNAL` wording)
-- VS1053: current local path still uses `AudioEncoderShim(SPIClass*)`; E2 will replace that with the upstream 7-parameter constructor using the existing named-bus/pin macros from `options.h`
-- I2S: current player init calls `setPinout(BCLK, LRC, DOUT, DIN, MCLK)`; upstream I2S 3.1.0 does not expose the same 5-argument shape, so the shim needs an overload/adaptation here
-- VS1053: `begin()` — called during player init
-
-**Playback control:**
-- `connecttohost(url, user="", pwd="")` — stream from URL
-- `connecttoFS(fs, path, fileStartPos=-1)` — play local file from any FS
-- `connecttoSD(path, resumeFilePos=-1)` — convenience alias (used in `player.cpp`); routes to `connecttoFS(SD, ...)`
-- `loop()` — called every audio task tick
-- `isRunning()` → `bool`
-- `stopSong()` → `uint32_t`
-- `setDefaults()` — reset decoder state; called when stopping/resuming
-- `eofHeader` — `bool` public field; set `false` before SD read loop, becomes `true` when library finishes parsing ID3/header; used in `player.cpp` tag-read loop
-- `pauseResume()`, `setFileLoop(bool)`, `setConnectionTimeout(ms, ms_ssl)`
-
-**Audio controls:**
-- `setVolume(uint8_t)` — both paths have this natively
-- `setBalance(int8_t bal=0)` — I2S 3.1.0 has this natively; upstream VS1053 does NOT → needs shim
-- `setTone(int8_t bass, int8_t middle, int8_t treble)` — local libs have this 3-param version; upstream VS1053 only has `setTone(uint8_t* rtone[4])` → needs shim; upstream I2S 3.1.0 has the 3-param version natively
-- `forceMono(bool)` — I2S 3.1.0 has this natively; upstream VS1053 does NOT → needs shim (no-op acceptable)
-- `setVolumeSteps(uint8_t)` — both have this
-
-**File position (used for SD resume and SD progress):**
-- `getFilePos()` → `uint32_t`
-- `getFileSize()` → `uint32_t`
-- `setFilePos(uint32_t)` → `bool`
-- `setAudioPlayPosition(uint16_t sec)` → `bool`
-
-**VU / compatibility surface:**
-- `get_VUlevel(uint16_t dimension)` — used by widget and Nextion VU rendering on both local decoder paths today
-- `computeVUlevel()` / `computeVUlevel(int16_t sample[2])` — local-library-specific; VS1053 parity remains an E2 decision (see §1.8)
-
-**Actively defined app callbacks in `src/core/audiohandlers.h`:**
-- `audio_info(const char*)`
-- `audio_bitrate(const char*)`
-- `audio_showstation(const char*)`
-- `audio_showstreamtitle(const char*)`
-- `audio_error(const char*)`
-- `audio_id3artist(const char*)`
-- `audio_id3album(const char*)`
-- `audio_id3title(const char*)`
-- `audio_beginSDread()`
-- `audio_id3data(const char*)`
-- `audio_eof_mp3(const char*)`
-- `audio_eof_stream(const char*)`
-- `audio_progress(uint32_t cur, uint32_t total)`
-
-**Declared by the decoder library APIs but not currently implemented by ehRadio app code:**
-- `audio_showstreaminfo(const char*)`
-- `audio_eof_speech(const char*)`
-- `audio_commercial(const char*)`
-- `audio_icyurl(const char*)`
-- `audio_icylogo(const char*)`
-- `audio_icydescription(const char*)`
-- `audio_lasthost(const char*)`
-- `audio_id3image(File&, size_t, size_t)`
-- `audio_id3lyrics(File&, size_t, size_t)`
-
-These optional callbacks can still be bridged in E2 for parity, but Issue 2 should not claim they are app-implemented today.
+**SPI infrastructure changes that survived both the migration and reversion:**
+- `SPI_BUS_SECONDARY = HSPI` (symbolic constant) in `options.h`
+- `deassertCsPins()` early-boot function in `startup.cpp`
+- `PSRAM_BUFSIZE` / `PSRAM_RES_BUFSIZE` macros
 
 ---
 
-### 1.4 Shim Architecture
+### 1.3 Current State
 
-**File:** `src/core/audioencodershim.h`
-*(Previously prototyped as `audiobackend.h` during exploratory work — that version has been reverted; use `audioencodershim.h` going forward.)*
-
-This is the single ehRadio-owned file that isolates `Player` from vendor library internals. When the backend changes (I2S ↔ VS1053 ↔ future library version), only this file and the ehRadio-owned callback sink should change.
-
-```
-player.h:  class Player : public AudioEncoderShim
-                               │
-                               ▼
-audioencodershim.h:   #if I2S path
-                        class AudioEncoderShim : public Audio  { ... }
-                      #else VS1053 path
-                        class AudioEncoderShim : public VS1053 { ... }
-                      #endif
-                               │
-                               ▼
-ehRadio-owned callback sink / bridge layer:
-  current:  src/core/audiohandlers.h
-            compiled once via trailing include in src/main.cpp
-  optional normalization during Issue 2:
-            src/core/audiohandlers.cpp + declarations in audiohandlers.h
-```
-
-**`audioencodershim.h` — I2S path responsibilities:**
-- E1: inherit the current local `Audio` class without behaviour change
-- E3: switch `#include` to upstream `ESP32-audioI2S (schreibfaul1 3.1.0)/src/Audio.h`
-- Preserve `bool eofHeader = false;` as a public field
-- Override `connecttoFS()` to fire `audio_beginSDread()` and reset `eofHeader` before delegating to `Audio::connecttoFS()`
-- Override `loop()` to call `Audio::loop()` then periodically fire `audio_progress()` using `getFilePos()` / `getFileSize()`
-- Add a public no-op `void setDefaults() {}` if current call sites still require it
-- Provide `bool connecttoSD(const char* path, int32_t pos=-1) { return connecttoFS(SD, path, pos); }`
-- Provide a shim overload/adaptation for the current 5-argument `setPinout(BCLK, LRC, DOUT, DIN, MCLK)` call used by `player.cpp`
-
-**`audioencodershim.h` — VS1053 path responsibilities:**
-- E1: inherit the current local `Audio` class without behaviour change
-- E2: switch `#include` to upstream `ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/src/vs1053_ext.h` and inherit `VS1053`
-- Add `bool eofHeader = false;` as a public field
-- Add stubs/adapters for `setBalance(int8_t)`, `forceMono(bool)`, `setDefaults()`, `connecttoSD(...)`, and `setTone(int8_t, int8_t, int8_t)`
-- Decide in E2 whether to keep the current VU API surface via shim helpers (`computeVUlevel()` / `get_VUlevel(uint16_t)`) or update display code instead (see §1.8)
-- Map the current named-bus/pin macros from `options.h` to the upstream 7-parameter constructor inside the shim; do not move that compatibility logic back into vendored source
+| Library | Status | Notes |
+|---------|--------|-------|
+| `src/libraries/VS1053_Audio/` | Active, original library | Patches disabled. SM_CANCEL fix applied. VU meter functions kept (full-range mapping + threshold decay) but gated behind `VS_PATCH_ENABLE`. |
+| `src/libraries/I2S_Audio/` | Active, original library | PSRAM buffer sizes now configurable. No other changes. |
+| `src/libraries/ESP32-audioI2S (schreibfaul1 3.1.0)/` | Reference copy | Keep as reference for selective merges. |
+| `src/libraries/ESP32-audioI2S (schreibfaul1 3.4.5)/` | Deferred reference | Larger API changes; not a priority. |
+| `src/libraries/ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/` | Reference copy | Keep as reference. Note: its FLAC patches also produce silence on this VS1053 variant. |
 
 ---
 
-### 1.5 Bridge Code — Keep It in ehRadio-Owned Callback Code
-
-`audiohandlers.h` is currently included in exactly one translation unit via the trailing include at the bottom of `main.cpp`, so it acts as an implementation header today. Issue 2 should keep bridge code in that ehRadio-owned callback sink, not in vendored library source.
-
-**No separate `audiobridge_*.cpp` files are required.** If Issue 2 normalizes the current implementation-header pattern, prefer a normal `src/core/audiohandlers.cpp` plus declarations in `audiohandlers.h` over introducing multiple bridge-only translation units.
-
-**VS1053 bridge stubs** — add the `vs1053_*` → `audio_*` forwarding stubs in the ehRadio-owned callback implementation during E2. Do **not** document them as something to "move" out of the current local VS1053 fork; the live fork already normalized its callback surface and does not expose a separate `vs1053_*` stub block to harvest.
-
-**I2S callback recovery** — extend the existing `audio_id3data` handler in `audiohandlers.h`:
-
-Upstream I2S 3.1.0 does not fire `audio_id3artist`, `audio_id3album`, or `audio_id3title` as separate weak functions. Instead it passes them through `audio_id3data` as prefixed strings. The app handlers for `audio_id3artist`, `audio_id3album`, and `audio_id3title` already live in `audiohandlers.h`; dispatch them from `audio_id3data` by prefix. `audio_beginSDread()` and `audio_progress()` remain method-triggered events supplied by shim overrides, not string-parsing callbacks.
-
-The only code change needed in the callback sink is ~4 lines added to the existing `audio_id3data` body:
-
-```cpp
-void audio_id3data(const char *info) {
-  if (player.lockOutput) return;
-  FUNCTIONLOG("Audio.id3", "%s", info);
-  // Upstream I2S 3.1.0 routes per-tag callbacks through audio_id3data.
-  // Dispatch them so the existing handlers in this file fire correctly.
-  #if defined(USE_AUDIO_I2S) || defined(USE_AUDIO_ESP32_DAC)
-    if (strncmp(info, "Artist: ", 8) == 0) { audio_id3artist(info + 8); return; }
-    if (strncmp(info, "Album: ",  7) == 0) { audio_id3album(info + 7);  return; }
-    if (strncmp(info, "Title: ",  7) == 0) { audio_id3title(info + 7);  return; }
-  #endif
-}
-```
-
-`audio_beginSDread()` and `audio_progress()` cannot be recovered this way because they fire on *method calls*, not library callbacks. They are triggered by `AudioEncoderShim` method overrides (`connecttoFS()` override fires `audio_beginSDread()`; `loop()` override fires `audio_progress()` periodically). See §1.4.
-
----
-
-### 1.6 `platformio.ini` Changes Required
-
-No new bridge files need to be added to `build_src_filter`. If the callback sink stays as `audiohandlers.h` or is normalized to `src/core/audiohandlers.cpp`, source filters do not change for that ownership cleanup because `src/core/*` is already part of the build. Only the library source folder references change.
-
-For each VS1053 environment:
-```ini
-; Before:
-+<libraries/VS1053_Audio/*>
-
-; After:
-+<libraries/ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/src/*>
-```
-
-For each I2S / ES8311 environment:
-```ini
-; Before:
-+<libraries/I2S_Audio/*>
-
-; After:
-+<libraries/ESP32-audioI2S (schreibfaul1 3.1.0)/src/*>
-```
-
-`platformio.ini` is a Rule #3 restricted file — changes require explicit user confirmation before editing.
-
----
-
-### 1.7 Dependency Status: Issue 1 Already Resolved
-
-The upstream `VS1053` constructor requires 7 explicit parameters:
-```cpp
-VS1053(uint8_t cs, uint8_t dcs, uint8_t dreq, uint8_t spi_bus, uint8_t mosi, uint8_t miso, uint8_t sclk);
-```
-
-This is no longer blocked on missing pin definitions. `options.h` already resolves `VS1053_CS`, `VS1053_DCS`, `VS1053_DREQ`, `VS1053_SCK`, `VS1053_MISO`, `VS1053_MOSI`, and `VS1053_SPIBUS`, with `VS1053_SPI` selecting the named bus.
-
-What E2 still needs is a small shim-local mapping from the current named-bus identity to the upstream numeric `spi_bus` constructor argument. Do this inside `AudioEncoderShim`; do **not** reopen `options.h` just to recreate the older `VS1053_SPI_BUS` plan.
-
-**Issue 1 is therefore not a blocker for Issue 2 anymore.** E2 still has constructor adaptation work, but not an unresolved pin-definition dependency.
-
----
-
-### 1.8 `VS_PATCH_ENABLE` and VU Meter API Gap (VS1053 only)
-
-`VS_PATCH_ENABLE` is defined in `myoptions.h` (currently `false` for the VS1053 hardware build). If not defined by the user, **both** local and upstream VS1053 libs default it to `true` via their own `#ifndef` guard at the top of their `.cpp` files.
-
-**What it controls (same in both libs):**
-- `true` (default): uploads the official VLSI FLAC patch to the chip on init (`loadUserCode()`); enables VU meter (`setVUmeter()`)
-- `false`: skips patch upload — workaround for 2.5V knock-off boards with the wrong voltage regulator (see [yoradio issue #108](https://github.com/e2002/yoradio/issues/108)); all VU meter functions short-circuit and return immediately
-
-**Macro passthrough — no change needed in E2.** Both libs use `#ifndef VS_PATCH_ENABLE / #define VS_PATCH_ENABLE true`, so the value set in `myoptions.h` propagates correctly to whichever lib is active. `options.h` does not need a fallback default for this macro.
-
-**VU meter API gap — requires attention in Step E2:**
-
-The VU reading API changed between the local lib and the upstream:
-
-| | Local (`VS1053_Audio`, class `Audio`) | Upstream (nsteplanets, class `VS1053`) |
-|---|---|---|
-| Read VU | `get_VUlevel(uint16_t dimension)` → scaled 0..dimension | `getVUlevel()` → packed uint16_t, MSB=right 0..255, LSB=left 0..255 |
-| Loop update | `computeVUlevel()` — reads chip, writes `config.vuThreshold` (auto-calibration) | no equivalent; data fetched inside `getVUlevel()` |
-
-Currently `display.cpp` still contains a `player.computeVUlevel()` call, but it is **commented out** inside a `/* ... */` block — VU meter may already be non-functional on VS1053 hardware. Confirm actual state on hardware before Step E2.
-
-**Action required in Step E2 (decide at that time):**
-- Option A: Add `computeVUlevel()` and `get_VUlevel(uint16_t dimension)` stubs to `AudioEncoderShim` (VS1053 path) that delegate to upstream `VS1053::getVUlevel()` and replicate the `config.vuThreshold` auto-calibration — preserves all existing display code
-- Option B: Update `display.cpp` to call `getVUlevel()` directly and drop the `computeVUlevel()` + threshold pattern — simpler, but touches display code outside the audio migration scope
-
----
-
-### 1.9 Staged Migration Plan
-
-**Pre-work — documentation/prep refresh:**
-- Keep the current named-bus / pin system from `options.h`; no new VS1053 pin macros are needed before E2
-- Decide during E1 or E2 whether to leave the callback sink as the current single-TU `audiohandlers.h` implementation or normalize it to a conventional `src/core/audiohandlers.cpp`
-
-**Step E1 — Shim isolation layer:**
-- Create `src/core/audioencodershim.h` with `class AudioEncoderShim` inheriting the appropriate local library class (still the local modified libs — no upstream switch yet)
-- Change `player.h` to `class Player : public AudioEncoderShim`
-- Preserve the current I2S `setPinout(BCLK, LRC, DOUT, DIN, MCLK)` call shape through the shim so E1 stays pure indirection
-- Optional but recommended: normalize the trailing `#include "core/audiohandlers.h"` pattern into a normal `src/core/audiohandlers.cpp` at the same time if you want to retire the implementation-header pattern early
-- Build and hardware-test all three environments (VS1053, I2S, ES8311)
-- This step is pure indirection — no behaviour change
-
-**Step E2 — VS1053 path to upstream:**
-1. Update `audioencodershim.h` VS1053 path: change `#include` to upstream `vs1053_ext.h`
-2. Change `class AudioEncoderShim : public Audio` → `class AudioEncoderShim : public VS1053`
-3. Adapt the constructor using the current `VS1053_CS/DCS/DREQ + VS1053_SCK/MISO/MOSI` macros plus a shim-local mapping from the current named-bus macros to the upstream numeric `spi_bus` argument
-4. Add VS1053 API surface stubs to `AudioEncoderShim` (including the VU compatibility decision from §1.8)
-5. Add the `vs1053_*` → `audio_*` forwarding stubs in the ehRadio-owned callback implementation (`audiohandlers.h` initially, or `audiohandlers.cpp` if normalized during the same step)
-6. Update `platformio.ini` VS1053 `build_src_filter` entries (Rule #3 — requires explicit confirmation)
-7. Build and hardware-test VS1053 environment
-
-**Step E3 — I2S path to upstream 3.1.0:**
-1. Update `audioencodershim.h` I2S path: change `#include` to upstream `Audio.h`
-2. Fix constructor: upstream 3.1.0 uses `Audio(uint8_t i2sPort)` — drop boolean/DAC params from `AudioEncoderShim()`
-3. Add I2S API surface overrides to `AudioEncoderShim` (see §1.4): `eofHeader` field, `connecttoFS()` override, `loop()` override, `connecttoSD()` alias, `setDefaults()` no-op, and a shim overload/adaptation for the current 5-argument `setPinout(...)` call
-4. Add ~4 lines to the existing `audio_id3data` body in `audiohandlers.h` to dispatch `audio_id3artist`/`album`/`title` from prefixed strings (see §1.5)
-5. Update `platformio.ini` I2S/ES8311 `build_src_filter` entries (Rule #3 — requires explicit confirmation)
-6. Build and hardware-test I2S and ES8311 environments
-
-**Step E4 — Cleanup:**
-- Confirm all three environments (VS1053, I2S, ES8311) build cleanly from upstream libs
-- After full hardware verification, remove old local library source files (`I2S_Audio/`, `VS1053_Audio/`)
-- Update `code-summary.md` (Rule #4 — required for new module `audioencodershim.h` and changes to `audiohandlers.h`)
-
----
-
-### 1.10 Deferred: `ESP32-audioI2S (schreibfaul1 3.4.5)` `[LOW]`
-
-The 3.4.5 snapshot is a substantially larger migration than the version number implies:
-
-- Uses `#include <NetworkClient.h>` **unconditionally** (no `#if v3` guard) — requires Arduino-ESP32 v3 toolchain
-- Uses `std::span`, `psram_unique_ptr.hpp`, `std::deque`, restructured event system — requires modern C++ and toolchain alignment
-- Metadata/info callbacks move to `Audio::audio_info_callback(msg_t)` event dispatch; only the PCM-processing weak hooks remain, so `audio_info`, `audio_showstreamtitle`, etc. no longer exist as the primary integration surface in 3.4.5
-- The class interface is restructured; `setTone`, `setBalance`, `forceMono` signatures have changed
-
-3.4.5 cannot be dropped on top of the 3.1.0 shim architecture. It requires a separate full analysis pass. **Do not attempt until Steps E1–E4 are complete and hardware-tested.**
-
----
-
-### 1.11 Rule Reminders for Implementation
-
-- **Rule #1**: Each of E1, E2, E3 is >50 lines and multi-file. Each step requires Plan mode confirmation before implementation begins.
-- **Rule #3**: `platformio.ini`, `myoptions.h`, `src/core/options.h` require explicit user confirmation for any edit.
-- **Rule #4**: When `audioencodershim.h` is created and bridge files are added, update `code-summary.md` in the same changeset.
-- **Rule #5**: Re-read this section before beginning any step.
-
-Do not attempt E2, E3, and E4 in a single PR. Each step is a distinct hardware-testable increment.
-
----
-
-### 1.12 Note that Github can be used for libraries
-
-Instead of just using platformio libraries, it is possible to use a Github repository with specific tag
-  https://github.com/gioblu/PJON.git#v2.0
-
----
-
-### 1.13 Note regarding hiccups on I2S
-
-This issue may self-rectify as the library is replaced, but if it comes up again, it was noted that after fixing core assignments that I2S decoder devices skip ever-so-slightly when reloading the webpage of the WebUI.  (Running Audio on Core 0, everything else on Core 1)
-
-The root cause is that Audio::loop() — which feeds the HTTP TCP ring buffer — runs on Core 1 inside the main loop(). WebSocket connect/disconnect bursts during a page reload can stall Core 1 for 100–200ms, starving the ring buffer that the Core 0 audio decode task is draining. The skip is the decode task hitting the bottom of that buffer.
-
-When replacing the audio library, look for: (a) an exposed ring buffer size define (e.g. AUDIO_RINGBUFFER_SIZE or similar) — increasing it gives more headroom to absorb Core 1 stalls; and (b) whether the library supports running its HTTP feed loop as a separate pinned FreeRTOS task at elevated priority, independent of the main loop(). If the new library supports the latter, pinning the feed task to Core 1 at priority 4 (above NETSERVER_TASK_PRIORITY) would prevent WebSocket traffic from preempting it.
-
----
-
-### 1.14 Connection Timeout Notes
-
-During migration to the upstream audio libraries, the following timeout-related changes were made to both `src/libraries/I2S_Audio/Audio.cpp` and `src/libraries/VS1053_Audio/audioVS1053Ex.cpp`. The upstream libraries hardcode timeout values that are not configurable, so these diffs will need to be re-applied after migration.
-
-**Changes made (2026-06-07):**
-
-| Change | Detail |
-|---|---|
-| `_client->setTimeout()` moved after `_client->connect()` | On ESP32/lwIP, `SO_RCVTIMEO` can only be set on a connected socket; calling it before `connect()` was a silent no-op. Both libraries' `connecttohost()`, `httpPrint()`, and other connect paths are fixed. |
-| Hardcoded `timeout = 3000` in `parseHttpResponseHeader()` | Replaced with `STREAM_TIMEOUT_MS` (default 3000, defined in `options.h`). Separated from socket-level timeouts so the library defaults (250/2700ms) are used for connect/read, and this controls only the header parsing deadline. |
-| Hardcoded `count < 3` retry loop in `Audio::loop()` | Replaced with `MAX_STREAM_RETRIES` (default 2, defined in `options.h`) |
-| Hardcoded connect timeouts `10000 : 5000` (VS1053) | Replaced with `m_timeout_ms_ssl : m_timeout_ms` |
-| Hardcoded `connect(host, 80, 5000)` (VS1053 TTS) | Replaced with `connect(host, 80, m_timeout_ms)` |
-
-**New macros in `options.h`:**
-- `MAX_STREAM_RETRIES` (default 2) — controls the retry loop in `Audio::loop()`
-- `STREAM_TIMEOUT_MS` (default 3000) — timeout for HTTP response header parsing (`parseHttpResponseHeader`); separate from socket-level timeouts
-- `CONNECT_HTTP_HTTPS_TIMEOUT` — left commented out in `options.h`; library defaults (250ms HTTP, 2700ms SSL) are used unless overridden in `myoptions.h`. Still consumed by `player.cpp` → `setConnectionTimeout()` → `m_timeout_ms`/`m_timeout_ms_ssl` for socket connect/read operations in both audio libraries.
-
-**Upstream library audit (ESP32-audioI2S schreibfaul1 3.4.5):**
-- `connecttohost()`: still calls `setTimeout()` before `connect()` — **needs fix**
-- `httpPrint()`: already fixed — calls `setTimeout()` after `connect()` ✅
-- `parseHttpResponseHeader()`: hardcoded `timeout = 3000` — **needs fix**
-- `Audio::loop()`: hardcoded `count < 3` — **needs fix**
-
-**Upstream library audit (VS1053 nsteplanets):**
-- Not yet audited — assume similar hardcoded values exist and will need the same review.
-
-**Watch points for migration:**
-1. Any new library version must be checked for `setTimeout()` ordering (must be after `connect()`)
-2. Any hardcoded numeric timeouts in response header parsing or retry loops must be replaced with configurable macros
-3. `m_timeout_ms` / `m_timeout_ms_ssl` naming may differ in upstream versions — verify the member variable names
-4. VS1053's `connect()` calls that pass a third argument (connect timeout) should use the configured timeout, not a hardcoded value
-5. The `m_f_timeout` flag in `Audio::loop()` controls whether retries happen at all — verify it's properly set in upstream versions
+### 1.4 Future Updating Strategy
+
+1. **Selective feature merges**: Pull individual fixes/features from upstream reference copies into the local libraries when a clear benefit exists (e.g. a bug fix in HTTP streaming, a new codec optimization).
+2. **PSRAM_BUFSIZE tuning**: Adjust the `myoptions.h` defaults per-board if experience shows the current values cause buffer underruns or waste memory.
+3. **No full library replacement**: The cost of re-adding ehRadio-specific adaptations (SPI bus abstraction, volume curve, timeout configuration, callback normalization) exceeds the benefit of being on the latest upstream commit.
 
 ---
 
@@ -399,7 +88,7 @@ During migration to the upstream audio libraries, the following timeout-related 
 - **Analysis**: `|| true` permanently short-circuits to `true`. Any code below this `return` is unreachable. This appears to be an acknowledged TODO — someone commented out the tag-reading functionality with `|| true` as a temporary measure that became permanent.
 - **Action**: Either implement the tag-reading block and remove `|| true`, or remove the `|| true` and let `strlen(file)==0` be the real condition. The current state is confusing because it looks like a real condition check when it is not.
 
-Trip5 Note: This may actually get fixed as part of the de-fork.
+Trip5 Note: This might get fixed if the tag-reading block is ever implemented.
 
 ---
 

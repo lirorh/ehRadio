@@ -23,6 +23,13 @@
 SDManager sdman(FSImplPtr(new VFSImpl()));
 
 bool SDManager::start() {
+  #if defined(SD_SPI) && (SD_SPI == 'B') && defined(SPIB_SCK) && defined(SPIB_SCK) && (SPIB_SCK != 255)
+    SPIB.end();
+    SPIB.begin(SPIB_SCK, SPIB_MISO, SPIB_MOSI);
+  #elif defined(SPIA_SCK) && (SPIA_SCK != 255)
+    SPI.end();
+    SPI.begin(SPIA_SCK, SPIA_MISO, SPIA_MOSI);
+  #endif
   ready = begin(SD_CS, SDREALSPI, SDSPISPEED);
   if (ready) return ready;
   vTaskDelay(10);

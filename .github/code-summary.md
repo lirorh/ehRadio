@@ -374,14 +374,23 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - title changes now directly trigger `rgbled.trackChange()` and `backlightControls.restart()` instead of a weak hook
 
 ## `src/core/netserver.h`
-- Declares request enums, websocket/server globals, and NetServer API.
+- Declares request enums, websocket/server globals, `StaticFileCache` class, `CachedFile` struct, and NetServer API.
+- `StaticFileCache` — PSRAM-backed cache for static WebUI files (files from `Config::wwwFiles[]`).
+- `CachedFile` — per-file entry: URL path, plain data pointer, gzipped data pointer, content-type.
 - Contains embedded fallback HTML templates (`emptyfs_html`, `index_html`, `emergency_form`).
 
 ## `src/core/netserver.cpp`
 - HTTP + WebSocket + upload/update + search/curated orchestration.
 - Main responsibilities:
-  - static file serving from SPIFFS `/www`
+  - static file serving from PSRAM cache (via `StaticFileCache`) — no SPIFFS reads during HTTP serving
+  - fallback to SPIFFS for dynamic files not in cache (`searchresults.json`, `curated.json`, etc.)
+  - `handleNotFound`: checks PSRAM cache first for GET requests, cache-busting `?v=` stripping removed (max-age=60 handles freshness)
+  - `handleIndex`: serves `player.html` from PSRAM cache for `GET /`
   - route handlers (`/`, `/search`, `/update`, `/locale.json`, `/ready`, etc.)
+  - `fileCache.loadAll()` called in `begin()` before `webserver.begin()`
+  - `invalidateCache()` public method exposed for `utility.cpp` runtime updates
+  - `Cache-Control: max-age=60` for all cached static files (was 3600)
+  - `/settings.html`, `/update.html`, `/ir.html` no longer served via `index_html[]` — handled by PSRAM cache fallthrough
   - websocket command parsing and outbound updates
   - state request queue processing (`GETSYSTEM`, `GETSCREEN`, `GETLOCALE`, etc.)
   - online update check/start tasks
@@ -391,7 +400,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 - Coupling:
   - uses `cmd.exec(...)` from commandhandler
   - emits JSON consumed by `data/www/script.js`
-  - `GETSCREEN` carries both display state and persisted dimming fields used by `data/www/options.html`
+  - `GETSCREEN` carries both display state and persisted dimming fields used by `data/www/settings.html`
 - Readiness detail:
   - `/ready` returns `{"ready":true}` only when `netserver.bootReady` is true, required web files exist, and network state is stable (`CONNECTED` + `WL_CONNECTED`, or `SDREADY`).
 - OTA note:
@@ -573,8 +582,10 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - reboot and update redirect calls now explicitly apply a 1-second post-ready grace in JavaScript before navigation.
   - manual upload completion now uses a 60 second fallback, while OTA still uses 180 seconds; both can redirect early as soon as `/ready` reports true.
   - mDNS rename (`restartmdns`) calls `MDNS.end()` + `MDNS.begin()` at runtime via `NetServer::restartMdns()` — no reboot. Browser-side: sends `mdnsname=`, swaps the button row for a status message, then polls the new `.local` host with `redirectWhenReady` (8s timeout, 500ms post-ready grace). If mdnsValue is empty, saves silently without redirect.
+- consolidated with `data/www/dragpl.js`
+  - Playlist drag-and-drop reorder behavior.
 
-## `data/www/options.js`
+## `data/www/settings.js`
 - Settings page behavior.
 - Responsibilities:
   - timezone JSON loading and dropdown population
@@ -585,21 +596,17 @@ All modules in `src/core/` follow the **class + global instance** pattern:
     - reboot/reset use ready-aware return-to-root with shorter fallback (15s)
     - format SPIFFS shows reboot status but skips automatic reload
 
-## `data/www/locale.js`
-- i18n runtime helper (`t(...)`) and translation application (`applyI18n`).
-- Applies key-based translations to DOM and fallback behavior.
-
 ## `data/www/player.html`
 - Player page structure (playlist, controls, sliders, status elements).
 
-## `data/www/options.html`
+## `data/www/settings.html`
 - Settings page structure with grouped sections and `data-command` bindings.
 - Contains element IDs expected by websocket payload mapping.
 
-## `data/www/updform.html`
+## `data/www/update.html`
 - Update page layout (manual upload + online update controls).
 
-## `data/www/irrecord.html`
+## `data/www/ir.html`
 - IR recording and assignment UI.
 
 ## `data/www/search.html`
@@ -608,15 +615,15 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 ## `data/www/curated.html`
 - Curated list browsing/import page.
 
-## `data/www/dragpl.js`
-- Playlist drag-and-drop reorder behavior.
-
 ## `data/www/script2.js`
 - Consolidated helper script loaded by main shell and standalone search/curated pages.
-- Contains logic previously in `ir.js`, `updform.js`, and `playstation.js`:
+- Contains logic previously in `ir.js`, `updform.js`, `playstation.js`
   - station preview/play helper (`sendStationAction`)
   - online update check/start UI helpers
   - IR setup/learn interactions (`initControls`, `checkSelect`, `irClear`, `backRecord`)
+- also consolidated with `data/www/locale.js`
+  - i18n runtime helper (`t(...)`) and translation application (`applyI18n`).
+  - Applies key-based translations to DOM and fallback behavior.
 
 ## `data/www/search.js`
 - Search page API calls, pagination, result actions, and import hooks.
@@ -924,13 +931,13 @@ This section is specifically for adding/removing settings and avoiding missed li
    - persist with `saveValue(...)`
    - trigger display/network side effects and request updates as needed.
 7. Add WebUI wiring:
-   - element in `data/www/options.html` with id and `data-command`.
+   - element in `data/www/settings.html` with id and `data-command`.
    - fallback label text + `data-i18n` key.
    - add i18n key in `src/locale/webui/en_US.json` (and optionally others).
 8. Ensure websocket UI apply path exists in `data/www/script.js`:
    - `setupElement(...)` supports element type/id.
    - incoming `GET*` payload key matches DOM element id or custom handler.
-9. If setting is locale/time/weather related, update `data/www/options.js` apply handlers too.
+9. If setting is locale/time/weather related, update `data/www/settings.js` apply handlers too.
 10. Telnet command handling is thin-dispatch by default: update `src/core/commandhandler.cpp` first, and only extend `src/core/telnet.cpp` if protocol normalization needs a new alias/form.
 11. If setting affects startup behavior, check `main.cpp`, `config.init()`, and `startup.startupServices()`.
 12. Update this `code-summary.md`.

@@ -353,4 +353,6 @@
   //#define ALL_DEBUG_LOGS
 #endif
 
+#define IR_PIN               6
+
 #endif // myoptions_h

@@ -27,7 +27,7 @@
 #endif
 
 
-const char* const Config::wwwFiles[] = {"curated.js", "dragpl.js", "locale.js", "options.js", "script.js", "script2.js", "search.js",
+const char* const Config::wwwFiles[] = {"curated.js", "options.js", "script.js", "script2.js", "search.js",
                                         "logo.svg", "icon.png", "locales.json", "rb_srvrs.json", "timezones.json", "style.css", "theme.css",
                                         "curated.html", "irrecord.html", "options.html", "search.html", "updform.html",
                                         "player.html"}; // keep main page at end (deleted when upgraded, last to be downloaded, so user sees emptyfs_html with wait message)

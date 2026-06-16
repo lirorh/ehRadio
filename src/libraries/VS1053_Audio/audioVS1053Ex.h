@@ -159,7 +159,7 @@ protected:
     size_t       m_writeSpace       = 0;
     size_t       m_dataLength       = 0;
     size_t       m_resBuffSizeRAM   = 2048;     // reserved buffspace, >= one mp3  frame
-    size_t   m_resBuffSizePSRAM = PSRAM_RES_BUFSIZE;
+    size_t   m_resBuffSizePSRAM     = 1024 * 24; // FLAC frame size 24KB (minimum)
     size_t       m_maxBlockSize     = 1600;
     uint8_t*     m_buffer           = NULL;
     uint8_t*     m_writePtr         = NULL;

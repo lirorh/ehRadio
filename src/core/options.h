@@ -819,24 +819,13 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define STREAM_TIMEOUT_MS 3000
 #endif
 
-// Audio Buffer
-#ifndef USE_FBUFFER
-  #define USE_FBUFFER true // framebuffer: best to leave this on (will use PSRAM if available and SRAM if not)
-#endif
-// PSRAM Buffer
+// PSRAM Audio Buffer
+// WebUI files cache: 100KB + Decoder Output: 52KB + Display framebuffer (480×320): 74KB = 266KB... leaves 758KB free in 1MB or 1784 free in 2MB
 #ifndef PSRAM_BUFSIZE
-  #if defined(ARDUINO_ESP32S3_DEV)
-    #define PSRAM_BUFSIZE UINT16_MAX * 10 // ~655KB
+  #if defined(ARDUINO_ESP32_DEV)
+    #define PSRAM_BUFSIZE 1024 * 750 // 750KB
   #else
-    #define PSRAM_BUFSIZE UINT16_MAX * 20 // 1310KB
-  #endif
-#endif
-// FLAC Reserved Buffer
-#ifndef PSRAM_RES_BUFSIZE
-  #if defined(ARDUINO_ESP32S3_DEV)
-    #define PSRAM_RES_BUFSIZE 4096 * 6 // 24KB
-  #else
-    #define PSRAM_RES_BUFSIZE 4096 * 18 // 72KB
+    #define PSRAM_BUFSIZE 1024 * 1750 // 1750KB
   #endif
 #endif
 

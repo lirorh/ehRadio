@@ -93,7 +93,7 @@ Information on how the controls function detailed are [here](Controls.md).
 
 The WebUI is optimized for mobile browsers but looks great on PCs, too.
 
-![image](images/WebUI_player_editor.jpg)
+![image](images/Screenshot_Player.jpg)
 
 More screenshots from the WebUI are [here](WebUI.md).
 
@@ -135,8 +135,7 @@ There are tools in the codebase to assist with translation work.
 ## Radio Creations
 
 I can't 100% confirm this, but I am pretty sure all devices built for other ESP-based radio projects will run ehRadio, as long as the hardware is supported.
-And although (as of `2026.05.26`), ehRadio has been reworked so an ESP32-S3 can be wired with an SPI display and a VS1053 (which ёRadio & ESP32-RadioV2 can't),
-I haven't actually built a radio like that yet.
+And although (as of `2026.06.15`), ehRadio has been reworked so an ESP32-S3 can be wired with an SPI display and a VS1053 (which ёRadio & ESP32-RadioV2 can't),
 
 Below here are some sketches and helpful hints to building one of the "prebuilt" firmwares as available in the Releases and the
 [online flasher](https://trip5.github.io/ehRadio/firmware.html).

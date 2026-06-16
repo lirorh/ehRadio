@@ -222,10 +222,14 @@
   #define ENC_CLK            40
   #define ENC_DT             39
   #define ENC_SW             38
+  #if defined(SH1106_PCM_REMOTE)
+    #define ENC_STEPS          4
+  #endif
 #elif defined(SH1106_PCM_1BUTTON)
   #define ENC_CLK            7
   #define ENC_DT             15
   #define ENC_SW             16
+  #define ENC_STEPS          4
 #endif
 
 

@@ -22,21 +22,23 @@
   },
   {
     "name": "Rotary Encoder",
-    "info": "If the encoder works in the opposite expected direction, swap CLK and DT\nA usually CLK, B usually DT",
+    "info": "If the encoder works in the opposite expected direction, swap CLK and DT\nA is usually CLK, B is usually DT\nKY-040 2 steps / EC11 4 steps",
     "pins": [ "ENC_CLK", "ENC_DT", "ENC_SW" ],
     "defines": [
-      { "define": "ENC_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary (true by default)" },
-      { "define": "ENC_SW_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
+      { "define": "ENC_STEPS", "type": "enum", "options": ["1", "2", "4"], "default": "2", "optional": true, "comment": "rotary encoder steps (default 2)" },
+      { "define": "ENC_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary (default true)" },
+      { "define": "ENC_SW_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
     "lib_deps": "${library.rotaryencoder}"
   },
   {
     "name": "Rotary Encoder 2",
-    "info": "If the encoder works in the opposite expected direction, swap CLK and DT\nA usually CLK, B usually DT",
+    "info": "If the encoder works in the opposite expected direction, swap CLK and DT\nA is usually CLK, B is usually DT\nKY-040 2 steps / EC11 4 steps",
     "pins": [ "ENC2_CLK", "ENC2_DT", "ENC2_SW" ],
     "defines": [
-      { "define": "ENC2_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary (true by default)" },
-      { "define": "ENC2_SW_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
+      { "define": "ENC2_STEPS", "type": "enum", "options": ["1", "2", "4"], "default": "2", "optional": true, "comment": "rotary encoder steps (default 2)" },
+      { "define": "ENC2_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary (default true)" },
+      { "define": "ENC2_SW_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
     "lib_deps": "${library.rotaryencoder}"
   },
@@ -44,7 +46,7 @@
     "name": "Button: Play/Pause",
     "pins": [ "BTN_PLAY" ],
     "defines": [
-      { "define": "BTN_PLAY_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
+      { "define": "BTN_PLAY_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -52,7 +54,7 @@
     "name": "Button: Previous Station/Track",
     "pins": [ "BTN_PREV" ],
     "defines": [
-      { "define": "BTN_PREV_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
+      { "define": "BTN_PREV_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -60,7 +62,7 @@
     "name": "Button: Next Station/Track",
     "pins": [ "BTN_NEXT" ],
     "defines": [
-      { "define": "BTN_NEXT_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
+      { "define": "BTN_NEXT_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -68,7 +70,7 @@
     "name": "Button: Volume Up",
     "pins": [ "BTN_UP" ],
     "defines": [
-      { "define": "BTN_UP_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
+      { "define": "BTN_UP_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -76,7 +78,7 @@
     "name": "Button: Volume Down",
     "pins": [ "BTN_DOWN" ],
     "defines": [
-      { "define": "BTN_DOWN_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
+      { "define": "BTN_DOWN_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
     "lib_deps": "${library.onebutton}"
   },
@@ -84,7 +86,7 @@
     "name": "Button: Mode Switch",
     "pins": [ "BTN_MODE" ],
     "defines": [
-      { "define": "BTN_MODE_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (true by default)" }
+      { "define": "BTN_MODE_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
     "lib_deps": "${library.onebutton}"
   },

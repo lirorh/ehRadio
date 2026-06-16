@@ -238,10 +238,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #endif
 #endif
 
-#ifndef USE_FBUFFER
-  #define USE_FBUFFER true // framebuffer: best to leave this on (will use PSRAM if available and SRAM if not)
-#endif
-
 /* Define your clock/volume page font as #define CLOCKFONT CHUNKY6 */
 #define YO_MONO         0  // Default modern yoRadio 7-Segment font (monospaced)
 #define YO_CLASSIC      1  // Classic yoRadio 7-Segment font (1 is narrow)
@@ -563,11 +559,11 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define ENC_SW_PULLUP true
 #endif
 #ifdef ENC_STEPS
-  #if !(ENC_STEPS == 1  ENC_STEPS == 2 | ENC_STEPS == 4 // 1 is acceptable but 2 for more accuracy
-    #error ENC_STEPS 1 or 2 or 4 only please
+  #if !(ENC_STEPS == 1 || ENC_STEPS == 2 || ENC_STEPS == 4) // 1 is acceptable but 2 for more accuracy
+    #error ENC_STEPS 1 or 2 or 4 only please (2 is default)
   #endif
 #else
-  #define ENC_STEPS 1
+  #define ENC_STEPS 2
 #endif
 
 #ifndef ENC2_DT
@@ -587,10 +583,10 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #ifdef ENC2_STEPS
   #if !(ENC2_STEPS==1  ENC2_STEPS==2 | ENC2_STEPS==4 // 1 is acceptable but 2 for more accuracy
-    #error ENC2_STEPS 1 or 2 or 4 only please
+    #error ENC2_STEPS 1 or 2 or 4 only please (2 is default)
   #endif
 #else
-  #define ENC2_STEPS 1
+  #define ENC2_STEPS 2
 #endif
 
 /* --- BUTTONS --- */
@@ -789,7 +785,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define SEARCHRESULTS_YIELDINTERVAL 0 // With a large buffer, skipping is almost eliminated with 0
 #endif
 #ifdef MAX_PL_READ_BYTES
- //#define MAX_PL_READ_BYTES 65536 // Makes chunked HTML transfers... possibly enable if experiencing slowdowns when sending web UI to client. Untested.
+  //#define MAX_PL_READ_BYTES 1024*64 // Makes chunked HTML transfers but only for playlist.csv and wifi.csv... might help I2S decoder with large playlists
 #endif
 /* Maximum lengths of character buffers */
 /* Notes have been made regarding old yoRadio values */
@@ -823,6 +819,10 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define STREAM_TIMEOUT_MS 3000
 #endif
 
+// Audio Buffer
+#ifndef USE_FBUFFER
+  #define USE_FBUFFER true // framebuffer: best to leave this on (will use PSRAM if available and SRAM if not)
+#endif
 // PSRAM Buffer
 #ifndef PSRAM_BUFSIZE
   #if defined(ARDUINO_ESP32S3_DEV)

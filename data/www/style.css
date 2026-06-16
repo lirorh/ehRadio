@@ -197,6 +197,7 @@ section .reset svg.fill{ fill: var(--section-border); stroke: none; width: 22px;
 .inputwrap { flex: 1; position: relative; padding: 0px 1% 0px 1%; }
 .inputwrap.pad { padding-top: 20px; }
 .inputwrap.center { display: flex; flex-direction: column; align-items: center; }
+.inputwrap.center .inputtitle { text-align: center; }
 .inputtitle { display: inline-block; padding-bottom: 7px; text-transform: lowercase; }
 .ssoption { padding: 0.5em 0em 0.5em 0em; }
 

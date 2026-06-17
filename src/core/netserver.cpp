@@ -113,7 +113,7 @@ void StaticFileCache::loadAll() {
         loadOne(Config::wwwFiles[i], count);
         if (entries[count].data || entries[count].gzData) count++;
     }
-    FUNCTIONLOG("FileCache", "Loaded %d files into PSRAM cache", count);
+    SERIALLOGX("Loaded %d files into PSRAM cache\t", count);
 }
 
 const CachedFile* StaticFileCache::find(const char* urlPath) const {
@@ -1532,9 +1532,6 @@ void handleNotFound(AsyncWebServerRequest * request) {
   // PSRAM cache check: serve static WebUI files from PSRAM (no SPIFFS reads)
   if (request->method() == HTTP_GET) {
     String url = request->url();
-    // Strip cache-busting query params (?v=xxx)
-    int qmark = url.indexOf('?');
-    if (qmark >= 0) url = url.substring(0, qmark);
     const CachedFile* cf = netserver.getFileCache().find(url.c_str());
     if (cf) {
       if (cf->gzData) {

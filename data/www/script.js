@@ -1069,7 +1069,7 @@ function hideSpinner(){
   getId("content").classList.remove("hidden");
 }
 function loadLogoThen(callback){
-  fetch(`logo.svg?v=${radioVersion}`).then(response => response.text()).then(svg => {
+  fetch(`logo.svg`).then(response => response.text()).then(svg => {
     getId('logo').innerHTML = svg;
     if (typeof callback === 'function') callback();
   });
@@ -1105,7 +1105,7 @@ function continueLoading(mode){
     const pathname = window.location.pathname;
     if(['/','/index.html'].includes(pathname)){
       document.title = `${Title} - Player`;
-      fetch(`player.html?${radioVersion}`).then(response => response.text()).then(player => { 
+      fetch(`player.html`).then(response => response.text()).then(player => {
         getId('content').classList.add('idx');
         getId('content').innerHTML = player; 
         loadLogoThen(function(){
@@ -1126,9 +1126,9 @@ function continueLoading(mode){
     }
     if(pathname=='/settings.html'){
       document.title = `${Title} - Settings`;
-      fetch(`options.html?${radioVersion}`).then(response => response.text()).then(options => {
+      fetch(`options.html`).then(response => response.text()).then(options => {
         getId('content').innerHTML = options;
-        loadJS(`options.js?${radioVersion}`, () => {
+        loadJS(`options.js`, () => {
           loadLogoThen(function(){
             hideSpinner();
             if (onlineUpdCapable) getId('webboard').classList.add('hidden');
@@ -1145,7 +1145,7 @@ function continueLoading(mode){
           websocket.send('getweather=1');
           websocket.send('getmqtt=1');
           websocket.send('getcontrols=1');
-          getWiFi(`http://${hostname}/data/wifi.csv`+"?"+new Date().getTime());
+          getWiFi(`http://${hostname}/data/wifi.csv`);
           websocket.send('getactive=1');
           websocket.send('getbattery=1');
           classEach("reset", function(el){ el.innerHTML='<svg viewBox="0 0 16 16" class="fill"><path d="M8 3v5a36.973 36.973 0 0 1-2.324-1.166A44.09 44.09 0 0 1 3.417 5.5a52.149 52.149 0 0 1 2.26-1.32A43.18 43.18 0 0 1 8 3z"/><path d="M7 5v1h4.5C12.894 6 14 7.106 14 8.5S12.894 11 11.5 11H1v1h10.5c1.93 0 3.5-1.57 3.5-3.5S13.43 5 11.5 5h-4z"/></svg>'; });
@@ -1155,36 +1155,36 @@ function continueLoading(mode){
     }
     if(pathname=='/update.html'){
       document.title = `${Title} - Update`;
-      fetch(`updform.html?${radioVersion}`).then(response => response.text()).then(updform => {
+      fetch(`updform.html`).then(response => response.text()).then(updform => {
         getId('content').classList.add('upd');
         getId('content').innerHTML = updform;
         loadLogoThen(function(){
           hideSpinner();
-          ensureFunctionLoaded('initOnlineUpdateChecker', `script2.js?${radioVersion}`, function(){ initOnlineUpdateChecker(); });
+          ensureFunctionLoaded('initOnlineUpdateChecker', `script2.js`, function(){ initOnlineUpdateChecker(); });
         });
         applyCommonPageMeta();
       });
     }
     if(pathname=='/ir.html'){
       document.title = `${Title} - IR Recorder`;
-      fetch(`irrecord.html?${radioVersion}`).then(response => response.text()).then(ircontent => {
+      fetch(`irrecord.html`).then(response => response.text()).then(ircontent => {
         getId('content').innerHTML = ircontent;
         loadLogoThen(function(){
-          ensureFunctionLoaded('initControls', `script2.js?${radioVersion}`, function(){ initControls(); });
+          ensureFunctionLoaded('initControls', `script2.js`, function(){ initControls(); });
           hideSpinner();
         });
         applyCommonPageMeta();
       });
     }
   }else{ // AP mode
-    fetch(`options.html?${radioVersion}`).then(response => response.text()).then(options => {
+    fetch(`options.html`).then(response => response.text()).then(options => {
       getId('content').innerHTML = options;
-      loadJS(`options.js?${radioVersion}`, () => {
+      loadJS(`options.js`, () => {
         loadLogoThen(function(){
           hideSpinner();
         });
         applyCommonPageMeta();
-        getWiFi(`http://${hostname}/data/wifi.csv`+"?"+new Date().getTime());
+        getWiFi(`http://${hostname}/data/wifi.csv`);
         websocket.send('getactive=1');
       });
     });

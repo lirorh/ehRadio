@@ -36,7 +36,7 @@ void setup() {
   #if (CORE_DEBUG_LEVEL > 0) || defined(ALL_DEBUG_LOGS)
     if (esp_reset_reason() == ESP_RST_POWERON || esp_reset_reason() == ESP_RST_EXT) { // checking if this is a poweron boot
       delay(1000);
-      BOOTLOG("Delay 1 second after cold boot to ensure serial logs are completely available (only when CORE_DEBUG_LEVEL > 0 or ALL_DEBUG_LOGS is defined)...");
+      BOOTLOG("1 second delay after cold boot to ensure serial logs are available (CORE_DEBUG_LEVEL > 0 or ALL_DEBUG_LOGS)...");
     }
   #endif
 

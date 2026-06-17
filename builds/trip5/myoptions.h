@@ -345,14 +345,6 @@
 //#define CLOCKFONT YO_MONO
 //#define CLOCKFONT YO_CLASSIC
 
-#if defined(ILI9488_VS1053_1BUTTON) // debugging & fixes
-  //#undef VS_PATCH_ENABLE
-  //#define VS_PATCH_ENABLE true
-  //#undef SD_SPI
-  //#undef SD_CS
-  //#define ALL_DEBUG_LOGS
-#endif
-
-#define IR_PIN               6
+#define ALL_DEBUG_LOGS
 
 #endif // myoptions_h

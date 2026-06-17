@@ -17,7 +17,7 @@ if (typeof uiLocale !== 'undefined' && typeof htmlLocale !== 'undefined') {
 // Only fetch locale.json if needed; expose promise so other scripts can chain on it
 var localePromise = Promise.resolve();
 if (shouldLoadLocale) {
-  localePromise = fetch('locale.json?' + (typeof radioVersion !== 'undefined' ? radioVersion : ''))
+  localePromise = fetch('locale.json')
       .then(function(r){ return r.ok ? r.json() : Promise.reject('not-ok'); })
       .then(function(data){ 
           i18n = data;

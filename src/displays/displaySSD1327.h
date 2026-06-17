@@ -5,6 +5,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1327.h>
 
+#define DISPLAY_MODEL_NAME "SSD1327"
+
 typedef GFXcanvas1 Canvas;
 typedef Adafruit_SSD1327 yoDisplay;
 

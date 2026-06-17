@@ -305,6 +305,8 @@ bool Startup::checkLocaleFile() {
 }
 
 void Startup::startupServicesAsync(void* param) {
+  // Delay to let audio stream buffer fill before background HTTP tasks compete for WiFi
+  vTaskDelay(pdMS_TO_TICKS(10000));
   startup.fixPlaylistFileEnding();
   #ifdef UPDATEURL
     if (!startup.checkLocaleFile()) {

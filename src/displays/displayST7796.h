@@ -5,6 +5,8 @@
 #include <Adafruit_GFX.h>
 #include "../libraries/Adafruit_ST7796S/Adafruit_ST7796S_kbv.h"
 
+#define DISPLAY_MODEL_NAME "ST7796S"
+
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_ST7796S_kbv yoDisplay;
 

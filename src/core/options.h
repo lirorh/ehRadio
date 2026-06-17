@@ -78,6 +78,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #if DSP_MODEL==DSP_DUMMY
   #define DUMMYDISPLAY
+  #define DSP_WIDTH  0
+  #define DSP_HEIGHT 0
 #endif
 
 /* --- DISPLAY RESOLUTION --- */
@@ -201,7 +203,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #ifndef AUTOBACKLIGHT // Auto-dimming with the light sensor (not related to DSP_DIMMING_ENABLED)
   #ifndef AUTOBACKLIGHT_MAX
-    #define AUTOBACKLIGHT_MAX 2500
+    #define AUTOBACKLIGHT_MAX 1500
   #endif
   #ifndef AUTOBACKLIGHT_MIN
     #define AUTOBACKLIGHT_MIN 12
@@ -372,7 +374,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef VS1053_RST
   #define VS1053_RST -1 // set to -1 if connected to Esp EN pin
 #endif
-// myoptions.h should also define which SPI bus will be used:
+// myoptions.h should also define which SPI bus will be used - VS1053 should be alone on this bus
 // #define VS1053_SPI 'A' // VS1053 decoder on Bus A (no display on A)
 // #define VS1053_SPI 'B' // VS1053 decoder on Bus B
 #if VS1053_CS!=255 && !defined(VS1053_SPI)
@@ -470,6 +472,15 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef PLAYER_FORCE_MONO
   #define PLAYER_FORCE_MONO false // mono option - false stereo, true mono (also add for mono I2S decoders for the VU)
 #endif
+
+/* --- VOLUME SCALE --- */
+#ifndef VOLUME_SCALE // Default 42 doubles future upstream library's scale of 21; 50-100 gives extremely fine control
+  #define VOLUME_SCALE 42
+#endif
+#if (VOLUME_SCALE < 21) || (VOLUME_SCALE > 255)
+  #error VOLUME_SCALE must be between 21 and 255
+#endif
+
 
 /* --- CHECK DECODER OPTIONS --- */
 #if (I2S_DOUT!=255) && (VS1053_CS!=255)
@@ -603,8 +614,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef BTN_DOWN
   #define BTN_DOWN 255
 #endif
-#ifndef BTN_PREV_PULLUP
-  #define BTN_PREV_PULLUP true
+#ifndef BTN_DOWN_PULLUP
+  #define BTN_DOWN_PULLUP true
 #endif
 #ifndef BTN_PLAY
   #define BTN_PLAY 255
@@ -615,20 +626,20 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef BTN_UP
   #define BTN_UP 255
 #endif
-#ifndef BTN_NEXT_PULLUP
-  #define BTN_NEXT_PULLUP true
+#ifndef BTN_UP_PULLUP
+  #define BTN_UP_PULLUP true
 #endif
 #ifndef BTN_PREV
   #define BTN_PREV 255
 #endif
-#ifndef BTN_UP_PULLUP
-  #define BTN_UP_PULLUP true
+#ifndef BTN_PREV_PULLUP
+  #define BTN_PREV_PULLUP true
 #endif
 #ifndef BTN_NEXT
   #define BTN_NEXT 255
 #endif
-#ifndef BTN_DOWN_PULLUP
-  #define BTN_DOWN_PULLUP true
+#ifndef BTN_NEXT_PULLUP
+  #define BTN_NEXT_PULLUP true
 #endif
 #ifndef BTN_MODE
   #define BTN_MODE 255
@@ -768,7 +779,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
  // How many seconds to wait after boot completed (including smart start) to consider successful, if rebooted during that time, will enter safe mode (disables smart start, autoupdate)
 #ifndef BOOT_SAFE_TIME
-  #define  BOOT_SAFE_TIME 10
+  #define  BOOT_SAFE_TIME 30
 #endif
 #ifndef SEARCHRESULTS_BUFFER
  // Buffer for chunked HTTP transfers from radio-browser.info. Defined in KB; conversion to bytes done in netserver.cpp.
@@ -1391,12 +1402,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* ============================== USER DEFAULTS ============================== */
 /* Sets defaults but still editable in WebUI */
 
-#ifndef VOLUME_SCALE // Default 42 doubles future upstream library's scale of 21; 50-100 gives extremely fine control
-  #define VOLUME_SCALE 42
-#endif
-#if (VOLUME_SCALE < 21) || (VOLUME_SCALE > 255)
-  #error VOLUME_SCALE must be between 21 and 255
-#endif
 #if defined(SOUND_VOLUME) && ((SOUND_VOLUME < 0) || (SOUND_VOLUME > VOLUME_SCALE))
   #warning "define warning in myoptions.h: SOUND_VOLUME is out of range (0-" #VOLUME_SCALE "), reverting to a safe default"
   #undef SOUND_VOLUME

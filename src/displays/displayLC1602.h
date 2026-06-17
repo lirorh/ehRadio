@@ -11,9 +11,11 @@
 #if DSP_MODEL==DSP_2004
   #define DSP_WIDTH  20
   #define DSP_HEIGHT 4
+  #define DISPLAY_MODEL_NAME "2004"
 #else
   #define DSP_WIDTH  16
   #define DSP_HEIGHT 2
+  #define DISPLAY_MODEL_NAME "1602"
 #endif
 
 // Auto-detect interface from pins: I2C if both I2C pins defined, else parallel

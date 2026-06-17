@@ -11,6 +11,7 @@
 #undef DSP_HEIGHT
 #define DSP_WIDTH  160
 #define DSP_HEIGHT 80
+#define DISPLAY_MODEL_NAME "GC9106"
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_GC9106Ex yoDisplay;

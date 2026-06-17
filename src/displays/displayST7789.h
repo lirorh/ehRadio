@@ -5,6 +5,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7789.h>
 
+#define DISPLAY_MODEL_NAME "ST7789"
+
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_ST7789 yoDisplay;
 

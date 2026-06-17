@@ -18,6 +18,7 @@
 #include "startup.h"
 #include "telnet.h"
 #include "utility.h"
+#include "../displays/dspcore.h"
 #include "../displays/tools/utf8_common.h"
 #ifdef USE_SD
   #include "sdmanager.h"
@@ -649,45 +650,91 @@ void Config::bootInfo() {
   BOOTLOG("*               ehRadio %s             *", RADIOVERSION);
   BOOTLOG("************************************************");
   BOOTLOG("------------------------------------------------");
-  BOOTLOG("arduino:\t%d", ARDUINO);
-  BOOTLOG("compiler:\t%s", __VERSION__);
-  BOOTLOG("esp32core:\t%d.%d.%d", ESP_ARDUINO_VERSION_MAJOR, ESP_ARDUINO_VERSION_MINOR, ESP_ARDUINO_VERSION_PATCH);
-  uint32_t chipId = 0;
-  for(int i=0; i<17; i=i+8) {
-    chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
-  }
-  BOOTLOG("chip:\t\tmodel: %s | rev: %d | id: %d | cores: %d | psram: %d", ESP.getChipModel(), ESP.getChipRevision(), chipId, ESP.getChipCores(), ESP.getPsramSize());
-  BOOTLOG("display:\t%d", DSP_MODEL);
-  if (VS1053_CS==255) {
-    BOOTLOG("audio:\t\t%s (%d, %d, %d)", "I2S", I2S_DOUT, I2S_BCLK, I2S_LRC);
-  } else {
-    BOOTLOG("audio:\t\t%s (%d, %d, %d, %d)", "VS1053", VS1053_CS, VS1053_DCS, VS1053_DREQ, VS1053_RST);
-  }
-  BOOTLOG("display locale :\t%s", DSP_LOCALE);
-  BOOTLOG("webui locale :\t%s", store.locale_webui);
-  BOOTLOG("bufferbar:\t%s", store.bufferbar?"true":"false");
-  BOOTLOG("smartstart:\t%s", store.smartstart ? "true" : "false");
-  BOOTLOG("vumeter:\t%s", store.vumeter?"true":"false");
-  BOOTLOG("softapdelay:\t%d", store.softapdelay);
-  BOOTLOG("flipscreen:\t%s", store.flipscreen?"true":"false");
-  BOOTLOG("volumepage:\t%s", store.volumepage?"true":"false");
-  BOOTLOG("clock12:\t%s", store.clock12?"true":"false");
-  BOOTLOG("invertdisplay:\t%s", store.invertdisplay?"true":"false");
-  BOOTLOG("showweather:\t%s", store.showweather?"true":"false");
-  BOOTLOG("wifiscanbest:\t%s", store.wifiscanbest?"true":"false");
-  BOOTLOG("mqttenable:\t%s", store.mqttenable?"true":"false");
-  BOOTLOG("buttons:\tleft=%d, center=%d, right=%d, up=%d, down=%d, mode=%d, pullup=%s", 
-          BTN_DOWN, BTN_PLAY, BTN_UP, BTN_PREV, BTN_NEXT, BTN_MODE);
-  BOOTLOG("encoders:\tl1=%d, b1=%d, r1=%d, pullup=%s, l2=%d, b2=%d, r2=%d, pullup=%s", 
-          ENC_DT, ENC_SW, ENC_CLK, ENC_PULLUP?"true":"false", ENC2_DT, ENC2_SW, ENC2_CLK, ENC2_PULLUP?"true":"false");
-  BOOTLOG("ir:\t\t%d", IR_PIN);
-  if (SD_CS!=255) BOOTLOG("SD:\t%d", SD_CS);
+  BOOTLOG("Arduino API:\t%d.%d.%d", ARDUINO / 10000, (ARDUINO / 100) % 100, ARDUINO % 100);
+  BOOTLOG("Arduino Core:\t%d.%d.%d", ESP_ARDUINO_VERSION_MAJOR, ESP_ARDUINO_VERSION_MINOR, ESP_ARDUINO_VERSION_PATCH);
+  BOOTLOG("GCC Toolchain:\t%s", __VERSION__);
+  BOOTLOG("%s:\trev: %d, Cores: %d, PSRAM: %dMB, ID: %d", ESP.getChipModel(), ESP.getChipRevision(), ESP.getChipCores(), (ESP.getPsramSize() + 524288) / 1048576, ({uint64_t _m=ESP.getEfuseMac(); (((_m>>40)&0xFF)<<16)|(((_m>>32)&0xFF)<<8)|((_m>>24)&0xFF);}));
+  BOOTLOG("Core Processes:\tAudio: %d, Network: %d, Display: %d", AUDIO_CORE, NETWORK_CORE, DSP_TASK_CORE_ID);
+  BOOTLOG("Stack Sizes:\tLoop: %dKB, Display: %dKB, Netserver: %dKB, Network: %dKB", LOOP_TASK_STACK_SIZE, DSP_TASK_STACK_SIZE, NETSERVER_TASK_STACK_SIZE, NETWORK_TASK_STACK_SIZE);
+  BOOTLOG("Task Priority:\tDisplay: %d, Netserver: %d, Playback: %d, Network: %d, Low: %d", DSP_TASK_PRIORITY, NETSERVER_TASK_PRIORITY, PLAYBACK_TASK_PRIORITY, NET_TASK_PRIORITY, LOW_TASK_PRIORITY);
+  #ifdef SPIA_SCK
+    if (SPIA_SCK!=255) BOOTLOG("SPIA:\t\tSCK: %d, MISO: %d, MOSI: %d", SPIA_SCK, SPIA_MISO, SPIA_MOSI);
+  #endif
+  #ifdef SPIB_SCK
+    if (SPIB_SCK!=255) BOOTLOG("SPIB:\t\tSCK: %d, MISO: %d, MOSI: %d", SPIB_SCK, SPIB_MISO, SPIB_MOSI);
+  #endif
+  BOOTLOG("Display %d:\t%s (width: %d, height: %d)", DSP_MODEL, DISPLAY_MODEL_NAME, DSP_WIDTH, DSP_HEIGHT);
+  if (I2C_SDA!=255) BOOTLOG("\t\tI2C SDA: %d, SCL: %d, RST: %d", I2C_SDA, I2C_SCL, I2C_RST);
+  if (LCD_RS!=255) BOOTLOG("\t\tLCD RS: %d, E: %d, D4: %d, D5: %d, D6: %d, D7: %d,", LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+  if (TFT_DC!=255) BOOTLOG("\t\tTFT SPIA, CS: %d, RST: %d, DC: %d", TFT_CS, TFT_RST, TFT_DC);
+  BOOTLOG("\t\tInvert Quirk: %s, Brightness Pin: %d, Dimming Enabled: %s", DSP_INVERT_QUIRK?"true":"false", BRIGHTNESS_PIN, DIMMING_ENABLED?"true":"false");
+  #ifdef AUTOBACKLIGHT
+    if (LIGHT_SENSOR!=255) BOOTLOG("Autobacklight Enabled: Light Sensor Pin: %d Max: %d Min: %d", LIGHT_SENSOR, AUTOBACKLIGHT_MAX, AUTOBACKLIGHT_MIN);
+  #endif
+  #ifdef VS1053_SPI
+    if (VS1053_CS!=255) BOOTLOG("Audio (VS1053):\tSPI%s, CS: %d, DCS: %d, DREQ: %d, RST: %d, Patch: %s", VS1053_SPI, VS1053_CS, VS1053_DCS, VS1053_DREQ, VS1053_RST, VS_PATCH_ENABLE?"enabled":"disabled");
+  #endif
+  if (I2S_DOUT!=255) BOOTLOG("Audio (I2S):\tDOUT: %d, BCLK: %d, LRC: %d, DIN: %d, MCLK: %d", I2S_DOUT, I2S_BCLK, I2S_LRC, I2S_DIN, I2S_MCLK);
+  #ifdef USE_ES8311
+    BOOTLOGX("Audio (ES8311)\tMAX_I2S: %d")
+    #ifdef ES8311_I2C_SCL
+      SERIALLOG(" I2C SCL: %d SDA: %d", ES8311_I2C_SCL, ES8311_I2C_SDA)
+    #else
+      SERIALLOG("")
+    #endif
+  #endif
+  BOOTLOGX("\t\tVolume Scale: %d, Force Mono: %s", VOLUME_SCALE, PLAYER_FORCE_MONO?"true":"false");
+  if (MUTE_PIN!=255) SERIALLOG(", Mute Pin: %d, Mute Val: %d, Mute Lock: %s", MUTE_PIN, MUTE_VAL, MUTE_LOCK?"true":"false"); else SERIALLOG("");
+  if (BTN_DOWN!=255) BOOTLOG("Button Down:\tPin: %d, Pullup: %s", BTN_DOWN, BTN_DOWN_PULLUP?"true":"false");
+  if (BTN_PLAY!=255) BOOTLOG("Button Play:\tPin: %d, Pullup: %s", BTN_PLAY, BTN_PLAY_PULLUP?"true":"false");
+  if (BTN_UP!=255) BOOTLOG("Button Up:\tPin: %d, Pullup: %s", BTN_UP, BTN_UP_PULLUP?"true":"false");
+  if (BTN_PREV!=255) BOOTLOG("Button Prev:\tPin: %d, Pullup: %s", BTN_PREV, BTN_PREV_PULLUP?"true":"false");
+  if (BTN_NEXT!=255) BOOTLOG("Button Next:\tPin: %d, Pullup: %s", BTN_NEXT, BTN_NEXT_PULLUP?"true":"false");
+  if (ENC_DT!=255) BOOTLOG("Encoder 1:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC_DT, ENC_CLK, ENC_PULLUP?"true":"false", ENC_SW, ENC_SW_PULLUP?"true":"false", ENC_STEPS);
+  if (ENC2_DT!=255) BOOTLOG("Encoder 2:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC2_DT, ENC2_CLK, ENC2_PULLUP?"true":"false", ENC2_SW, ENC2_SW_PULLUP?"true":"false", ENC2_STEPS);
+  if (IR_PIN!=255) BOOTLOG("IR:\t\tPin: %d", IR_PIN);
+  if (SD_CS!=255) BOOTLOGX("SD:\t\tPin: %d", SD_CS);
+  if (SD_CARD_DETECT_PIN!=255) SERIALLOG("Detect Pin: %d Autoplay: %s", SD_CARD_DETECT_PIN, SD_AUTOPLAY?"true":"false"); else SERIALLOG("");
   #ifdef FIRMWARE
-    BOOTLOG("firmware:\t%s", FIRMWARE);
+    BOOTLOG("Firmware:\t%s", FIRMWARE);
   #endif
   #ifdef UPDATEURL
-    BOOTLOG("updateurl:\t%s", UPDATEURL);
+    BOOTLOG("Update URL:\t%s", UPDATEURL);
+    BOOTLOG("Auto Update:\t%s", store.autoupdate?"true":"false");
   #endif
+  #ifdef MQTT_ENABLE
+    BOOTLOG("MQTT Enabled:\t%s", store.mqttenable?"true":"false");
+  #endif
+  BOOTLOGX("AP SSID:\t%s", AP_SSID);
+  #ifdef AP_PASSWORD
+    SERIALLOG(", Password: %s", AP_PASSWORD);
+  #else
+    SERIALLOG(" (no password)");
+  #endif
+  BOOTLOG("Soft AP Delay:\t%d", store.softapdelay);
+  #ifdef ALL_DEBUG_LOGS
+    BOOTLOG("ALL_DEBUG_LOGS:\tenabled");
+  #else
+    #if defined(ESPFILEUPDATER_DEBUG)
+      BOOTLOG("ESPFILEUPDATER_DEBUG enabled");
+    #endif
+    #if defined(NETSERVER_DEBUG)
+      BOOTLOG("NETSERVER_DEBUG\tenabled");
+    #endif
+    #if defined(CORE_MONITOR)
+      BOOTLOG("CORE_MONITOR\tenabled");
+    #endif
+  #endif
+  #if defined(CORS_DEBUG)
+    BOOTLOG("CORS_DEBUG\tenabled");
+  #endif
+  #if defined(BATTERY_DEBUG)
+    BOOTLOG("BATTERY_DEBUG\tenabled");
+  #endif
+  BOOTLOG("Display Locale:\t%s", DSP_LOCALE);
+  BOOTLOG("WebUI Locale:\t%s", store.locale_webui);
+  BOOTLOG("Smartstart:\t%s", store.smartstart?"true":"false");
+  BOOTLOG("Wifi Scan Best:\t%s", store.wifiscanbest?"true":"false");
   BOOTLOG("------------------------------------------------");
 }
 

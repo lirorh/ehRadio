@@ -14,12 +14,21 @@ typedef Adafruit_ST7735 yoDisplay;
 #if DTYPE==INITR_MINI160x80
   #define DSP_WIDTH  160
   #define DSP_HEIGHT 80
+  #define DISPLAY_MODEL_NAME "ST7735 MINI160x80"
 #elif DTYPE==INITR_144GREENTAB
   #define DSP_WIDTH  128
   #define DSP_HEIGHT 128
+  #define DISPLAY_MODEL_NAME "ST7735 144GREENTAB"
 #else
   #define DSP_WIDTH  160
   #define DSP_HEIGHT 128
+  #if DTYPE==INITR_GREENTAB
+    #define DISPLAY_MODEL_NAME "ST7735 GREENTAB"
+  #elif DTYPE==INITR_REDTAB
+    #define DISPLAY_MODEL_NAME "ST7735 REDTAB"
+  #else // INITR_BLACKTAB (default) or unknown
+    #define DISPLAY_MODEL_NAME "ST7735 BLACKTAB"
+  #endif
 #endif
 
 #include "dspfont.h"

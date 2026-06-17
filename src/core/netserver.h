@@ -118,18 +118,8 @@ const char index_html[] PROGMEM = R"(
   <link rel="stylesheet" id="themeCSS" href="theme.css" type="text/css" />
   <link rel="stylesheet" id="styleCSS" href="style.css" type="text/css" />
   <script type="text/javascript" src="variables.js"></script>
-  <script>
-    // Cache-busting
-    var v = '?v=' + radioVersion;
-    document.getElementById('themeCSS').href = 'theme.css' + v;
-    document.getElementById('styleCSS').href = 'style.css' + v;
-    ['script.js', 'script2.js'].forEach(function(src) {
-      var script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = src + v;
-      document.head.appendChild(script);
-    });
-  </script>
+  <script type="text/javascript" src="script.js"></script>
+  <script type="text/javascript" src="script2.js"></script>
   </head>
 <body>
 <div id="content" class="hidden progmem"></div><!--content--><div id="progress"><span id="loader"></span></div>

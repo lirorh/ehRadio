@@ -10,6 +10,7 @@
 #undef DSP_HEIGHT
 #define DSP_WIDTH  84
 #define DSP_HEIGHT 48
+#define DISPLAY_MODEL_NAME "N5110"
 
 typedef GFXcanvas1 Canvas;
 typedef Adafruit_PCD8544 yoDisplay;

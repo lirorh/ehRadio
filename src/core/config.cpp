@@ -676,11 +676,11 @@ void Config::bootInfo() {
   #endif
   if (I2S_DOUT!=255) BOOTLOG("Audio (I2S):\tDOUT: %d, BCLK: %d, LRC: %d, DIN: %d, MCLK: %d", I2S_DOUT, I2S_BCLK, I2S_LRC, I2S_DIN, I2S_MCLK);
   #ifdef USE_ES8311
-    BOOTLOGX("Audio (ES8311)\tMAX_I2S: %d")
+    BOOTLOGX("Audio (ES8311)\tMAX_I2S: %d");
     #ifdef ES8311_I2C_SCL
-      SERIALLOG(" I2C SCL: %d SDA: %d", ES8311_I2C_SCL, ES8311_I2C_SDA)
+      SERIALLOG(" I2C SCL: %d SDA: %d", ES8311_I2C_SCL, ES8311_I2C_SDA);
     #else
-      SERIALLOG("")
+      SERIALLOG("");
     #endif
   #endif
   BOOTLOGX("\t\tVolume Scale: %d, Force Mono: %s", VOLUME_SCALE, PLAYER_FORCE_MONO?"true":"false");

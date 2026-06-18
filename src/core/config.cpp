@@ -672,7 +672,7 @@ void Config::bootInfo() {
     if (LIGHT_SENSOR!=255) BOOTLOG("Autobacklight Enabled: Light Sensor Pin: %d Max: %d Min: %d", LIGHT_SENSOR, AUTOBACKLIGHT_MAX, AUTOBACKLIGHT_MIN);
   #endif
   #ifdef VS1053_SPI
-    if (VS1053_CS!=255) BOOTLOG("Audio (VS1053):\tSPI%s, CS: %d, DCS: %d, DREQ: %d, RST: %d, Patch: %s", VS1053_SPI, VS1053_CS, VS1053_DCS, VS1053_DREQ, VS1053_RST, VS_PATCH_ENABLE?"enabled":"disabled");
+    if (VS1053_CS!=255) BOOTLOG("Audio (VS1053):\tSPI%c, CS: %d, DCS: %d, DREQ: %d, RST: %d, Patch: %s", VS1053_SPI, VS1053_CS, VS1053_DCS, VS1053_DREQ, VS1053_RST, VS_PATCH_ENABLE?"enabled":"disabled");
   #endif
   if (I2S_DOUT!=255) BOOTLOG("Audio (I2S):\tDOUT: %d, BCLK: %d, LRC: %d, DIN: %d, MCLK: %d", I2S_DOUT, I2S_BCLK, I2S_LRC, I2S_DIN, I2S_MCLK);
   #ifdef USE_ES8311
@@ -693,8 +693,15 @@ void Config::bootInfo() {
   if (ENC_DT!=255) BOOTLOG("Encoder 1:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC_DT, ENC_CLK, ENC_PULLUP?"true":"false", ENC_SW, ENC_SW_PULLUP?"true":"false", ENC_STEPS);
   if (ENC2_DT!=255) BOOTLOG("Encoder 2:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC2_DT, ENC2_CLK, ENC2_PULLUP?"true":"false", ENC2_SW, ENC2_SW_PULLUP?"true":"false", ENC2_STEPS);
   if (IR_PIN!=255) BOOTLOG("IR:\t\tPin: %d", IR_PIN);
-  if (SD_CS!=255) BOOTLOGX("SD:\t\tPin: %d", SD_CS);
+  if (SD_CS!=255) BOOTLOGX("SD:\t\tSPI%c Pin: %d", SD_SPI, SD_CS);
   if (SD_CARD_DETECT_PIN!=255) SERIALLOG("Detect Pin: %d Autoplay: %s", SD_CARD_DETECT_PIN, SD_AUTOPLAY?"true":"false"); else SERIALLOG("");
+  #if (TS_MODEL!=TS_MODEL_UNDEFINED)
+    #if (TS_CS!=255)
+      BOOTLOG("Touchscreen:\t Model: %d, SPI%c CS: %d", TS_MODEL, TS_SPI, TS_CS);
+    #else
+      BOOTLOG("Touchscreen:\t Model: %d, SDA: %d, SCL: : %d, INT: %d, RST: %d", TS_MODEL, TS_SDA, TS_SCL, TS_INT, TS_RST);
+    #endif
+  #endif
   #ifdef FIRMWARE
     BOOTLOG("Firmware:\t%s", FIRMWARE);
   #endif

@@ -117,7 +117,7 @@ Grouped (not one-by-one deep explained) areas:
   - `static_assert` with `__builtin_strcmp` for enumerated string options (e.g. `WEATHER_API`, `WEATHER_WIND_SPEED_UNITS`). **Update the `static_assert` whenever a new provider/value is added.**
   - `/* PREVENT BOARD-DEFINED PIN RE-USE */` section lives after the `/* ESP DEVBOARD */` LED block (requires `LED_PIN` and `ESP_S3C3` to be defined first). Covers LED vs RST pin conflicts only — keep it narrowly scoped.
 - **What is intentionally NOT guarded**: booleans (compiler error is obvious), pin numbers (board-dependent range), free-form strings (`AP_SSID`, `MQTT_*`, URLs), color macros (R,G,B triplets), `AUTOBACKLIGHT(x)` (C macro function), `BATTERY_CURVE_MV/PCT` (already has `static_assert` in `battery.cpp`).
-- **PSRAM buffer sizing** — `PSRAM_BUFSIZE` / `PSRAM_RES_BUFSIZE` macros control the audio input buffer and FLAC reserved buffer sizes. Defaults differ by board: ESP32-S3 gets `UINT16_MAX*10` (~655KB) / `4096*6` (24KB); ESP32 gets `UINT16_MAX*25` (~1.6MB) / `4096*90` (360KB). Both `I2S_Audio/Audio.h` and `VS1053_Audio/audioVS1053Ex.h` now delegate to these macros with local `#ifndef` fallbacks.
+- **PSRAM buffer sizing** — `PSRAM_BUFSIZE` macro controls the audio input buffer and FLAC reserved buffer sizes. Defaults differ by board
 - Buffer bar visual mapping:
   - `BUFFERBAR_VISUAL_FULL_PERCENT` controls where input-buffer fill is rendered as visually full.
   - default `82` means 82% raw fill maps to 100% bar width; set `100` to keep direct 1:1 mapping.
@@ -273,13 +273,19 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 - Owns startup-time helpers that were previously mixed into `config.cpp`:
   - boot-time version marker and required SPIFFS/WebUI file verification (`checkVerAndSpiffs()`)
   - loading saved SSIDs from `/data/wifi.csv` into `config.ssids`
-  - newline repair for `/data/playlist.csv`
   - stale search-result cleanup under `/www/searchresults.*`
   - required WebUI asset download and recovery flow
   - version-file parsing for online-update detection
-  - startup background update scheduling (`startupServicesAsync`)
+  - startup background update scheduling (`startupServicesAsync`) — spawned as a FreeRTOS task on `NETWORK_CORE` at low priority:
+    - waits `STARTUP_SERVICES_DELAY` seconds before any work, letting audio buffer fill first
+    - verifies WebUI locale JSON file; downloads if missing
+    - checks for new firmware version via `new_ver.txt`; triggers OTA if `autoupdate` is enabled
+    - downloads default `playlist.csv` from `PLAYLIST_DEFAULT_URL` if file is missing
+    - updates `timezones.json.gz` and `rb_srvrs.json` from online sources
+    - cleans stale search results older than 24 hours
+    - deletes the `ESPFileUpdater` param and self-terminates via `vTaskDelete(NULL)`
   - `deassertCsPins()` — called from `main.cpp` `setup()` before any device init. Sets all known SPI CS pins (`VS1053_CS`, `SD_CS`, `TFT_CS`, `TS_CS`) to `OUTPUT` + `HIGH` to prevent floating CS from causing bus contention during peripheral detection.
-  - safe mode boot crash-loop detection (`checkSafeMode`, `bootInSafeMode`, `markBootStable`, `loop`): reads NVS key `lastbootgood` at boot — if previous boot did not complete successfully, disables `smartstart` and `autoupdate` in memory only for this session so the device does not auto-reconnect to a crash-causing stream; marks boot stable after `BOOT_SAFE_TIME` seconds of uptime
+  - safe mode boot crash-loop detection (`checkSafeMode`, `bootInSafeMode`, `markBootStable`, `loop`): reads NVS key `lastbootgood` at boot — if previous boot did not complete successfully, disables `smartstart` and `autoupdate` in memory only for this session so the device does not auto-reconnect to a crash-causing stream; marks boot stable after `BOOT_STABLE_TIME` seconds of uptime
 - Coupling:
   - drives `utility` for shared update/download helpers
   - reads Config-owned asset allowlists during required-file recovery
@@ -374,14 +380,23 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - title changes now directly trigger `rgbled.trackChange()` and `backlightControls.restart()` instead of a weak hook
 
 ## `src/core/netserver.h`
-- Declares request enums, websocket/server globals, and NetServer API.
+- Declares request enums, websocket/server globals, `StaticFileCache` class, `CachedFile` struct, and NetServer API.
+- `StaticFileCache` — PSRAM-backed cache for static WebUI files (files from `Config::wwwFiles[]`).
+- `CachedFile` — per-file entry: URL path, plain data pointer, gzipped data pointer, content-type.
 - Contains embedded fallback HTML templates (`emptyfs_html`, `index_html`, `emergency_form`).
 
 ## `src/core/netserver.cpp`
 - HTTP + WebSocket + upload/update + search/curated orchestration.
 - Main responsibilities:
-  - static file serving from SPIFFS `/www`
+  - static file serving from PSRAM cache (via `StaticFileCache`) — no SPIFFS reads during HTTP serving
+  - fallback to SPIFFS for dynamic files not in cache (`searchresults.json`, `curated.json`, etc.)
+  - `handleNotFound`: checks PSRAM cache first for GET requests, cache-busting `?v=` stripping removed (max-age=60 handles freshness)
+  - `handleIndex`: serves `player.html` from PSRAM cache for `GET /`
   - route handlers (`/`, `/search`, `/update`, `/locale.json`, `/ready`, etc.)
+  - `fileCache.loadAll()` called in `begin()` before `webserver.begin()`
+  - `invalidateCache()` public method exposed for `utility.cpp` runtime updates
+  - `Cache-Control: max-age=60` for all cached static files (was 3600)
+  - `/settings.html`, `/update.html`, `/ir.html` no longer served via `index_html[]` — handled by PSRAM cache fallthrough
   - websocket command parsing and outbound updates
   - state request queue processing (`GETSYSTEM`, `GETSCREEN`, `GETLOCALE`, etc.)
   - online update check/start tasks
@@ -391,7 +406,7 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 - Coupling:
   - uses `cmd.exec(...)` from commandhandler
   - emits JSON consumed by `data/www/script.js`
-  - `GETSCREEN` carries both display state and persisted dimming fields used by `data/www/options.html`
+  - `GETSCREEN` carries both display state and persisted dimming fields used by `data/www/settings.html`
 - Readiness detail:
   - `/ready` returns `{"ready":true}` only when `netserver.bootReady` is true, required web files exist, and network state is stable (`CONNECTED` + `WL_CONNECTED`, or `SDREADY`).
 - OTA note:
@@ -573,8 +588,10 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - reboot and update redirect calls now explicitly apply a 1-second post-ready grace in JavaScript before navigation.
   - manual upload completion now uses a 60 second fallback, while OTA still uses 180 seconds; both can redirect early as soon as `/ready` reports true.
   - mDNS rename (`restartmdns`) calls `MDNS.end()` + `MDNS.begin()` at runtime via `NetServer::restartMdns()` — no reboot. Browser-side: sends `mdnsname=`, swaps the button row for a status message, then polls the new `.local` host with `redirectWhenReady` (8s timeout, 500ms post-ready grace). If mdnsValue is empty, saves silently without redirect.
+- consolidated with `data/www/dragpl.js`
+  - Playlist drag-and-drop reorder behavior.
 
-## `data/www/options.js`
+## `data/www/settings.js`
 - Settings page behavior.
 - Responsibilities:
   - timezone JSON loading and dropdown population
@@ -585,21 +602,17 @@ All modules in `src/core/` follow the **class + global instance** pattern:
     - reboot/reset use ready-aware return-to-root with shorter fallback (15s)
     - format SPIFFS shows reboot status but skips automatic reload
 
-## `data/www/locale.js`
-- i18n runtime helper (`t(...)`) and translation application (`applyI18n`).
-- Applies key-based translations to DOM and fallback behavior.
-
 ## `data/www/player.html`
 - Player page structure (playlist, controls, sliders, status elements).
 
-## `data/www/options.html`
+## `data/www/settings.html`
 - Settings page structure with grouped sections and `data-command` bindings.
 - Contains element IDs expected by websocket payload mapping.
 
-## `data/www/updform.html`
+## `data/www/update.html`
 - Update page layout (manual upload + online update controls).
 
-## `data/www/irrecord.html`
+## `data/www/ir.html`
 - IR recording and assignment UI.
 
 ## `data/www/search.html`
@@ -608,15 +621,15 @@ All modules in `src/core/` follow the **class + global instance** pattern:
 ## `data/www/curated.html`
 - Curated list browsing/import page.
 
-## `data/www/dragpl.js`
-- Playlist drag-and-drop reorder behavior.
-
 ## `data/www/script2.js`
 - Consolidated helper script loaded by main shell and standalone search/curated pages.
-- Contains logic previously in `ir.js`, `updform.js`, and `playstation.js`:
+- Contains logic previously in `ir.js`, `updform.js`, `playstation.js`
   - station preview/play helper (`sendStationAction`)
   - online update check/start UI helpers
   - IR setup/learn interactions (`initControls`, `checkSelect`, `irClear`, `backRecord`)
+- also consolidated with `data/www/locale.js`
+  - i18n runtime helper (`t(...)`) and translation application (`applyI18n`).
+  - Applies key-based translations to DOM and fallback behavior.
 
 ## `data/www/search.js`
 - Search page API calls, pagination, result actions, and import hooks.
@@ -858,8 +871,8 @@ These are **not** third-party packages installable via PlatformIO's registry. Th
 - `ST7920/` — ST7920 GLCD driver
 
 ### Audio decoder libraries
-- `I2S_Audio/` — software I2S audio decoder (adapted from schreibfaul1/ESP32-audioI2S via Maleksm's yoRadio mod). PSRAM buffer size now configurable via `PSRAM_BUFSIZE`/`PSRAM_RES_BUFSIZE` macros.
-- `VS1053_Audio/` — VS1053 hardware decoder driver (adapted from schreibfaul1/ESP32-vs1053_ext via Maleksm's yoRadio mod). PSRAM buffer size now configurable via `PSRAM_BUFSIZE`/`PSRAM_RES_BUFSIZE` macros. `stopSong()` SM_CANCEL sequence now guarded by `if(m_f_running)` — prevents permanently stuck CANCEL bit when stop is called during init with no song playing. `VS_PATCH_ENABLE` forced `false` on this hardware — FLAC patches produce audio silence on this VS1053 variant.
+- `I2S_Audio/` — software I2S audio decoder (adapted from schreibfaul1/ESP32-audioI2S via Maleksm's yoRadio mod). PSRAM buffer size now configurable via `PSRAM_BUFSIZE` macro.
+- `VS1053_Audio/` — VS1053 hardware decoder driver (adapted from schreibfaul1/ESP32-vs1053_ext via Maleksm's yoRadio mod). PSRAM buffer size now configurable via `PSRAM_BUFSIZE` macro. `stopSong()` SM_CANCEL sequence now guarded by `if(m_f_running)` — prevents permanently stuck CANCEL bit when stop is called during init with no song playing. `VS_PATCH_ENABLE` forced `false` on this hardware — FLAC patches produce audio silence on this VS1053 variant.
 - `ES8311_Audio/` — ES8311 codec driver (written for ehRadio by kasperaitis)
 
 ### Touchscreen library
@@ -924,13 +937,13 @@ This section is specifically for adding/removing settings and avoiding missed li
    - persist with `saveValue(...)`
    - trigger display/network side effects and request updates as needed.
 7. Add WebUI wiring:
-   - element in `data/www/options.html` with id and `data-command`.
+   - element in `data/www/settings.html` with id and `data-command`.
    - fallback label text + `data-i18n` key.
    - add i18n key in `src/locale/webui/en_US.json` (and optionally others).
 8. Ensure websocket UI apply path exists in `data/www/script.js`:
    - `setupElement(...)` supports element type/id.
    - incoming `GET*` payload key matches DOM element id or custom handler.
-9. If setting is locale/time/weather related, update `data/www/options.js` apply handlers too.
+9. If setting is locale/time/weather related, update `data/www/settings.js` apply handlers too.
 10. Telnet command handling is thin-dispatch by default: update `src/core/commandhandler.cpp` first, and only extend `src/core/telnet.cpp` if protocol normalization needs a new alias/form.
 11. If setting affects startup behavior, check `main.cpp`, `config.init()`, and `startup.startupServices()`.
 12. Update this `code-summary.md`.

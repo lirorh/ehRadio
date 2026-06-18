@@ -70,14 +70,9 @@ Page *pages[] = { new Page(), new Page(), new Page(), new Page() };
 #endif
 
 static uint32_t normalizeBufferbarValue(uint32_t rawValue, uint32_t maxValue) {
+  // Raw audio buffer fill vs the KB threshold where the bar looks "full"
   if (maxValue == 0) return 0;
-  uint32_t clampedRaw = min(rawValue, maxValue);
-  #if BUFFERBAR_VISUAL_FULL_PERCENT >= 100
-    return clampedRaw;
-  #else
-    uint32_t scaled = (uint32_t)(((uint64_t)clampedRaw * 100ULL) / BUFFERBAR_VISUAL_FULL_PERCENT);
-    return min(scaled, maxValue);
-  #endif
+  return min(rawValue, maxValue);
 }
 
 
@@ -172,7 +167,7 @@ void Display::_buildPager() {
     _volbar = new SliderWidget(volbarConf, config.theme.volbarin, config.theme.background, VOLUME_SCALE, config.theme.volbarout);
   #endif
   #ifndef HIDE_BUFFERBAR
-    _bufferbarMax = psramInit() ? 300000 : 1600 * 10;
+    _bufferbarMax = 1024 * BUFFERBAR_VISUAL_FULL_KB;
     _bufferbar = new SliderWidget(bufferbarConf, config.theme.buffer, config.theme.background, _bufferbarMax);
   #endif
   #ifndef HIDE_VOL

@@ -10,6 +10,7 @@
 #undef DSP_HEIGHT
 #define DSP_WIDTH  320
 #define DSP_HEIGHT 240
+#define DISPLAY_MODEL_NAME "ILI9341"
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_ILI9341 yoDisplay;

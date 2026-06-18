@@ -643,6 +643,19 @@ void Utility::updateFile(void* param, const char* localFile, const char* onlineF
   );
   if (result == ESPFileUpdater::UPDATED) {
     FUNCTIONLOG("ESPFileUpdater", "%s - update completed", simpleName);
+    // Invalidate PSRAM cache entry for the updated file (if it's a cached www file)
+    const char* basename = strrchr(localFile, '/');
+    if (basename) {
+      basename++; // skip '/'
+      char cachePath[32];
+      snprintf(cachePath, sizeof(cachePath), "/%s", basename);
+      // Strip .gz suffix from cache path
+      size_t clen = strlen(cachePath);
+      if (clen > 3 && strcmp(cachePath + clen - 3, ".gz") == 0) {
+        cachePath[clen - 3] = '\0';
+      }
+      netserver.invalidateCache(cachePath);
+    }
   } else if (result == ESPFileUpdater::NOT_MODIFIED || result == ESPFileUpdater::MAX_AGE_NOT_REACHED) {
     FUNCTIONLOG("ESPFileUpdater", "%s - no update needed", simpleName);
   } else {

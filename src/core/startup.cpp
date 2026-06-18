@@ -29,7 +29,7 @@ void Startup::checkSafeMode() {
 }
 
 void Startup::bootInSafeMode() {
-  BOOTLOG("SAFE MODE: smartstart and autoupdate disabled for this session");
+  FUNCTIONLOG("SAFE MODE", "Smartstart and Autoupdate disabled for this session");
   config.store.smartstart = false;
   config.store.autoupdate = false;
 }
@@ -48,7 +48,7 @@ void Startup::loop() {
     _bootStartMs = millis();  // First loop() call — setup() (including smartstart) is done
     return;
   }
-  if (millis() - _bootStartMs > (BOOT_SAFE_TIME * 1000UL)) {
+  if (millis() - _bootStartMs > (BOOT_STABLE_TIME * 1000UL)) {
     markBootStable();
     _bootStablePending = false;
   }
@@ -177,29 +177,6 @@ void Startup::cleanStaleSearchResults() {
   }
 }
 
-void Startup::fixPlaylistFileEnding() {
-  const char* playlistPath = PLAYLIST_PATH;
-  if (!SPIFFS.exists(playlistPath)) return;
-
-  File playlistFile = SPIFFS.open(playlistPath, "r+");
-  if (!playlistFile) return;
-
-  size_t size = playlistFile.size();
-  if (size < 2) {
-    playlistFile.close();
-    return;
-  }
-
-  playlistFile.seek(size - 2, SeekSet);
-  char last2[3] = {0};
-  playlistFile.read((uint8_t*)last2, 2);
-  if (!(last2[0] == '\r' && last2[1] == '\n')) {
-    playlistFile.seek(size, SeekSet);
-    playlistFile.write((const uint8_t*)"\r\n", 2);
-  }
-  playlistFile.close();
-}
-
 void Startup::getRequiredFiles() {
   #ifdef UPDATEURL
     player.sendCommand({PR_STOP, 0});
@@ -305,7 +282,9 @@ bool Startup::checkLocaleFile() {
 }
 
 void Startup::startupServicesAsync(void* param) {
-  startup.fixPlaylistFileEnding();
+  // Delay to let audio stream buffer fill before background HTTP tasks compete for WiFi
+  BOOTLOG("Startup Async Services will begin in %d seconds", STARTUP_ASYNC_SERVICES_DELAY);
+  vTaskDelay(pdMS_TO_TICKS(1000*STARTUP_ASYNC_SERVICES_DELAY));
   #ifdef UPDATEURL
     if (!startup.checkLocaleFile()) {
       FUNCTIONLOG("Locale Check", "Locale file verification failed, updating to %s...", config.store.locale_webui);

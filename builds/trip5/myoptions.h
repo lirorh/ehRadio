@@ -222,10 +222,14 @@
   #define ENC_CLK            40
   #define ENC_DT             39
   #define ENC_SW             38
+  #if defined(SH1106_PCM_REMOTE)
+    #define ENC_STEPS          4
+  #endif
 #elif defined(SH1106_PCM_1BUTTON)
   #define ENC_CLK            7
   #define ENC_DT             15
   #define ENC_SW             16
+  #define ENC_STEPS          4
 #endif
 
 
@@ -340,13 +344,5 @@
 //#define CLOCKFONT CHUNKY6
 //#define CLOCKFONT YO_MONO
 //#define CLOCKFONT YO_CLASSIC
-
-#if defined(ILI9488_VS1053_1BUTTON) // debugging & fixes
-  //#undef VS_PATCH_ENABLE
-  //#define VS_PATCH_ENABLE true
-  //#undef SD_SPI
-  //#undef SD_CS
-  //#define ALL_DEBUG_LOGS
-#endif
 
 #endif // myoptions_h

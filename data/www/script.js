@@ -1,3 +1,5 @@
+// ===== PLAYER AND PLAYLIST EDITOR FUNCTIONALITY =====
+
 var hostname = window.location.hostname;
 var modesd = false;
 const query = window.location.search;
@@ -426,7 +428,7 @@ function handlePlaylistData(fileData) {
   const ul = getId('playlist');
   ul.innerHTML='';
   if (!fileData) return;
-  const lines = fileData.split('\n');
+  const lines = fileData.split(/\r?\n/);
   let li='', html='';
   for(var i = 0;i < lines.length;i++){
     let line = lines[i].split('\t');
@@ -571,7 +573,7 @@ function submitPlaylist(){
     let ovol = inputs[3].value;
     if(ovol < -30) ovol = -30;
     if(ovol > 30) ovol = 30;
-    output+=inputs[1].value+"\t"+inputs[2].value+"\t"+ovol+"\n";
+    output+=inputs[1].value+"\t"+inputs[2].value+"\t"+ovol+"\r\n";
   }
   let file = new File([output], "playlist.csv",{type:"text/plain;charset=utf-8", lastModified:new Date().getTime()});
   let container = new DataTransfer();
@@ -738,7 +740,7 @@ function urlToName(url) {
 }
 
 function parseAndAddCSV(content, targetCallback, mode = 'replace') {
-  const lines = content.split('\n');
+  const lines = content.split(/\r?\n/);
   const existingURLs = mode === 'merge' ? getExistingURLs() : new Set();
   let addedCount = 0;
   let duplicateCount = 0;
@@ -973,7 +975,7 @@ function exportCurrentPlaylist() {
       return;
     }
     
-    csvContent += `${name}\t${url}\t${ovol}\n`;
+    csvContent += `${name}\t${url}\t${ovol}\r\n`;
   }
   
   // Create blob and trigger download
@@ -1067,7 +1069,7 @@ function hideSpinner(){
   getId("content").classList.remove("hidden");
 }
 function loadLogoThen(callback){
-  fetch(`logo.svg?v=${radioVersion}`).then(response => response.text()).then(svg => {
+  fetch(`logo.svg`).then(response => response.text()).then(svg => {
     getId('logo').innerHTML = svg;
     if (typeof callback === 'function') callback();
   });
@@ -1103,7 +1105,7 @@ function continueLoading(mode){
     const pathname = window.location.pathname;
     if(['/','/index.html'].includes(pathname)){
       document.title = `${Title} - Player`;
-      fetch(`player.html?${radioVersion}`).then(response => response.text()).then(player => { 
+      fetch(`player.html`).then(response => response.text()).then(player => {
         getId('content').classList.add('idx');
         getId('content').innerHTML = player; 
         loadLogoThen(function(){
@@ -1124,9 +1126,9 @@ function continueLoading(mode){
     }
     if(pathname=='/settings.html'){
       document.title = `${Title} - Settings`;
-      fetch(`options.html?${radioVersion}`).then(response => response.text()).then(options => {
+      fetch(`options.html`).then(response => response.text()).then(options => {
         getId('content').innerHTML = options;
-        loadJS(`options.js?${radioVersion}`, () => {
+        loadJS(`options.js`, () => {
           loadLogoThen(function(){
             hideSpinner();
             if (onlineUpdCapable) getId('webboard').classList.add('hidden');
@@ -1143,7 +1145,7 @@ function continueLoading(mode){
           websocket.send('getweather=1');
           websocket.send('getmqtt=1');
           websocket.send('getcontrols=1');
-          getWiFi(`http://${hostname}/data/wifi.csv`+"?"+new Date().getTime());
+          getWiFi(`http://${hostname}/data/wifi.csv`);
           websocket.send('getactive=1');
           websocket.send('getbattery=1');
           classEach("reset", function(el){ el.innerHTML='<svg viewBox="0 0 16 16" class="fill"><path d="M8 3v5a36.973 36.973 0 0 1-2.324-1.166A44.09 44.09 0 0 1 3.417 5.5a52.149 52.149 0 0 1 2.26-1.32A43.18 43.18 0 0 1 8 3z"/><path d="M7 5v1h4.5C12.894 6 14 7.106 14 8.5S12.894 11 11.5 11H1v1h10.5c1.93 0 3.5-1.57 3.5-3.5S13.43 5 11.5 5h-4z"/></svg>'; });
@@ -1153,36 +1155,36 @@ function continueLoading(mode){
     }
     if(pathname=='/update.html'){
       document.title = `${Title} - Update`;
-      fetch(`updform.html?${radioVersion}`).then(response => response.text()).then(updform => {
+      fetch(`updform.html`).then(response => response.text()).then(updform => {
         getId('content').classList.add('upd');
         getId('content').innerHTML = updform;
         loadLogoThen(function(){
           hideSpinner();
-          ensureFunctionLoaded('initOnlineUpdateChecker', `script2.js?${radioVersion}`, function(){ initOnlineUpdateChecker(); });
+          ensureFunctionLoaded('initOnlineUpdateChecker', `script2.js`, function(){ initOnlineUpdateChecker(); });
         });
         applyCommonPageMeta();
       });
     }
     if(pathname=='/ir.html'){
       document.title = `${Title} - IR Recorder`;
-      fetch(`irrecord.html?${radioVersion}`).then(response => response.text()).then(ircontent => {
+      fetch(`irrecord.html`).then(response => response.text()).then(ircontent => {
         getId('content').innerHTML = ircontent;
         loadLogoThen(function(){
-          ensureFunctionLoaded('initControls', `script2.js?${radioVersion}`, function(){ initControls(); });
+          ensureFunctionLoaded('initControls', `script2.js`, function(){ initControls(); });
           hideSpinner();
         });
         applyCommonPageMeta();
       });
     }
   }else{ // AP mode
-    fetch(`options.html?${radioVersion}`).then(response => response.text()).then(options => {
+    fetch(`options.html`).then(response => response.text()).then(options => {
       getId('content').innerHTML = options;
-      loadJS(`options.js?${radioVersion}`, () => {
+      loadJS(`options.js`, () => {
         loadLogoThen(function(){
           hideSpinner();
         });
         applyCommonPageMeta();
-        getWiFi(`http://${hostname}/data/wifi.csv`+"?"+new Date().getTime());
+        getWiFi(`http://${hostname}/data/wifi.csv`);
         websocket.send('getactive=1');
       });
     });
@@ -1293,7 +1295,7 @@ function continueLoading(mode){
   });
 }
 
-/** UPDATE **/
+// ===== UPDATE =====
 var uploadWithError = false;
 var rebootTimer;
 var readyPollTimer;
@@ -1459,4 +1461,205 @@ function abortHandler(event) {
   getId('check_online_update').classList.remove('hidden');
 }
 
+// ===== Playlist Editor Dragging Functionality =====
 
+let dragged, id, index, indexDrop, list;
+let scrollInterval = null;
+let lastX = 0, lastY = 0;
+let touchTimeout = null;
+let startX = 0, startY = 0;
+const LONG_PRESS_DELAY = 1000;
+
+function getLi(el) {
+	while (el && el !== document.body && el !== null) {
+		if (el.classList && el.classList.contains('pleitem')) return el;
+		el = el.parentNode;
+	}
+	return null;
+}
+
+function clearIndicators() {
+	const items = document.querySelectorAll('.pleitem');
+	items.forEach(item => {
+		item.classList.remove('drag-over-above', 'drag-over-below');
+	});
+}
+
+function stopAutoScroll() {
+	if (scrollInterval) {
+		clearInterval(scrollInterval);
+		scrollInterval = null;
+	}
+}
+
+function handleAutoScroll(x, y) {
+	if (!dragged) return;
+	const container = document.getElementById('pleditorcontent');
+	if (!container) return;
+	const rect = container.getBoundingClientRect();
+	const threshold = 50;
+	let direction = 0;
+
+	if (y < rect.top + threshold) direction = -1;
+	else if (y > rect.bottom - threshold) direction = 1;
+
+	lastX = x;
+	lastY = y;
+
+	if (direction !== 0) {
+		if (!scrollInterval) {
+			scrollInterval = setInterval(() => {
+				container.scrollTop += direction * 8;
+				const target = document.elementFromPoint(lastX, lastY);
+				const targetLi = getLi(target);
+				setIndicator({ clientX: lastX, clientY: lastY }, targetLi);
+			}, 25);
+		}
+	} else {
+		stopAutoScroll();
+	}
+}
+
+function updateIndices() {
+	let items = document.getElementById('pleditorcontent').getElementsByTagName('li');
+	for (let i = 0; i < items.length; i++) {
+		items[i].getElementsByTagName('span')[0].innerText = ("00" + (i + 1)).slice(-3);
+	}
+}
+
+function startDrag(target) {
+	const li = getLi(target);
+	if (li) {
+		dragged = li;
+		id = li.id;
+		list = li.parentNode.children;
+		for (let i = 0; i < list.length; i += 1) {
+			if (list[i] === dragged) {
+				index = i;
+				break;
+			}
+		}
+		dragged.classList.add('dragging');
+	}
+}
+
+function setIndicator(e, targetLi) {
+	if (!dragged || !targetLi || targetLi === dragged) {
+		clearIndicators();
+		return;
+	}
+	const rect = targetLi.getBoundingClientRect();
+	const mouseY = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : (e.clientY || e.pageY || 0);
+	const threshold = rect.top + rect.height / 2;
+	
+	clearIndicators();
+	if (mouseY < threshold) {
+		targetLi.classList.add('drag-over-above');
+	} else {
+		targetLi.classList.add('drag-over-below');
+	}
+}
+
+function doDrop(target) {
+	stopAutoScroll();
+	const targetLi = getLi(target);
+	if (dragged && targetLi && targetLi !== dragged) {
+		const isAbove = targetLi.classList.contains('drag-over-above');
+		dragged.remove();
+		for (let i = 0; i < list.length; i += 1) {
+			if (list[i] === targetLi) {
+				indexDrop = i;
+				break;
+			}
+		}
+		if (isAbove) {
+			targetLi.before(dragged);
+		} else {
+			targetLi.after(dragged);
+		}
+		updateIndices();
+	}
+	if (dragged) dragged.classList.remove('dragging');
+	clearIndicators();
+	dragged = null;
+}
+
+document.addEventListener("dragstart", (e) => {
+	if (e.target.classList.contains('grabbable')) {
+		startDrag(e.target);
+	}
+});
+
+document.addEventListener("dragover", (e) => {
+	e.preventDefault();
+	handleAutoScroll(e.clientX, e.clientY);
+	const targetLi = getLi(e.target);
+	setIndicator(e, targetLi);
+});
+
+document.addEventListener("drop", (e) => {
+	doDrop(e.target);
+});
+
+document.addEventListener("dragend", (e) => {
+	stopAutoScroll();
+	if (dragged) dragged.classList.remove('dragging');
+	clearIndicators();
+	dragged = null;
+});
+
+// Prevent browser context menu on long press
+document.addEventListener("contextmenu", (e) => {
+	if (e.target.classList.contains('grabbable') || getLi(e.target)) {
+		e.preventDefault();
+		return false;
+	}
+});
+
+// Mobile/Touch Support
+document.addEventListener("touchstart", (e) => {
+	if (e.target.classList.contains('grabbable')) {
+		// Prevent text selection and context menu
+		e.preventDefault();
+		const touch = e.touches[0];
+		startX = touch.clientX;
+		startY = touch.clientY;
+		const target = e.target;
+		touchTimeout = setTimeout(() => {
+			startDrag(target);
+			if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback when grab starts
+		}, LONG_PRESS_DELAY);
+	}
+}, { passive: false });
+
+document.addEventListener("touchmove", (e) => {
+	const touch = e.touches[0];
+	if (touchTimeout && !dragged) {
+		const moveX = Math.abs(touch.clientX - startX);
+		const moveY = Math.abs(touch.clientY - startY);
+		if (moveX > 10 || moveY > 10) {
+			clearTimeout(touchTimeout);
+			touchTimeout = null;
+		}
+	}
+	if (dragged) {
+		e.preventDefault(); // Prevent scrolling
+		handleAutoScroll(touch.clientX, touch.clientY);
+		const target = document.elementFromPoint(touch.clientX, touch.clientY);
+		const targetLi = getLi(target);
+		setIndicator(e, targetLi);
+	}
+}, { passive: false });
+
+document.addEventListener("touchend", (e) => {
+	if (touchTimeout) {
+		clearTimeout(touchTimeout);
+		touchTimeout = null;
+	}
+	if (dragged) {
+		stopAutoScroll();
+		const touch = e.changedTouches[0];
+		const target = document.elementFromPoint(touch.clientX, touch.clientY);
+		doDrop(target);
+	}
+});

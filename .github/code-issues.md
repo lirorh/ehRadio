@@ -122,18 +122,17 @@ Static content that occupies SPIFFS on every boot (approximate gzipped sizes fro
 
 | File | Approx. size |
 |---|---|
-| `/www/player.html.gz` + `options.html.gz` etc. | ~30–50 KB total |
-| `/www/script.js.gz` + `script2.js.gz` | ~30–40 KB |
-| `/www/style.css.gz` + `theme.css.gz` | ~8 KB |
-| `/www/locales.json.gz` (or per-locale file) | ~20–35 KB |
-| `/www/rb_srvrs.json` | ~10 KB |
-| `/www/timezones.json` | ~30 KB |
-| `/data/playlist.csv` | user-variable, easily 20–50 KB for a modest list |
+| `/www/player.html.gz` + `script.js.gz` etc. | ~75–100 KB total |
+
+| `/www/[locale].json.gz` (per-locale file) | ~8 KB |
+| `/www/rb_srvrs.json` | 0.1 KB |
+| `/www/timezones.json` | ~20 KB |
+| `/data/playlist.csv` | user-variable, easily 10–50 KB for a modest list |
 | `/data/wifi.csv` | ~1 KB |
 | `/data/ehradio.ver` | ~0.1 KB |
-| **Static subtotal** | **~150–220 KB** |
+| **Static subtotal** | **~180 KB** |
 
-That leaves approximately **230–300 KB free** for dynamic operations on a plausibly-loaded device. Not enormous.
+That leaves approximately **270 KB free** for dynamic operations on a plausibly-loaded device. Not enormous.
 
 #### Dynamic operations and their space footprints
 
@@ -180,7 +179,7 @@ This means **the SPIFFS space problem is effectively an `board_esp32` (4 MB flas
 
 1. **Check remaining space before every SPIFFS write**, not just before search/curated. `ESPFileUpdater`, `handleUpload`, and `updateLocaleFileAsync` all need the guard.
 2. **Return specific error to the user** when a write fails due to space: HTTP 507 Insufficient Storage for uploads; WebSocket `{"error":"spiffs_full"}` for async tasks.
-3. **Expose SPIFFS usage in the WebUI** (e.g., in options.html system group or `getsystem` response). `SPIFFS.usedBytes()` and `SPIFFS.totalBytes()` are cheap calls; including them in `GETSYSTEM` lets the user see how full the filesystem is before attempting operations.
+3. **Expose SPIFFS usage in the WebUI** (e.g., in settings.html system group or `getsystem` response). `SPIFFS.usedBytes()` and `SPIFFS.totalBytes()` are cheap calls; including them in `GETSYSTEM` lets the user see how full the filesystem is before attempting operations.
 4. **For `board_esp32` only**: consider moving the partition table to give SPIFFS more space at the cost of one OTA slot (single-slot non-OTA partition), or move to LittleFS which has better space utilisation than SPIFFS for the same physical allocation.
 
 Trip5's idea:

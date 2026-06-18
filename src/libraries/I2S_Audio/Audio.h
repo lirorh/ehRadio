@@ -6,6 +6,7 @@
  *  Version 3.1.0n
  *  Updated on: Feb 27.2025, Apr 04.2025 (Maleksm)
  *      Author: Wolle (schreibfaul1)
+ *  Some adjustments by Trip5 for ehRadio
  */
 #if defined(USE_AUDIO_I2S) || defined(USE_AUDIO_ESP32_DAC)
 
@@ -133,14 +134,14 @@ public:
     bool     havePSRAM() { return m_f_psram; };
 
 protected:
-    size_t            m_buffSizePSRAM    = PSRAM_BUFSIZE;
+    size_t            m_buffSizePSRAM    = 1024 * PSRAM_BUFSIZE;
     size_t            m_buffSizeRAM      = 1600 * AUDIOBUFFER_MULTIPLIER2;
     size_t            m_buffSize         = 0;
     size_t            m_freeSpace        = 0;
     size_t            m_writeSpace       = 0;
     size_t            m_dataLength       = 0;
     size_t            m_resBuffSizeRAM   = 2048;     // reserved buffspace, >= one wav  frame
-    size_t            m_resBuffSizePSRAM = PSRAM_RES_BUFSIZE;
+    size_t            m_resBuffSizePSRAM = 1024 * 24; // FLAC frame size 24KB
     size_t            m_maxBlockSize     = 1600;
     uint8_t*          m_buffer           = NULL;
     uint8_t*          m_writePtr         = NULL;

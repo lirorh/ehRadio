@@ -17,7 +17,6 @@ private:
   void bootInSafeMode();
   void markBootStable();
   void cleanStaleSearchResults();
-  void fixPlaylistFileEnding();
   void getRequiredFiles();
   void checkNewVersionFile();
   bool checkLocaleFile();

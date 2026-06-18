@@ -93,7 +93,7 @@ Information on how the controls function detailed are [here](Controls.md).
 
 The WebUI is optimized for mobile browsers but looks great on PCs, too.
 
-![image](images/WebUI_player_editor.jpg)
+![image](images/Screenshot_Player.jpg)
 
 More screenshots from the WebUI are [here](WebUI.md).
 
@@ -135,8 +135,7 @@ There are tools in the codebase to assist with translation work.
 ## Radio Creations
 
 I can't 100% confirm this, but I am pretty sure all devices built for other ESP-based radio projects will run ehRadio, as long as the hardware is supported.
-And although (as of `2026.05.26`), ehRadio has been reworked so an ESP32-S3 can be wired with an SPI display and a VS1053 (which ёRadio & ESP32-RadioV2 can't),
-I haven't actually built a radio like that yet.
+And although (as of `2026.06.15`), ehRadio has been reworked so an ESP32-S3 can be wired with an SPI display and a VS1053 (which ёRadio & ESP32-RadioV2 can't),
 
 Below here are some sketches and helpful hints to building one of the "prebuilt" firmwares as available in the Releases and the
 [online flasher](https://trip5.github.io/ehRadio/firmware.html).
@@ -246,6 +245,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
+| 2026.06.18 | WebUI files now served from PSRAM cache (if available) which eliminates audio stuttering for I2S decoders, adjustments to PSRAM-related code, rotary encoders fix |
 | 2026.06.15 | SPI fixed so SPI Display and VS1053 are possible, SD fixes, Wi-fi reconnect smarter, generator indicates safe pins |
 | 2026.06.08 | Fixed Search/Curated additions corrupting the playlist, changing stations faster, connect errors fail faster, safe mode entered after unsuccessful boot (disables smartstart, autoupdate) |
 | 2026.06.03 | Displays overhauled to support more displays more easily, volume now cubic polynomial, `VOLUME_SCALE 42` reduces volume increments from 254, volume steps removed, generator updated |

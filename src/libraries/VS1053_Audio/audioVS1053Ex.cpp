@@ -4,6 +4,7 @@
  *  Created on: Jul 09.2017
  *  Updated on: Apr 04.2025 (Maleksm)
  *      Author: Wolle (Dec 15.2023), easy
+ *  Some adjustments by Trip5 for ehRadio
  */
 #include "../../core/options.h"
 

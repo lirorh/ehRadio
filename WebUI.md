@@ -1,17 +1,35 @@
 ## WebUI
 
-The WebUI is optimized for mobile browsers but will look great on PCs, too.
+The WebUI is optimized for mobile browsers but looks great on PCs, too.
 
-### Player and Playlist Editor
+### Player
 
-![image](images/WebUI_player_editor.jpg)
+![image](images/Screenshot_Player.jpg)
 
-### Search and Curated Lists
+### Playlist Editor
 
-![image](images/WebUI_search_curated.jpg)
+![image](images/Screenshot_Editor.jpg)
 
-### Settings
+### Search
 
-![image](images/WebUI_settings1.jpg)
+![image](images/Screenshot_Search.jpg)
 
-![image](images/WebUI_settings2.jpg)
+### Curated Lists
+
+![image](images/Screenshot_Curated.jpg)
+
+### Settings: System
+
+![image](images/Screenshot_Settings_System.jpg)
+
+### Settings: Screen
+
+![image](images/Screenshot_Settings_Screen.jpg)
+
+### Settings: Locale
+
+![image](images/Screenshot_Settings_Locale.jpg)
+
+### Settings: Weather
+
+![image](images/Screenshot_Settings_Weather.jpg)

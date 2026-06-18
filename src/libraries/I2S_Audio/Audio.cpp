@@ -6,6 +6,7 @@
  *  Version 3.1.0n
  *  Updated on: Mar 29.2025, Apr 04.2025 (Maleksm)
  *      Author: Wolle (schreibfaul1)
+ *  Some adjustments by Trip5 for ehRadio
  */
 #include "../../core/options.h"
 #if VS1053_CS==255

@@ -11,6 +11,7 @@
 #undef DSP_HEIGHT
 #define DSP_WIDTH  240
 #define DSP_HEIGHT 240
+#define DISPLAY_MODEL_NAME "GC9A01A"
 
 typedef GFXcanvas16 Canvas;
 typedef Adafruit_GC9A01A yoDisplay;

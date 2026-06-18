@@ -47,6 +47,122 @@ portMUX_TYPE taskSpawnMux = portMUX_INITIALIZER_UNLOCKED;
 #define FS_REQUIRED_FREE_SPACE 150 // in KB - must be minimum x1.5 of the limit_per_page in search.js (100)
 #define SEARCHRESULTS_BUFFER_BYTES (SEARCHRESULTS_BUFFER * 1024)
 
+/* PSRAM-backed static file cache implementation */
+// Determine MIME type from filename extension
+static const char* mimeTypeForFile(const char* filename) {
+    const char* ext = strrchr(filename, '.');
+    if (!ext) return "application/octet-stream";
+    if (strcasecmp(ext, ".html") == 0) return "text/html";
+    if (strcasecmp(ext, ".js") == 0)   return "application/javascript";
+    if (strcasecmp(ext, ".css") == 0)  return "text/css";
+    if (strcasecmp(ext, ".json") == 0) return "application/json";
+    if (strcasecmp(ext, ".svg") == 0)  return "image/svg+xml";
+    if (strcasecmp(ext, ".png") == 0)  return "image/png";
+    return "application/octet-stream";
+}
+
+void StaticFileCache::loadOne(const char* filename, int idx) {
+    if (idx < 0 || idx >= MAX_ENTRIES) return;
+    CachedFile& e = entries[idx];
+    memset(&e, 0, sizeof(CachedFile));
+    snprintf(e.path, sizeof(e.path), "/%s", filename);
+    e.contentType = mimeTypeForFile(filename);
+
+    char fullPath[64];
+
+    // Try .gz variant first — production builds use gzipped files on SPIFFS
+    snprintf(fullPath, sizeof(fullPath), "/www/%s.gz", filename);
+    if (SPIFFS.exists(fullPath)) {
+        File f = SPIFFS.open(fullPath, "r");
+        if (f) {
+            size_t sz = f.size();
+            char* buf = (char*)ps_malloc(sz);
+            if (buf) {
+                f.read((uint8_t*)buf, sz);
+                e.gzData = buf;
+                e.gzSize = sz;
+            }
+            f.close();
+        }
+    }
+
+    // Try plain file (if no .gz variant, or if gz read failed)
+    if (!e.gzData) {
+        snprintf(fullPath, sizeof(fullPath), "/www/%s", filename);
+        if (SPIFFS.exists(fullPath)) {
+            File f = SPIFFS.open(fullPath, "r");
+            if (f) {
+                size_t sz = f.size();
+                char* buf = (char*)ps_malloc(sz + 1);
+                if (buf) {
+                    f.read((uint8_t*)buf, sz);
+                    buf[sz] = '\0';
+                    e.data = buf;
+                    e.size = sz;
+                }
+                f.close();
+            }
+        }
+    }
+}
+
+void StaticFileCache::loadAll() {
+    freeAll();  // Free any previous allocations
+    count = 0;
+    for (size_t i = 0; i < Config::wwwFilesCount && count < MAX_ENTRIES; i++) {
+        loadOne(Config::wwwFiles[i], count);
+        if (entries[count].data || entries[count].gzData) count++;
+    }
+    SERIALLOGX("Loaded %d files into PSRAM cache\t", count);
+}
+
+size_t StaticFileCache::totalBytes() const {
+    size_t total = 0;
+    for (int i = 0; i < count; i++) {
+        total += entries[i].size;     // plain data
+        total += entries[i].gzSize;   // gzipped data (if loaded separately)
+    }
+    return total;
+}
+
+const CachedFile* StaticFileCache::find(const char* urlPath) const {
+    for (int i = 0; i < count; i++) {
+        if (strcmp(entries[i].path, urlPath) == 0) {
+            return &entries[i];
+        }
+    }
+    return NULL;
+}
+
+bool StaticFileCache::invalidate(const char* urlPath) {
+    for (int i = 0; i < count; i++) {
+        if (strcmp(entries[i].path, urlPath) == 0) {
+            if (entries[i].data)  free((void*)entries[i].data);
+            if (entries[i].gzData) free((void*)entries[i].gzData);
+            entries[i].data = NULL;
+            entries[i].gzData = NULL;
+            entries[i].size = 0;
+            entries[i].gzSize = 0;
+            loadOne(urlPath + 1, i);  // skip leading '/'
+            FUNCTIONLOG("FileCache", "Invalidated and reloaded: %s", urlPath);
+            return true;
+        }
+    }
+    return false;
+}
+
+void StaticFileCache::freeAll() {
+    for (int i = 0; i < count; i++) {
+        if (entries[i].data)  free((void*)entries[i].data);
+        if (entries[i].gzData) free((void*)entries[i].gzData);
+        entries[i].data = NULL;
+        entries[i].gzData = NULL;
+        entries[i].size = 0;
+        entries[i].gzSize = 0;
+    }
+    count = 0;
+}
+
 NetServer netserver;
 
 AsyncWebServer webserver(80);
@@ -264,7 +380,7 @@ bool NetServer::begin(bool quiet) {
   webserver.on("/ncsi.txt", HTTP_GET, captiveRedirect);                     // Windows
   webserver.on("/connecttest.txt", HTTP_GET, captiveRedirect);              // Windows
 
-  webserver.serveStatic("/", SPIFFS, "/www/").setCacheControl("max-age=3600");
+  if (psramFound()) fileCache.loadAll();
   webserver.onNotFound(handleNotFound);
   webserver.onFileUpload(handleUpload);
   #ifdef CORS_DEBUG
@@ -701,12 +817,6 @@ int freeSpace;
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   if (request->url()=="/upload") {
     if (!index) {
-      if (filename!="tempwifi.csv") {
-        if (SPIFFS.exists(PLAYLIST_PATH)) SPIFFS.remove(PLAYLIST_PATH);
-        if (SPIFFS.exists(INDEX_PATH)) SPIFFS.remove(INDEX_PATH);
-        if (SPIFFS.exists(PLAYLIST_SD_PATH)) SPIFFS.remove(PLAYLIST_SD_PATH);
-        if (SPIFFS.exists(INDEX_SD_PATH)) SPIFFS.remove(INDEX_SD_PATH);
-      }
       freeSpace = (float)SPIFFS.totalBytes()/100*68-SPIFFS.usedBytes();
       request->_tempFile = SPIFFS.open(TMP_PATH , "w");
     }
@@ -758,8 +868,16 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
     if (final) {
       request->_tempFile.close();
       if (filename=="playlist.csv") {
-        utility.indexPlaylist();
+        // Remove index and SD index to force cleanPlaylist to run
+        if (SPIFFS.exists(INDEX_PATH)) SPIFFS.remove(INDEX_PATH);
+        if (SPIFFS.exists(INDEX_SD_PATH)) SPIFFS.remove(INDEX_SD_PATH);
+        utility.cleanPlaylist();   // Rewrites with CRLF, removes blank lines; calls indexPlaylist() internally
         netserver.requestOnChange(PLAYLISTSAVED, 0);
+      } else {
+        // Invalidate PSRAM cache for uploaded www files
+        char cachePath[32];
+        snprintf(cachePath, sizeof(cachePath), "/%s", filename.c_str());
+        netserver.invalidateCache(cachePath);
       }
     }
   }
@@ -1416,6 +1534,26 @@ void handleNotFound(AsyncWebServerRequest * request) {
         return request->requestAuthentication();
       }
   #endif
+
+  // PSRAM cache check: serve static WebUI files from PSRAM (no SPIFFS reads)
+  if (request->method() == HTTP_GET) {
+    String url = request->url();
+    const CachedFile* cf = netserver.getFileCache().find(url.c_str());
+    if (cf) {
+      if (cf->gzData) {
+        AsyncWebServerResponse *response = request->beginResponse(200, cf->contentType, (const uint8_t*)cf->gzData, cf->gzSize);
+        response->addHeader("Content-Encoding", "gzip");
+        response->addHeader("Cache-Control", "max-age=60");
+        request->send(response);
+      } else {
+        AsyncWebServerResponse *response = request->beginResponse(200, cf->contentType, (const uint8_t*)cf->data, cf->size);
+        response->addHeader("Cache-Control", "max-age=60");
+        request->send(response);
+      }
+      return;
+    }
+  }
+
   if (request->url()=="/emergency") { request->send(200, "text/html", emergency_form); return; }
   if (request->method() == HTTP_POST && request->url()=="/webboard" && !config.wwwFilesExist) { request->redirect("/"); ESP.restart(); return; }
   if (request->method() == HTTP_GET && request->url() == "/search") { handleSearch(request); return; }
@@ -1439,10 +1577,7 @@ void handleNotFound(AsyncWebServerRequest * request) {
   #endif
 
   if (request->method() == HTTP_GET) {
-    #ifdef NETSERVER_DEBUG
-      FUNCTIONLOG ("Netserver.debug", "[%s] client ip=%s request of %s", __func__, request->client()->remoteIP().toString().c_str(), request->url().c_str());
-    #endif
-    if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 || 
+    if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 ||
         strcmp(request->url().c_str(), SSIDS_PATH) == 0 || 
         strcmp(request->url().c_str(), INDEX_PATH) == 0 || 
         strcmp(request->url().c_str(), TMP_PATH) == 0 || 
@@ -1557,6 +1692,26 @@ void handleNotFound(AsyncWebServerRequest * request) {
     request->send(200, "text/html", emptyfs_html);
     return;
   }
+  // Fallback: try SPIFFS for files not in PSRAM cache — check .gz variant first
+  if (request->method() == HTTP_GET) {
+    char spiffsPath[64];
+    snprintf(spiffsPath, sizeof(spiffsPath), "/www%s", request->url().c_str());
+    char gzPath[64];
+    snprintf(gzPath, sizeof(gzPath), "%s.gz", spiffsPath);
+    if (SPIFFS.exists(gzPath)) {
+      AsyncWebServerResponse *response = request->beginResponse(SPIFFS, gzPath, mimeTypeForFile(request->url().c_str()));
+      response->addHeader("Content-Encoding", "gzip");
+      request->send(response);
+      return;
+    }
+    if (SPIFFS.exists(spiffsPath)) {
+      request->send(SPIFFS, spiffsPath);
+      return;
+    }
+  }
+  #ifdef NETSERVER_DEBUG
+    FUNCTIONLOG("Netserver.debug", "[handleNotFound] 404: %s", request->url().c_str());
+  #endif
   FUNCTIONLOG("Netserver.notfound", "Not Found: %s", request->url().c_str());
   request->send(404, "text/plain", "Not found");
 }

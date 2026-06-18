@@ -10,6 +10,7 @@
 #undef DSP_HEIGHT
 #define DSP_WIDTH  128
 #define DSP_HEIGHT 64
+#define DISPLAY_MODEL_NAME "ST7920"
 
 typedef GFXcanvas1 Canvas;
 typedef ST7920 yoDisplay;

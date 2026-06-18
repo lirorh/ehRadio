@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.06.15"
+#define RADIOVERSION "2026.06.18"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -777,9 +777,15 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #if WIFI_ATTEMPTS < 1
   #error define error in myoptions.h: WIFI_ATTEMPTS must be at least 1
 #endif
+// How many seconds to wait after boot completed to Start the Async Services (other services are starting and too soon can crash netserver stack).  The less-important services started here (can take a full minute to complete if server connection issues):
+// verifies/downloads locale JSON file, checks for new version (triggers autoupdate), downloads PLAYLIST_DEFAULT_URL (if set), updates timezones.json.gz and rb_srvrs.json, cleans up stale search results
+#ifndef STARTUP_ASYNC_SERVICES_DELAY
+  #define STARTUP_ASYNC_SERVICES_DELAY 20
+#endif
  // How many seconds to wait after boot completed (including smart start) to consider successful, if rebooted during that time, will enter safe mode (disables smart start, autoupdate)
-#ifndef BOOT_SAFE_TIME
-  #define  BOOT_SAFE_TIME 30
+ // Make it about a minute?  It may mark boot as stable even if the Startup Services haven't finished yet
+#ifndef BOOT_STABLE_TIME
+  #define BOOT_STABLE_TIME 30
 #endif
 #ifndef SEARCHRESULTS_BUFFER
  // Buffer for chunked HTTP transfers from radio-browser.info. Defined in KB; conversion to bytes done in netserver.cpp.
@@ -831,24 +837,28 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 
 // PSRAM Audio Buffer
-// WebUI files cache: 100KB + Decoder Output: 52KB + Display framebuffer (480×320): 74KB = 266KB... leaves 758KB free in 1MB or 1784 free in 2MB
+// WebUI files cache: (up to) 300KB + Decoder Output: 52KB + Display framebuffer (480×320): 74KB = 426KB... leaves 598KB free in 1MB or 1598 free in 2MB
+// To be fair, in real-world use, above 300KB may be excessive...
 #ifndef PSRAM_BUFSIZE
   #if defined(ARDUINO_ESP32_DEV)
-    #define PSRAM_BUFSIZE 1024 * 750 // 750KB
+    #define PSRAM_BUFSIZE 550
   #else
-    #define PSRAM_BUFSIZE 1024 * 1750 // 1750KB
+    #define PSRAM_BUFSIZE 1500
   #endif
 #endif
-
-// Since the buffer can never technically fill up, the visual buffer bar should look "full"
-// when the buffer is near to maximum potential, estimating that 80% to 85% is good.
-#ifndef BUFFERBAR_VISUAL_FULL_PERCENT // value where buffer bar appears visually full
-  #define BUFFERBAR_VISUAL_FULL_PERCENT 82
+// Since the audio buffer can never technically fill up (most streams prevent reading-ahead excessively),
+// the visual buffer bar should look "full" when the buffer is near to maximum potential (250KB is ~6 seconds at 320kbps)
+#ifndef BUFFERBAR_VISUAL_FULL_KB
+  #define BUFFERBAR_VISUAL_FULL_KB 250
 #endif
-#if BUFFERBAR_VISUAL_FULL_PERCENT < 1 || BUFFERBAR_VISUAL_FULL_PERCENT > 100
-  #warning BUFFERBAR_VISUAL_FULL_PERCENT out of range, resetting to default 82
-  #undef BUFFERBAR_VISUAL_FULL_PERCENT
-  #define BUFFERBAR_VISUAL_FULL_PERCENT 82
+#if (BUFFERBAR_VISUAL_FULL_KB < 16) || (BUFFERBAR_VISUAL_FULL_KB > 500)
+  #warning BUFFERBAR_VISUAL_FULL_KB is outside 16 to 500 range, using default of 250KB
+  #undef BUFFERBAR_VISUAL_FULL_KB
+  #define BUFFERBAR_VISUAL_FULL_KB 250
+#endif
+#if (PSRAM_BUFSIZE < BUFFERBAR_VISUAL_FULL_KB)
+  #undef BUFFERBAR_VISUAL_FULL_KB
+  #define BUFFERBAR_VISUAL_FULL_KB (PSRAM_BUFSIZE)
 #endif
 
 /* --- CPU CORES --- */
@@ -1280,6 +1290,9 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #ifndef CORE_MONITOR
     #define CORE_MONITOR // This shows the ESP32 CPU Core Monitor in serial and telnet (updated every 5s), includes SPIFFS information
   #endif
+  #ifndef CORE_MONITOR_ETC_LOOPS
+    #define CORE_MONITOR_ETC_LOOPS 5 // Show SPIFFS + PSRAM info every N core monitor cycles (default: 5, every 25s)
+  #endif
   #ifdef WIDGET_DEBUG
     #define WIDGET_DEBUG // This shows the Widget's Text in logging.  It's extremely noisy.
   #endif
@@ -1288,33 +1301,45 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
  // This enables CORS policy: 'Access-Control-Allow-Origin' (for testing)
 #endif
 
-/* CPU CORE NAMES: Name the Cores For What They Do */
+/* CPU CORE NAMES: Name the Cores for what they do... */
 /* Do not use any of these macros directly in myoptions.h! */
 /* Use #define CORE_MONITOR to show how busy the cores are... this gives them friendly names */
 #if (!CONFIG_FREERTOS_UNICORE && defined(CORE_MONITOR))
   #if (AUDIO_CORE==0)
-    #define CORE_0A "+Audio"
+    #define CORE_0A "Audio"
     #define CORE_1A ""
   #elif (AUDIO_CORE==1)
     #define CORE_0A ""
     #define CORE_1A "+Audio"
   #endif
   #if (NETWORK_CORE==0)
-    #define CORE_0B "+Net"
+    #if (AUDIO_CORE==0)
+      #define CORE_0B "+Net"
+    #else
+      #define CORE_0B "Net"
+    #endif
     #define CORE_1B ""
   #elif (NETWORK_CORE==1)
     #define CORE_0B ""
     #define CORE_1B "+Net"
   #endif
   #if (CONFIG_ASYNC_TCP_RUNNING_CORE==0)
-    #define CORE_0C "+TCP"
+    #if (AUDIO_CORE==0) || (NETWORK_CORE==0)
+      #define CORE_0C "+TCP"
+    #else
+      #define CORE_0C "TCP"
+    #endif
     #define CORE_1C ""
   #elif (CONFIG_ASYNC_TCP_RUNNING_CORE==1)
     #define CORE_0C ""
     #define CORE_1C "+TCP"
   #endif
   #if (DSP_TASK_CORE_ID==0)
-    #define CORE_0D "+Disp"
+    #if (AUDIO_CORE==0) || (NETWORK_CORE==0) || (CONFIG_ASYNC_TCP_RUNNING_CORE==0)
+      #define CORE_0D "+Disp"
+    #else
+      #define CORE_0D "Disp"
+    #endif
     #define CORE_1D ""
   #elif (DSP_TASK_CORE_ID==1)
     #define CORE_0D ""

@@ -345,6 +345,4 @@
 //#define CLOCKFONT YO_MONO
 //#define CLOCKFONT YO_CLASSIC
 
-#define ALL_DEBUG_LOGS
-
 #endif // myoptions_h

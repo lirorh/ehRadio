@@ -401,34 +401,6 @@ function getWiFi(path){
   xhr.send(null);
 }
 
-function submitWiFi(){
-  var output="";
-  var items=document.getElementsByClassName("credential");
-  for (var i = 0; i <= items.length - 1; i++) {
-    inputs=items[i].getElementsByTagName("input");
-    if(inputs[0].value == "") continue;
-    let ps=inputs[1].value==""?inputs[1].dataset.pass:inputs[1].value;
-    output+=inputs[0].value+"\t"+ps+"\n";
-  }
-  if(output!=""){ // Well, let's say, quack.
-    let file = new File([output], "tempwifi.csv",{type:"text/plain;charset=utf-8", lastModified:new Date().getTime()});
-    let container = new DataTransfer();
-    container.items.add(file);
-    let fileuploadinput=getId("file-upload");
-    fileuploadinput.files = container.files;
-    var formData = new FormData();
-    formData.append("wifile", fileuploadinput.files[0]);
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST",`http://${hostname}/upload`,true);
-    xhr.send(formData);
-    fileuploadinput.value = '';
-    getId("settingscontent").innerHTML='<h2>'+t('msg_settings_saved', 'Settings saved. Rebooting...')+'</h2>';
-    getId("settingsdone").classList.add("hidden");
-    getId("navigation").classList.add("hidden");
-    setTimeout(function(){ window.location.href=`http://${hostname}/`; }, 10000);
-  }
-}
-
 /** SYSTEM **/
 function rebootSystem(info, waitSeconds = 15, autoReload = true){
   getId("settingscontent").innerHTML=`<h2>${info}</h2>`;

@@ -428,7 +428,7 @@ function handlePlaylistData(fileData) {
   const ul = getId('playlist');
   ul.innerHTML='';
   if (!fileData) return;
-  const lines = fileData.split('\n');
+  const lines = fileData.split(/\r?\n/);
   let li='', html='';
   for(var i = 0;i < lines.length;i++){
     let line = lines[i].split('\t');
@@ -573,7 +573,7 @@ function submitPlaylist(){
     let ovol = inputs[3].value;
     if(ovol < -30) ovol = -30;
     if(ovol > 30) ovol = 30;
-    output+=inputs[1].value+"\t"+inputs[2].value+"\t"+ovol+"\n";
+    output+=inputs[1].value+"\t"+inputs[2].value+"\t"+ovol+"\r\n";
   }
   let file = new File([output], "playlist.csv",{type:"text/plain;charset=utf-8", lastModified:new Date().getTime()});
   let container = new DataTransfer();
@@ -740,7 +740,7 @@ function urlToName(url) {
 }
 
 function parseAndAddCSV(content, targetCallback, mode = 'replace') {
-  const lines = content.split('\n');
+  const lines = content.split(/\r?\n/);
   const existingURLs = mode === 'merge' ? getExistingURLs() : new Set();
   let addedCount = 0;
   let duplicateCount = 0;
@@ -975,7 +975,7 @@ function exportCurrentPlaylist() {
       return;
     }
     
-    csvContent += `${name}\t${url}\t${ovol}\n`;
+    csvContent += `${name}\t${url}\t${ovol}\r\n`;
   }
   
   // Create blob and trigger download

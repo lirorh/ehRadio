@@ -15,20 +15,25 @@
 #include "core/rgbled.h"
 #include "core/startup.h"
 #include "core/telnet.h"
+#include "displays/tools/psframebuffer.h"
 #ifdef USE_NEXTION
   #include "displays/nextion.h"
 #endif
 
 SET_LOOP_TASK_STACK_SIZE(LOOP_TASK_STACK_SIZE * 1024);
 
+/* PSRAM usage tracking — set by subsystems, consumed by Core Monitor */
+size_t psramFrameBufferBytes = 0;
+
 #ifdef CORE_MONITOR
   extern volatile uint32_t cmDspLoopCount;
   extern TaskHandle_t dspTaskHandle;
   extern TaskHandle_t nsTaskHandle;
-  static uint32_t cmMainCount    = 0;
-  static uint32_t cmMaxMainLoop  = 0;
-  static uint32_t cmLoopStart    = 0;
+  static uint32_t cmMainCount     = 0;
+  static uint32_t cmMaxMainLoop   = 0;
+  static uint32_t cmLoopStart     = 0;
   static unsigned long cmLastPrint = 0;
+  static uint8_t cmEtcCount      = 0;  // CORE_MONITOR_ETC_LOOPS counter
 #endif
 
 void setup() {
@@ -116,6 +121,7 @@ void loop() {
     config.processDeferredSaves();
   }
   startup.loop();
+
   #ifdef CORE_MONITOR
     cmMainCount++;
     uint32_t cmDur = micros() - cmLoopStart;
@@ -125,17 +131,35 @@ void loop() {
       uint32_t m = cmMainCount;     cmMainCount = 0;
       uint32_t mx = cmMaxMainLoop;  cmMaxMainLoop = 0;
       #ifdef CONFIG_FREERTOS_UNICORE
-        FUNCTIONLOG("Core.monitor", "Core0 loops/s: %u (%.2fms/loop) | Core0(Main) loops/s: %u (%.2fms/loop) | MaxMainLoopUs: %u | Heap: %u",
-            d/5, d>0 ? 5000.0f/d : 0.0f, m/5, m>0 ? 5000.0f/m : 0.0f, mx, (unsigned)ESP.getFreeHeap());
+        FUNCTIONLOG("Core.monitor", "Core0 loops/s: %u (%.2fms/loop), Core0(Main) loops/s: %u (%.2fms/loop), Max Main Loop Time: %.3fms, Free Heap: %u",
+            d/5, d>0 ? 5000.0f/d : 0.0f, m/5, m>0 ? 5000.0f/m : 0.0f, mx / 1000.0f, (unsigned)ESP.getFreeHeap());
       #else
-        FUNCTIONLOG("Core.monitor", "Core0" CORE_0 " loops/s: %u (%.2fms/loop) | Core1" CORE_1 " loops/s: %u (%.2fms/loop) | MaxMainLoopUs: %u | Heap: %u",
-            d/5, d>0 ? 5000.0f/d : 0.0f, m/5, m>0 ? 5000.0f/m : 0.0f, mx, (unsigned)ESP.getFreeHeap());
+        FUNCTIONLOG("Core.monitor", "Core0" CORE_0 " loops/s: %u (%.2fms/loop), Core1" CORE_1 " loops/s: %u (%.2fms/loop), Max Main Loop Time: %.3fms, Free Heap: %u",
+            d/5, d>0 ? 5000.0f/d : 0.0f, m/5, m>0 ? 5000.0f/m : 0.0f, mx / 1000.0f, (unsigned)ESP.getFreeHeap());
       #endif
-      FUNCTIONLOG("Core.monitor", "HWM: Loop=%u Disp=%u nsLoop=%u",
+      FUNCTIONLOG("Core.monitor", "High Water Mark (free bytes in stacks): Main: %u, Display: %u, Netserver: %u",
           (unsigned)uxTaskGetStackHighWaterMark(NULL),
           (unsigned)(dspTaskHandle ? uxTaskGetStackHighWaterMark(dspTaskHandle) : 0),
           (unsigned)(nsTaskHandle  ? uxTaskGetStackHighWaterMark(nsTaskHandle)  : 0));
-      FUNCTIONLOG("SPIFFS", "Used: %u / %u bytes, Free: %u bytes", SPIFFS.usedBytes(), SPIFFS.totalBytes(), SPIFFS.totalBytes() - SPIFFS.usedBytes());
+      // SPIFFS + PSRAM info — rate-limited by CORE_MONITOR_ETC_LOOPS
+      if (++cmEtcCount >= CORE_MONITOR_ETC_LOOPS) {
+        cmEtcCount = 0;
+        FUNCTIONLOG("SPIFFS", "Used: %u / %u bytes, Free: %u bytes", SPIFFS.usedBytes(), SPIFFS.totalBytes(), SPIFFS.totalBytes() - SPIFFS.usedBytes());
+        if (psramFound()) {
+          size_t psramTotal = ESP.getPsramSize();
+          size_t psramUsed  = psramTotal - ESP.getFreePsram();
+          size_t known      = (1024 * PSRAM_BUFSIZE) + netserver.getFileCache().totalBytes() + psramFrameBufferBytes;
+          size_t audioFill  = player.inBufferFilled();
+          FUNCTIONLOG("PSRAM", "Allocated: %uKB / %uKB: Framebuffer: %uKB, WebUI Cache: %uKB, Other: %uKB, Audio: %uKB used / %uKB allocated",
+              psramUsed / 1024,
+              psramTotal / 1024,
+              psramFrameBufferBytes / 1024,
+              netserver.getFileCache().totalBytes() / 1024,
+              (psramUsed > known ? (psramUsed - known) / 1024 : 0),
+              audioFill / 1024,
+              PSRAM_BUFSIZE);
+        }
+      }
       cmLastPrint = millis();
     }
   #endif

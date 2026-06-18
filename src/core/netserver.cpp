@@ -116,6 +116,15 @@ void StaticFileCache::loadAll() {
     SERIALLOGX("Loaded %d files into PSRAM cache\t", count);
 }
 
+size_t StaticFileCache::totalBytes() const {
+    size_t total = 0;
+    for (int i = 0; i < count; i++) {
+        total += entries[i].size;     // plain data
+        total += entries[i].gzSize;   // gzipped data (if loaded separately)
+    }
+    return total;
+}
+
 const CachedFile* StaticFileCache::find(const char* urlPath) const {
     for (int i = 0; i < count; i++) {
         if (strcmp(entries[i].path, urlPath) == 0) {
@@ -371,7 +380,7 @@ bool NetServer::begin(bool quiet) {
   webserver.on("/ncsi.txt", HTTP_GET, captiveRedirect);                     // Windows
   webserver.on("/connecttest.txt", HTTP_GET, captiveRedirect);              // Windows
 
-  fileCache.loadAll();
+  if (psramFound()) fileCache.loadAll();
   webserver.onNotFound(handleNotFound);
   webserver.onFileUpload(handleUpload);
   #ifdef CORS_DEBUG
@@ -808,12 +817,6 @@ int freeSpace;
 void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   if (request->url()=="/upload") {
     if (!index) {
-      if (filename!="tempwifi.csv") {
-        if (SPIFFS.exists(PLAYLIST_PATH)) SPIFFS.remove(PLAYLIST_PATH);
-        if (SPIFFS.exists(INDEX_PATH)) SPIFFS.remove(INDEX_PATH);
-        if (SPIFFS.exists(PLAYLIST_SD_PATH)) SPIFFS.remove(PLAYLIST_SD_PATH);
-        if (SPIFFS.exists(INDEX_SD_PATH)) SPIFFS.remove(INDEX_SD_PATH);
-      }
       freeSpace = (float)SPIFFS.totalBytes()/100*68-SPIFFS.usedBytes();
       request->_tempFile = SPIFFS.open(TMP_PATH , "w");
     }
@@ -865,7 +868,10 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
     if (final) {
       request->_tempFile.close();
       if (filename=="playlist.csv") {
-        utility.indexPlaylist();
+        // Remove index and SD index to force cleanPlaylist to run
+        if (SPIFFS.exists(INDEX_PATH)) SPIFFS.remove(INDEX_PATH);
+        if (SPIFFS.exists(INDEX_SD_PATH)) SPIFFS.remove(INDEX_SD_PATH);
+        utility.cleanPlaylist();   // Rewrites with CRLF, removes blank lines; calls indexPlaylist() internally
         netserver.requestOnChange(PLAYLISTSAVED, 0);
       } else {
         // Invalidate PSRAM cache for uploaded www files
@@ -1571,10 +1577,7 @@ void handleNotFound(AsyncWebServerRequest * request) {
   #endif
 
   if (request->method() == HTTP_GET) {
-    #ifdef NETSERVER_DEBUG
-      FUNCTIONLOG ("Netserver.debug", "[%s] client ip=%s request of %s", __func__, request->client()->remoteIP().toString().c_str(), request->url().c_str());
-    #endif
-    if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 || 
+    if (strcmp(request->url().c_str(), PLAYLIST_PATH) == 0 ||
         strcmp(request->url().c_str(), SSIDS_PATH) == 0 || 
         strcmp(request->url().c_str(), INDEX_PATH) == 0 || 
         strcmp(request->url().c_str(), TMP_PATH) == 0 || 
@@ -1689,14 +1692,26 @@ void handleNotFound(AsyncWebServerRequest * request) {
     request->send(200, "text/html", emptyfs_html);
     return;
   }
-  // Fallback: try SPIFFS for dynamic files not in PSRAM cache (searchresults.json, curated.json, etc.)
+  // Fallback: try SPIFFS for files not in PSRAM cache — check .gz variant first
   if (request->method() == HTTP_GET) {
-    String spiffsPath = String("/www") + request->url();
-    if (SPIFFS.exists(spiffsPath.c_str())) {
-      request->send(SPIFFS, spiffsPath.c_str());
+    char spiffsPath[64];
+    snprintf(spiffsPath, sizeof(spiffsPath), "/www%s", request->url().c_str());
+    char gzPath[64];
+    snprintf(gzPath, sizeof(gzPath), "%s.gz", spiffsPath);
+    if (SPIFFS.exists(gzPath)) {
+      AsyncWebServerResponse *response = request->beginResponse(SPIFFS, gzPath, mimeTypeForFile(request->url().c_str()));
+      response->addHeader("Content-Encoding", "gzip");
+      request->send(response);
+      return;
+    }
+    if (SPIFFS.exists(spiffsPath)) {
+      request->send(SPIFFS, spiffsPath);
       return;
     }
   }
+  #ifdef NETSERVER_DEBUG
+    FUNCTIONLOG("Netserver.debug", "[handleNotFound] 404: %s", request->url().c_str());
+  #endif
   FUNCTIONLOG("Netserver.notfound", "Not Found: %s", request->url().c_str());
   request->send(404, "text/plain", "Not found");
 }

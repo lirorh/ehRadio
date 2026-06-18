@@ -24,6 +24,7 @@ public:
     const CachedFile* find(const char* urlPath) const;  /* Lookup by URL path */
     bool invalidate(const char* urlPath);                /* Reload single file after update */
     void freeAll();                 /* Free all PSRAM allocations */
+    size_t totalBytes() const;      /* Total PSRAM used by cached files */
 private:
     static constexpr int MAX_ENTRIES = 32;
     CachedFile entries[MAX_ENTRIES];

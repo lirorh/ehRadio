@@ -4,6 +4,9 @@
 #ifdef PSFBUFFER
 #include <Adafruit_GFX.h>
 
+/* PSRAM framebuffer size tracker — updated by psFrameBuffer on allocation */
+extern size_t psramFrameBufferBytes;
+
 class  psFrameBuffer : public Adafruit_GFX {
   public:
     psFrameBuffer(int16_t w, int16_t h):Adafruit_GFX(w, h){ setTextWrap(false); cp437(true); }
@@ -68,10 +71,12 @@ class  psFrameBuffer : public Adafruit_GFX {
     uint16_t _bgcolor;
     void _createBuffer(){
       #if (defined(USE_FBUFFER) && USE_FBUFFER)
-        if(psramInit())
+        if(psramInit()) {
           buffer = (uint16_t*) ps_calloc(_hh * _ww, sizeof(uint16_t));
-        else
+          psramFrameBufferBytes = _hh * _ww * sizeof(uint16_t);
+        } else {
           buffer = (uint16_t*) calloc(_hh * _ww, sizeof(uint16_t));
+        }
       #endif
       if(buffer){
         for (int i = 0; i < _hh * _ww; i++)

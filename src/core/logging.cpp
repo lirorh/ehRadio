@@ -11,7 +11,10 @@ void emitLogMessage(const char* category, bool appendNewline, const char* fmt, v
   size_t prefixLen = 0;
 
   if (category && category[0] != '\0') {
-    int written = snprintf(logBuffer, sizeof(logBuffer), "[%s]\t", category);
+    // Pad bracketed category to 16 chars for aligned columns (e.g. "[PSRAM]       ")
+    char catBuf[20];
+    snprintf(catBuf, sizeof(catBuf), "[%s]", category);
+    int written = snprintf(logBuffer, sizeof(logBuffer), "%-16s", catBuf);
     if (written > 0) {
       prefixLen = static_cast<size_t>(written);
       if (prefixLen >= sizeof(logBuffer)) {

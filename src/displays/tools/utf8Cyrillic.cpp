@@ -5,6 +5,7 @@
 
 #include "Arduino.h"
 #include "../../core/options.h"
+#include "../../core/locale.h"
 #include "../dspcore.h"
 #include "utf8Cyrillic.h"
 #include "utf8_common.h" // transliteration and helpers moved here

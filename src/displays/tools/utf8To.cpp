@@ -7,6 +7,7 @@
 #include "Arduino.h"
 #include <ctype.h>
 #include "../../core/options.h"
+#include "../../core/locale.h"
 #include "../dspcore.h"
 
 #ifdef L10N_CP_CYRILLIC

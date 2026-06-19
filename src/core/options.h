@@ -570,7 +570,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define ENC_SW_PULLUP true
 #endif
 #ifdef ENC_STEPS
-  #if !(ENC_STEPS == 1 || ENC_STEPS == 2 || ENC_STEPS == 4) // 1 is acceptable but 2 for more accuracy
+  #if !(ENC_STEPS == 1 || ENC_STEPS == 2 || ENC_STEPS == 4) // KY-040 requires 2, bare encoders 4
     #error ENC_STEPS 1 or 2 or 4 only please (2 is default)
   #endif
 #else
@@ -593,7 +593,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define ENC2_SW_PULLUP true
 #endif
 #ifdef ENC2_STEPS
-  #if !(ENC2_STEPS==1  ENC2_STEPS==2 | ENC2_STEPS==4 // 1 is acceptable but 2 for more accuracy
+  #if !(ENC2_STEPS == 1 || ENC2_STEPS == 2 || ENC2_STEPS == 4) // KY-040 requires 2, bare encoders 4
     #error ENC2_STEPS 1 or 2 or 4 only please (2 is default)
   #endif
 #else

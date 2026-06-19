@@ -337,12 +337,14 @@
 
 /* --- Debug? --- */
 //#define CORE_MONITOR
-//#define ALL_DEBUG_LOGS
+#define ALL_DEBUG_LOGS
 
 /* --- Clock Fonts --- */
 // CHUNKY6_PX is default...
 //#define CLOCKFONT CHUNKY6
 //#define CLOCKFONT YO_MONO
 //#define CLOCKFONT YO_CLASSIC
+
+#define DSP_LANGUAGE_ru_RU
 
 #endif // myoptions_h

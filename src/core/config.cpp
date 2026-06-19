@@ -654,7 +654,7 @@ void Config::bootInfo() {
   BOOTLOG("Arduino Core:\t%d.%d.%d", ESP_ARDUINO_VERSION_MAJOR, ESP_ARDUINO_VERSION_MINOR, ESP_ARDUINO_VERSION_PATCH);
   BOOTLOG("GCC Toolchain:\t%s", __VERSION__);
   BOOTLOG("%s:\trev: %d, Cores: %d, PSRAM: %dMB, ID: %d", ESP.getChipModel(), ESP.getChipRevision(), ESP.getChipCores(), (ESP.getPsramSize() + 524288) / 1048576, ({uint64_t _m=ESP.getEfuseMac(); (((_m>>40)&0xFF)<<16)|(((_m>>32)&0xFF)<<8)|((_m>>24)&0xFF);}));
-  BOOTLOG("Core Processes:\tAudio: %d, Network: %d, Display: %d", AUDIO_CORE, NETWORK_CORE, DSP_TASK_CORE_ID);
+  BOOTLOG("Core Processes:\tMain: 1, Audio: %d, Network: %d, Display: %d", AUDIO_CORE, NETWORK_CORE, DSP_TASK_CORE_ID);
   BOOTLOG("Stack Sizes:\tLoop: %dKB, Display: %dKB, Netserver: %dKB, Network: %dKB", LOOP_TASK_STACK_SIZE, DSP_TASK_STACK_SIZE, NETSERVER_TASK_STACK_SIZE, NETWORK_TASK_STACK_SIZE);
   BOOTLOG("Task Priority:\tDisplay: %d, Netserver: %d, Playback: %d, Network: %d, Low: %d", DSP_TASK_PRIORITY, NETSERVER_TASK_PRIORITY, PLAYBACK_TASK_PRIORITY, NET_TASK_PRIORITY, LOW_TASK_PRIORITY);
   #ifdef SPIA_SCK
@@ -690,6 +690,8 @@ void Config::bootInfo() {
   if (BTN_UP!=255) BOOTLOG("Button Up:\tPin: %d, Pullup: %s", BTN_UP, BTN_UP_PULLUP?"true":"false");
   if (BTN_PREV!=255) BOOTLOG("Button Prev:\tPin: %d, Pullup: %s", BTN_PREV, BTN_PREV_PULLUP?"true":"false");
   if (BTN_NEXT!=255) BOOTLOG("Button Next:\tPin: %d, Pullup: %s", BTN_NEXT, BTN_NEXT_PULLUP?"true":"false");
+  if (BTN_MODE!=255) BOOTLOG("Button Mode:\tPin: %d, Pullup: %s", BTN_MODE, BTN_MODE_PULLUP?"true":"false");
+  if (WAKE_PIN!=255) BOOTLOG("Wake:\t\tPin: %d, State: %s", WAKE_PIN, WAKE_PIN_STATE?"high":"low");
   if (ENC_DT!=255) BOOTLOG("Encoder 1:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC_DT, ENC_CLK, ENC_PULLUP?"true":"false", ENC_SW, ENC_SW_PULLUP?"true":"false", ENC_STEPS);
   if (ENC2_DT!=255) BOOTLOG("Encoder 2:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC2_DT, ENC2_CLK, ENC2_PULLUP?"true":"false", ENC2_SW, ENC2_SW_PULLUP?"true":"false", ENC2_STEPS);
   if (IR_PIN!=255) BOOTLOG("IR:\t\tPin: %d", IR_PIN);

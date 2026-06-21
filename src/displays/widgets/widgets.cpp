@@ -249,7 +249,7 @@ void ScrollWidget::_clear(){
   if(_fb->ready()){
     #ifdef PSFBUFFER
       _fb->fillRect(0, 0, _width, _textheight, _bgcolor);
-      _fb->display();
+      // display() happens in _draw() after text is rendered — not here
     #endif
   } else {
     dsp.fillRect(_config.left, _config.top, _width, _textheight, _bgcolor);

@@ -61,7 +61,22 @@ class  psFrameBuffer : public Adafruit_GFX {
     void drawPixel( int16_t x, int16_t y, uint16_t color){
       if (x < 0 || x >= _ww || y < 0 || y >= _hh) return;
       if(!buffer) return;
-      buffer[x + y * _ww] = color;
+      uint16_t &pixel = buffer[x + y * _ww];
+      if (pixel != color) pixel = color;  // skip write if already target color
+    }
+    void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color){
+      // Write directly to PSRAM buffer — do NOT use base-class writeFillRect
+      // which bypasses the framebuffer and writes to the display over SPI.
+      if(!buffer) return;
+      if(x < 0){ w += x; x = 0; }
+      if(y < 0){ h += y; y = 0; }
+      if(x + w > _ww) w = _ww - x;
+      if(y + h > _hh) h = _hh - y;
+      if(w <= 0 || h <= 0) return;
+      for(int16_t j = 0; j < h; j++){
+        uint16_t *row = &buffer[x + (y + j) * _ww];
+        for(int16_t i = 0; i < w; i++) row[i] = color;
+      }
     }
     void display(){
       if(!buffer) return;
@@ -119,11 +134,6 @@ class  psFrameBuffer : public Adafruit_GFX {
                     drawPixel(cursor_x + col, renderY - 8 + row, textcolor);
                   else
                     writeFillRect(cursor_x + col * textsize_x, (renderY - 8 + row) * textsize_y, textsize_x, textsize_y, textcolor);
-                } else if (textbgcolor != textcolor) {
-                  if (textsize_x == 1 && textsize_y == 1)
-                    drawPixel(cursor_x + col, renderY - 8 + row, textbgcolor);
-                  else
-                    writeFillRect(cursor_x + col * textsize_x, (renderY - 8 + row) * textsize_y, textsize_x, textsize_y, textbgcolor);
                 }
               }
             }
@@ -164,11 +174,6 @@ class  psFrameBuffer : public Adafruit_GFX {
                   drawPixel(cursor_x + xo + xx, renderY + yo + yy, textcolor);
                 else
                   writeFillRect(cursor_x + (xo + xx) * textsize_x, renderY + (yo + yy) * textsize_y, textsize_x, textsize_y, textcolor);
-              } else if (textbgcolor != textcolor) {
-                if (textsize_x == 1 && textsize_y == 1)
-                  drawPixel(cursor_x + xo + xx, renderY + yo + yy, textbgcolor);
-                else
-                  writeFillRect(cursor_x + (xo + xx) * textsize_x, renderY + (yo + yy) * textsize_y, textsize_x, textsize_y, textbgcolor);
               }
               bit >>= 1;
             }

@@ -202,8 +202,8 @@ class DspCore: public yoDisplay {
         }
         cursor_x += (int16_t)pgm_read_byte(&glyph->xAdvance) * textsize_x;
       } else if (cp >= 256) {
-        uint16_t folded = foldAccent(cp);
-        if (folded) { _writeGlyph(folded); return; }
+        uint16_t mapped = preText(cp, f);
+        if (mapped && mapped != cp) { _writeGlyph(mapped); return; }
       }
     }
 

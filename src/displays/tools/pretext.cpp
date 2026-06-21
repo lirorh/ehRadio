@@ -1,8 +1,23 @@
 #include "pretext.h"
 
+// Pre-render text processing pipeline.  Add new preprocessors here.
+uint16_t preText(uint16_t cp, const GFXfont *font) {
+  return foldAccent(cp, font);
+}
+
 // Strip diacritical marks from Latin-1 and Latin Extended-A characters.
-// Returns the base ASCII codepoint, or 0 if no mapping exists.
-uint16_t foldAccent(uint16_t cp) {
+// Only applies if the codepoint has NO glyph in the font (w==0 or h==0).
+// Returns the folded codepoint, or cp unchanged if the glyph exists,
+// or 0 if no fallback is available.
+uint16_t foldAccent(uint16_t cp, const GFXfont *font) {
+  // Check if glyph exists in font — if yes, no folding needed
+  if (cp >= pgm_read_word(&font->first) && cp <= pgm_read_word(&font->last)) {
+    uint16_t idx = cp - pgm_read_word(&font->first);
+    if (pgm_read_byte(&font->glyph[idx].width) > 0 &&
+        pgm_read_byte(&font->glyph[idx].height) > 0)
+      return cp;  // glyph exists, keep as-is
+  }
+  // Glyph not in font or empty slot — try accent folding
   // Latin-1 Supplement (U+00C0–U+00FF) → ASCII
   if (cp >= 0x00C0 && cp <= 0x00C5) return 'A';
   if (cp == 0x00C7) return 'C';

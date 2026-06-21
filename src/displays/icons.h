@@ -17,6 +17,7 @@ static const uint8_t ICON_RSSI_00[] PROGMEM = {
     0b00000000,  // ........
     0b01000000,  // .@......
     0b01000000,  // .@......
+    0b00000000,  // ........
 };
 
 // \002 (dec 2) — RSSI bar __00  (used in display.cpp RSSI rendering)
@@ -26,6 +27,7 @@ static const uint8_t ICON_RSSI__00[] PROGMEM = {
     0b00000000,  // ........
     0b01000000,  // .@......
     0b01000000,  // .@......
+    0b00000000,  // ........
 };
 
 // \003 (dec 3) — RSSI bar 10__  (used in display.cpp RSSI rendering)
@@ -35,6 +37,7 @@ static const uint8_t ICON_RSSI_10[] PROGMEM = {
     0b00000000,  // ........
     0b01000000,  // .@......
     0b01000000,  // .@......
+    0b00000000,  // ........
 };
 
 // \004 (dec 4) — RSSI bar 11__  (used in display.cpp RSSI rendering)
@@ -44,6 +47,7 @@ static const uint8_t ICON_RSSI_11[] PROGMEM = {
     0b00000000,  // ........
     0b01110000,  // .@@@....
     0b01110000,  // .@@@....
+    0b00000000,  // ........
 };
 
 // \005 (dec 5) — RSSI bar __10  (used in display.cpp RSSI rendering)
@@ -53,6 +57,7 @@ static const uint8_t ICON_RSSI__10[] PROGMEM = {
     0b00000000,  // ........
     0b01000000,  // .@......
     0b01000000,  // .@......
+    0b00000000,  // ........
 };
 
 // \006 (dec 6) — RSSI bar __11  (used in display.cpp RSSI rendering)
@@ -62,6 +67,7 @@ static const uint8_t ICON_RSSI__11[] PROGMEM = {
     0b00000000,  // ........
     0b01111100,  // .@@@@@..
     0b01111100,  // .@@@@@..
+    0b00000000,  // ........
 };
 
 // \007 (dec 7) — Weather divider / bullet  (used in network.cpp weather strings)
@@ -70,6 +76,7 @@ static const uint8_t ICON_WEATHER_DIV[] PROGMEM = {
     0b00011100,  // ...@@@..
     0b00011100,  // ...@@@..
     0b00011100,  // ...@@@..
+    0b00000000,  // ........
     0b00000000,  // ........
 };
 
@@ -80,6 +87,7 @@ static const uint8_t ICON_IP[] PROGMEM = {
     0b00100010,  // ..@...@.
     0b00100010,  // ..@...@.
     0b01110010,  // .@@@..@.
+    0b00000000,  // ........
 };
 
 // \013 (dec 11) — Battery LOW (0-25%)  (used in conf files: batteryRangeFmt[0])
@@ -89,6 +97,7 @@ static const uint8_t ICON_BATTERY_LOW[] PROGMEM = {
     0b01000001,  // .@.....@
     0b01000011,  // .@....@@
     0b01111110,  // .@@@@@@.
+    0b00000000,  // ........
 };
 
 // \014 (dec 12) — Battery MID (25-75%)  (used in conf files: batteryRangeFmt[1])
@@ -98,6 +107,7 @@ static const uint8_t ICON_BATTERY_MID[] PROGMEM = {
     0b01110001,  // .@@@...@
     0b01111011,  // .@@@@.@@
     0b01111110,  // .@@@@@@.
+    0b00000000,  // ........
 };
 
 // \016 (dec 14) — Note icon  (unused in current code)
@@ -107,6 +117,7 @@ static const uint8_t ICON_NOTE[] PROGMEM = {
     0b00000101,  // .....@.@
     0b00110101,  // ..@@.@.@
     0b00111111,  // ..@@@@@@
+    0b00000000,  // ........
 };
 
 // \017 (dec 15) — Battery HIGH (75-100%)  (used in conf files: batteryRangeFmt[2])
@@ -116,6 +127,7 @@ static const uint8_t ICON_BATTERY_HIGH[] PROGMEM = {
     0b01111111,  // .@@@@@@@
     0b01111111,  // .@@@@@@@
     0b01111110,  // .@@@@@@.
+    0b00000000,  // ........
 };
 
 // \020 (dec 16) — Play / Next icon  (used in display.cpp as progress bar fill)
@@ -125,6 +137,7 @@ static const uint8_t ICON_PLAY[] PROGMEM = {
     0b00111110,  // ..@@@@@.
     0b00011100,  // ...@@@..
     0b00001000,  // ....@...
+    0b00000000,  // ........
 };
 
 // \021 (dec 17) — Previous icon  (used in display.cpp)
@@ -133,6 +146,7 @@ static const uint8_t ICON_PREV[] PROGMEM = {
     0b00011100,  // ...@@@..
     0b00111110,  // ..@@@@@.
     0b01111111,  // .@@@@@@@
+    0b00000000,  // ........
     0b00000000,  // ........
 };
 
@@ -143,11 +157,13 @@ static const uint8_t ICON_SPEAKER[] PROGMEM = {
     0b00011000,  // ...@@...
     0b00111100,  // ..@@@@..
     0b01111110,  // .@@@@@@.
+    0b00000000,  // ........
 };
 
 // \024 (dec 20) — Volume 25%  (unused in current code)
 static const uint8_t ICON_VOL_25[] PROGMEM = {
     0b00011000,  // ...@@...
+    0b00000000,  // ........
     0b00000000,  // ........
     0b00000000,  // ........
     0b00000000,  // ........
@@ -161,6 +177,7 @@ static const uint8_t ICON_VOL_50[] PROGMEM = {
     0b00111100,  // ..@@@@..
     0b00000000,  // ........
     0b00000000,  // ........
+    0b00000000,  // ........
 };
 
 // \026 (dec 22) — Volume 100%  (unused in current code)
@@ -170,6 +187,7 @@ static const uint8_t ICON_VOL_100[] PROGMEM = {
     0b00111100,  // ..@@@@..
     0b01000010,  // .@....@.
     0b00111100,  // ..@@@@..
+    0b00000000,  // ........
 };
 
 // \030 (dec 24) — Charging icon  (referenced in display.cpp, commented out)
@@ -179,6 +197,7 @@ static const uint8_t ICON_CHARGING[] PROGMEM = {
     0b01111110,  // .@@@@@@.
     0b00000100,  // .....@..
     0b00001000,  // ....@...
+    0b00000000,  // ........
 };
 
 // \031 (dec 25) — Discharging icon  (referenced in display.cpp, commented out)
@@ -188,6 +207,7 @@ static const uint8_t ICON_DISCHARGING[] PROGMEM = {
     0b01111110,  // .@@@@@@.
     0b00100000,  // ..@.....
     0b00010000,  // ...@....
+    0b00000000,  // ........
 };
 
 // \034 (dec 28) — Pause icon  (used in display.cpp)
@@ -197,6 +217,7 @@ static const uint8_t ICON_PAUSE[] PROGMEM = {
     0b00000000,  // ........
     0b01111111,  // .@@@@@@@
     0b01111111,  // .@@@@@@@
+    0b00000000,  // ........
 };
 
 // \035 (dec 29) — List icon  (used in display.cpp)
@@ -206,6 +227,7 @@ static const uint8_t ICON_LIST[] PROGMEM = {
     0b01010101,  // .@.@.@.@
     0b01010101,  // .@.@.@.@
     0b01010101,  // .@.@.@.@
+    0b00000000,  // ........
 };
 
 // ==========================================================================

@@ -2,7 +2,9 @@
 #define common_gfx_h
 #include <Arduino.h>
 #include "../widgets/widgetsconfig.h" // displayXXXDDDDconf.h
-#include "utf8To.h"
+#include "../icons.h"                 // icon bitmaps + ICON_TABLE
+#include "../dspfont.h"               // DSP_UNICODE_FONT definition
+#include "pretext.h"
 
 // Define missing macros for SSD1306x32 if not already defined
 #ifndef CHARWIDTH
@@ -107,7 +109,108 @@ class DspCore: public yoDisplay {
         setClipping({0, 0, width(), height()});
       #endif
     }
+
+    // Draw a 5-pixel-wide icon from icons.h at the current cursor position.
+    void drawIcon(const uint8_t* icon, uint16_t color, uint16_t bg) {
+      for (int8_t i = 0; i < 5; i++) {
+        uint8_t line = pgm_read_byte(icon + i);
+        for (int8_t j = 0; j < 8; j++) {
+          if (line & (0x80 >> j))
+            yoDisplay::writePixel(cursor_x + i, cursor_y + j, color);
+          else if (bg != color && bg != (uint16_t)-1)
+            yoDisplay::writePixel(cursor_x + i, cursor_y + j, bg);
+        }
+      }
+      cursor_x += 6;
+    }
+
+    // UTF-8 aware write() — replaces the stock library's uint8_t-limited version.
+    using Print::write;
+    size_t write(uint8_t c) {
+      if (c < 0x80) {
+        _utf8_cp = c;
+        _utf8_remaining = 0;
+        _writeGlyph(_utf8_cp);
+      } else if (c < 0xC0) {
+        if (_utf8_remaining > 0) {
+          _utf8_cp = (_utf8_cp << 6) | (c & 0x3F);
+          if (--_utf8_remaining == 0) _writeGlyph(_utf8_cp);
+        }
+      } else if (c < 0xE0) {
+        _utf8_cp = c & 0x1F;
+        _utf8_remaining = 1;
+      } else if (c < 0xF0) {
+        _utf8_cp = c & 0x0F;
+        _utf8_remaining = 2;
+      } else {
+        _utf8_cp = c & 0x07;
+        _utf8_remaining = 3;
+      }
+      return 1;
+    }
+
   private:
+    // Render a 16-bit codepoint using DSP_UNICODE_FONT.  All characters
+    // (ASCII + non-ASCII) are rendered directly with background fill —
+    // unlike the library's GFXfont drawChar which draws only foreground.
+    void _writeGlyph(uint16_t cp) {
+      const GFXfont *f = &DSP_UNICODE_FONT;
+      if (cp == '\n') { cursor_x = 0; cursor_y += (int16_t)textsize_y * (uint8_t)pgm_read_byte(&f->yAdvance); return; }
+      if (cp == '\r') return;
+      // If a clock font is active (not ours, not NULL), let the library handle it.
+      if (gfxFont != NULL && gfxFont != (GFXfont *)f) {
+        Adafruit_GFX::write((uint8_t)(cp & 0xFF));
+        return;
+      }
+      uint16_t first = pgm_read_word(&f->first);
+      uint16_t last  = pgm_read_word(&f->last);
+      if (cp >= first && cp <= last) {
+        GFXglyph *glyph = (GFXglyph *)pgm_read_ptr(&f->glyph);
+        glyph += (cp - first);
+        uint8_t w = pgm_read_byte(&glyph->width), h = pgm_read_byte(&glyph->height);
+        int16_t renderY = cursor_y;
+        if (gfxFont == NULL) renderY += (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
+        if (w > 0 && h > 0) {
+          int8_t xo = (int8_t)pgm_read_byte(&glyph->xOffset);
+          int8_t yo = (int8_t)pgm_read_byte(&glyph->yOffset);
+          if (wrap && (cursor_x + textsize_x * (xo + w) > _width)) {
+            cursor_x = 0;
+            cursor_y += (int16_t)textsize_y * (uint8_t)pgm_read_byte(&f->yAdvance);
+            renderY = cursor_y;
+            if (gfxFont == NULL) renderY += (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
+          }
+          uint8_t *bitmap = (uint8_t *)pgm_read_ptr(&f->bitmap);
+          uint16_t bo = pgm_read_word(&glyph->bitmapOffset);
+          uint8_t bits = 0, bit = 0;
+          for (uint8_t yy = 0; yy < h; yy++) {
+            for (uint8_t xx = 0; xx < w; xx++) {
+              if (bit == 0) { bits = pgm_read_byte(&bitmap[bo++]); bit = 0x80; }
+              if (bits & bit) {
+                if (textsize_x == 1 && textsize_y == 1)
+                  writePixel(cursor_x + xo + xx, renderY + yo + yy, textcolor);
+                else
+                  writeFillRect(cursor_x + (xo + xx) * textsize_x, renderY + (yo + yy) * textsize_y, textsize_x, textsize_y, textcolor);
+              } else if (textbgcolor != textcolor) {
+                if (textsize_x == 1 && textsize_y == 1)
+                  writePixel(cursor_x + xo + xx, renderY + yo + yy, textbgcolor);
+                else
+                  writeFillRect(cursor_x + (xo + xx) * textsize_x, renderY + (yo + yy) * textsize_y, textsize_x, textsize_y, textbgcolor);
+              }
+              bit >>= 1;
+            }
+          }
+        }
+        cursor_x += (int16_t)pgm_read_byte(&glyph->xAdvance) * textsize_x;
+      } else if (cp >= 256) {
+        uint16_t folded = foldAccent(cp);
+        if (folded) { _writeGlyph(folded); return; }
+      }
+    }
+
+    // UTF-8 decoder state
+    uint32_t _utf8_cp = 0;
+    uint8_t _utf8_remaining = 0;
+
     bool _clipping;
     clipArea _cliparea;
     void * _scrollid;

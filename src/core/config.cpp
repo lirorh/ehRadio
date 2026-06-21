@@ -19,7 +19,6 @@
 #include "telnet.h"
 #include "utility.h"
 #include "../displays/dspcore.h"
-#include "../displays/tools/utf8_common.h"
 #ifdef USE_SD
   #include "sdmanager.h"
 #endif

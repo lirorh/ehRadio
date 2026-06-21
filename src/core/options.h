@@ -240,6 +240,19 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #endif
 #endif
 
+/* Define your display font in myoptions.h, e.g.: #define DISPLAYFONT X11       */
+/* Options: MATRIXLIGHT(0), MATRIXCHUNKY(1), MATRIXLIGHTX(2), MATRIXCHUNKYX(3), */
+/*          X11(4), GLCD(5)                                                      */
+#define MATRIXLIGHT     0
+#define MATRIXCHUNKY    1
+#define MATRIXLIGHTX    2
+#define MATRIXCHUNKYX   3
+#define X11             4   // Unix X11 6x9 fixed-width
+
+#ifndef DISPLAYFONT
+  #define DISPLAYFONT X11
+#endif
+
 /* Define your clock/volume page font as #define CLOCKFONT CHUNKY6 */
 #define YO_MONO         0  // Default modern yoRadio 7-Segment font (monospaced)
 #define YO_CLASSIC      1  // Classic yoRadio 7-Segment font (1 is narrow)
@@ -249,7 +262,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* Chunky6 with spaces between pixels is the default (except on smaller displays) */
 #ifndef CLOCKFONT
   #if DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SH1106 || DSP_MODEL==DSP_SH1107 || DSP_MODEL==DSP_SSD1305
-  // note that using YO_MONO or YO_CLASSIC on the above list of displays will revert to glcd font (the common font)
+  // note that using YO_MONO or YO_CLASSIC on the above list of displays will revert to the display font.
     #define CLOCKFONT CHUNKY6
   #else
     #define CLOCKFONT CHUNKY6_PX

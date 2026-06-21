@@ -67,7 +67,7 @@ void TextWidget::init(WidgetConfig wconf, uint16_t buffsize, bool uppercase, uin
 }
 
 void TextWidget::setText(const char* txt) {
-  strlcpy(_text, utf8To(txt, _uppercase), _buffsize);
+  strlcpy(_text, txt, _buffsize);
   /* Compute width accounting for special in-text pixel spacer (0x1E) which counts as 2 pixels
      and otherwise each character occupies _charWidth pixels. */
   uint16_t w = 0;
@@ -182,7 +182,7 @@ bool ScrollWidget::_checkIsScrollNeeded() {
 }
 
 void ScrollWidget::setText(const char* txt) {
-  strlcpy(_text, utf8To(txt, _uppercase), _buffsize - 1);
+  strlcpy(_text, txt, _buffsize - 1);
   if (strcmp(_oldtext, _text) == 0) return;
   _textwidth = strlen(_text) * _charWidth;
   _x = _fb->ready()?0:_config.left;
@@ -277,6 +277,7 @@ void ScrollWidget::_draw() {
       _fb->display();
     #endif
     } else {
+      dsp.fillRect(_config.left, _config.top, _width, _textheight, _bgcolor);
       dsp.setCursor(_x + hiddenChars * _charWidth, _config.top);
       dsp.setClipping({_config.left, _config.top, _width, _textheight});
       dsp.print(_window);
@@ -737,9 +738,9 @@ void ClockWidget::_getTimeBounds() {
           gfx.setTextSize(_superfont);
           gfx.setCursor(_linesleft+_space+1, _top()-CHARHEIGHT * _superfont);
           gfx.setTextColor(dowColor, config.theme.background);
-          gfx.print(utf8To(LANG::dow[network.timeinfo.tm_wday], false));
+          gfx.print(LANG::dow[network.timeinfo.tm_wday]);
           sprintf(_tmp, "%2d %s %d", network.timeinfo.tm_mday, LANG::mnths[network.timeinfo.tm_mon], network.timeinfo.tm_year+1900);
-          strlcpy(_datebuf, utf8To(_tmp, true), sizeof(_datebuf));
+          strlcpy(_datebuf, _tmp, sizeof(_datebuf));
           uint16_t _datewidth = strlen(_datebuf) * CHARWIDTH*_dateheight;
           gfx.setTextSize(_dateheight);
           #if DSP_MODEL==DSP_GC9A01A
@@ -987,7 +988,7 @@ void PlayListWidget::_printPLitem(uint8_t pos, const char* item){
     dsp.setTextColor(config.theme.playlist[plColor], config.theme.background);
     dsp.setCursor(TFT_FRAMEWDT, _plYStart + pos * _plItemHeight);
     dsp.fillRect(0, _plYStart + pos * _plItemHeight - 1, dsp.width(), _plItemHeight - 2, config.theme.background);
-    dsp.print(utf8To(item, true));
+    dsp.print(item);
   }
 }
 
@@ -1025,7 +1026,7 @@ void PlayListWidget::_printPLitem(uint8_t pos, const char* item){
   } else {
     dsp.setCursor(1, pos);
     char tmp[dsp.width()] = {0};
-    strlcpy(tmp, utf8To(item, true), dsp.width());
+    strlcpy(tmp, item, dsp.width());
     dsp.print(tmp);
   }
 }
@@ -1052,9 +1053,9 @@ void PlayListWidget::_printPLitemPaged(uint16_t stationId, uint16_t y, bool sele
     if (config.store.numplaylist) {
       char label[STATION_FIELD_LENGTH / 2 + 6];
       snprintf(label, sizeof(label), "%d %s", stationId, name);
-      dsp.print(utf8To(label, true));
+      dsp.print(label);
     } else {
-      dsp.print(utf8To(name, true));
+      dsp.print(name);
     }
   }
 }

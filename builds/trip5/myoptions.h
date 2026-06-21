@@ -345,6 +345,12 @@
 //#define CLOCKFONT YO_MONO
 //#define CLOCKFONT YO_CLASSIC
 
-#define DSP_LANGUAGE_ru_RU
+//#define DSP_LANGUAGE_ru_RU
+//#define DISPLAYFONT CHUNKY8X
+#define DISPLAYFONT X11
+//#define DISPLAYFONT GLCD
+
+#define COLOR_CLOCK_BG              100,   100,   255 // clock color background
+#define PLAYLIST_MODE_PAGED false
 
 #endif // myoptions_h

@@ -18,25 +18,16 @@
 //
 // L10N_INCLUDE : display language file
 // DSP_LOCALE : locale abbreviation of display language
-// L10N_CP_LATIN or L10N_CP_CYRILLIC select font for display
 // WEATHER_LANG : used by OpenWeather API
 // WEBUI_LOCALE : selects .json for localized WebUI
 //                default is same as DSP_LOCALE
 //                (WebUI can support more languages than Display)
 //==================================================
 
-/* Guard against multiple codepages */
-#if defined(L10N_CP_CYRILLIC) && defined(L10N_CP_LATIN)
-  #error define error in myoptions.h: L10N_CP_CYRILLIC and L10N_CP_LATIN cannot both be defined
-#endif
-
 #if __has_include("../locale/displayL10n_custom.h")
   #define L10N_INCLUDE "../locale/displayL10n_custom.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "custom"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "en"
@@ -46,9 +37,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "be_BY"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "be"
   #endif
@@ -56,9 +44,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_bg_BG.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "bg_BG"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "bg"
@@ -68,9 +53,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "bs_BA"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "hr"  /* Bosnian not available, using Croatian */
   #endif
@@ -78,9 +60,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_cs_CZ.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "cs_CZ"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "cz"
@@ -90,9 +69,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "da_DK"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "da"
   #endif
@@ -100,9 +76,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_de_DE.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "de_DE"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "de"
@@ -112,9 +85,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "el_GR"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "el"
   #endif
@@ -122,9 +92,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_en_US.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "en_US"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "en"
@@ -134,9 +101,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "es_ES"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "es"
   #endif
@@ -144,9 +108,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_et_EE.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "et_EE"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "en"  /* Estonian not available */
@@ -156,9 +117,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "fi_FI"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "fi"
   #endif
@@ -166,9 +124,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_fr_FR.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "fr_FR"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "fr"
@@ -178,9 +133,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "hr_HR"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "hr"
   #endif
@@ -188,9 +140,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_hu_HU.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "hu_HU"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "hu"
@@ -200,9 +149,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "is_IS"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "is"
   #endif
@@ -210,9 +156,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_kk_KZ.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "kk_KZ"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "en"  /* Kazakh not available */
@@ -222,9 +165,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "ky_KG"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "en"  /* Kyrgyz not available */
   #endif
@@ -232,9 +172,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_lt_LT.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "lt_LT"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "lt"
@@ -244,9 +181,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "lv_LV"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "la"
   #endif
@@ -254,9 +188,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_me_ME.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "me_ME"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "sr"  /* Montenegrin not available, using Serbian */
@@ -266,9 +197,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "mk_MK"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "mk"
   #endif
@@ -276,9 +204,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_mn_MN.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "mn_MN"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "en"  /* Mongolian not available */
@@ -288,9 +213,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "nl_NL"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "nl"
   #endif
@@ -298,9 +220,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_no_NO.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "no_NO"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "no"
@@ -310,9 +229,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "pl_PL"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "pl"
   #endif
@@ -320,9 +236,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_pt_PT.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "pt_PT"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "pt"
@@ -332,9 +245,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "ro_RO"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "ro"
   #endif
@@ -342,9 +252,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_ru_RU.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "ru_RU"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "ru"
@@ -354,9 +261,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "sk_SK"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "sk"
   #endif
@@ -364,9 +268,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_sl_SI.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "sl_SI"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "sl"
@@ -376,9 +277,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "sr_RS"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "sr"
   #endif
@@ -386,9 +284,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_sv_SE.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "sv_SE"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "sv"
@@ -398,9 +293,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "tg_TJ"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "en"  /* Tajik not available */
   #endif
@@ -408,9 +300,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_tr_TR.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "tr_TR"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "tr"
@@ -420,9 +309,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "uk_UA"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "uk"
   #endif
@@ -431,9 +317,6 @@
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "uz_UZ"
   #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_CYRILLIC
-  #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "en"  /* Uzbek not available */
   #endif
@@ -441,9 +324,6 @@
   #define L10N_INCLUDE "../locale/displayL10n_en_US.h"
   #ifndef DSP_LOCALE
     #define DSP_LOCALE "en_US"
-  #endif
-  #if !defined(L10N_CP_CYRILLIC) && !defined(L10N_CP_LATIN)
-    #define L10N_CP_LATIN
   #endif
   #ifndef WEATHER_LANG
     #define WEATHER_LANG "en"

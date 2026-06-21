@@ -13,6 +13,31 @@
 //   DSP_LCD                — character LCDs get TIME_SIZE=1, no bootlogo/font
 // ==========================================================================
 
+// ── DISPLAY FONT (Unicode GFXfont) ────────────────────────────────────
+// Select the main UI font (converted from BDF via bdf2adafruit3.py).
+// Options: MATRIXLIGHT (default), MATRIXLIGHTX, MATRIXCHUNKY, MATRIXCHUNKYX,
+//          X11 (Unix X11 5x8 fixed-width, 1421 glyphs).
+#if DISPLAYFONT == MATRIXLIGHT
+  #include <Fonts/MatrixLight8.h>
+  #define DSP_UNICODE_FONT MatrixLight8
+#elif DISPLAYFONT == MATRIXLIGHTX
+  #include <Fonts/MatrixLight8X.h>
+  #define DSP_UNICODE_FONT MatrixLight8X
+#elif DISPLAYFONT == MATRIXCHUNKY
+  #include <Fonts/MatrixChunky8.h>
+  #define DSP_UNICODE_FONT MatrixChunky8
+#elif DISPLAYFONT == MATRIXCHUNKYX
+  #include <Fonts/MatrixChunky8X.h>
+  #define DSP_UNICODE_FONT MatrixChunky8X
+#elif DISPLAYFONT == X11
+  #include <Fonts/UnixX11_6x9.h>
+  #define DSP_UNICODE_FONT Fixed
+#else
+  #warning "DISPLAYFONT value not recognized, defaulting to MATRIXLIGHT"
+  #include <Fonts/MatrixLight8.h>
+  #define DSP_UNICODE_FONT MatrixLight8
+#endif
+
 // ── TIME_SIZE ───────────────────────────────────────────────────────────
 // Outlier overrides (checked before generic resolution rules)
 #if DSP_MODEL==DSP_ST7920
@@ -109,3 +134,4 @@
 #endif
 
 #endif // dspfont_h
+

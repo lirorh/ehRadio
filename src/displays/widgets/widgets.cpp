@@ -168,6 +168,7 @@ void ScrollWidget::_setTextParams() {
   if (_config.textsize == 0) return;
   if(_fb->ready()){
   #ifdef PSFBUFFER
+    _fb->setFont((GFXfont *)&DisplayFont);
     _fb->setTextSize(_config.textsize);
     _fb->setTextColor(_fgcolor, _bgcolor);
   #endif
@@ -184,7 +185,7 @@ bool ScrollWidget::_checkIsScrollNeeded() {
 void ScrollWidget::setText(const char* txt) {
   strlcpy(_text, txt, _buffsize - 1);
   if (strcmp(_oldtext, _text) == 0) return;
-  _textwidth = strlen(_text) * _charWidth;
+  _textwidth = utf8_strlen(_text) * _charWidth;
   _x = _fb->ready()?0:_config.left;
   _doscroll = _checkIsScrollNeeded();
   if (dsp.getScrollId() == this) dsp.setScrollId(NULL);
@@ -261,12 +262,15 @@ void ScrollWidget::_draw() {
   if (_doscroll) {
     uint16_t fbl = _fb->ready()?0:_config.left;
     uint16_t _newx = fbl - _x;
-    const char* _cursor = _text + _newx / _charWidth;
-    uint16_t hiddenChars = _cursor - _text;
-    if (hiddenChars < strlen(_text)) {
+    uint16_t charOffset = _newx / _charWidth;
+    const char* _cursor = utf8_offset(_text, charOffset);
+    uint16_t hiddenChars = charOffset;
+    uint16_t textLen = utf8_strlen(_text);
+    if (hiddenChars < textLen) {
       snprintf(_window, _width / _charWidth + 1, "%s%s%s", _cursor, _sep, _text);
     } else {
-      const char* _scursor = _sep + (_cursor - (_text + strlen(_text)));
+      uint16_t sepOffset = hiddenChars - textLen;
+      const char* _scursor = utf8_offset(_sep, sepOffset);
       snprintf(_window, _width / _charWidth + 1, "%s%s", _scursor, _text);
     }
     if(_fb->ready()){

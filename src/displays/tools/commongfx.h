@@ -150,13 +150,42 @@ class DspCore: public yoDisplay {
     }
 
   private:
-    // Render a 16-bit codepoint using DSP_UNICODE_FONT.  All characters
+    // Render a 16-bit codepoint using DisplayFont.  All characters
     // (ASCII + non-ASCII) are rendered directly with background fill —
     // unlike the library's GFXfont drawChar which draws only foreground.
     void _writeGlyph(uint16_t cp) {
-      const GFXfont *f = &DSP_UNICODE_FONT;
+      const GFXfont *f = &DisplayFont;
       if (cp == '\n') { cursor_x = 0; cursor_y += (int16_t)textsize_y * (uint8_t)pgm_read_byte(&f->yAdvance); return; }
       if (cp == '\r') return;
+      // Icon codepoints (0x01-0x1F) — render directly from ICON_TABLE
+      if (cp >= 0x01 && cp <= 0x1F) {
+        const uint8_t* const *table = ICON_TABLE;
+        if (cp < 32) {
+          const uint8_t* icon = (const uint8_t*)pgm_read_ptr(&table[cp]);
+          if (icon) {
+            int16_t renderY = cursor_y;
+            if (gfxFont == NULL) renderY += (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
+            for (uint8_t row = 0; row < 8; row++) {
+              uint8_t line = pgm_read_byte(icon + row);
+              for (uint8_t col = 0; col < 6; col++) {
+                if (line & (0x20 >> col)) {
+                  if (textsize_x == 1 && textsize_y == 1)
+                    writePixel(cursor_x + col, renderY - 8 + row, textcolor);
+                  else
+                    writeFillRect(cursor_x + col * textsize_x, (renderY - 8 + row) * textsize_y, textsize_x, textsize_y, textcolor);
+                } else if (textbgcolor != textcolor) {
+                  if (textsize_x == 1 && textsize_y == 1)
+                    writePixel(cursor_x + col, renderY - 8 + row, textbgcolor);
+                  else
+                    writeFillRect(cursor_x + col * textsize_x, (renderY - 8 + row) * textsize_y, textsize_x, textsize_y, textbgcolor);
+                }
+              }
+            }
+            cursor_x += 6 * textsize_x;
+          }
+        }
+        return;
+      }
       // If a clock font is active (not ours, not NULL), let the library handle it.
       if (gfxFont != NULL && gfxFont != (GFXfont *)f) {
         Adafruit_GFX::write((uint8_t)(cp & 0xFF));

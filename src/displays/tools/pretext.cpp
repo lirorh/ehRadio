@@ -60,3 +60,23 @@ uint16_t foldAccent(uint16_t cp, const GFXfont *font) {
   if (cp >= 0x0179 && cp <= 0x017E) return 'Z';
   return 0;
 }
+
+// Count Unicode characters (not bytes) in a UTF-8 string.
+uint16_t utf8_strlen(const char *s) {
+  uint16_t count = 0;
+  while (*s) {
+    if ((*s & 0xC0) != 0x80) count++; // not a continuation byte
+    s++;
+  }
+  return count;
+}
+
+// Return byte pointer to the Nth Unicode character in a UTF-8 string.
+const char* utf8_offset(const char *s, uint16_t charIndex) {
+  uint16_t idx = 0;
+  while (*s && idx < charIndex) {
+    if ((*s & 0xC0) != 0x80) idx++; // not a continuation byte
+    s++;
+  }
+  return s;
+}

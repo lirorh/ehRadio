@@ -101,7 +101,7 @@ void Display::init() {
     analogSetAttenuation(ADC_0db);
   #endif
   dsp.initDisplay();
-  dsp.setFont((GFXfont *)&DSP_UNICODE_FONT);
+  dsp.setFont((GFXfont *)&DisplayFont);
   displayQueue=NULL;
   displayQueue = xQueueCreate(5, sizeof(requestParams_t));
   if (displayQueue==NULL) { log_e("[display] displayQueue alloc failed — rebooting"); ESP.restart(); }

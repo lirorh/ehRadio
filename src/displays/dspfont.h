@@ -18,24 +18,18 @@
 // Options: MATRIXLIGHT (default), MATRIXLIGHTX, MATRIXCHUNKY, MATRIXCHUNKYX,
 //          X11 (Unix X11 5x8 fixed-width, 1421 glyphs).
 #if DISPLAYFONT == MATRIXLIGHT
-  #include <Fonts/MatrixLight8.h>
-  #define DSP_UNICODE_FONT MatrixLight8
-#elif DISPLAYFONT == MATRIXLIGHTX
-  #include <Fonts/MatrixLight8X.h>
-  #define DSP_UNICODE_FONT MatrixLight8X
+  #include <Fonts/MatrixLight8x6.h>
+  #define DisplayFont MatrixLight8x6
 #elif DISPLAYFONT == MATRIXCHUNKY
-  #include <Fonts/MatrixChunky8.h>
-  #define DSP_UNICODE_FONT MatrixChunky8
-#elif DISPLAYFONT == MATRIXCHUNKYX
-  #include <Fonts/MatrixChunky8X.h>
-  #define DSP_UNICODE_FONT MatrixChunky8X
+  #include <Fonts/MatrixChunky8x6.h>
+  #define DisplayFont MatrixChunky8x6
 #elif DISPLAYFONT == X11
   #include <Fonts/UnixX11_6x9.h>
-  #define DSP_UNICODE_FONT Fixed
+  #define DisplayFont Fixed
 #else
-  #warning "DISPLAYFONT value not recognized, defaulting to MATRIXLIGHT"
-  #include <Fonts/MatrixLight8.h>
-  #define DSP_UNICODE_FONT MatrixLight8
+  #warning "DISPLAYFONT value not recognized, defaulting to X11"
+  #include <Fonts/UnixX11_6x9.h>
+  #define DisplayFont X11
 #endif
 
 // ── TIME_SIZE ───────────────────────────────────────────────────────────

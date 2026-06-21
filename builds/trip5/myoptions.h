@@ -343,11 +343,11 @@
 // CHUNKY6_PX is default...
 //#define CLOCKFONT CHUNKY6
 //#define CLOCKFONT YO_MONO
-//#define CLOCKFONT YO_CLASSIC
+#define CLOCKFONT YO_CLASSIC
 
-//#define DSP_LANGUAGE_ru_RU
-//#define DISPLAYFONT CHUNKY8X
-#define DISPLAYFONT X11
+#define DSP_LANGUAGE_ru_RU
+#define DISPLAYFONT MATRIXCHUNKY
+//#define DISPLAYFONT X11
 //#define DISPLAYFONT GLCD
 
 #define COLOR_CLOCK_BG              100,   100,   255 // clock color background

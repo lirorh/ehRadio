@@ -714,7 +714,7 @@ bool MyNetwork::buildWeatherString() {
     // Convert temperature based on user preference
     float temp_display = config.store.weathertempimp ? (WeatherCache::temp_c * 9.0 / 5.0 + 32.0) : WeatherCache::temp_c;
     float feels_display = config.store.weathertempimp ? (WeatherCache::feels_like_c * 9.0 / 5.0 + 32.0) : WeatherCache::feels_like_c;
-    const char *tempUnit = config.store.weathertempimp ? "\011F" : "\011C";
+    const char *tempUnit = config.store.weathertempimp ? "°F" : "°C";
     
     // Convert pressure based on user preference
     float press_display = config.store.weatherpressimp ? (WeatherCache::pressure_hpa * 0.750062) : WeatherCache::pressure_hpa;

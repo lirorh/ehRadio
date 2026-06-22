@@ -350,10 +350,10 @@
 //#define DISPLAYFONT MATRIXLIGHT
 //#define DISPLAYFONT X11
 //#define DISPLAYFONT GLCD
-//#define PRETEXT_ALLCAPS
+#define PRETEXT_ALLCAPS
 //#define PRETEXT_FOLDACCENT
 
 #define COLOR_CLOCK_BG              100,   100,   255 // clock color background
-#define PLAYLIST_MODE_PAGED false
+//#define PLAYLIST_MODE_PAGED false
 
 #endif // myoptions_h

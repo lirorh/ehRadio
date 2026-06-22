@@ -1,4 +1,4 @@
-#ifndef psframebuffer_h
+ #ifndef psframebuffer_h
 #define psframebuffer_h
 
 #ifdef PSFBUFFER
@@ -134,7 +134,7 @@ class  psFrameBuffer : public Adafruit_GFX {
                   if (textsize_x == 1 && textsize_y == 1)
                     drawPixel(cursor_x + col, renderY - 8 + row, textcolor);
                   else
-                    writeFillRect(cursor_x + col * textsize_x, (renderY - 8 + row) * textsize_y, textsize_x, textsize_y, textcolor);
+                    writeFillRect(cursor_x + col * textsize_x, renderY + (int16_t)(row - 8) * textsize_y, textsize_x, textsize_y, textcolor);
                 }
               }
             }

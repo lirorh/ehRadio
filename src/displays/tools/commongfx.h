@@ -163,8 +163,7 @@ class DspCore: public yoDisplay {
         if (cp < 32) {
           const uint8_t* icon = (const uint8_t*)pgm_read_ptr(&table[cp]);
           if (icon) {
-            int16_t renderY = cursor_y;
-            if (gfxFont == NULL) renderY += (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
+            int16_t renderY = cursor_y + (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
             for (uint8_t row = 0; row < 8; row++) {
               uint8_t line = pgm_read_byte(icon + row);
               for (uint8_t col = 0; col < 6; col++) {
@@ -172,12 +171,12 @@ class DspCore: public yoDisplay {
                   if (textsize_x == 1 && textsize_y == 1)
                     writePixel(cursor_x + col, renderY - 8 + row, textcolor);
                   else
-                    writeFillRect(cursor_x + col * textsize_x, (renderY - 8 + row) * textsize_y, textsize_x, textsize_y, textcolor);
+                    writeFillRect(cursor_x + col * textsize_x, renderY + (int16_t)(row - 8) * textsize_y, textsize_x, textsize_y, textcolor);
                 } else if (textbgcolor != textcolor) {
                   if (textsize_x == 1 && textsize_y == 1)
                     writePixel(cursor_x + col, renderY - 8 + row, textbgcolor);
                   else
-                    writeFillRect(cursor_x + col * textsize_x, (renderY - 8 + row) * textsize_y, textsize_x, textsize_y, textbgcolor);
+                    writeFillRect(cursor_x + col * textsize_x, renderY + (int16_t)(row - 8) * textsize_y, textsize_x, textsize_y, textbgcolor);
                 }
               }
             }

@@ -68,39 +68,9 @@ The full list is viewable in `locale.h`.
 
 ---
 
-## Codepages — `L10N_CODEPAGE`
 
-The codepage controls **which extended character set is baked into the GLCD font** and therefore which characters can be rendered natively without transliteration.
 
-| Constant | Value | Meaning |
-|---|:---:|---|
-| `L10N_CP_LATIN` | 1 | Latin extended glyphs (accented Latin letters: à, é, ü, ø, etc.) |
-| `L10N_CP_CYRILLIC` | 2 | Cyrillic glyphs (А–Я, plus language-specific extras like Є, Ї, Ґ, Ё, І) |
 
-### Auto-detection
-
-You do **not** need to set `L10N_CODEPAGE` manually. The preprocessor in `options.h` automatically selects the correct codepage based on `DSP_LANGUAGE`:
-
-- Cyrillic is automatically selected for: `ru_RU`, `uk_UA`, `be_BY`, `bg_BG`, `mk_MK`, `sr_RS`, `me_ME`, `uz_UZ`, `kk_KZ`, `tg_TJ`, `ky_KG`, `mn_MN`
-- All other languages default to `L10N_CP_LATIN`
-
-### Forcing a codepage
-
-To override the auto-detected codepage, add to `myoptions.h`:
-
-```cpp
-#define L10N_CP_CYRILLIC   // or L10N_CP_LATIN
-```
-
-### Effect on rendering
-
-The active codepage affects three things:
-
-1. **Which GLCD font file is linked** — `glcdfont_Latin.c` or `glcdfont_Cyrillic.c` (selected by `builds/platformio_pre_replace_font.py` during the build). Display drivers use the static `font[]` array provided by the Adafruit GFX library; no runtime pointer or switching is involved.
-2. **Which characters `shouldPreserveChar()` passes through** — preserved characters are written as raw UTF-8 bytes directly to the display buffer; non-preserved characters are transliterated.
-3. **Case handling** — both font variants carry **uppercase glyphs only**. In both codepages, lowercase extended characters are accepted and rendered using the uppercase glyph. The mechanism differs:
-   - **Cyrillic:** lowercase codepoints U+0430–U+044F fall inside the preserve range and are explicitly remapped to their uppercase equivalents U+0410–U+042F before being written to the output buffer.
-   - **Latin:** both the uppercase and lowercase codepoint for each accented letter are listed in `LATIN_PRESERVE[]`, and `utf8Latin.cpp` maps both to the same (uppercase) glyph slot — e.g. `à` (C3 A0) and `À` (C3 80) both write glyph index `0x80`, which holds the uppercase `À` bitmap.
 
 ---
 
@@ -330,7 +300,7 @@ This is sufficient for characters whose script is already covered by the font sc
 
 ---
 
-## How to Add a New Language
+## How to Add a New Language For Displays
 
 1. **Copy an existing locale file** as a starting point:
    ```

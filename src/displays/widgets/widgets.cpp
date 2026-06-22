@@ -770,6 +770,12 @@ void ClockWidget::_getTimeBounds() {
         gfx.setCursor(_linesleft+_space+1, _top()-_timeheight);
       }
       gfx.setTextColor(secondsColor, config.theme.background);
+      // Clear seconds area before drawing (no background fill in _writeGlyph)
+      if (_fb->ready()) {
+        uint16_t sx = !_fullclock ? _left()+_timewidth+_space : _linesleft+_space+1;
+        uint16_t sy = !_fullclock ? _top()-_timeheight+_space : _top()-_timeheight;
+        gfx.fillRect(sx, sy, 2 * CHARWIDTH * _superfont, CHARHEIGHT * _superfont, config.theme.background);
+      }
       sprintf(_tmp, "%02d", network.timeinfo.tm_sec);
       gfx.print(_tmp);
     }

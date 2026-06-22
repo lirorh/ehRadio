@@ -30,6 +30,7 @@ class  psFrameBuffer : public Adafruit_GFX {
       _ready = false;
       if(buffer) {
         _dspl->fillRect(_ll, _tt, _ww, _hh, _bgcolor);
+        psramFrameBufferBytes -= _hh * _ww * sizeof(uint16_t);
         free(buffer);
       }
       buffer = nullptr;
@@ -101,7 +102,7 @@ class  psFrameBuffer : public Adafruit_GFX {
       #if (defined(USE_FBUFFER) && USE_FBUFFER)
         if(psramInit()) {
           buffer = (uint16_t*) ps_calloc(_hh * _ww, sizeof(uint16_t));
-          psramFrameBufferBytes = _hh * _ww * sizeof(uint16_t);
+          psramFrameBufferBytes += _hh * _ww * sizeof(uint16_t);
         } else {
           buffer = (uint16_t*) calloc(_hh * _ww, sizeof(uint16_t));
         }
@@ -124,8 +125,7 @@ class  psFrameBuffer : public Adafruit_GFX {
         if (cp < 32) {
           const uint8_t* icon = (const uint8_t*)pgm_read_ptr(&table[cp]);
           if (icon) {
-            int16_t renderY = cursor_y;
-            if (gfxFont == NULL) renderY += (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
+            int16_t renderY = cursor_y + (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
             for (uint8_t row = 0; row < 8; row++) {
               uint8_t line = pgm_read_byte(icon + row);
               for (uint8_t col = 0; col < 6; col++) {
@@ -152,16 +152,14 @@ class  psFrameBuffer : public Adafruit_GFX {
         GFXglyph *glyph = (GFXglyph *)pgm_read_ptr(&f->glyph);
         glyph += (cp - first);
         uint8_t w = pgm_read_byte(&glyph->width), h = pgm_read_byte(&glyph->height);
-        int16_t renderY = cursor_y;
-        if (gfxFont == NULL) renderY += (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
+        int16_t renderY = cursor_y + (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
         if (w > 0 && h > 0) {
           int8_t xo = (int8_t)pgm_read_byte(&glyph->xOffset);
           int8_t yo = (int8_t)pgm_read_byte(&glyph->yOffset);
           if (wrap && (cursor_x + textsize_x * (xo + w) > _width)) {
             cursor_x = 0;
             cursor_y += (int16_t)textsize_y * (uint8_t)pgm_read_byte(&f->yAdvance);
-            renderY = cursor_y;
-            if (gfxFont == NULL) renderY += (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
+            renderY = cursor_y + (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
           }
           uint8_t *bitmap = (uint8_t *)pgm_read_ptr(&f->bitmap);
           uint16_t bo = pgm_read_word(&glyph->bitmapOffset);

@@ -1,8 +1,35 @@
 #include "pretext.h"
 
+// Convert lowercase letters to uppercase (Latin + Cyrillic).
+// Used only when DISPLAYFONT_ALLCAPS is defined (font testing).
+uint16_t allCaps(uint16_t cp) {
+  // ASCII a-z → A-Z
+  if (cp >= 'a' && cp <= 'z') return cp - 32;
+  // Latin-1 Supplement lowercase accented → uppercase
+  if (cp >= 0x00E0 && cp <= 0x00F6 && cp != 0x00F7) return cp - 32;
+  if (cp == 0x00F8) return 0x00D8;  // ø → Ø
+  if (cp >= 0x00F9 && cp <= 0x00FE) return cp - 32;
+  if (cp == 0x00FF) return 0x0178;  // ÿ → Ÿ
+  // Latin Extended-A lowercase → uppercase
+  if (cp >= 0x0101 && cp <= 0x017E && (cp & 1)) return cp - 1;  // odd = lowercase
+  // Cyrillic lowercase а-я → А-Я (U+0430–U+044F → U+0410–U+042F)
+  if (cp >= 0x0430 && cp <= 0x044F) return cp - 32;
+  // Cyrillic lowercase ё → Ё
+  if (cp == 0x0451) return 0x0401;
+  // Cyrillic Extended lowercase → uppercase
+  if (cp >= 0x0460 && cp <= 0x0481 && (cp & 1)) return cp - 1;
+  if (cp >= 0x048C && cp <= 0x04BF && (cp & 1)) return cp - 1;
+  if (cp >= 0x04D0 && cp <= 0x04FF && (cp & 1)) return cp - 1;
+  return cp;  // not lowercase, return unchanged
+}
+
 // Pre-render text processing pipeline.  Add new preprocessors here.
 uint16_t preText(uint16_t cp, const GFXfont *font) {
-  return foldAccent(cp, font);
+  #ifdef DISPLAYFONT_ALLCAPS
+    return allcaps(foldAccent(cp, font));
+  #else
+    return foldAccent(cp, font);
+  #endif
 }
 
 // Strip diacritical marks from Latin-1 and Latin Extended-A characters.

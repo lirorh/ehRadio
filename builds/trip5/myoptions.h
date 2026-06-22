@@ -347,9 +347,10 @@
 
 //#define DSP_LANGUAGE_ru_RU
 //#define DISPLAYFONT MATRIXCHUNKY
-//#define DISPLAYFONT MATRIXLIGHT
+#define DISPLAYFONT MATRIXLIGHT
 //#define DISPLAYFONT X11
 //#define DISPLAYFONT GLCD
+#define DISPLAYFONT_ALLCAPS
 
 #define COLOR_CLOCK_BG              100,   100,   255 // clock color background
 #define PLAYLIST_MODE_PAGED false

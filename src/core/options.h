@@ -849,6 +849,11 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define STREAM_TIMEOUT_MS 3000
 #endif
 
+// PSRAM Frame Buffer
+#ifndef USE_FBUFFER
+  #define USE_FBUFFER true // framebuffer: best to leave this on (will use PSRAM if available and SRAM if not)
+#endif
+
 // PSRAM Audio Buffer
 // WebUI files cache: (up to) 300KB + Decoder Output: 52KB + Display framebuffer (480×320): 74KB = 426KB... leaves 598KB free in 1MB or 1598 free in 2MB
 // To be fair, in real-world use, above 300KB may be excessive...

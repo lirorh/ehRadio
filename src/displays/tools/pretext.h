@@ -10,6 +10,7 @@
 // or 0 if the character should be silently dropped.
 uint16_t preText(uint16_t cp, const GFXfont *font);
 uint16_t foldAccent(uint16_t cp, const GFXfont *font);
+uint16_t allCaps(uint16_t cp);
 
 // Count Unicode characters (not bytes) in a UTF-8 string.
 uint16_t utf8_strlen(const char *s);

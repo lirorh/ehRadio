@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <Adafruit_GFX.h>   // GFXfont, GFXglyph, pgm_read_*
+#include "../../core/options.h"  // PRETEXT_* macros
 
 // Pre-render text processing pipeline.
 // Currently only does accent folding, but can chain other preprocessors.

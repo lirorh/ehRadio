@@ -1,7 +1,23 @@
 #include "pretext.h"
 
+// Pre-render text processing pipeline.  Add new preprocessors here.
+// No-op unless PRETEXT_FOLDACCENT or PRETEXT_ALLCAPS is defined.
+uint16_t preText(uint16_t cp, const GFXfont *font) {
+  #if defined(PRETEXT_FOLDACCENT) || defined(PRETEXT_ALLCAPS)
+    #ifdef PRETEXT_ALLCAPS
+      cp = allCaps(cp);
+    #endif
+    #ifdef PRETEXT_FOLDACCENT
+      cp = foldAccent(cp, font);
+    #endif
+    return cp;
+  #else
+    return cp;  // no-op when no preprocessors enabled
+  #endif
+}
+
 // Convert lowercase letters to uppercase (Latin + Cyrillic).
-// Used only when DISPLAYFONT_ALLCAPS is defined (font testing).
+// Used only when PRETEXT_ALLCAPS is defined (font testing).
 uint16_t allCaps(uint16_t cp) {
   // ASCII a-z → A-Z
   if (cp >= 'a' && cp <= 'z') return cp - 32;
@@ -21,15 +37,6 @@ uint16_t allCaps(uint16_t cp) {
   if (cp >= 0x048C && cp <= 0x04BF && (cp & 1)) return cp - 1;
   if (cp >= 0x04D0 && cp <= 0x04FF && (cp & 1)) return cp - 1;
   return cp;  // not lowercase, return unchanged
-}
-
-// Pre-render text processing pipeline.  Add new preprocessors here.
-uint16_t preText(uint16_t cp, const GFXfont *font) {
-  #ifdef DISPLAYFONT_ALLCAPS
-    return allcaps(foldAccent(cp, font));
-  #else
-    return foldAccent(cp, font);
-  #endif
 }
 
 // Strip diacritical marks from Latin-1 and Latin Extended-A characters.

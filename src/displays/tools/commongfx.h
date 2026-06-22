@@ -186,6 +186,9 @@ class DspCore: public yoDisplay {
         }
         return;
       }
+      // Run optional pre-processing (allcaps, accent folding)
+      cp = preText(cp, f);
+
       // If a clock font is active (not ours, not NULL), let the library handle it.
       if (gfxFont != NULL && gfxFont != (GFXfont *)f) {
         Adafruit_GFX::write((uint8_t)(cp & 0xFF));
@@ -230,8 +233,8 @@ class DspCore: public yoDisplay {
           }
         }
         cursor_x += (int16_t)pgm_read_byte(&glyph->xAdvance) * textsize_x;
-      } else if (cp >= 256) {
-        uint16_t mapped = preText(cp, f);
+      } else {
+        uint16_t mapped = foldAccent(cp, f);
         if (mapped && mapped != cp) { _writeGlyph(mapped); return; }
       }
     }

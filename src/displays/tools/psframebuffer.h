@@ -5,6 +5,7 @@
 #include <Adafruit_GFX.h>
 #include "../dspfont.h"               // DSP_UNICODE_FONT definition
 #include "../icons.h"                  // ICON_TABLE for icon rendering
+#include "pretext.h"                   // preText() pipeline
 
 /* PSRAM framebuffer size tracker — updated by psFrameBuffer on allocation */
 extern size_t psramFrameBufferBytes;
@@ -142,6 +143,9 @@ class  psFrameBuffer : public Adafruit_GFX {
         }
         return;
       }
+      // Run optional pre-processing (allcaps, accent folding)
+      cp = preText(cp, f);
+
       if (gfxFont != NULL && gfxFont != (GFXfont *)f) {
         Adafruit_GFX::write((uint8_t)(cp & 0xFF));
         return;
@@ -178,6 +182,9 @@ class  psFrameBuffer : public Adafruit_GFX {
           }
         }
         cursor_x += (int16_t)pgm_read_byte(&glyph->xAdvance) * textsize_x;
+      } else {
+        uint16_t mapped = foldAccent(cp, f);
+        if (mapped && mapped != cp) { _writeGlyph(mapped); return; }
       }
     }
 

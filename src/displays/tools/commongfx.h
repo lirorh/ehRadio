@@ -149,6 +149,10 @@ class DspCore: public yoDisplay {
       return 1;
     }
 
+    /* Reset the UTF-8 decoder state so a partial sequence from a previous
+       print() call does not corrupt the first glyph of the next frame. */
+    void resetUTF8() { _utf8_remaining = 0; }
+
   private:
     // Render a 16-bit codepoint using DisplayFont.  All characters
     // (ASCII + non-ASCII) are rendered directly with background fill —
@@ -183,6 +187,14 @@ class DspCore: public yoDisplay {
             cursor_x += 6 * textsize_x;
           }
         }
+        return;
+      }
+      // Space (0x20) — advance cursor by one character cell.  Some fonts
+      // start at 0x21; without this, space falls to foldAccent and the
+      // cursor never advances, causing characters to run together.
+      if (cp == ' ') {
+        uint8_t spaceAdv = pgm_read_byte(&((GFXglyph *)pgm_read_ptr(&f->glyph))->xAdvance);
+        cursor_x += (int16_t)spaceAdv * textsize_x;
         return;
       }
       // Run optional pre-processing (allcaps, accent folding)
@@ -235,6 +247,11 @@ class DspCore: public yoDisplay {
       } else {
         uint16_t mapped = foldAccent(cp, f);
         if (mapped && mapped != cp) { _writeGlyph(mapped); return; }
+        // Unrenderable codepoint (not in font, no accent mapping).
+        // Advance cursor by one character cell so scroll width stays
+        // consistent and missing glyphs appear as blank space.
+        uint8_t spaceAdv = pgm_read_byte(&((GFXglyph *)pgm_read_ptr(&f->glyph))->xAdvance);
+        cursor_x += (int16_t)spaceAdv * textsize_x;
       }
     }
 

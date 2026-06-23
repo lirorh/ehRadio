@@ -23,6 +23,10 @@ class  psFrameBuffer : public Adafruit_GFX {
       return 1;
     }
 
+    /* Reset the UTF-8 decoder state so a partial sequence from a previous
+       print() call does not corrupt the first glyph of the next frame. */
+    void resetUTF8() { _utf8_remaining = 0; }
+
     psFrameBuffer(int16_t w, int16_t h):Adafruit_GFX(w, h){ setTextWrap(false); cp437(true); }
     ~psFrameBuffer(){ freeBuffer(); }
     bool ready() { return _ready; }
@@ -143,6 +147,12 @@ class  psFrameBuffer : public Adafruit_GFX {
         }
         return;
       }
+      // Space (0x20) — advance cursor by one character cell.
+      if (cp == ' ') {
+        uint8_t spaceAdv = pgm_read_byte(&((GFXglyph *)pgm_read_ptr(&f->glyph))->xAdvance);
+        cursor_x += (int16_t)spaceAdv * textsize_x;
+        return;
+      }
       // Run optional pre-processing (allcaps, accent folding)
       cp = preText(cp, f);
 
@@ -185,6 +195,9 @@ class  psFrameBuffer : public Adafruit_GFX {
       } else {
         uint16_t mapped = foldAccent(cp, f);
         if (mapped && mapped != cp) { _writeGlyph(mapped); return; }
+        // Unrenderable codepoint — advance by one character cell.
+        uint8_t spaceAdv = pgm_read_byte(&((GFXglyph *)pgm_read_ptr(&f->glyph))->xAdvance);
+        cursor_x += (int16_t)spaceAdv * textsize_x;
       }
     }
 

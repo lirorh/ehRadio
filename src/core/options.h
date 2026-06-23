@@ -420,6 +420,10 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef VS_PATCH_ENABLE
   #define VS_PATCH_ENABLE false /* Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V. */
 #endif
+#if (VS_PATCH_ENABLE==false && VS1053_CS != 255) // unfortunately, the VU Meter doesn't work on VS1053 without the patch
+  #undef SHOW_VU_METER
+  #define SHOW_VU_METER false
+#endif
 
 /* --- ESP32 INTERNAL DAC --- */
 /* The ESP32 has an internal DAC - these are the pins needed to use it */

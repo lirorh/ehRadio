@@ -3,10 +3,10 @@ Trip5's Notes about the fonts used by the clock:
 This folder ONLY contains fonts used by the clock (and on the volume page screen)
 
 yofont5x7 and yofont10x14
-are ONLY used by ILI9225.cpp
+were ONLY used by ILI9225 - but eliminated at some point...
 
 TinyFont5 and TinyFont6
-are ONLY used by displayN5110.h (Nokia)
+are ONLY used by displayN5110.h (Nokia) for Clock
 
 font15 = Chunky6_15, Chunky6_15_px
 displaySH1106.h
@@ -46,7 +46,7 @@ Chunky6 is a Trip5 font designed for pixel displays: https://github.com/trip5/Ma
 
 Let's generate a font from a PNG using my own tool to make the "0123456789:" graphic: https://trip5.github.io/Matrix-Fonts/renderer.html
 Numbers are a fixed-width and the colon is half of that width - this including spaces.  The result is the total width will be divisible by 21.
-Nnote that it adds a 1 or 2 pixel border all around and we then add black borders and trim
+Note that it adds a 1 or 2 pixel border all around and we then add black borders and trim
 so that there are equal numbers of black pixels left-right and top-bottom, odd ones getting extra space on left and bottom
 
 Chunky6_70:    pixel size 14

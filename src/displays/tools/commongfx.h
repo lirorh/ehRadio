@@ -130,11 +130,13 @@ class DspCore: public yoDisplay {
       if (c < 0x80) {
         _utf8_cp = c;
         _utf8_remaining = 0;
+        startWrite();
         _writeGlyph(_utf8_cp);
+        endWrite();
       } else if (c < 0xC0) {
         if (_utf8_remaining > 0) {
           _utf8_cp = (_utf8_cp << 6) | (c & 0x3F);
-          if (--_utf8_remaining == 0) _writeGlyph(_utf8_cp);
+          if (--_utf8_remaining == 0) { startWrite(); _writeGlyph(_utf8_cp); endWrite(); }
         }
       } else if (c < 0xE0) {
         _utf8_cp = c & 0x1F;

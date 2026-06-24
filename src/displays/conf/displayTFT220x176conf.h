@@ -16,7 +16,7 @@
 #define BOOTLOGOTOP     28
 
 /* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
-const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 2, WA_LEFT }, 140, true, DSP_WIDTH+10, SCROLLDELAY, 2, SCROLLTIME*3/2 };
+const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT, TFT_FRAMEWDT, 2, WA_LEFT }, 140, true, DSP_WIDTH+10, SCROLLDELAY, 2, SCROLLTIME*7/4 };
 const ScrollConfig title1Conf     PROGMEM = {{ TFT_FRAMEWDT, 28, 1, WA_LEFT }, 140, true, MAX_WIDTH-TITLE_FIX, SCROLLDELAY, 1, SCROLLTIME };
 const ScrollConfig title2Conf     PROGMEM = {{ TFT_FRAMEWDT, 40, 1, WA_LEFT }, 140, true, MAX_WIDTH-TITLE_FIX, SCROLLDELAY, 1, SCROLLTIME };
 const ScrollConfig playlistConf   PROGMEM = {{ TFT_FRAMEWDT, 80, 2, WA_LEFT }, 140, true, DSP_WIDTH+10, SCROLLDELAY/5, 2, SCROLLTIME };

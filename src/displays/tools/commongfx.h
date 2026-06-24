@@ -130,13 +130,11 @@ class DspCore: public yoDisplay {
       if (c < 0x80) {
         _utf8_cp = c;
         _utf8_remaining = 0;
-        startWrite();
         _writeGlyph(_utf8_cp);
-        endWrite();
       } else if (c < 0xC0) {
         if (_utf8_remaining > 0) {
           _utf8_cp = (_utf8_cp << 6) | (c & 0x3F);
-          if (--_utf8_remaining == 0) { startWrite(); _writeGlyph(_utf8_cp); endWrite(); }
+          if (--_utf8_remaining == 0) _writeGlyph(_utf8_cp);
         }
       } else if (c < 0xE0) {
         _utf8_cp = c & 0x1F;
@@ -169,6 +167,7 @@ class DspCore: public yoDisplay {
         if (cp < 32) {
           const uint8_t* icon = (const uint8_t*)pgm_read_ptr(&table[cp]);
           if (icon) {
+            startWrite();
             int16_t renderY = cursor_y + (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
             for (uint8_t row = 0; row < 8; row++) {
               uint8_t line = pgm_read_byte(icon + row);
@@ -186,6 +185,7 @@ class DspCore: public yoDisplay {
                 }
               }
             }
+            endWrite();
             cursor_x += 6 * textsize_x;
           }
         }
@@ -216,6 +216,7 @@ class DspCore: public yoDisplay {
         int16_t renderY = cursor_y;
         if (gfxFont == NULL) renderY += (int16_t)pgm_read_byte(&f->yAdvance) * textsize_y;
         if (w > 0 && h > 0) {
+          startWrite();
           int8_t xo = (int8_t)pgm_read_byte(&glyph->xOffset);
           int8_t yo = (int8_t)pgm_read_byte(&glyph->yOffset);
           if (wrap && (cursor_x + textsize_x * (xo + w) > _width)) {
@@ -244,6 +245,7 @@ class DspCore: public yoDisplay {
               bit >>= 1;
             }
           }
+          endWrite();
         }
         cursor_x += (int16_t)pgm_read_byte(&glyph->xAdvance) * textsize_x;
       } else {

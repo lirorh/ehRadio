@@ -245,12 +245,10 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /*          X11(4), GLCD(5)                                                      */
 #define MATRIXLIGHT     0
 #define MATRIXCHUNKY    1
-#define MATRIXLIGHTX    2
-#define MATRIXCHUNKYX   3
-#define X11             4   // Unix X11 6x9 fixed-width
+#define X11             2   // Unix X11 6x9 fixed-width
 
 #ifndef DISPLAYFONT
-  #define DISPLAYFONT X11
+  #define DISPLAYFONT MATRIXLIGHT
 #endif
 
 /* Define your clock/volume page font as #define CLOCKFONT CHUNKY6 */
@@ -292,6 +290,14 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define PLAYLIST_MODE_PAGED false
   #endif
 #endif
+
+/* Scrolling Speed: may be manually tweaked using myoptions.h */
+/* check dspcore.h for actual defaults, especially for LCD displays */
+// pixels per second = scrolldelta * 1000 / scrolltime]
+// Here are the defaults for OLED and TFT displays:
+// #define SCROLLDELAY 5000 // delay time (ms) for widgets: meta, title1, title2 / playlist mode scroll divides by 5
+// #define SCROLLTIME 15 // time (ms) per pixel-column movement (a column of font pixels, not display pixels)
+// if using an LCD screen, check dspcore.h for safe values
 
 /* ============================== SPI BUSES AND PINS ============================== */
 

@@ -5,7 +5,6 @@
 #ifndef displayLCD128x64conf_h
 #define displayLCD128x64conf_h
 
-
 #define TFT_FRAMEWDT    1
 #define MAX_WIDTH       DSP_WIDTH-TFT_FRAMEWDT*2
 
@@ -16,13 +15,13 @@
 #define BOOTLOGOTOP     8
 
 /* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
-const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT+1, TFT_FRAMEWDT+1, 1, WA_LEFT }, 140, true, MAX_WIDTH-2, 5000, 6, 250 };
-const ScrollConfig title1Conf     PROGMEM = {{ 0, 13, 1, WA_LEFT }, 140, true, DSP_WIDTH-6*4, 5000, 6, 250 };
-const ScrollConfig title2Conf     PROGMEM = {{ 0, 22, 1, WA_LEFT }, 140, true, DSP_WIDTH, 5000, 6, 250 };
-const ScrollConfig playlistConf   PROGMEM = {{ TFT_FRAMEWDT, 30, 1, WA_LEFT }, 140, true, MAX_WIDTH, 500, 6, 250 };
-const ScrollConfig apTitleConf    PROGMEM = {{ TFT_FRAMEWDT+1, TFT_FRAMEWDT+1, 1, WA_CENTER }, 140, false, MAX_WIDTH-2, 0, 6, 250 };
-const ScrollConfig apSettConf     PROGMEM = {{ TFT_FRAMEWDT, 64-7, 1, WA_LEFT }, 140, false, MAX_WIDTH, 0, 6, 250 };
-const ScrollConfig weatherConf    PROGMEM = {{ 0, 64-11, 1, WA_LEFT }, 140, true, DSP_WIDTH-6*4, 0, 6, 250 }; // ??????!!
+const ScrollConfig metaConf       PROGMEM = {{ TFT_FRAMEWDT+1, TFT_FRAMEWDT+1, 1, WA_LEFT }, 140, true, MAX_WIDTH-2, SCROLLDELAY, 5, SCROLLTIME };
+const ScrollConfig title1Conf     PROGMEM = {{ 0, 13, 1, WA_LEFT }, 140, true, DSP_WIDTH-6*4, SCROLLDELAY, 5, SCROLLTIME };
+const ScrollConfig title2Conf     PROGMEM = {{ 0, 22, 1, WA_LEFT }, 140, true, DSP_WIDTH, SCROLLDELAY, 5, SCROLLTIME };
+const ScrollConfig playlistConf   PROGMEM = {{ TFT_FRAMEWDT, 30, 1, WA_LEFT }, 140, true, MAX_WIDTH, SCROLLDELAY/5, 5, SCROLLTIME };
+const ScrollConfig apTitleConf    PROGMEM = {{ TFT_FRAMEWDT+1, TFT_FRAMEWDT+1, 1, WA_CENTER }, 140, false, MAX_WIDTH-2, 0, 5, SCROLLTIME };
+const ScrollConfig apSettConf     PROGMEM = {{ TFT_FRAMEWDT, 64-7, 1, WA_LEFT }, 140, false, MAX_WIDTH, 0, 5, SCROLLTIME };
+const ScrollConfig weatherConf    PROGMEM = {{ 0, 64-11, 1, WA_LEFT }, 140, true, DSP_WIDTH-6*4, 0, 5, SCROLLTIME };
 
 /* BACKGROUNGC9106DS  */                 /* {{ left, top, fontsize, align }, width, height, outlined } */
 const FillConfig metaBGConf       PROGMEM = {{ 0, 0,  0, WA_LEFT }, DSP_WIDTH, 11, false };
@@ -66,3 +65,4 @@ const MoveConfig weatherMove      PROGMEM = { 0, 0, -1 };
 const MoveConfig weatherMoveVU    PROGMEM = { 0, 0, -1 };
 
 #endif
+

@@ -181,11 +181,13 @@ class  psFrameBuffer : public Adafruit_GFX {
           for (uint8_t yy = 0; yy < h; yy++) {
             for (uint8_t xx = 0; xx < w; xx++) {
               if (bit == 0) { bits = pgm_read_byte(&bitmap[bo++]); bit = 0x80; }
-              if (bits & bit) {
-                if (textsize_x == 1 && textsize_y == 1)
-                  drawPixel(cursor_x + xo + xx, renderY + yo + yy, textcolor);
-                else
-                  writeFillRect(cursor_x + (xo + xx) * textsize_x, renderY + (yo + yy) * textsize_y, textsize_x, textsize_y, textcolor);
+              if ((int16_t)(xo + xx) < (int16_t)pgm_read_byte(&glyph->xAdvance)) {
+                if (bits & bit) {
+                  if (textsize_x == 1 && textsize_y == 1)
+                    drawPixel(cursor_x + xo + xx, renderY + yo + yy, textcolor);
+                  else
+                    writeFillRect(cursor_x + (xo + xx) * textsize_x, renderY + (yo + yy) * textsize_y, textsize_x, textsize_y, textcolor);
+                }
               }
               bit >>= 1;
             }

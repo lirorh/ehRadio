@@ -810,7 +810,7 @@ void ClockWidget::_getTimeBounds() {
       // Clear seconds area before drawing — GFXfont drawChar only paints
       // foreground pixels, so narrower glyphs (e.g. "1" after "0") leave
       // leftover pixels from the previous character.
-      {
+      if (Clock_GFXfontPtr != NULL) {
         uint16_t sx = !_fullclock ? _left()+_timewidth+_space : _linesleft+_space+1;
         uint16_t sy = !_fullclock ? _top()-_timeheight+_space : _top()-_timeheight;
         gfx.fillRect(sx, sy, 2 * CHARWIDTH * _superfont, CHARHEIGHT * _superfont, config.theme.background);

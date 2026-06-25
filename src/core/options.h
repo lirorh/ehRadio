@@ -61,13 +61,13 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #define DSP_ILI9488     7 // 480x320 (default)
 #define DSP_ILI9486     8 // 480x320 (default) (not fully tested - see notes inside the library regarding gamma correction)
 #define DSP_NOKIA5110   9 // 84x48 (fixed in displayN5110.h)
-#define DSP_SH1106      10 // 128x64 (default): SPI or I2C  (auto-detected from pins)
-#define DSP_SH1107      11 // 128x64 (default): SPI or I2C  (auto-detected from pins)
-#define DSP_SSD1305     12 // 128x64 (default): SPI or I2C  (auto-detected from pins)
-#define DSP_SSD1306     13 // 128x64 (default): SPI or I2C  (auto-detected from pins)
+#define DSP_SH1106      10 // 128x64 (default): SPI or I2C (auto-detected from pins)
+#define DSP_SH1107      11 // 128x64 (default): SPI or I2C (auto-detected from pins)
+#define DSP_SSD1305     12 // 128x64 (default): SPI or I2C (auto-detected from pins)
+#define DSP_SSD1306     13 // 128x64 (default): SPI or I2C (auto-detected from pins)
 #define DSP_SSD1322     14 // 256x64 (default): SPI
 #define DSP_SSD1327     15 // 128x128 (default): SPI or I2C (auto-detected from pins)
-#define DSP_ST7735      16 // 160x128 / 128x128 / 160x80 (fixed, derived from DTYPE in displayST7735.h)
+#define DSP_ST7735      16 // 160x128 / 128x128 / 160x80 (dimensions derived from DTYPE in displayST7735.h)
 #define DSP_ST7789      17 // 320x240 (default)
 #define DSP_ST7796      18 // 480x320 (default)
 #define DSP_ST7920      19 // 128x64 (fixed in displayST7920.h)
@@ -240,9 +240,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #endif
 #endif
 
-/* Define your display font in myoptions.h, e.g.: #define DISPLAYFONT X11       */
-/* Options: MATRIXLIGHT(0), MATRIXCHUNKY(1), MATRIXLIGHTX(2), MATRIXCHUNKYX(3), */
-/*          X11(4), GLCD(5)                                                      */
+/* Define your display font as: #define DISPLAYFONT X11       */
 #define MATRIXLIGHT     0
 #define MATRIXCHUNKY    1
 #define X11             2   // Unix X11 6x9 fixed-width
@@ -497,7 +495,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 
 /* --- VOLUME SCALE --- */
-#ifndef VOLUME_SCALE // Default 42 doubles future upstream library's scale of 21; 50-100 gives extremely fine control
+#ifndef VOLUME_SCALE // Default 42 doubles upstream library's scale of 21; 50-100 gives extremely fine control
   #define VOLUME_SCALE 42
 #endif
 #if (VOLUME_SCALE < 21) || (VOLUME_SCALE > 255)
@@ -1275,6 +1273,9 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #ifndef SCREENSAVERSTARTUPDELAY // initial delay
   #define SCREENSAVERSTARTUPDELAY 5
+#endif
+#ifndef SCREENSAVERMOVE // how often to move the screensaver (in seconds)
+  #define SCREENSAVERMOVE 5
 #endif
 #ifndef HEADER_TIMEOUT
   #define HEADER_TIMEOUT 5000

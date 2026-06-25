@@ -589,8 +589,9 @@ void NumWidget::setText(const char* txt) {
   _getBounds();
   if (strcmp(_oldtext, _text) == 0) return;
   uint16_t realth = _textheight;
-  #if defined(DSP_OLED) && DSP_MODEL!=DSP_SSD1322
-    if(Clock_GFXfontPtr==nullptr) realth = _textheight * 8; //CHARHEIGHT
+  if (Clock_GFXfontPtr == NULL) realth = _textheight * CHARHEIGHT;
+  #ifndef CLOCKFONT5x7
+    else realth = _textHeight() + 1;
   #endif
   if (_active)
   #ifndef CLOCKFONT5x7

@@ -211,6 +211,7 @@ class ClockWidget: public Widget {
     inline uint16_t dateSize(){ return _space+ _dateheight; }
     inline uint16_t clockWidth(){ return _clockwidth; }
     inline uint16_t clockHeight(){ return _clockheight; }
+    inline uint16_t timeHeight(){ return _timeheight; }
   private:
   #ifndef DSP_LCD
     Adafruit_GFX &getRealDsp();

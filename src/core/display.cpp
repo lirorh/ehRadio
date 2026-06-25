@@ -840,9 +840,10 @@ void Display::_time(bool redraw) {
       config.setBrightness();
     }
   #endif
-  if (config.isScreensaver && network.timeinfo.tm_sec % 60 == 0) {
-    int32_t minTop = TFT_FRAMEWDT + _clock->clockHeight();
-    int32_t maxTop = dsp.height() - TFT_FRAMEWDT;
+  if (config.isScreensaver && network.timeinfo.tm_sec % SCREENSAVERMOVE == 0) {
+    int32_t clockH = _clock->clockHeight();
+    int32_t minTop = max((int32_t)TFT_FRAMEWDT, (int32_t)_clock->timeHeight());
+    int32_t maxTop = dsp.height() - clockH - TFT_FRAMEWDT;
     uint16_t ft = (maxTop > minTop) ? static_cast<uint16_t>(random(minTop, maxTop + 1)) : static_cast<uint16_t>(minTop);
 
     int32_t minLeft = TFT_FRAMEWDT;

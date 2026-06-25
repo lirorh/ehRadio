@@ -44,7 +44,7 @@ especially in terms of how they are used and how they are built.
 | - IR remote control                           | - same |
 | - Nextion uses advanced control               | - Nextion support is incomplete or broken |
 | Must be flashed using VS Code / Arduino IDE   | Web flasher & Internet OTA updates make getting a new version easy-peasy |
-| English or Russian display                    | 37 Display languages (Latin & Cyrillic) (builder's choice)
+| English or Russian display                    | 37 Display languages (using a single Unicode font) (builder's choice)
 | MQTT, Telnet, HTTP                            | MQTT, Telnet, HTTP |
 | - mostly used for playback                    | - all WebUI commands are available |
 | Home Assistant integration (through MQTT)     | Home Assistant integration (through MQTT) - improved |
@@ -245,7 +245,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.06.18 `dev` | Cyrillic fixed (and with different RSSI bars for testing) |
+| 2026.06.25 | Unicode 8x6 fonts now in |
 | 2026.06.18 | WebUI files now served from PSRAM cache (if available) which eliminates audio stuttering for I2S decoders, adjustments to PSRAM-related code, rotary encoders fix |
 | 2026.06.15 | SPI fixed so SPI Display and VS1053 are possible, SD fixes, Wi-fi reconnect smarter, generator indicates safe pins |
 | 2026.06.08 | Fixed Search/Curated additions corrupting the playlist, changing stations faster, connect errors fail faster, safe mode entered after unsuccessful boot (disables smartstart, autoupdate) |

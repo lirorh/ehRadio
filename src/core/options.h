@@ -997,7 +997,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #ifndef NS_QUEUE_DELAY
   #define NS_QUEUE_DELAY 0 // ms; xQueueReceive timeout for nsQueue (processQueue). 0 = non-blocking poll
-#endif#endif
+#endif
 
 /* Network utility tasks (network.cpp, player.cpp): doSync, searchWiFi, retryStreamConnection */
 #ifndef NETWORK_TASK_STACK_SIZE

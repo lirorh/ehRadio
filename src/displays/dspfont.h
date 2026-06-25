@@ -18,17 +18,17 @@
 // Options: MATRIXLIGHT (default), MATRIXLIGHTX, MATRIXCHUNKY, MATRIXCHUNKYX,
 //          X11 (Unix X11 5x8 fixed-width, 1421 glyphs).
 #if DISPLAYFONT == MATRIXLIGHT
-  #include <Fonts/MatrixLight8x6.h>
+  #include "fonts/MatrixLight8x6.h"
   #define DisplayFont MatrixLight8x6
 #elif DISPLAYFONT == MATRIXCHUNKY
-  #include <Fonts/MatrixChunky8x6.h>
+  #include "fonts/MatrixChunky8x6.h"
   #define DisplayFont MatrixChunky8x6
 #elif DISPLAYFONT == X11
-  #include <Fonts/UnixX11_6x9.h>
+  #include "fonts/UnixX11_6x9.h"
   #define DisplayFont Fixed
 #else
   #warning "DISPLAYFONT value not recognized, defaulting to X11"
-  #include <Fonts/UnixX11_6x9.h>
+  #include "fonts/UnixX11_6x9.h"
   #define DisplayFont X11
 #endif
 

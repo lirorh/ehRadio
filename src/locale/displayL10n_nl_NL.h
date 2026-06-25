@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[verbinden]";
 const char  const_DlgVolume[]    PROGMEM = "VOLUME";
 const char    const_DlgLost[]    PROGMEM = "* GEEN VERBINDING *";
 const char  const_DlgUpdate[]    PROGMEM = "* BIJWERKEN *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEX SD";
 
 const char        apNameTxt[]    PROGMEM = "AP NAAM";

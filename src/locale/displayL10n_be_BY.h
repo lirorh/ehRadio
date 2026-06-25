@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[злучэнне]";
 const char  const_DlgVolume[]    PROGMEM = "ГУЧНАСЦЬ";
 const char    const_DlgLost[]    PROGMEM = "АДКЛЮЧАНА";
 const char  const_DlgUpdate[]    PROGMEM = "АБНАЎЛЕННЕ";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "ЧАКАННЕ SD";
 
 const char        apNameTxt[]    PROGMEM = "ТОЧКА ДАСТУПУ";

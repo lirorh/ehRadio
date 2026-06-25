@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[tilslutter]";
 const char  const_DlgVolume[]    PROGMEM = "LYDSTYRKE";
 const char    const_DlgLost[]    PROGMEM = "* FORBINDELSE TABT *";
 const char  const_DlgUpdate[]    PROGMEM = "* OPDATERER *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEKS SD";
 
 const char        apNameTxt[]    PROGMEM = "AP NAVN";

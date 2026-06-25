@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[bağlanıyor]";
 const char  const_DlgVolume[]    PROGMEM = "SES";
 const char    const_DlgLost[]    PROGMEM = "* BAĞLANTI KESİLDİ *";
 const char  const_DlgUpdate[]    PROGMEM = "* GÜNCELLENİYOR *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "SD İNDEKS";
 
 const char        apNameTxt[]    PROGMEM = "AP ADI";

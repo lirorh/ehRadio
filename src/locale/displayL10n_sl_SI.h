@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[povezovanje]";
 const char  const_DlgVolume[]    PROGMEM = "GLASNOST";
 const char    const_DlgLost[]    PROGMEM = "* PREKINJENO *";
 const char  const_DlgUpdate[]    PROGMEM = "* POSODOBITEV *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEKS SD";
 
 const char        apNameTxt[]    PROGMEM = "IME AP";

@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[підключення]";
 const char  const_DlgVolume[]    PROGMEM = "ГОЛОСНІСТЬ";
 const char    const_DlgLost[]    PROGMEM = "* ВТРАТА З'ЄДНАННЯ *";
 const char  const_DlgUpdate[]    PROGMEM = "* ОНОВЛЕННЯ *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "ІНДЕКСУВАННЯ SD";
 
 const char        apNameTxt[]    PROGMEM = "ІМ'Я AP";

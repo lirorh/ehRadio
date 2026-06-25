@@ -16,9 +16,6 @@
 #ifdef USE_ES8311
   #include "../libraries/ES8311_Audio/es8311.h"
 #endif
-#ifdef USE_NEXTION
-  #include "../displays/nextion.h"
-#endif
 
 #define NETWORK_TASK_STACK_BYTES (NETWORK_TASK_STACK_SIZE * 1024)
 
@@ -124,9 +121,6 @@ void Player::_stop(bool alreadyStopped) {
   if (!hasError()) config.setTitle((display.mode()==LOST || display.mode()==UPDATING)?"":LANG::const_PlStopped);
   config.station.bitrate = 0;
   config.setBitrateFormat(BF_UNKNOWN);
-  #ifdef USE_NEXTION
-    nextion.bitrate(config.station.bitrate);
-  #endif
   netserver.requestOnChange(BITRATE, 0);
   display.putRequest(DBITRATE);
   display.putRequest(PSTOP);

@@ -4,7 +4,7 @@
     <div class="navigation group group_system hidden" id="navigation">
       <div class="navitem group group_system hidden" data-target="group_system" data-i18n="ttl_system">System</div>
       <div class="navitem group group_battery hidden" data-target="group_battery" data-i18n="ttl_battery">Battery</div>
-      <div class="navitem group group_display group_nextion hidden" data-target="group_display" data-i18n="ttl_screen">Screen</div>
+      <div class="navitem group group_display hidden" data-target="group_display" data-i18n="ttl_screen">Screen</div>
       <div class="navitem group group_controls hidden" data-target="group_controls" data-i18n="ttl_controls">Controls</div>
       <div class="navitem group group_locale hidden" data-target="group_locale" data-i18n="ttl_locale">Locale</div>
       <div class="navitem group group_wifi hidden" data-target="group_wifi" data-i18n="ttl_wifi">Wi-Fi</div>
@@ -94,7 +94,7 @@
           </div>
         </section>
         <a name="screen"></a>
-        <section class="group group_display group_oled group_nextion hidden" id="group_display">
+        <section class="group group_display group_oled hidden" id="group_display">
           <div class="title"><span data-i18n="ttl_screen">Screen</span></div>
           <div class="reset" data-name="screen" title="reset"></div>
           <div class="flex-row group_tft hidden">
@@ -146,7 +146,7 @@
             </div>
           </div>
           <div class="row-title"><span data-i18n="ttl_screensaver">Screensaver</span></div>
-          <div class="flex-row group group_tft group_oled group_nextion hidden">
+          <div class="flex-row group group_tft group_oled hidden">
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_while_not_playing">While Not Playing</span>
               <div class="checkbox ssoption" id="scre" data-command="screensaverenabled"><div class="knob"></div></div>
@@ -160,7 +160,7 @@
               <input type="number" id="scrt" data-command="screensavertimeout" value="" maxlength="3" min="5" max="65520" />
             </div>
           </div>
-          <div class="flex-row group group_tft group_oled group_nextion hidden">
+          <div class="flex-row group group_tft group_oled hidden">
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_while_playing">While Playing</span>
               <div class="checkbox ssoption" id="scrpe" data-command="screensaverplayingenabled"><div class="knob"></div></div>

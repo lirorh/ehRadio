@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[се поврзува]";
 const char  const_DlgVolume[]    PROGMEM = "ЈАЧИНА";
 const char    const_DlgLost[]    PROGMEM = "* ПРЕКИНАТО *";
 const char  const_DlgUpdate[]    PROGMEM = "* АЖУРИРАЊЕ *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "ИНДЕКС SD";
 
 const char        apNameTxt[]    PROGMEM = "ИМЕ AP";

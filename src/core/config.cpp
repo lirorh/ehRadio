@@ -22,9 +22,6 @@
 #ifdef USE_SD
   #include "sdmanager.h"
 #endif
-#ifdef USE_NEXTION
-  #include "../displays/nextion.h"
-#endif
 
 
 const char* const Config::wwwFiles[] = {"curated.js", "options.js", "script.js", "script2.js", "search.js",
@@ -609,17 +606,6 @@ void Config::setBrightness(bool dosave) {
       saveValue(&store.dspon, store.dspon);
     }
   #endif
-  #ifdef USE_NEXTION
-    nextion.wake();
-    char cmd[15];
-    snprintf(cmd, 15, "dims=%d", store.brightness);
-    nextion.putcmd(cmd);
-    if (!store.dspon) store.dspon = true;
-    if (dosave) {
-      saveValueButWait(&store.brightness, store.brightness, 4000);
-      saveValue(&store.dspon, store.dspon);
-    }
-  #endif
 }
 
 void Config::setDspOn(bool dspon, bool saveval) {
@@ -627,10 +613,6 @@ void Config::setDspOn(bool dspon, bool saveval) {
     store.dspon = dspon;
     saveValue(&store.dspon, store.dspon);
   }
-  #ifdef USE_NEXTION
-    if (!dspon) nextion.sleep();
-    else nextion.wake();
-  #endif
   if (!dspon) {
     #if BRIGHTNESS_PIN!=255
       analogWrite(BRIGHTNESS_PIN, 0);

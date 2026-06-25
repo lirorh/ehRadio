@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[yhdistetään]";
 const char  const_DlgVolume[]    PROGMEM = "ÄÄNENVOIMUUS";
 const char    const_DlgLost[]    PROGMEM = "* YHTEYS KATKENNUT *";
 const char  const_DlgUpdate[]    PROGMEM = "* PÄIVITETÄÄN *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEKSI SD";
 
 const char        apNameTxt[]    PROGMEM = "AP NIMI";

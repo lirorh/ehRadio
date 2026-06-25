@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[tengist]";
 const char  const_DlgVolume[]    PROGMEM = "HLJÓÐSTYRKUR";
 const char    const_DlgLost[]    PROGMEM = "* TENGING BROTIN *";
 const char  const_DlgUpdate[]    PROGMEM = "* UPPFYLLING *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEKS SD";
 
 const char        apNameTxt[]    PROGMEM = "AP NAFN";

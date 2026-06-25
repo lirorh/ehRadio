@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[csatlakozás]";
 const char  const_DlgVolume[]    PROGMEM = "HANGERŐ";
 const char    const_DlgLost[]    PROGMEM = "* KAPCSOLAT MEGSZAKADT *";
 const char  const_DlgUpdate[]    PROGMEM = "* FRISSÍTÉS *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEX SD";
 
 const char        apNameTxt[]    PROGMEM = "AP NÉV";

@@ -16,9 +16,6 @@
 #include "core/startup.h"
 #include "core/telnet.h"
 #include "displays/tools/psframebuffer.h"
-#ifdef USE_NEXTION
-  #include "displays/nextion.h"
-#endif
 
 SET_LOOP_TASK_STACK_SIZE(LOOP_TASK_STACK_SIZE * 1024);
 

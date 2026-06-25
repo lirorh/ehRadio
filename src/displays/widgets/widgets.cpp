@@ -439,7 +439,7 @@ void VuWidget::init(WidgetConfig wconf, VUBandsConfig bands, uint16_t vumaxcolor
 
 void VuWidget::_draw(){
   if(!_active || _locked) return;
-  #if !defined(USE_NEXTION) && defined(USE_AUDIO_VS1053)
+  #if defined(USE_AUDIO_VS1053)
   /*  static uint8_t cc = 0;
     cc++;
     if(cc>0){

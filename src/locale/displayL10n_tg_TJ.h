@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[пайвастшавӣ]";
 const char  const_DlgVolume[]    PROGMEM = "ҲАЖМ";
 const char    const_DlgLost[]    PROGMEM = "* АЛОҚА НЕСТ *";
 const char  const_DlgUpdate[]    PROGMEM = "* НАВ КУНАНД *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "ИНДЕКС SD";
 
 const char        apNameTxt[]    PROGMEM = "НОМИ AP";

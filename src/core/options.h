@@ -692,17 +692,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define WAKE_PIN_STATE LOW
 #endif
 
-/* --- NEXTION --- */
-#ifndef NEXTION_RX
-  #define NEXTION_RX 255
-#endif
-#ifndef NEXTION_TX
-  #define NEXTION_TX 255
-#endif
-#if NEXTION_RX!=255 && NEXTION_TX!=255
-  #define USE_NEXTION
-#endif
-
 /* --- TOUCH SCREEN --- */
 #define TS_MODEL_UNDEFINED 0
 #define TS_MODEL_XPT2046 1
@@ -1008,17 +997,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #ifndef NS_QUEUE_DELAY
   #define NS_QUEUE_DELAY 0 // ms; xQueueReceive timeout for nsQueue (processQueue). 0 = non-blocking poll
-#endif
-
-/* nextionCore0 (nextion.cpp): Nextion display task */
-#ifndef NEXTION_TASK_STACK_SIZE
-  #define NEXTION_TASK_STACK_SIZE (3 * STACK_MULTIPLIER) // KB; 3 (ESP32/C3) or 6 (S3)
-#elif (NEXTION_TASK_STACK_SIZE < 2) || (NEXTION_TASK_STACK_SIZE > 16)
-  #error define error in myoptions.h: NEXTION_TASK_STACK_SIZE must be between 2 and 16 (value in KB)
-#endif
-#ifndef NEXTION_TASK_PRIORITY
-  #define NEXTION_TASK_PRIORITY 2 // 2 = same tier as display
-#endif
+#endif#endif
 
 /* Network utility tasks (network.cpp, player.cpp): doSync, searchWiFi, retryStreamConnection */
 #ifndef NETWORK_TASK_STACK_SIZE

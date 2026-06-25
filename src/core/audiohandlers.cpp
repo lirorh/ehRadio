@@ -11,9 +11,6 @@
 #include "netserver.h"
 #include "player.h"
 #include "utility.h"
-#ifdef USE_NEXTION
-  #include "../displays/nextion.h"
-#endif
 
 namespace {
 
@@ -175,9 +172,6 @@ void AudioHandlers::handleInfo(const char* info) {
 
   if (strcmp(info, "StreamTitle=''") != 0) FUNCTIONLOG("Audio.info", "%s", info);
   
-  #ifdef USE_NEXTION
-    nextion.audioinfo(info);
-  #endif
 
   if (strstr(info, "format is mp3") != NULL) { config.setBitrateFormat(BF_MP3); display.putRequest(DBITRATE); }
   if (strstr(info, "format is aac") != NULL) { config.setBitrateFormat(BF_AAC); display.putRequest(DBITRATE); }
@@ -204,9 +198,6 @@ void AudioHandlers::handleBitrate(const char* info) {
   FUNCTIONLOG("Audio.bitrate", "%s", info);
   config.station.bitrate = atoi(info) / 1000;
   display.putRequest(DBITRATE);
-  #ifdef USE_NEXTION
-    nextion.bitrate(config.station.bitrate);
-  #endif
   netserver.requestOnChange(BITRATE, 0);
 }
 

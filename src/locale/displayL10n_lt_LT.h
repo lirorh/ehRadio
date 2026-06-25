@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[jungiamasi]";
 const char  const_DlgVolume[]    PROGMEM = "GARSAS";
 const char    const_DlgLost[]    PROGMEM = "* ATSIJUNGĘS *";
 const char  const_DlgUpdate[]    PROGMEM = "* Atnaujinama *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEKSUOJAMA SD";
 
 const char        apNameTxt[]    PROGMEM = "TAŠKO VARDAS";

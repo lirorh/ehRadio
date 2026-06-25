@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[σύνδεση]";
 const char  const_DlgVolume[]    PROGMEM = "ΕΝΤΑΣΗ";
 const char    const_DlgLost[]    PROGMEM = "* ΧΩΡΙΣ ΣΥΝΔΕΣΗ *";
 const char  const_DlgUpdate[]    PROGMEM = "* ΕΝΗΜΈΡΩΣΗ *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "ΕΥΡΕΤΗΡΙΟ SD";
 
 const char        apNameTxt[]    PROGMEM = "ΟΝΟΜΑ AP";

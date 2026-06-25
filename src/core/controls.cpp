@@ -143,13 +143,13 @@ void Controls::loop() {
     int8_t encoderDelta = enc->encoderChanged();
     if (encoderDelta!=0) {
       uint8_t encBtnState = digitalRead(first?ENC_SW:ENC2_SW);
-    #if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
+    #if defined(DUMMYDISPLAY)
       first = first?(first && encBtnState):(!encBtnState);
       if (first) {
         int nv = config.store.volume+encoderDelta;
         if (nv<0) nv=0;
         if (nv>VOLUME_SCALE) nv=VOLUME_SCALE;
-        player.setVol((uint8_t)nv);  
+        player.setVol((uint8_t)nv);
       } else {
         if (encoderDelta > 0) player.next(); else player.prev();
       }
@@ -168,7 +168,7 @@ void Controls::loop() {
         }
         controlsEvent(encoderDelta > 0, encoderDelta);
       }
-    #endif //#if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
+    #endif
     }
   }
 #endif //#if (ENC_DT!=255 && ENC_CLK!=255) || (ENC2_DT!=255 && ENC2_CLK!=255)
@@ -346,14 +346,14 @@ void Controls::onBtnLongPressStart(int id) {
       }
     case EVT_BTN_PLAY:
     case EVT_ENC_SW: {
-        #if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
+        #if defined(DUMMYDISPLAY)
           break;
         #endif
         display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
         break;
       }
     case EVT_ENC2_SW: {
-        #if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
+        #if defined(DUMMYDISPLAY)
           break;
         #endif
         display.putRequest(NEWMODE, display.mode() == PLAYER ? VOL : PLAYER);
@@ -448,7 +448,7 @@ void Controls::controlsEvent(bool toRight, int8_t volDelta) {
     display.putRequest(NEWMODE, PLAYER);
   }
   if (display.mode() != STATIONS) {
-    #if !defined(DUMMYDISPLAY) || defined(USE_NEXTION)
+    #if !defined(DUMMYDISPLAY)
       display.putRequest(NEWMODE, VOL);
     #endif
     if (volDelta!=0) {

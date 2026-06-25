@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[verbinde]";
 const char  const_DlgVolume[]    PROGMEM = "LAUTST";
 const char    const_DlgLost[]    PROGMEM = "* VERBINDUNG VERLOREN *";
 const char  const_DlgUpdate[]    PROGMEM = "* AKTUALISIERE *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEX SD";
 
 const char        apNameTxt[]    PROGMEM = "AP NAME";

@@ -151,7 +151,6 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
   - Conf files no longer define DSP_WIDTH/DSP_HEIGHT (set upstream in options.h).
   - **Removed enum values** (collapsed into resolution variants): DSP_ST7789_240, DSP_ST7789_76, DSP_SSD1306x32, DSP_SSD1305I2C, DSP_1602I2C, DSP_2004I2C, DSP_SSD1327_64. I2C variants detected by `I2C_SDA` and `I2C_SCL`.
   - ST7735 DTYPE still required for library; resolution auto-derived from DTYPE in displayST7735.h.
-  - Nextion is a special path (`src/displays/nextion.cpp`) with its own command protocol and UI assumptions.
 - Network/update features:
   - some online update and service behavior is compiled out by feature flags.
 - MQTT, touch, RTC, SD, battery helper behavior:
@@ -664,8 +663,6 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - `SliderWidget` buffer/volume bar rendering now repaints the full inner area each update to avoid stale pixels after page/mode transitions.
 - `src/displays/widgets/pages.h`, `pages.cpp`
   - page and pager composition framework.
-- `src/displays/nextion.h`, `nextion.cpp`
-  - Nextion display integration path.
 
 ## Display driver files (`src/displays/display*.h/.cpp`)
 - Similar pattern:
@@ -795,8 +792,6 @@ A board-aware multiplier scales all five user-configurable FreeRTOS task stacks 
 - `searchWiFi` (WiFi connection/retry loop) is pinned to `NETWORK_CORE`.
 - `retryStreamConnection` (post-disconnect reconnect) is pinned to `NETWORK_CORE`.
 
-#### `src/displays/nextion.cpp`
-- `nextionCore0` is pinned to `NETWORK_CORE` explicitly (previously used `!xPortGetCoreID()` which unsafely resolved to Core 0 at runtime — now fixed).
 
 #### `src/core/netserver.cpp` — `netserverLoopTask` + all utility tasks pinned to `NETWORK_CORE`
 - `netserverLoopTask` (started by `NetServer::startLoopTask()`, called from `main.cpp` after each `netserver.begin()`) is pinned to `NETWORK_CORE`. It is the sole caller of `netserver.loop()`.
@@ -821,7 +816,6 @@ Stack sizes and priorities are controlled by macros in `src/core/options.h` (`/*
 | `loopTask` | main.cpp | `LOOP_TASK_STACK_SIZE` KB (8 / 16) | 1 (framework) | Arduino loop(); `SET_LOOP_TASK_STACK_SIZE()` applies at boot |
 | `DspTask` | display.cpp | `DSP_TASK_STACK_SIZE` KB (4 / 8) | `DSP_TASK_PRIORITY` (2) | — |
 | `netserverLoopTask` | netserver.cpp | `NETSERVER_TASK_STACK_SIZE` KB (4 / 8) | `NETSERVER_TASK_PRIORITY` (2) | — |
-| `nextionCore0` | nextion.cpp | `NEXTION_TASK_STACK_SIZE` KB (3 / 6) | `NEXTION_TASK_PRIORITY` (2) | Nextion display only |
 | `doSync` | network.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `LOW_TASK_PRIORITY` (1) | Time/weather sync |
 | `searchWiFi` ×2 | network.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `NET_TASK_PRIORITY` (3) | — |
 | `retryStreamConnection` | network.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `NET_TASK_PRIORITY` (3) | Post-disconnect reconnect |
@@ -855,10 +849,8 @@ Implementation:
 
 This section calls out hardware implementations that diverge from the common code path and are more likely to regress.
 
-## Nextion (`src/displays/nextion.cpp/.h`)
 - Separate serial protocol parser and command emitter (`^...$` framed messages).
 - Uses dedicated queue and task loop; does not behave like generic TFT/OLED widget drivers.
-- Has direct config mutation paths (volume/EQ/timezone/wifi writes) from Nextion events.
 - Includes an explicit maintainer warning in file header about potential breakage.
 - Risk notes:
   - page/component names are hardcoded strings, so HMI/editor changes can silently break firmware integration.

@@ -14,9 +14,6 @@
 #include "config.h"
 #include "display.h"
 #include "netserver.h"
-#ifdef USE_NEXTION
-  #include "../displays/nextion.h"
-#endif
 
 namespace {
 
@@ -41,9 +38,6 @@ uint16_t Utility::sleepfor = 0;
 void Utility::sleepCore() {
   if (BRIGHTNESS_PIN != 255) analogWrite(BRIGHTNESS_PIN, 0);
   display.deepsleep();
-  #ifdef USE_NEXTION
-    nextion.sleep();
-  #endif
   #if defined(ARDUINO_ESP32C3_DEV)
     if (WAKE_PIN != 255) {
       esp_deep_sleep_enable_gpio_wakeup((1ULL << WAKE_PIN), WAKE_PIN_STATE ? ESP_GPIO_WAKEUP_GPIO_HIGH : ESP_GPIO_WAKEUP_GPIO_LOW);

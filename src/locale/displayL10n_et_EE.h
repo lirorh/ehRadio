@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[ühendamine]";
 const char  const_DlgVolume[]    PROGMEM = "HELITUVEGUS";
 const char    const_DlgLost[]    PROGMEM = "* ÜHENDUS KATKENUD *";
 const char  const_DlgUpdate[]    PROGMEM = "* UUENDAMINE *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEKSEERIMINE SD";
 
 const char        apNameTxt[]    PROGMEM = "AP NIMI";

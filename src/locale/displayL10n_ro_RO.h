@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[conectare]";
 const char  const_DlgVolume[]    PROGMEM = "VOLUM";
 const char    const_DlgLost[]    PROGMEM = "* FĂRĂ CONEXIUNE *";
 const char  const_DlgUpdate[]    PROGMEM = "* ACTUALIZARE *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "INDEX SD";
 
 const char        apNameTxt[]    PROGMEM = "NUME AP";

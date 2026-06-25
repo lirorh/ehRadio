@@ -65,7 +65,6 @@ const char  const_PlConnect[]    PROGMEM = "[ulanish]";
 const char  const_DlgVolume[]    PROGMEM = "HAJMI";
 const char    const_DlgLost[]    PROGMEM = "* ULANISH YO'Q *";
 const char  const_DlgUpdate[]    PROGMEM = "* YANGILANMOQDA *";
-const char const_DlgNextion[]    PROGMEM = "NEXTION";
 const char  const_waitForSD[]    PROGMEM = "SD INDEKSI";
 
 const char        apNameTxt[]    PROGMEM = "AP NOMI";

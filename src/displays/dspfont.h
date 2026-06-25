@@ -66,9 +66,9 @@
   #define TIME_SIZE 1
 #endif
 
-// Chunky-font override — when using YO_MONO or YO_CLASSIC on small OLEDs,
-// revert to GLCD font size (moved from dspcore.h)
-#if TIME_SIZE == 15 && (CLOCKFONT == YO_MONO || CLOCKFONT == YO_CLASSIC)
+// Chunky-font override — when using YO_MONO on small OLEDs,
+// reverts to display font size (moved from dspcore.h)
+#if TIME_SIZE == 15 && CLOCKFONT == YO_MONO
   #undef TIME_SIZE
   #define TIME_SIZE 2
 #endif
@@ -103,27 +103,27 @@
 
 // ── CLOCK FONT ──────────────────────────────────────────────────────────
 #if DSP_WIDTH >= 480
-  #include "ehfonts/font70.h"
+  #include "clockfonts/font70.h"
 #elif (DSP_WIDTH==320 && DSP_HEIGHT==240) || (DSP_WIDTH==240 && DSP_HEIGHT==240)
-  #include "ehfonts/font52.h"
+  #include "clockfonts/font52.h"
 #elif DSP_WIDTH==220
-  #include "ehfonts/font35.h"
+  #include "clockfonts/font35.h"
 #elif DSP_WIDTH==160
-  #include "ehfonts/font35.h"
+  #include "clockfonts/font35.h"
 #elif DSP_WIDTH==284
-  #include "ehfonts/font35.h"
+  #include "clockfonts/font35.h"
 #elif DSP_WIDTH==128 && DSP_HEIGHT==128
-  #include "ehfonts/font35.h"
+  #include "clockfonts/font35.h"
 #elif DSP_WIDTH==256
-  #include "ehfonts/font35.h"
+  #include "clockfonts/font35.h"
 #elif DSP_WIDTH==128 && DSP_HEIGHT==64
   // ST7920 uses GLCD font (no include); OLEDs use font15
   #if DSP_MODEL!=DSP_ST7920
-    #include "ehfonts/font15.h"
+    #include "clockfonts/font15.h"
   #endif
 #elif DSP_WIDTH==84
-  #include "ehfonts/TinyFont5.h"
-  #include "ehfonts/TinyFont6.h"
+  #include "clockfonts/TinyFont5.h"
+  #include "clockfonts/TinyFont6.h"
 // 128x32, character LCDs: use GLCD font (no include)
 #endif
 

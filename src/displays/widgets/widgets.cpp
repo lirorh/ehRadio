@@ -11,7 +11,7 @@
 #include "../../core/player.h"    //  for VU widget
 #include "../../core/utility.h"
 
-#if CLOCKFONT == YO_MONO || CLOCKFONT == YO_CLASSIC // no special character but an 8 on a 7-segment display is the same as filling in background pixels
+#if CLOCKFONT == YO_MONO // no special character but an 8 on a 7-segment display is the same as filling in background pixels
   #define CLOCKGLOW_STRING "88:88"
 #else //if CLOCKFONT == CHUNKY6_PX || CLOCKFONT == CHUNKY6 // these use a special character
   #define CLOCKGLOW_STRING "//://"
@@ -531,7 +531,7 @@ void VuWidget::_clear(){ }
       NUM & CLOCK
  ************************/
 #if !defined(DSP_LCD)
-  #if TIME_SIZE<15 || (TIME_SIZE==15 && (CLOCKFONT==YO_MONO || CLOCKFONT==YO_CLASSIC))
+  #if TIME_SIZE<15 || (TIME_SIZE==15 && CLOCKFONT==YO_MONO)
     const GFXfont* Clock_GFXfontPtr = nullptr;
     #define CLOCKFONT5x7
   #else

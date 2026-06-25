@@ -251,14 +251,13 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 
 /* Define your clock/volume page font as #define CLOCKFONT CHUNKY6 */
 #define YO_MONO         0  // Default modern yoRadio 7-Segment font (monospaced)
-#define YO_CLASSIC      1  // Classic yoRadio 7-Segment font (1 is narrow)
-#define CHUNKY6_PX      2  // Default
-#define CHUNKY6         3  // Really heavy looking
+#define CHUNKY6_PX      1  // Default (spacing pixels) - great on color screens
+#define CHUNKY6         2  // Really heavy looking - great on mono screens
 
 /* Chunky6 with spaces between pixels is the default (except on smaller displays) */
 #ifndef CLOCKFONT
   #if DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SH1106 || DSP_MODEL==DSP_SH1107 || DSP_MODEL==DSP_SSD1305
-  // note that using YO_MONO or YO_CLASSIC on the above list of displays will revert to the display font.
+  // note that using YO_MONO on the above list of displays will revert to the display font.
     #define CLOCKFONT CHUNKY6
   #else
     #define CLOCKFONT CHUNKY6_PX
@@ -270,7 +269,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #if CLOCKFONT == YO_MONO || CLOCKFONT == CHUNKY6_PX
     #define CLOCKGLOW true
   #else
-    #define CLOCKGLOW false // with YO_CLASSIC, this effect looks super-terrible, with CHUNKY6 it is not great
+    #define CLOCKGLOW false // with CHUNKY6, this effect looks not great
   #endif
 #endif
 

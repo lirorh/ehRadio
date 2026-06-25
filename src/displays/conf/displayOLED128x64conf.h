@@ -16,7 +16,7 @@
 
 #define IP_WEATHER_SHARED true // these widgets share the same space
 
-#if CLOCKFONT == YO_MONO || CLOCKFONT == YO_CLASSIC
+#if CLOCKFONT == YO_MONO
   #define FONTSHIFT 0
 #else // CHUNKY6 CHUNKY6_PX
   #define FONTSHIFT 15

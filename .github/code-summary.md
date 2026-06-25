@@ -21,7 +21,7 @@ This document is intentionally per-file focused for:
 Grouped (not one-by-one deep explained) areas:
 - `src/displays/display*.cpp/.h` (drivers follow similar shape)
 - `src/displays/conf/*.h` (widget placement/config pattern files)
-- `src/displays/ehfonts/*` (font assets)
+- `src/displays/clockfonts/*` (font assets)
 
 ---
 
@@ -707,8 +707,42 @@ Purpose:
 - display utility support
 
 ## Display fonts/assets
-- `src/displays/ehfonts/*` for digit/font assets.
-- `font15.h` is wired for 128x64 mono-OLED clock paths (SH1106/SH1107, SSD1306 128x64, SSD1305). Clock font dispatch headers now live under `src/displays/ehfonts/` (`font15.h`, `font19.h`, `font35.h`, `font52.h`, `font70.h`), and DS_DIGI/Chunky6 families also live there (`src/displays/ehfonts/DS_DIGI/`, `src/displays/ehfonts/Chunky6/`). `font15.h` maps CHUNKY6 modes directly to Chunky6_15 variants; `font19.h` is retained for possible future use. For clock rendering fallback, widgets now force `CLOCKFONT5x7` when `TIME_SIZE<15`, or when `TIME_SIZE==15` with `CLOCKFONT` set to `YO_MONO` or `YO_CLASSIC`.
+- `src/displays/clockfonts/*` for digit/font assets.
+- `font15.h` is wired for 128x64 mono-OLED clock paths (SH1106/SH1107, SSD1306 128x64, SSD1305). Clock font dispatch headers now live under `src/displays/clockfonts/` (`font15.h`, `font19.h`, `font35.h`, `font52.h`, `font70.h`), and DS_DIGI/Chunky6 families also live there (`src/displays/clockfonts/DS_DIGI/`, `src/displays/clockfonts/Chunky6/`). `font15.h` maps CHUNKY6 modes directly to Chunky6_15 variants; `font19.h` is retained for possible future use. For clock rendering fallback, widgets now force `CLOCKFONT5x7` when `TIME_SIZE<15`, or when `TIME_SIZE==15` with `CLOCKFONT` set to `YO_MONO`.
+
+## GFXfont Rendering Pipeline (`src/displays/tools/commongfx.h`, `psframebuffer.h`)
+
+`DspCore::_writeGlyph(uint16_t cp)` is the central glyph renderer replacing the legacy 256-slot glcdfont system. Key behaviors:
+
+- **Dispatch:** When `gfxFont != NULL && gfxFont != &DisplayFont` (a special clock font is active), delegates to `Adafruit_GFX::write()` which uses the font's native `drawChar`. Otherwise renders via `&DisplayFont` (the configured Unicode GFXfont).
+- **Icon rendering:** Codepoints `0x01-0x1F` map to `ICON_TABLE[]`; rendered with `startWrite()`/`endWrite()` wrapping (needed for Adafruit SPI TFT drivers).
+- **Font glyph rendering:** Similarly wrapped in `startWrite()`/`endWrite()`. The inner loop iterates all `width` bitmap columns but only renders columns where `(xOffset + xx) < xAdvance` — prevents glyph bleed beyond the cell boundary (fixes colon/digit overlap on SH1106 YO_MONO). Bleed columns have their bits consumed from the bitmap stream but are not rendered.
+- **Space handler:** Advances cursor by the font's first-glyph `xAdvance` without drawing pixels.
+- **Unrenderable fallback:** Falls through `foldAccent()`; if still unmapped, advances cursor by the font's `xAdvance` (blank space).
+- **`psframebuffer.h`** mirrors the same `_writeGlyph` logic for PSRAM-framebuffer TFT displays.
+
+Important rendering invariants:
+- Never call `startWrite()`/`endWrite()` in `write()` or `writePixel`/`writeFillRect` overrides — SPI nesting causes hangs on Adafruit TFT drivers.
+- The `gfxFont == NULL` case (YO_MONO / display font) runs through `_writeGlyph` using DisplayFont, NOT the built-in glcdfont. This means glyph metrics (yAdvance, yOffset, xAdvance) come from DisplayFont.
+
+## Screen Rendering Fixes (Session: SH1106 YO_MONO)
+
+### ClockWidget colon blink (widgets.cpp)
+- The seconds-area `fillRect` at line 813 is guarded by `if (Clock_GFXfontPtr != NULL)` — its Y-position formula (`_top() - _timeheight + _space`) is only correct for special clock fonts; YO_MONO renders at `_top()` directly and the fillRect would clear into title rows.
+
+### Screensaver clock boundaries (display.cpp, widgets.h)
+- `minTop = max(TFT_FRAMEWDT, _clock->timeHeight())` — for framebuffer displays, `_config.top - _timeheight` must stay >= 0 to avoid framebuffer clipping above the display.
+- `maxTop = dsp.height() - clockH - TFT_FRAMEWDT` — was missing the `-clockH` term, allowing the clock to render partially off-screen.
+- Movement interval now uses `% SCREENSAVERMOVE` (default 5 seconds) instead of hardcoded `% 60`.
+- `ClockWidget::timeHeight()` accessor added to expose `_timeheight`.
+
+### NumWidget volume-digit clearing (widgets.cpp)
+- YO_MONO clear height: `realth = _textheight * CHARHEIGHT` (was OLED-only; now applies to all displays with `Clock_GFXfontPtr == NULL`).
+- Special-font clear height: `realth = _textHeight() + 1` — uses the font's actual glyph height + 1px margin, matching `_clearClock()`'s pattern.
+
+### Font directory renamed
+- `src/displays/ehfonts/` → `src/displays/clockfonts/`
+- `YO_CLASSIC` removed as a clock font option (variable-width variant of YO_MONO that broke layout assumptions).
 
 ---
 

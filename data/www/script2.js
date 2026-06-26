@@ -40,6 +40,8 @@ function applyI18n(root) {
       el.value = val;
     } else if (el.tagName === 'INPUT' && el.placeholder !== undefined) {
       el.placeholder = val;
+    } else if (el.tagName === 'INPUT') {
+      el.value = val;
     } else {
       el.textContent = val;
     }

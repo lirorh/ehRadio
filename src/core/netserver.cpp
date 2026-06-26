@@ -14,7 +14,6 @@
 #include "config.h"
 #include "controls.h"
 #include "display.h"
-#include "locale.h"
 #include "logging.h"
 #include "mqtt.h"
 #include "netserver.h"
@@ -22,6 +21,7 @@
 #include "player.h"
 #include "telnet.h"
 #include "utility.h"
+#include "../locale/dsplocale.h"
 #include "../displays/dspcore.h"
 #include "../displays/widgets/widgetsconfig.h" //BitrateFormat
 #if USE_OTA
@@ -1491,7 +1491,7 @@ void startOnlineUpdate() {
               char progMsg[64];
               snprintf(progMsg, sizeof(progMsg), "{\"onlineupdateprogress\":%d}", percent);
               websocket.textAll(progMsg);
-              display.updateProgress(LANG::updFirmware, (float)written / (float)contentLength);
+              display.updateProgress(l10n(L10N_MSG_UPD_FIRMWARE), (float)written / (float)contentLength);
             }
           }
           if (Update.end(true)) { // end(true) will finish and commit the update

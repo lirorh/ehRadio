@@ -25,7 +25,8 @@
 
 
 const char* const Config::wwwFiles[] = {"curated.js", "options.js", "script.js", "script2.js", "search.js",
-                                        "logo.svg", "icon.png", "locales.json", "rb_srvrs.json", "timezones.json", "style.css", "theme.css",
+                                        "logo.svg", "icon.png", "style.css", "theme.css",
+                                        "dsplocale.json", "rb_srvrs.json", "timezones.json",
                                         "curated.html", "irrecord.html", "options.html", "search.html", "updform.html",
                                         "player.html"}; // keep main page at end (deleted when upgraded, last to be downloaded, so user sees emptyfs_html with wait message)
 const size_t Config::wwwFilesCount = sizeof(Config::wwwFiles) / sizeof(Config::wwwFiles[0]);
@@ -38,6 +39,7 @@ const size_t Config::dataFilesCount = sizeof(Config::dataFiles) / sizeof(Config:
 #endif
 
 Config config;
+uint8_t _activeLocale = 0;  // default en_US, updated at boot from config.store.displaylocale
 
 bool wasUpdated(ESPFileUpdater::UpdateStatus status) { return status == ESPFileUpdater::UPDATED; }
 
@@ -468,7 +470,7 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     saveValue(&store.weatherhumidity, false);
     saveValue(&store.weatherpressure, false);
     saveValue(&store.weatherwind, false);
-    saveValue(store.weatherlang, WEATHER_LANG);
+    saveValue(store.weatherlang, WEATHER_LANG_OWM);
     saveValue(store.weatherlat, WEATHER_LAT);
     saveValue(store.weatherlon, WEATHER_LON);
     saveValue(store.weatherapi, WEATHER_API);

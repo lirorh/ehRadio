@@ -6,11 +6,11 @@
 
 #include "config.h"
 #include "display.h"
-#include "locale.h"
 #include "logging.h"
 #include "netserver.h"
 #include "player.h"
 #include "utility.h"
+#include "../locale/dsplocale.h"
 
 Startup startup;
 
@@ -189,7 +189,7 @@ void Startup::getRequiredFiles() {
     char tryUrl[128];
     display.putRequest(NEWMODE, UPDATING);
     for (size_t i = 0; i < Config::wwwFilesCount; i++) {
-      display.updateProgress(LANG::updFiles, (float)(i + 1) / (float)Config::wwwFilesCount);
+      display.updateProgress(l10n(L10N_MSG_UPD_FILES), (float)(i + 1) / (float)Config::wwwFilesCount);
       const char* fileName = Config::wwwFiles[i];
       snprintf(localFileGz, sizeof(localFileGz), "/www/%s.gz", fileName);
       snprintf(localFile, sizeof(localFile), "/www/%s", fileName);
@@ -221,7 +221,7 @@ void Startup::getRequiredFiles() {
         }
       }
       if (!success) {
-        display.updateProgress(LANG::updFailed, 0.0f);
+        display.updateProgress(l10n(L10N_MSG_UPD_FAILED), 0.0f);
         delay(3000);
         display.putRequest(NEWMODE, LOST);
         delete updater;

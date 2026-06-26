@@ -9,9 +9,9 @@
 #include "backlightcontrols.h"
 #include "netserver.h"
 #include "network.h"
-#include "locale.h"
 #include "rgbled.h"
 #include "utility.h"
+#include "../locale/dsplocale.h"
 
 #ifdef USE_ES8311
   #include "../libraries/ES8311_Audio/es8311.h"
@@ -118,7 +118,7 @@ void Player::_stop(bool alreadyStopped) {
   _playingStationId = 0;
   setOutputPins(false);
   if (audioHandlers.clearArtwork()) netserver.requestOnChange(ARTWORK, 0);
-  if (!hasError()) config.setTitle((display.mode()==LOST || display.mode()==UPDATING)?"":LANG::const_PlStopped);
+  if (!hasError()) config.setTitle((display.mode()==LOST || display.mode()==UPDATING)?"":l10n(L10N_MSG_STOPPED));
   config.station.bitrate = 0;
   config.setBitrateFormat(BF_UNKNOWN);
   netserver.requestOnChange(BITRATE, 0);
@@ -261,7 +261,7 @@ void Player::_play(uint16_t stationId) {
   setOutputPins(false);
   //config.setTitle(config.getMode()==PM_WEB?const_PlConnect:"");
   if (!utility.loadStation(stationId)) return;
-  config.setTitle(config.getMode()==PM_WEB?LANG::const_PlConnect:"[next track]");
+  config.setTitle(config.getMode()==PM_WEB?l10n(L10N_MSG_CONNECT):"[next track]");
   config.station.bitrate=0;
   config.setBitrateFormat(BF_UNKNOWN);
   
@@ -323,7 +323,7 @@ void Player::playUrl(const char* url) {
   resumeAfterUrl = _status==PLAYING;
   display.putRequest(PSTOP);
   setOutputPins(false);
-  config.setTitle(LANG::const_PlConnect);
+  config.setTitle(l10n(L10N_MSG_CONNECT));
   if (connecttohost(url)) {
     _status = PLAYING;
     config.setLastStationUrl(url);

@@ -1,0 +1,182 @@
+[
+  {
+    "code": "be_BY",
+    "name": "беларуская мова",
+    "name_en": "Belarusian"
+  },
+  {
+    "code": "bg_BG",
+    "name": "български език",
+    "name_en": "Bulgarian"
+  },
+  {
+    "code": "bs_BA",
+    "name": "bosanski jezik",
+    "name_en": "Bosnian"
+  },
+  {
+    "code": "bs_ME",
+    "name": "crnogorski jezik",
+    "name_en": "Bosnian-Montenegrin"
+  },
+  {
+    "code": "cs_CZ",
+    "name": "čeština",
+    "name_en": "Czech"
+  },
+  {
+    "code": "da_DK",
+    "name": "dansk",
+    "name_en": "Danish"
+  },
+  {
+    "code": "de_DE",
+    "name": "Deutsch",
+    "name_en": "German"
+  },
+  {
+    "code": "el_GR",
+    "name": "Ελληνικά",
+    "name_en": "Greek"
+  },
+  {
+    "code": "en_US",
+    "name": "English",
+    "name_en": "English"
+  },
+  {
+    "code": "es_ES",
+    "name": "español",
+    "name_en": "Spanish"
+  },
+  {
+    "code": "et_EE",
+    "name": "eesti keel",
+    "name_en": "Estonian"
+  },
+  {
+    "code": "fi_FI",
+    "name": "suomi",
+    "name_en": "Finnish"
+  },
+  {
+    "code": "fr_FR",
+    "name": "français",
+    "name_en": "French"
+  },
+  {
+    "code": "hr_HR",
+    "name": "hrvatski jezik",
+    "name_en": "Croatian"
+  },
+  {
+    "code": "hu_HU",
+    "name": "magyar nyelv",
+    "name_en": "Hungarian"
+  },
+  {
+    "code": "is_IS",
+    "name": "íslenska",
+    "name_en": "Icelandic"
+  },
+  {
+    "code": "kk_KZ",
+    "name": "қазақ тілі",
+    "name_en": "Kazakh"
+  },
+  {
+    "code": "ky_KG",
+    "name": "кыргызча",
+    "name_en": "Kyrgyz"
+  },
+  {
+    "code": "lt_LT",
+    "name": "lietuvių kalba",
+    "name_en": "Lithuanian"
+  },
+  {
+    "code": "lv_LV",
+    "name": "latviešu valoda",
+    "name_en": "Latvian"
+  },
+  {
+    "code": "mk_MK",
+    "name": "македонски јазик",
+    "name_en": "Macedonian"
+  },
+  {
+    "code": "mn_MN",
+    "name": "монгол хэл",
+    "name_en": "Mongolian"
+  },
+  {
+    "code": "nl_NL",
+    "name": "Nederlands",
+    "name_en": "Dutch"
+  },
+  {
+    "code": "no_NO",
+    "name": "norsk",
+    "name_en": "Norwegian"
+  },
+  {
+    "code": "pl_PL",
+    "name": "polski",
+    "name_en": "Polish"
+  },
+  {
+    "code": "pt_PT",
+    "name": "português",
+    "name_en": "Portuguese"
+  },
+  {
+    "code": "ro_RO",
+    "name": "română",
+    "name_en": "Romanian"
+  },
+  {
+    "code": "ru_RU",
+    "name": "русский язык",
+    "name_en": "Russian"
+  },
+  {
+    "code": "sk_SK",
+    "name": "slovenčina",
+    "name_en": "Slovak"
+  },
+  {
+    "code": "sl_SI",
+    "name": "slovenščina",
+    "name_en": "Slovenian"
+  },
+  {
+    "code": "sr_RS",
+    "name": "српски језик",
+    "name_en": "Serbian"
+  },
+  {
+    "code": "sv_SE",
+    "name": "svenska",
+    "name_en": "Swedish"
+  },
+  {
+    "code": "tg_TJ",
+    "name": "тоҷикӣ",
+    "name_en": "Tajik"
+  },
+  {
+    "code": "tr_TR",
+    "name": "Türkçe",
+    "name_en": "Turkish"
+  },
+  {
+    "code": "uk_UA",
+    "name": "українська мова",
+    "name_en": "Ukrainian"
+  },
+  {
+    "code": "uz_UZ",
+    "name": "oʻzbek tili",
+    "name_en": "Uzbek"
+  }
+]

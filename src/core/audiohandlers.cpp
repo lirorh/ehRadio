@@ -182,7 +182,7 @@ void AudioHandlers::handleInfo(const char* info) {
   if (strstr(info, "format is opus") != NULL) { config.setBitrateFormat(BF_OPU); display.putRequest(DBITRATE); }
   if (strstr(info, "skip metadata") != NULL) config.setTitle(config.station.name);
   if (strstr(info, "stream ready") != NULL) {
-    if (strcmp_P(config.station.title, LANG::const_PlConnect) == 0) config.setTitle("");
+    if (strcmp_P(config.station.title, l10n(L10N_MSG_CONNECT)) == 0) config.setTitle("");
   }
   if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) {
     player.setError(info);

@@ -9,8 +9,8 @@
 #endif
 #include <SPIFFS.h>
 #include <Preferences.h>
-#include "locale.h"
 #include "logging.h"
+#include "../locale/dsplocale.h"
 #include "../displays/widgets/widgetsconfig.h"
 
 #define PLAYLIST_FILE        "playlist.csv"
@@ -131,7 +131,8 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   uint16_t  battery_adc_ref_mv = BATTERY_ADC_REF_MV;
   bool      skipPlaylistUpDown = ONE_CLICK_SWITCH;
   uint8_t   irtlp = IR_TOLERANCE;
-  char      locale_webui[10] = WEBUI_LOCALE;
+  char      locale_webui[6] = WEBUI_LOCALE;
+  char      displaylocale[6] = DSP_LOCALE;
   char      tz_name[70] = TIMEZONE_NAME;
   char      tzposix[70] = TIMEZONE_POSIX;
   char      sntp1[35] = SNTP_1;
@@ -140,7 +141,7 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   bool      showweather = false;
   uint8_t   weathersyncinterval = WEATHER_SYNC_INTERVAL;
   char      weatherapi[6] = WEATHER_API;
-  char      weatherlang[10] = WEATHER_LANG;
+  char      weatherlang[6] = WEATHER_LANG_OWM;
   char      weatherlat[10] = WEATHER_LAT;
   char      weatherlon[10] = WEATHER_LON;
   char      weatherkey[WEATHERKEY_LENGTH] = "";

@@ -44,7 +44,7 @@ especially in terms of how they are used and how they are built.
 | - IR remote control                           | - same |
 | - Nextion uses advanced control               | - Nextion support removed |
 | Must be flashed using VS Code / Arduino IDE   | Web flasher & Internet OTA updates make getting a new version easy-peasy |
-| English or Russian display                    | 37 Display languages (using a single Unicode font) (builder's choice)
+| English or Russian display                    | 36 Display languages (using a single Unicode font) (builder's choice)
 | MQTT, Telnet, HTTP                            | MQTT, Telnet, HTTP |
 | - mostly used for playback                    | - all WebUI commands are available |
 | Home Assistant integration (through MQTT)     | Home Assistant integration (through MQTT) - improved |

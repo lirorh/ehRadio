@@ -18,9 +18,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 or examine the examples in builds/trip5 and make your own!
 
 You may also create your own mytheme.h in the root folder.
-
-Locales are guarded seperately in locale.h so check
-that file if you need non-English language options.
 ********************************************************/
 
 #if __has_include("../../myoptions.h")
@@ -1596,6 +1593,24 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #ifndef IR_TOLERANCE
   #define IR_TOLERANCE 35
+#endif
+// The Display Locale is changeable!  (Check locale/dsplocales.json for full list)
+#ifndef DSP_LOCALE
+  #define DSP_LOCALE "en_US"
+#endif
+// WebUI locale which can differ from display locale (check locale/locales.json for full list)
+#ifndef WEBUI_LOCALE
+  #define WEBUI_LOCALE DSP_LOCALE // use the same as display by default
+#endif
+// Is the hardcoded text in the HTML files not English?  If yes, then you should override this
+// OVERRIDE WITH EXTREME CAUTION !!!  You must prepare the HTML files with hardcode_locale_to_html.py
+#ifndef HARDCODED_WEBUI_LOCALE
+  #define HARDCODED_WEBUI_LOCALE "en_US"
+#endif
+// OpenWeatherMap API requires its own language code - this is still editable in WebUI
+// https://openweathermap.org/current?collection=current_forecast#multi
+#ifndef WEATHER_LANG_OWM
+  #define WEATHER_LANG_OWM "en"
 #endif
 #ifndef TIMEZONE_NAME
   #define TIMEZONE_NAME "Canada/Atlantic"

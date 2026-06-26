@@ -4,9 +4,9 @@
 #include "../dspcore.h"
 #include "../tools/psframebuffer.h"
 #include "widgets.h"
+#include "../../locale/dsplocale.h"
 #include "../../core/config.h"
 #include "../../core/logging.h"
-#include "../../core/locale.h"
 #include "../../core/network.h"   //  for Clock widget
 #include "../../core/player.h"    //  for VU widget
 #include "../../core/utility.h"
@@ -780,8 +780,8 @@ void ClockWidget::_getTimeBounds() {
           gfx.setTextSize(_superfont);
           gfx.setCursor(_linesleft+_space+1, _top()-CHARHEIGHT * _superfont);
           gfx.setTextColor(dowColor, config.theme.background);
-          gfx.print(LANG::dow[network.timeinfo.tm_wday]);
-          sprintf(_tmp, "%2d %s %d", network.timeinfo.tm_mday, LANG::mnths[network.timeinfo.tm_mon], network.timeinfo.tm_year+1900);
+          gfx.print(l10n_dow(network.timeinfo.tm_wday));
+          sprintf(_tmp, "%2d %s %d", network.timeinfo.tm_mday, l10n_month(network.timeinfo.tm_mon), network.timeinfo.tm_year+1900);
           strlcpy(_datebuf, _tmp, sizeof(_datebuf));
           uint16_t _datewidth = utf8_strlen(_datebuf) * CHARWIDTH*_dateheight;
           gfx.setTextSize(_dateheight);

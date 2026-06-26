@@ -6,13 +6,13 @@
 #include "config.h"
 #include "display.h"
 #include "logging.h"
-#include "locale.h"
 #include "netserver.h"
 #include "network.h"
 #include "player.h"
 #include "utility.h"
 #include "backlightcontrols.h"
 #include "rgbled.h"
+#include "../locale/dsplocale.h"
 #include "../displays/dspcore.h"
 #include "../displays/widgets/pages.h"
 #include "../displays/widgets/widgets.h"
@@ -91,6 +91,7 @@ void Display::init() {
   #if LIGHT_SENSOR!=255
     analogSetAttenuation(ADC_0db);
   #endif
+  _activeLocale = l10n_findLocale(config.store.displaylocale);
   dsp.initDisplay();
   dsp.setFont((GFXfont *)&DisplayFont);
   displayQueue=NULL;
@@ -271,17 +272,17 @@ void Display::_apScreen() {
     ScrollWidget *bootTitle = (ScrollWidget*) &_boot->addWidget(new ScrollWidget("*", apTitleConf, config.theme.meta, config.theme.metabg));
     bootTitle->setText("AP/Improv Mode");
     TextWidget *apname = (TextWidget*) &_boot->addWidget(new TextWidget(apNameConf, 30, false, config.theme.title1, config.theme.background));
-    apname->setText(LANG::apNameTxt);
+    apname->setText(l10n(L10N_LBL_APNAME));
     TextWidget *apname2 = (TextWidget*) &_boot->addWidget(new TextWidget(apName2Conf, 30, false, config.theme.clock, config.theme.background));
     apname2->setText(AP_SSID);
     TextWidget *appass = (TextWidget*) &_boot->addWidget(new TextWidget(apPassConf, 30, false, config.theme.title1, config.theme.background));
-    appass->setText(LANG::apPassTxt);
+    appass->setText(l10n(L10N_LBL_APPASS));
     TextWidget *appass2 = (TextWidget*) &_boot->addWidget(new TextWidget(apPass2Conf, 30, false, config.theme.clock, config.theme.background));
     #ifdef AP_PASSWORD
       appass2->setText(AP_PASSWORD);
     #endif
     ScrollWidget *bootSett = (ScrollWidget*) &_boot->addWidget(new ScrollWidget("*", apSettConf, config.theme.title2, config.theme.background));
-    bootSett->setText(utility.ipToStr(WiFi.softAPIP()), LANG::apSettFmt);
+    bootSett->setText(utility.ipToStr(WiFi.softAPIP()), l10n(L10N_MSG_CONNECT_OPEN));
     _pager->addPage(_boot);
     _pager->setPage(_boot);
   #else
@@ -298,7 +299,7 @@ void Display::_start() {
   }
   _buildPager();
   _mode = PLAYER;
-  config.setTitle(LANG::const_PlReady);
+  config.setTitle(l10n(L10N_MSG_READY));
   
   if (_bufferbar)  _bufferbar->lock(!config.store.bufferbar);
   
@@ -405,21 +406,21 @@ void Display::_swichMode(displayMode_e newmode) {
       }
     #endif
     if (config.store.volumepage) {
-      _showDialog(LANG::const_DlgVolume);
+      _showDialog(l10n(L10N_LBL_VOLUME));
     }
     #ifndef HIDE_IP
       if (_volip) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
     #endif
     _nums->setText(config.store.volume, numtxtFmt);
   }
-  if (newmode == LOST)      _showDialog(LANG::const_DlgLost);
-  if (newmode == UPDATING)  { _showDialog(LANG::const_DlgUpdate);
+  if (newmode == LOST)      _showDialog(l10n(L10N_LBL_LOST));
+  if (newmode == UPDATING)  { _showDialog(l10n(L10N_LBL_UPDATE));
     #ifdef UPDATEURL
       _updFirstCall = true;
     #endif
   }
   if (newmode == SLEEPING)  _showDialog("SLEEPING");
-  if (newmode == SDCHANGE)  _showDialog(LANG::const_waitForSD);
+  if (newmode == SDCHANGE)  _showDialog(l10n(L10N_LBL_WAITFORSD));
   if (newmode == INFO || newmode == SETTINGS || newmode == TIMEZONE || newmode == WIFI) _showDialog("");
   if (newmode == NUMBERS) _showDialog("");
   if (newmode == STATIONS) {
@@ -621,11 +622,11 @@ void Display::loop() {
           break;
         }
         case BOOTSTRING: {
-          if (_bootstring) _bootstring->setText(config.ssids[request.payload].ssid, LANG::bootstrFmt);
+          if (_bootstring) _bootstring->setText(config.ssids[request.payload].ssid, l10n(L10N_MSG_WIFI));
           break;
         }
         case WAITFORSD: {
-          if (_bootstring) _bootstring->setText(LANG::const_waitForSD);
+          if (_bootstring) _bootstring->setText(l10n(L10N_LBL_WAITFORSD));
           break;
         }
         case SDFILEINDEX: {
@@ -858,7 +859,7 @@ void Display::init() {
   _createDspTask();
 }
 void Display::_start() {
-  config.setTitle(LANG::const_PlReady);
+  config.setTitle(l10n(L10N_MSG_READY));
 }
 
 void Display::putRequest(displayRequestType_e type, int payload) {

@@ -192,7 +192,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "irtlp"))             { controls.setIRTolerance(static_cast<uint8_t>(atoi(value))); return true; }
 
   /* Options: Locale */
-  if (cmdIs(command, "locale_webui")) { utility.updateLocaleFileAsync(value, cid); return true; }
+  if (cmdIs(command, "locale_webui")) { config.saveValue(config.store.locale_webui, value); return true; }
   if (cmdIs(command, "tz_name"))      { config.saveValue(config.store.tz_name, value); return true; }
   if (cmdIs(command, "tzposix"))      { config.saveValue(config.store.tzposix, value); network.forceTimeSync = true; network.requestTimeSync(true); return true; }
   if (cmdIs(command, "sntp1"))        { config.saveValue(config.store.sntp1, value); network.forceTimeSync = true; network.requestTimeSync(true); return true; }

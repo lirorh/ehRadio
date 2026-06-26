@@ -21,6 +21,7 @@
 #include "player.h"
 #include "telnet.h"
 #include "utility.h"
+#include "../locale/wwwlocale.h"
 #include "../locale/dsplocale.h"
 #include "../displays/dspcore.h"
 #include "../displays/widgets/widgetsconfig.h" //BitrateFormat
@@ -189,31 +190,22 @@ char* updateError() {
 }
 
 void handleDynamicLocale(AsyncWebServerRequest *request) {
-  // Dynamically serve the current locale file as /locale.json
-  // Maps to /www/{locale_code}.json[.gz] based on config.store.locale_webui or WEBUI_LOCALE
-  char localeFile[64];
-  #ifdef UPDATEURL
-    // Update capability enabled - use config.store.locale_webui (user can download locales)
-    const char* localeCode = config.store.locale_webui;
-  #else
-    // Update capability disabled - use hardcoded WEBUI_LOCALE
-    const char* localeCode = WEBUI_LOCALE;
-  #endif
-  // Try .gz version first (production builds use gzipped files)
-  snprintf(localeFile, sizeof(localeFile), "/www/%s.json.gz", localeCode);
-  if (SPIFFS.exists(localeFile)) {
-    AsyncWebServerResponse *response = request->beginResponse(SPIFFS, localeFile, "application/json");
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
+  // Serve locale.json from PROGMEM based on config.store.locale_webui
+  if (strcmp(config.store.locale_webui, HARDCODED_WEBUI_LOCALE) == 0) {
+    request->send(404); // No locale needed — hardcoded text matches target language
     return;
   }
-  // Try non-gzipped version
-  snprintf(localeFile, sizeof(localeFile), "/www/%s.json", localeCode);
-  if (SPIFFS.exists(localeFile)) {
-    request->send(SPIFFS, localeFile, "application/json");
-    return;
+  for (uint8_t i = 0; i < WWW_LOCALE_COUNT; i++) {
+    if (strcmp_P(config.store.locale_webui, ((const char*)pgm_read_ptr(&www_locales[i].code))) == 0) {
+      request->send_P(200, "application/json", (const char*)pgm_read_ptr(&www_locales[i].data));
+      return;
+    }
   }
-  request->send(404, "text/plain", "Locale file not found");
+  request->send(404);
+}
+
+void handleWWWLocaleIndex(AsyncWebServerRequest *request) {
+  request->send_P(200, "application/json", wwwlocale_index);
 }
 
 void handleSearch(AsyncWebServerRequest *request) {
@@ -368,6 +360,7 @@ bool NetServer::begin(bool quiet) {
   webserver.on("/", HTTP_ANY, handleIndex);
   webserver.on("/ready", HTTP_GET, handleReady);
   webserver.on("/locale.json", HTTP_GET, handleDynamicLocale);
+  webserver.on("/wwwlocale.json", HTTP_GET, handleWWWLocaleIndex);
   webserver.on("/search", HTTP_GET, handleSearch);
   webserver.on("/search", HTTP_POST, handleSearchPost);
 

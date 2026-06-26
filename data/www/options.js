@@ -1,7 +1,7 @@
 // Options/Settings page specific functions
 
 const localTZjson = 'timezones.json';
-const localLocalesJson = 'locales.json';
+const localLocalesJson = 'wwwlocale.json';
 let timezoneData = null;
 let localesData = null;
 let pendingTZData = null; // Store WebSocket data if it arrives before timezones load
@@ -327,13 +327,10 @@ function applyLocale(){
   // Check if locale actually changed
   const localeChanged = (selectedCode !== window.originalLocaleWebui);
   if (localeChanged) {
-    // Show downloading message
-    const display = getId('locale_disp');
-    if (display) {
-      display.value = t('msg_please_wait', 'Please wait...');
-    }
-    console.log(`[Locale] Requesting locale change to ${selectedCode}`);
+    console.log(`[Locale] Applying locale change to ${selectedCode}`);
     websocket.send("locale_webui=" + selectedCode);
+    // Reload page after short delay to apply new locale
+    setTimeout(function(){ window.location.reload(); }, 1000);
   } else {
     console.log(`[Locale] Locale unchanged (${selectedCode}), skipping download`);
   }

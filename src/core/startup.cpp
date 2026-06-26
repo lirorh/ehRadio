@@ -259,27 +259,6 @@ void Startup::checkNewVersionFile() {
   #endif
 }
 
-bool Startup::checkLocaleFile() {
-  if (strcmp(config.store.locale_webui, HARDCODED_WEBUI_LOCALE) == 0) {
-    FUNCTIONLOG("Locale Check", "%s uses hardcoded default, no file needed", HARDCODED_WEBUI_LOCALE);
-    return true;
-  }
-
-  char localeFileGz[64];
-  char localeFile[64];
-  snprintf(localeFileGz, sizeof(localeFileGz), "/www/%s.json.gz", config.store.locale_webui);
-  snprintf(localeFile, sizeof(localeFile), "/www/%s.json", config.store.locale_webui);
-  if (SPIFFS.exists(localeFileGz)) {
-    FUNCTIONLOG("Locale Check", "Found %s.json.gz", config.store.locale_webui);
-    return true;
-  }
-  if (SPIFFS.exists(localeFile)) {
-    FUNCTIONLOG("Locale Check", "Found %s.json", config.store.locale_webui);
-    return true;
-  }
-  FUNCTIONLOG("Locale Check", "Locale file not found for %s", config.store.locale_webui);
-  return false;
-}
 
 void Startup::startupServicesAsync(void* param) {
   // Delay to let audio stream buffer fill before background HTTP tasks compete for WiFi
@@ -287,10 +266,6 @@ void Startup::startupServicesAsync(void* param) {
   vTaskDelay(pdMS_TO_TICKS(1000*STARTUP_ASYNC_SERVICES_DELAY));
   BOOTLOG("Startup Async Services starting", STARTUP_ASYNC_SERVICES_DELAY);
   #ifdef UPDATEURL
-    if (!startup.checkLocaleFile()) {
-      FUNCTIONLOG("Locale Check", "Locale file verification failed, updating to %s...", config.store.locale_webui);
-      utility.updateLocaleFile();
-    }
     utility.updateFile(param, "/data/new_ver.txt", CHECKUPDATEURL, CHECKUPDATEURL_TIME, "New version number");
     startup.checkNewVersionFile();
     if (config.store.autoupdate && netserver.newVersionAvailable) {

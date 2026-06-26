@@ -69,7 +69,7 @@ _translation_input_locale = "en_US"
 _translation_lang_cache = {}
 _translation_error_shown = False
 
-META_KEYS = {'locale_code', 'locale', 'locale_en'}
+META_KEYS = ('locale_code', 'locale', 'locale_en')  # tuple — order matters for sort_keys_by_master
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DISPLAY_DIR = os.path.join(SCRIPT_DIR, 'display')

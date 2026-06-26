@@ -44,7 +44,7 @@ especially in terms of how they are used and how they are built.
 | - IR remote control                           | - same |
 | - Nextion uses advanced control               | - Nextion support removed |
 | Must be flashed using VS Code / Arduino IDE   | Web flasher & Internet OTA updates make getting a new version easy-peasy |
-| English or Russian display                    | 36 Display languages (using a single Unicode font) (builder's choice)
+| English or Russian display                    | 36 Display languages (using a single Unicode font) (easily changeable)
 | MQTT, Telnet, HTTP                            | MQTT, Telnet, HTTP |
 | - mostly used for playback                    | - all WebUI commands are available |
 | Home Assistant integration (through MQTT)     | Home Assistant integration (through MQTT) - improved |
@@ -61,7 +61,7 @@ especially in terms of how they are used and how they are built.
 | ёRadio | ehRadio |
 | ------ | --------|
 | Primarily focused on ESP32                           | Primarily focused on ESP32-S3 |
-| - 4MB of flash is fine                               | - 8MB flash recommended, 4MB certain features will break (until fixed) |
+| - 4MB of flash is fine                               | - 8MB flash recommended, 4MB possible but will break features |
 | - ESP-WROVER has PSRAM, works better                 | - ESP-WROVER with PSRAM probably supported but untested |
 | - ESP32-WROOM has no PSRAM but still functions       | - ESP32-WROOM likely doesn't work at all |  
 | - Some support for ESP32-S3 and ESP32-C3             | - ESP32-S3 well-tested, ESP32-C3 untested |
@@ -69,7 +69,7 @@ especially in terms of how they are used and how they are built.
 | - I2S PCM decoder                                    | - I2S and VS1053 updated (for higher bitrate streams) |
 | - VS1053 (or VS1003)                                 | - ES8311 works (a common codec on ESP32-S3 display boards) |
 | - ESP32's builtin DAC                                |   |
-| Multiple displays                                    | Uses 'ёRadio' display architecture |
+| Multiple displays                                    | Based on 'ёRadio' display architecture |
 | - see `options.h` for a full list                    | - ёRadio and ehRadio display configs should be compatible with each other |
 | SPI buses use default pins                           | SPI buses can use custom pins |
 | - SPI display and VS1053 can only use VSPI or HSPI   | - non-standard bus pins may be assigned to Bus A or B |

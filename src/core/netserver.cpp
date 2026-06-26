@@ -190,14 +190,18 @@ char* updateError() {
 }
 
 void handleDynamicLocale(AsyncWebServerRequest *request) {
-  // Serve locale.json from PROGMEM based on config.store.locale_webui
+  // Serve locale.json (gzip-compressed) from PROGMEM based on config.store.locale_webui
   if (strcmp(config.store.locale_webui, HARDCODED_WEBUI_LOCALE) == 0) {
     request->send(404); // No locale needed — hardcoded text matches target language
     return;
   }
   for (uint8_t i = 0; i < WWW_LOCALE_COUNT; i++) {
     if (strcmp_P(config.store.locale_webui, ((const char*)pgm_read_ptr(&www_locales[i].code))) == 0) {
-      request->send_P(200, "application/json", (const char*)pgm_read_ptr(&www_locales[i].data));
+      uint16_t size = pgm_read_word(&www_locales[i].size);
+      AsyncWebServerResponse *response = request->beginResponse(200, "application/json",
+        (const uint8_t*)pgm_read_ptr(&www_locales[i].data), size);
+      response->addHeader("Content-Encoding", "gzip");
+      request->send(response);
       return;
     }
   }
@@ -205,7 +209,7 @@ void handleDynamicLocale(AsyncWebServerRequest *request) {
 }
 
 void handleWWWLocaleIndex(AsyncWebServerRequest *request) {
-  request->send_P(200, "application/json", wwwlocale_index);
+  request->send(200, "application/json", wwwlocale_index);
 }
 
 void handleSearch(AsyncWebServerRequest *request) {

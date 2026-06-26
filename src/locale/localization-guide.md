@@ -1,6 +1,6 @@
 # ehRadio — Languages, Fonts & Localization
 
-This document explains the localization pipeline: how language selection flows from a `myoptions.h` define through locale strings and the GFXfont renderer to the display.
+This document explains the localization pipeline: how language selection flows from JSON source files through PROGMEM-compiled headers, the GFXfont renderer, and the WebUI.
 
 ---
 
@@ -8,13 +8,13 @@ This document explains the localization pipeline: how language selection flows f
 
 1. [Overview](#overview)
 2. [Configuration Cascade](#configuration-cascade)
-3. [Picking a Language — `DSP_LANGUAGE`](#picking-a-language--dsp_language)
-4. [Locale Files (`displayL10n_*.h`)](#locale-files-displayl10n_h)
-5. [The Include Chain (`l10n.h`)](#the-include-chain-l10nh)
-6. [Custom Locale Override](#custom-locale-override)
+3. [Picking a Language — `DSP_LOCALE`](#picking-a-language--dsp_locale)
+4. [Display Locale Files (`src/locale/display/*.json`)](#display-locale-files-srclocaledisplayjson)
+5. [The Compile Chain (`dsplocale.h`)](#the-compile-chain-dsplocaleh)
+6. [Runtime Locale Switching](#runtime-locale-switching)
 7. [Display Font (`dspfont.h`)](#display-font-dspfonth)
 8. [Text Rendering Pipeline](#text-rendering-pipeline)
-9. [Weather Language (`weatherLang`)](#weather-language-weatherlang)
+9. [Weather Descriptions (WMO Codes)](#weather-descriptions-wmo-codes)
 10. [How to Add a New Language](#how-to-add-a-new-language)
 11. [WebUI i18n](#webui-i18n)
 12. [Developer Tools](#developer-tools)
@@ -26,11 +26,11 @@ This document explains the localization pipeline: how language selection flows f
 The display uses a **Unicode GFXfont** (Adafruit GFXfont format, converted from BDF), selected via the `DISPLAYFONT` macro in `dspfont.h`. The font contains 400+ glyphs covering Latin, Cyrillic, Greek, and other scripts — it can render these characters directly without transliteration or codepage switching.
 
 The active language controls:
-- UI strings (day names, month names, wind directions, weather labels) from `displayL10n_*.h`
-- The language code sent to the OpenWeather API
+- UI strings (day names, month names, wind directions, weather labels, status messages) from JSON source files compiled into `dsplocale.h`
+- Weather descriptions via WMO code → locale-aware lookup
 - Optional all-caps conversion for languages with no lowercase distinction in the font
 
-Separately, the **WebUI** (served from the device over Wi-Fi) has its own runtime i18n layer: translated strings are loaded from JSON files on the device filesystem.
+Separately, the **WebUI** has its own runtime i18n layer: translated strings are compiled into `wwwlocale.h` as gzip-compressed PROGMEM arrays and served directly from firmware flash.
 
 ---
 
@@ -46,80 +46,78 @@ myoptions.h                 ← your hardware & locale overrides
 mytheme.h                   ← colour / UI overrides (optional)
 ```
 
-All language configuration belongs in **`myoptions.h`**. Language selection is **compile‑time only**.
+The display locale default is set via `DSP_LOCALE` in `myoptions.h`. Both display and WebUI locales can also be changed at runtime via the settings page.
 
 ---
 
-## Picking a Language — `DSP_LANGUAGE`
+## Picking a Language — `DSP_LOCALE`
 
 In `myoptions.h`, set:
 
 ```cpp
-#define DSP_LANGUAGE_de_DE
+#define DSP_LOCALE "de_DE"
 ```
 
-If a `DSP_LANGUAGE_*` is not defined, it defaults to `DSP_LANGUAGE_en_US`.
+If `DSP_LOCALE` is not defined, it defaults to `"en_US"`. A `static_assert` in `dsplocale.h` validates the value at compile time against all known locale codes.
 
-Each language entry in `src/core/locale.h` selects:
-- The locale header file to include
-- The `weatherLang` API code for OpenWeather
-- Whether `allCaps()` is applied (for scripts that are uppercase-only in the font)
-
-The full list of supported languages is in `src/core/locale.h`.
+At boot, `_activeLocale` is set from the saved `config.store.locale_display` preference (which defaults to `DSP_LOCALE`). Runtime changes persist to NVS and take effect immediately.
 
 ---
 
-## Locale Files (`displayL10n_*.h`)
+## Display Locale Files (`src/locale/display/*.json`)
 
-Each locale file lives in `src/locale/` and is named using IETF BCP 47 format:
+Each locale file lives in `src/locale/display/` and is named using IETF BCP 47 format:
 
 ```
-src/locale/displayL10n_en_US.h
-src/locale/displayL10n_ru_RU.h
-src/locale/displayL10n_uk_UA.h
+src/locale/display/en_US.json  ← master (canonical key set)
+src/locale/display/ru_RU.json
+src/locale/display/uk_UA.json
 ...
 ```
 
-Every locale file defines the same set of `PROGMEM` string constants in the `LANG` namespace:
+Every locale file contains the same set of 67 keys, defined by `en_US.json`:
 
-| Constant group | Example values |
+| Key group | Examples |
 |---|---|
-| Short day names | `mon`, `tue`, `wed`, `thu`, `fri`, `sat`, `sun` |
-| Full day names | `monday`, `tuesday`, `wednesday`, … |
-| Month names | `jan`, `feb`, `mar`, … `dec` |
-| Wind direction strings | `wn_N`, `wn_NE`, `wn_E`, … `wn_NNW` |
-| Weather condition labels | `wc_thunder`, `wc_rain`, `wc_snow`, `wc_clear`, etc. |
-| OpenWeather language code | `weatherLang[]` — the API `lang` parameter |
+| Short day names | `day_mon`, `day_tue`, … `day_sun` |
+| Month names | `mon_jan`, `mon_feb`, … `mon_dec` |
+| Wind direction strings | `msg_wind_n`, `msg_wind_ne`, … `msg_wind_nnw` |
+| Weather condition labels | `msg_w_clear_sky`, `msg_w_overcast`, `msg_w_foggy`, … `msg_w_thunderstorm_hail` |
+| Status/UI labels | `msg_ready`, `msg_stopped`, `lbl_volume`, `lbl_w_feelslike`, etc. |
+| Metadata | `locale_code`, `locale`, `locale_en` |
 
-All strings are stored in flash (`PROGMEM`) to conserve RAM.
-
----
-
-## The Include Chain (`l10n.h`)
-
-`src/displays/tools/l10n.h` is the single include point for locale strings:
-
-1. Checks `DSP_LANGUAGE_*` with an `#if / #elif` ladder and sets `L10N_INCLUDE` to the matching locale file path.
-2. Checks whether `src/locale/displayL10n_custom.h` exists — if so, it is included **instead** of the auto-selected locale (see below).
-3. Wraps `L10N_INCLUDE` inside `namespace LANG { ... }` so locale strings don't pollute the global namespace.
-
-All display code that needs localized strings includes `l10n.h` and accesses strings as `LANG::mon`, `LANG::weatherLang`, etc.
+`en_US.json` is the **master key reference** — all other files are validated against it. Any key not present in `en_US.json` is considered stale and removed by the clean tool.
 
 ---
 
-## Custom Locale Override
+## The Compile Chain (`dsplocale.h`)
 
-To modify UI strings without touching built-in locale files, create:
+`src/locale/dsplocale.h` is AUTO-GENERATED by `make_dsplocale.py`. It is the single include point for display locale strings:
 
-```
-src/locale/displayL10n_custom.h
-```
+1. Validates all JSON files: missing keys, extra keys, `locale_code` mismatches.
+2. Generates a `L10nKey` enum (e.g., `L10N_DAY_MON`, `L10N_MSG_WIND_N`).
+3. Generates per-string PROGMEM constants for every locale.
+4. Generates a 2D pointer table `l10n_strings[36][67]` for O(1) runtime lookup.
+5. Generates `l10n_findLocale()`, `l10n_str()`, `l10n()`, `l10n_dow()`, `l10n_month()`, `l10n_wind()` inline helpers.
+6. Embeds `dsplocale_index` — a PROGMEM JSON string served at `/dsplocale.json` for the WebUI display locale dropdown.
 
-This file completely replaces the auto-selected locale — the compiler will not include the standard `displayL10n_*.h`. Copy the locale you want to base yours on and edit from there.
-
-Add it to your `.gitignore` so it persists across project updates.
+All display code that needs localized strings calls `l10n(L10N_XXX)`.
 
 ---
+
+## Runtime Locale Switching
+
+Unlike the old compile-time-only system, the display locale can be changed at runtime:
+
+1. WebUI sends `locale_disp=fr_FR` over websocket.
+2. `commandhandler.cpp` persists to `config.store.locale_display` and sets `_activeLocale = l10n_findLocale(value)`.
+3. Weather string is rebuilt with new locale via `network.buildWeatherString()`.
+4. Clock widget is force-redrawn via `display.putRequest(CLOCK, true)`.
+
+The `_activeLocale` index (0-35) is used by all `l10n()` calls — zero RAM cost for string storage (all PROGMEM).
+
+---
+
 
 ## Display Font (`dspfont.h`)
 
@@ -166,29 +164,72 @@ All text rendering goes through `DspCore::write(uint8_t)` → `_writeGlyph(uint1
 
 ---
 
-## Weather Language (`weatherLang`)
+## Weather Descriptions (WMO Codes)
 
-Each locale file defines `weatherLang[]` — a PROGMEM string sent as the `lang` parameter to the OpenWeather API. This controls the language of weather condition text returned by the API (e.g., "Clouds" vs "Облачно").
+Weather condition text uses WMO (World Meteorological Organization) codes, not API language parameters. The `getWMODescription()` function in `network.cpp` maps WMO codes 0–99 to `L10nKey` enum values:
+
+| WMO Code | L10nKey | Example (en_US) |
+|---|---|---|
+| 0 | `L10N_MSG_W_CLEAR_SKY` | Clear sky |
+| 1-3 | `L10N_MSG_W_OVERCAST` | Overcast |
+| 45, 48 | `L10N_MSG_W_FOGGY` | Fog |
+| 51-57 | `L10N_MSG_W_DRIZZLE` | Drizzle |
+| 56-57 | `L10N_MSG_W_FREEZING_DRIZZLE` | Freezing drizzle |
+| 61-67 | `L10N_MSG_W_RAIN` | Rain |
+| 66-67 | `L10N_MSG_W_FREEZING_RAIN` | Freezing rain |
+| 71-77 | `L10N_MSG_W_SNOW` | Snow |
+| 77 | `L10N_MSG_W_SNOW_GRAINS` | Snow grains |
+| 80-82 | `L10N_MSG_W_RAIN_SHOWERS` | Rain showers |
+| 85-86 | `L10N_MSG_W_SNOW_SHOWERS` | Snow showers |
+| 95 | `L10N_MSG_W_THUNDERSTORM` | Thunderstorm |
+| 96, 99 | `L10N_MSG_W_THUNDERSTORM_HAIL` | Thunderstorm with hail |
+
+A `has_wmo` flag ensures code 0 ("Clear sky") is not confused with "no WMO data". The weather string is rebuilt whenever the locale changes via `buildWeatherString()` + `NEWWEATHER` request.
 
 ---
 
 ## How to Add a New Language
 
-1. **Copy an existing locale file:**
+### Display locale
+
+1. **Create the display JSON:**
    ```
-   src/locale/displayL10n_en_US.h  →  src/locale/displayL10n_xx_XX.h
+   py display_tool.py xx_XX --create
+   ```
+   This copies `en_US.json` to `src/locale/display/xx_XX.json` with empty translation values.
+
+2. **Translate:**
+   ```
+   py display_tool.py xx_XX --translate --fast --clean --sort
+   ```
+   Uses DeepL auto-translation (requires `trans_deepl.key` setup). Alternatively, edit the JSON manually.
+
+3. **Rebuild `dsplocale.h`:**
+   ```
+   py src/locale/make_dsplocale.py
+   ```
+   This validates all files, generates the PROGMEM header, and updates the WebUI index.
+
+### WebUI locale
+
+1. **Create the www JSON:**
+   ```
+   py www_tool.py xx_XX --create
+   ```
+   Copies `src/locale/www/en_US.json` with empty values.
+
+2. **Translate:**
+   ```
+   py www_tool.py xx_XX --translate --fast --clean --sort
    ```
 
-2. **Translate all string constants** (day names, month names, weather labels, wind directions).
+3. **Rebuild `wwwlocale.h`:**
+   ```
+   py src/locale/make_wwwlocale.py
+   ```
+   Gzip-compresses all www JSONs into PROGMEM byte arrays.
 
-3. **Add an `#elif` branch** in `src/core/locale.h` with the locale include, weather language code, and `allCaps` setting. Keep alphabetically ordered.
-
-4. **Update `src/locale/l10n.md`** with the new entry.
-
-5. **Add a WebUI locale JSON file** in `src/locale/webui/`. Copy `src/locale/webui/en_US.json`, rename to `{code}.json`, and translate all values. The build script deploys it to SPIFFS.
-
-6. **Set `DSP_LANGUAGE_xx_XX`** in `myoptions.h` and build.
-   Optionally define `WEBUI_LANGUAGE` if the WebUI should use a different locale than the display.
+4. **Rebuild firmware** — both `dsplocale.h` and `wwwlocale.h` are compile-time includes.
 
 ---
 
@@ -198,7 +239,7 @@ The WebUI has its own runtime translation layer, independent of the firmware dis
 
 ### How it works
 
-1. **Language detection** — the server serves `locale.json` from SPIFFS matching the preferred locale code. If `en_US` is selected (and the HTML contains English), no JSON is fetched — built-in text is used.
+1. **Language detection** — `script2.js` fetches `/locale.json` from the device. If the locale matches the hardcoded `HARDCODED_WEBUI_LOCALE`, the server returns 404 and built-in English text is used.
 
 2. **`t(key, ...args)` helper** — looks up `key` in the loaded `i18n` object. Positional placeholders `{0}`, `{1}` are substituted with extra arguments.
 
@@ -212,16 +253,26 @@ The WebUI has its own runtime translation layer, independent of the firmware dis
 
 7. **CSS knob labels** — toggle switch text is set via CSS custom properties from `t('lbl_off')` / `t('lbl_on')`.
 
-### JSON locale files
+### PROGMEM serving
 
-WebUI locale JSONs live in `src/locale/webui/`. The build script (`platformio_pre_gzip_www.py`) copies the selected JSON to `data/www/locale/` before building the SPIFFS image.
+All WebUI locale data is compiled into `wwwlocale.h` as gzip-compressed PROGMEM byte arrays. The server serves:
+
+| Route | Content | Header |
+|---|---|---|
+| `/locale.json` | Gzip-compressed locale JSON | `Content-Encoding: gzip` |
+| `/wwwlocale.json` | Locale index (native names) | `application/json` |
+| `/dsplocale.json` | Display locale index | `application/json` |
+
+No SPIFFS files are needed — everything is zero-RAM PROGMEM.
+
+### JSON source files
+
+WebUI locale JSONs live in `src/locale/www/`.
 
 | File | Purpose |
 |---|---|
-| `src/locale/webui/en_US.json` | Master key reference (not deployed — English is hardcoded) |
-| `src/locale/webui/ru_RU.json` | Russian translation example |
-
-To add a language: copy `en_US.json`, rename to `<code>.json`, translate all values, run `make_data_www_locales_json.py` to regenerate the locale list.
+| `src/locale/www/en_US.json` | Master key reference |
+| `src/locale/www/ru_RU.json` | Russian translation example |
 
 ### Key categories
 
@@ -237,22 +288,30 @@ To add a language: copy `en_US.json`, rename to `<code>.json`, translate all val
 
 ## Developer Tools
 
-### Python tools in `src/locale/`
+### Build tools
 
 | Tool | Purpose |
 |---|---|
-| `scan_www_check_json.py` | Checks `.html`/`.js` files against a locale `.json` — can auto-translate, add, sort, and delete missing keys |
-| `hardcode_locale_to_webui.py` | Replaces all text in `data/www` files using a locale `.json`; updates `#define HARDCODED_WEBUI_LOCALE` in `locale.h` |
-| `make_data_www_locales_json.py` | Generates `locales.json` for the WebUI locale dropdown |
+| `make_dsplocale.py` | Validates display JSONs, generates `dsplocale.h` PROGMEM header |
+| `make_wwwlocale.py` | Validates www JSONs, gzip-compresses into `wwwlocale.h` PROGMEM header |
+| `hardcode_locale_to_webui.py` | Replaces all text in `data/www` files using a locale `.json`; updates `#define HARDCODED_WEBUI_LOCALE` |
 
-### Translation assistance
+### Maintenance tools
 
-| `scan_trans_deepl.py` | Auto-translation via DeepL API |
-| `scan_trans_deepl.md` | Setup instructions for DeepL |
+| Tool | Purpose |
+|---|---|
+| `www_tool.py` | Scan HTML/JS for i18n keys, check/add/translate/sort/clean www locale JSONs. Use `--create` to create new locale from `en_US`. |
+| `display_tool.py` | Manage display JSONs against master (`en_US.json`). Sort uses master key order. Clean never touches master. `--create` copies master with empty values. |
+| `trans_deepl.py` | Auto-translation via DeepL API |
+| `trans_deepl.md` | Setup instructions for DeepL (API key, installation, usage) |
 
-Usage: `py scan_trans_deepl.py en_US de_DE Hello` → `Hallo`
+### Translation discovery
 
-To add another translation API, create a `scan_trans_<api>.py` script matching the same command-line and output structure. `scan_www_check_json.py` automatically discovers any `scan_trans_*.py` that has a matching `scan_trans_<api>.key` file.
+`www_tool.py` and `display_tool.py` automatically discover translation services by scanning for `trans_*.key` files paired with `trans_*.py` scripts. To add another translation API, create `trans_<api>.py` and `trans_<api>.key` matching the same command-line structure:
+
+```bash
+py trans_deepl.py en_US de_DE "Hello"   # → Hallo
+```
 
 ### Font conversion
 

@@ -1,16 +1,16 @@
 # DeepL Translation Service Setup
 
-Get your free API key from: https://www.deepl.com/pro-api  
+Get your free API key from: https://www.deepl.com/pro-api
 Free tier: 500,000 characters/month
 
 ## Setup Instructions
 
 1. **Sign up** at https://www.deepl.com/pro-api (free tier available)
 2. **Copy your API key**
-3. **Create file** `scan_trans_deepl.key` in this directory
+3. **Create file** `trans_deepl.key` in this directory
 4. **Paste your API key** into the file (one line, no quotes needed)
 
-Example `scan_trans_deepl.key` content:
+Example `trans_deepl.key` content:
 ```
 012abc34-56d7-890e-f123-abc456d7e8f9:fx
 ```
@@ -30,17 +30,17 @@ Test the translation module directly. All text after the language codes is treat
 
 ```bash
 # Single word (no quotes needed)
-py scan_trans_deepl.py en_US de_DE Hello
+py trans_deepl.py en_US de_DE Hello
 
 # Multiple words (shell requires quotes to group them)
-py scan_trans_deepl.py en_US de_DE "Hello World"
-py scan_trans_deepl.py en_US hr_HR "Time Sync Interval (hours)"
+py trans_deepl.py en_US de_DE "Hello World"
+py trans_deepl.py en_US hr_HR "Time Sync Interval (hours)"
 
 # Text containing quotes (PowerShell - use single quotes outside)
-py scan_trans_deepl.py en_US es_ES '"He said Hello"'
+py trans_deepl.py en_US es_ES '"He said Hello"'
 ```
 
-**Note**: When called programmatically by scan_www_check_json.py, all characters are passed exactly (no shell processing).
+**Note**: When called programmatically by www_tool.py or display_tool.py, all characters are passed exactly (no shell processing).
 
 **Known Limitation**: DeepL API may normalize punctuation (quotes, apostrophes) as it's designed for natural language translation, not exact character preservation. Example:
 - Input: `"Hello"` → Output: `Hallo` (quotes removed)

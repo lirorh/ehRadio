@@ -6,11 +6,11 @@ NOTE:
     Check .md files for how to install full translation support
 
 USAGE:
-    python scan_www_check_json.py <locale> [mode] [options]
-    python scan_www_check_json.py * [mode] [options]
+    python www_tool.py <locale> [mode] [options]
+    python www_tool.py * [mode] [options]
 
 TARGET:
-    <locale>         One locale → .json file in the webui folder (en_US → en_US.json)
+    <locale>         One locale → .json file in the www folder (en_US → en_US.json)
     *                All locales → all .json files
 
 MODES:
@@ -24,22 +24,23 @@ OPTIONS:
     --translate, -t  Translate HTML Found text (can't use with --diff)
     --clean, -c      Auto-delete unused keys (no prompt)
     --sort, -s       Auto-sort keys hierarchically at end (no prompt)
+    --create         Auto-create missing locale JSON from en_US.json with empty values
 
 EXAMPLES:
     # Interactive check of one file
-    py scan_www_check_json.py fr_FR
+    py www_tool.py fr_FR
 
     # Interactive check of each key with translation (cleaned & sorted file)
-    py scan_www_check_json.py * --translate --clean --sort
+    py www_tool.py * --translate --clean --sort
 
     # Fast mode WITH translation (auto-translate all missing keys in all files)
-    py scan_www_check_json.py * --translate --fast --clean --sort
+    py www_tool.py * --translate --fast --clean --sort
 
     # Diff mode (never uses translation, useful for checking that hard-coded text and locale file are same)
-    py scan_www_check_json.py en_US --diff
+    py www_tool.py en_US --diff
 
     # Ndiff mode (prompt only when text matches - to find/fix untranslated text with translation)
-    py scan_www_check_json.py de_DE --ndiff --translate --clean --sort
+    py www_tool.py de_DE --ndiff --translate --clean --sort
 """
 
 import os
@@ -71,7 +72,7 @@ _translation_error_shown = False
 
 def detect_translation_service():
     """
-    Detect available translation service by scanning for scan_trans_*.api files.
+    Detect available translation service by scanning for trans_*.key files.
     Returns: service name (e.g., 'deepl', 'google') or None if none available
     """
     global _translation_service, _translation_check_done
@@ -84,13 +85,13 @@ def detect_translation_service():
     # Get script directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # Scan for any scan_trans_*.key files
-    key_files = glob.glob(os.path.join(script_dir, 'scan_trans_*.key'))
+    # Scan for any trans_*.key files
+    key_files = glob.glob(os.path.join(script_dir, 'trans_*.key'))
     
     for key_file in sorted(key_files):  # Sorted for consistent order
-        # Extract service name from filename: scan_trans_deepl.key -> deepl
+        # Extract service name from filename: trans_deepl.key -> deepl
         basename = os.path.basename(key_file)
-        service_name = basename[11:-4]  # Remove 'scan_trans_' prefix and '.key' suffix
+        service_name = basename[6:-4]  # Remove 'trans_' prefix and '.key' suffix
         
         # Check if key file has content (not just comments)
         has_key = False
@@ -108,7 +109,7 @@ def detect_translation_service():
             continue
         
         # Check if matching .py script exists
-        script_file = os.path.join(script_dir, f'scan_trans_{service_name}.py')
+        script_file = os.path.join(script_dir, f'trans_{service_name}.py')
         if os.path.exists(script_file):
             # Found a valid translation service!
             _translation_service = service_name
@@ -148,7 +149,7 @@ def translate_text(text, source_locale=None, target_locale=None):
     # Call external translation script (generic for any service)
     if service:
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        script_path = os.path.join(script_dir, f'scan_trans_{service}.py')
+        script_path = os.path.join(script_dir, f'trans_{service}.py')
         
         try:
             # Pass: source_lang target_lang "text"
@@ -534,15 +535,40 @@ def sort_json_data(data):
     return {key: data[key] for key in sorted_keys}
 
 
-def process_locale_file(locale_code, www_path, json_path, mode, auto_clean, auto_sort, use_translate=False):
+def process_locale_file(locale_code, www_path, json_path, mode, auto_clean, auto_sort, use_translate=False, auto_create=False):
     """Process a single locale file."""
     print(f"\n{'='*60}")
     print(f"Processing: {locale_code}.json")
     print(f"{'='*60}")
     
     if not os.path.exists(json_path):
-        print(f"Error: JSON file not found at {json_path}")
-        return False
+        if auto_create and locale_code != 'en_US':
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            master_path = os.path.join(script_dir, 'www', 'en_US.json')
+            if os.path.exists(master_path):
+                with open(master_path, 'r', encoding='utf-8') as f:
+                    master_data = json.load(f)
+                new_data = {}
+                for key, value in master_data.items():
+                    if key == 'locale_code':
+                        new_data[key] = locale_code
+                    elif key in ('locale', 'locale_en'):
+                        new_data[key] = ''
+                    elif key.startswith('ttl_') or key.startswith('lbl_') or key.startswith('btn_') or key.startswith('msg_') or key.startswith('unit_'):
+                        new_data[key] = ''
+                    else:
+                        new_data[key] = value  # preserve locale_* metadata values (empty)
+                # Ensure directory exists
+                os.makedirs(os.path.dirname(json_path), exist_ok=True)
+                with open(json_path, 'w', encoding='utf-8') as f:
+                    json.dump(new_data, f, ensure_ascii=False, indent=2)
+                print(f"✓ Created {locale_code}.json from en_US.json with empty values")
+            else:
+                print(f"Error: Master en_US.json not found at {master_path}")
+                return False
+        else:
+            print(f"Error: JSON file not found at {json_path}")
+            return False
     
     # Load JSON with automatic trailing comma fix
     try:
@@ -770,6 +796,7 @@ def main():
     parser.add_argument('--ndiff', '-n', action='store_true', help='Only prompt when text is same (to fix untranslated)')
     parser.add_argument('--clean', '-c', action='store_true', help='Auto-delete unused keys (no prompt)')
     parser.add_argument('--sort', '-s', action='store_true', help='Auto-sort keys hierarchically (no prompt)')
+    parser.add_argument('--create', action='store_true', help='Auto-create missing locale JSON from en_US.json with empty values')
     args = parser.parse_args()
     
     # Validate argument combinations
@@ -831,7 +858,7 @@ def main():
             # User requested translation but it's unavailable
             print(f"{'='*60}")
             print("⚠ Error: --translate flag is set but translation is unavailable!")
-            print("⚠ No translation service (add API key to scan_trans_<service>.key)")
+            print("⚠ No translation service (add API key to trans_<service>.key)")
             print(f"{'='*60}")
             sys.exit(1)
         elif mode == 'missing':
@@ -854,11 +881,11 @@ def main():
     # Process file(s)
     if args.locale == '*':
         # Process all locale files
-        webui_path = os.path.join(script_dir, 'webui')
-        json_files = glob.glob(os.path.join(webui_path, '*.json'))
+        www_locale_path = os.path.join(script_dir, 'www')
+        json_files = glob.glob(os.path.join(www_locale_path, '*.json'))
         
         if not json_files:
-            print(f"Error: No JSON files found in {webui_path}")
+            print(f"Error: No JSON files found in {www_locale_path}")
             sys.exit(1)
         
         print(f"Found {len(json_files)} locale file(s) to process")
@@ -866,7 +893,7 @@ def main():
         success_count = 0
         for json_path in sorted(json_files):
             locale_code = os.path.splitext(os.path.basename(json_path))[0]
-            if process_locale_file(locale_code, www_path, json_path, mode, args.clean, args.sort, args.translate):
+            if process_locale_file(locale_code, www_path, json_path, mode, args.clean, args.sort, args.translate, args.create):
                 success_count += 1
         
         print(f"\n{'='*60}")
@@ -875,8 +902,8 @@ def main():
     
     else:
         # Process single locale file
-        json_path = os.path.join(script_dir, 'webui', f'{args.locale}.json')
-        process_locale_file(args.locale, www_path, json_path, mode, args.clean, args.sort, args.translate)
+        json_path = os.path.join(script_dir, 'www', f'{args.locale}.json')
+        process_locale_file(args.locale, www_path, json_path, mode, args.clean, args.sort, args.translate, args.create)
 
 
 if __name__ == '__main__':

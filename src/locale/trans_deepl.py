@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 DeepL Translation Module
-Usage: python scan_trans_deepl.py source_lang target_lang "text to translate"
-Example: python scan_trans_deepl.py en_US de_DE "Hello"
+Usage: python trans_deepl.py source_lang target_lang "text to translate"
+Example: python trans_deepl.py en_US de_DE "Hello"
 Outputs: Translated text (single line)
 Exit codes: 0 = success, 1 = error
 """
@@ -48,12 +48,12 @@ def convert_to_deepl_code(locale_code, is_target=True):
         return locale_code[:2].lower()
 
 def get_api_key():
-    """Read API key from scan_trans_deepl.key file."""
+    """Read API key from trans_deepl.key file."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    key_file = os.path.join(script_dir, 'scan_trans_deepl.key')
+    key_file = os.path.join(script_dir, 'trans_deepl.key')
     
     if not os.path.exists(key_file):
-        print("Error: scan_trans_deepl.key not found", file=sys.stderr)
+        print("Error: trans_deepl.key not found", file=sys.stderr)
         return None
     
     try:
@@ -63,7 +63,7 @@ def get_api_key():
                 # Skip empty lines and comments
                 if line and not line.startswith('#'):
                     return line
-        print("Error: No API key found in scan_trans_deepl.key", file=sys.stderr)
+        print("Error: No API key found in trans_deepl.key", file=sys.stderr)
         return None
     except Exception as e:
         print(f"Error reading API key: {e}", file=sys.stderr)
@@ -153,9 +153,9 @@ def main():
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
     
     if len(sys.argv) < 4:
-        print("Usage: python scan_trans_deepl.py source_lang target_lang text...", file=sys.stderr)
+        print("Usage: python trans_deepl.py source_lang target_lang text...", file=sys.stderr)
         print("  All text after target_lang is treated as input (joined with spaces)", file=sys.stderr)
-        print("Example: python scan_trans_deepl.py en_US de_DE \"Hello World\"", file=sys.stderr)
+        print("Example: python trans_deepl.py en_US de_DE \"Hello World\"", file=sys.stderr)
         sys.exit(1)
     
     source_lang = sys.argv[1]

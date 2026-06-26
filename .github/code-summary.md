@@ -920,29 +920,31 @@ These are **not** third-party packages installable via PlatformIO's registry. Th
 ## Locale and Translation Map (`src/locale`)
 
 ## `src/core/locale.h` (selector)
-- compile-time locale selection and weather language fallback mapping.
-- `WEBUI_LOCALE` default behavior and hardcoded locale fallback constants.
+- Thin include wrapper: includes `dsplocale.h` and defines `WEBUI_LOCALE` from `DSP_LOCALE` if not overridden.
+- `_activeLocale` runtime index (set from `config.store.locale_display`), `l10n()` / `l10n_dow()` / `l10n_month()` / `l10n_wind()` helpers.
+- `l10n_findLocale()` resolves locale code to array index at runtime.
 
-## Display locale files (`src/locale/displayL10n_*.h`)
-- one file per display locale string set.
-- used via `LANG::` namespace throughout display/system text.
+## Display locale files (`src/locale/display/*.json`)
+- 36 JSON source files (one per locale), compiled via `make_dsplocale.py` into `dsplocale.h` PROGMEM mega-header.
+- Master key set defined by `en_US.json` (67 keys: days, months, wind, weather, status labels).
+- `static_assert` validates `DSP_LOCALE` at compile time against known locale codes.
+- `dsplocale_index` PROGMEM string served at `/dsplocale.json` for WebUI dropdown.
 
-## WebUI locale files (`src/locale/webui/*.json`)
-- one JSON per WebUI language.
-- consumed by `data/www/locale.js`.
+## WebUI locale files (`src/locale/www/*.json`)
+- 50 JSON source files, compiled via `make_wwwlocale.py` into `wwwlocale.h` PROGMEM (gzip-compressed byte arrays).
+- Served from PROGMEM at `/locale.json` (with `Content-Encoding: gzip`) and `/wwwlocale.json` (index).
+- No SPIFFS files needed — all locale data is compile-time embedded.
 
-## Locale docs/scripts
-- `src/locale/l10n.md`: locale listing matrix.
-- `src/locale/localization-guide.md`: full localization/font pipeline doc.
-- `src/locale/make_data_www_locales_json.py`: regenerate `locales.json`.
-- `src/locale/scan_www_check_json.py`: check i18n key consistency.
-- `src/locale/hardcode_locale_to_webui.py`: bake locale text into WebUI assets.
-- `src/locale/scan_trans_deepl.py` and notes: translation helper.
+## Locale build tools
+- `src/locale/make_dsplocale.py`: validates display JSONs, generates `dsplocale.h` with PROGMEM string tables + enum.
+- `src/locale/make_wwwlocale.py`: validates webui JSONs, gzip-compresses into `wwwlocale.h` PROGMEM byte arrays.
+- `src/locale/hardcode_locale_to_webui.py`: bake locale text into WebUI assets (for `HARDCODED_WEBUI_LOCALE`).
 
-## GLCD font files
-- `src/locale/glcdfont/glcdfont_Latin.c` / `glcdfont_Cyrillic.c` / docs.
-- `glcdfont-lib.c` for base/reference.
-- glyph tool scripts under `src/locale/glcdfont/glyph_scripts`.
+## Locale maintenance tools
+- `src/locale/www_tool.py` (was `scan_www_check_json.py`): scan HTML/JS for i18n keys, check/add/translate/sort www locale JSONs. Supports `--create`.
+- `src/locale/display_tool.py` (NEW): manage display JSONs against master. Sort uses master key order (never alphabetizes). Clean never touches master. Supports `--create`.
+- `src/locale/trans_deepl.py` (was `scan_trans_deepl.py`): DeepL translation module. Uses `trans_*.key` discovery pattern (was `scan_trans_*.key`).
+- `src/locale/trans_deepl.md` (was `scan_trans_deepl.md`): DeepL setup + usage docs.
 
 ---
 
@@ -965,7 +967,7 @@ This section is specifically for adding/removing settings and avoiding missed li
 7. Add WebUI wiring:
    - element in `data/www/settings.html` with id and `data-command`.
    - fallback label text + `data-i18n` key.
-   - add i18n key in `src/locale/webui/en_US.json` (and optionally others).
+   - add i18n key in `src/locale/www/en_US.json` (and optionally others).
 8. Ensure websocket UI apply path exists in `data/www/script.js`:
    - `setupElement(...)` supports element type/id.
    - incoming `GET*` payload key matches DOM element id or custom handler.
@@ -982,7 +984,7 @@ This section is specifically for adding/removing settings and avoiding missed li
 3. Remove UI controls and JS references.
 4. Remove from `config_t` + `keyMap`.
 5. Add removed key to `Config::deleteOldKeys()` if old persisted value should be cleaned.
-6. Remove locale keys from `src/locale/webui/en_US.json` (and regenerate/check).
+6. Remove locale keys from `src/locale/www/en_US.json` (and regenerate/check).
 7. Check telnet/mqtt code paths for orphan logic.
 8. Update this file.
 

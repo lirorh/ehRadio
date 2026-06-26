@@ -276,7 +276,11 @@ void Display::_apScreen() {
     TextWidget *apname2 = (TextWidget*) &_boot->addWidget(new TextWidget(apName2Conf, 30, false, config.theme.clock, config.theme.background));
     apname2->setText(AP_SSID);
     TextWidget *appass = (TextWidget*) &_boot->addWidget(new TextWidget(apPassConf, 30, false, config.theme.title1, config.theme.background));
-    appass->setText(l10n(L10N_LBL_APPASS));
+    #ifdef AP_PASSWORD
+      appass->setText(l10n(L10N_LBL_APPASS));
+    #else 
+      appass->setText(l10n(L10N_LBL_APNOPASS));
+    #endif
     TextWidget *appass2 = (TextWidget*) &_boot->addWidget(new TextWidget(apPass2Conf, 30, false, config.theme.clock, config.theme.background));
     #ifdef AP_PASSWORD
       appass2->setText(AP_PASSWORD);

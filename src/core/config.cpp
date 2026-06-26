@@ -25,8 +25,7 @@
 
 
 const char* const Config::wwwFiles[] = {"curated.js", "options.js", "script.js", "script2.js", "search.js",
-                                        "logo.svg", "icon.png", "style.css", "theme.css",
-                                        "rb_srvrs.json", "timezones.json",
+                                        "logo.svg", "icon.png", "style.css", "theme.css", "rb_srvrs.json", "timezones.json",
                                         "curated.html", "irrecord.html", "options.html", "search.html", "updform.html",
                                         "player.html"}; // keep main page at end (deleted when upgraded, last to be downloaded, so user sees emptyfs_html with wait message)
 const size_t Config::wwwFilesCount = sizeof(Config::wwwFiles) / sizeof(Config::wwwFiles[0]);
@@ -39,7 +38,7 @@ const size_t Config::dataFilesCount = sizeof(Config::dataFiles) / sizeof(Config:
 #endif
 
 Config config;
-uint8_t _activeLocale = 0;  // default en_US, updated at boot from config.store.displaylocale
+uint8_t _activeLocale = 0;  // default en_US, updated at boot from config.store.locale_display
 
 bool wasUpdated(ESPFileUpdater::UpdateStatus status) { return status == ESPFileUpdater::UPDATED; }
 
@@ -449,6 +448,10 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
   }
   if (strcmp(val, "locale") == 0) {
     saveValue(store.locale_webui, WEBUI_LOCALE);
+    saveValue(store.locale_display, DSP_LOCALE);
+    _activeLocale = l10n_findLocale(config.store.locale_display);
+    network.buildWeatherString();
+    display.putRequest(CLOCK, true);
     saveValue(store.tz_name, TIMEZONE_NAME);
     saveValue(store.tzposix, TIMEZONE_POSIX);
     saveValue(store.sntp1, SNTP_1);
@@ -723,7 +726,7 @@ void Config::bootInfo() {
   #if defined(BATTERY_DEBUG)
     BOOTLOG("BATTERY_DEBUG\tenabled");
   #endif
-  BOOTLOG("Display Locale:\t%s", DSP_LOCALE);
+  BOOTLOG("Display Locale:\t%s", store.locale_display);
   BOOTLOG("WebUI Locale:\t%s", store.locale_webui);
   BOOTLOG("Smartstart:\t%s", store.smartstart?"true":"false");
   BOOTLOG("Wifi Scan Best:\t%s", store.wifiscanbest?"true":"false");
@@ -779,6 +782,7 @@ const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(skipPlaylistUpDown, "skipplupdn"),
   CONFIG_KEY_ENTRY(irtlp, "irtlp"),
   CONFIG_KEY_ENTRY(locale_webui, "localewebui"),
+  CONFIG_KEY_ENTRY(locale_display, "localedsp"),
   CONFIG_KEY_ENTRY(tz_name, "tzname"),
   CONFIG_KEY_ENTRY(tzposix, "tzposix"),
   CONFIG_KEY_ENTRY(sntp1, "sntp1"),

@@ -221,40 +221,6 @@ function onMessage(event) {
       return;
     }
     
-    /* Locale update completed - reload page to load new translations */
-    if(typeof data.locale_updated !== 'undefined'){
-      console.log('[Locale] Update successful, reloading page...');
-      setTimeout(function(){ window.location.reload(); }, 1000);
-      return;
-    }
-    
-    /* Locale update failed - show error message */
-    if(typeof data.locale_update_failed !== 'undefined'){
-      console.error('[Locale] Update failed');
-      const select = getId('locale_webui');
-      const display = getId('locale_disp');
-      
-      if (display) {
-        display.value = 'Download failed';
-      }
-      
-      setTimeout(function(){ 
-        // Restore both dropdown and display field after error message
-        // Restore dropdown selection to original
-        if (select && window.originalLocaleWebui) {
-          const i = [...select.options].findIndex(opt => opt.value === window.originalLocaleWebui);
-          if (i !== -1) {
-            select.selectedIndex = i;
-          }
-        }
-        
-        // Restore display field to original
-        if (display && window.originalLocaleDisp) {
-          display.value = window.originalLocaleDisp;
-        }
-      }, 3000);
-      return;
-    }
     if(typeof data.payload !== 'undefined'){
       data.payload.forEach(item=> {
         // battery string: parse and fill separate elements (labels in HTML with data-i18n)

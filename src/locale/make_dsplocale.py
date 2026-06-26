@@ -167,7 +167,7 @@ def generate_header(locales, keys):
     lines.append('')
 
     # ── Runtime functions ──
-    lines.append('// Active locale index — set at boot from config.store.displaylocale')
+    lines.append('// Active locale index — set at boot from config.store.locale_display')
     lines.append('extern uint8_t _activeLocale;')
     lines.append('')
     lines.append('// Find locale index by code. Returns 0 (en_US) if not found.')
@@ -217,6 +217,16 @@ def generate_header(locales, keys):
     lines.append('    };')
     lines.append('    return l10n((L10nKey)pgm_read_byte(&month_keys[idx % 12]));')
     lines.append('}')
+    lines.append('')
+    lines.append('// ── WebUI dsplocale.json index (flat object: {"en_US": "English", ...}) ──')
+    index_obj = {}
+    for code in locale_codes:
+        index_obj[code] = locales[code].get('locale', code)
+    import json as _json
+    index_json = _json.dumps(index_obj, indent=2, ensure_ascii=False)
+    lines.append(f'const char dsplocale_index[] PROGMEM = R"DSEND(')
+    lines.append(index_json)
+    lines.append(f')DSEND";')
     lines.append('')
 
     return '\n'.join(lines)
@@ -295,10 +305,7 @@ def main():
     print(f"Generated: {OUTPUT_H}")
 
     # Generate WebUI index
-    index = generate_index_json(locales)
-    with open(OUTPUT_JSON, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(index)
-    print(f"Generated: {OUTPUT_JSON}")
+    # dsplocale_index is now embedded in dsplocale.h as PROGMEM string
 
 
 if __name__ == '__main__':

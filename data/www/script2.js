@@ -4,20 +4,8 @@
 // ===== i18n loader: loads locale.json for translations =====
 var i18n = {};
 
-// Check if we need to load locale.json
-// If uiLocale === htmlLocale, we're using hardcoded firmware locale (no file needed)
-var shouldLoadLocale = true;
-if (typeof uiLocale !== 'undefined' && typeof htmlLocale !== 'undefined') {
-  if (uiLocale === htmlLocale) {
-    console.log('Using hardcoded locale (' + htmlLocale + '), no need to fetch locale.json');
-    shouldLoadLocale = false;
-  }
-}
-
-// Only fetch locale.json if needed; expose promise so other scripts can chain on it
-var localePromise = Promise.resolve();
-if (shouldLoadLocale) {
-  localePromise = fetch('locale.json')
+// Fetch locale.json — if 404, fall back to hardcoded text
+var localePromise = fetch('locale.json')
       .then(function(r){ return r.ok ? r.json() : Promise.reject('not-ok'); })
       .then(function(data){ 
           i18n = data;
@@ -27,7 +15,6 @@ if (shouldLoadLocale) {
           console.warn('locale.json not found or failed to load, using hardcoded HTML text');
           // Don't run applyI18n() - let HTML fallbacks handle it
       });
-}
 
 function t(key) {
   // If only key provided, use old behavior (backward compatibility)

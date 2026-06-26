@@ -132,7 +132,7 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   bool      skipPlaylistUpDown = ONE_CLICK_SWITCH;
   uint8_t   irtlp = IR_TOLERANCE;
   char      locale_webui[6] = WEBUI_LOCALE;
-  char      displaylocale[6] = DSP_LOCALE;
+  char      locale_display[6] = DSP_LOCALE;
   char      tz_name[70] = TIMEZONE_NAME;
   char      tzposix[70] = TIMEZONE_POSIX;
   char      sntp1[35] = SNTP_1;

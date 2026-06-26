@@ -91,7 +91,7 @@ void Display::init() {
   #if LIGHT_SENSOR!=255
     analogSetAttenuation(ADC_0db);
   #endif
-  _activeLocale = l10n_findLocale(config.store.displaylocale);
+  _activeLocale = l10n_findLocale(config.store.locale_display);
   dsp.initDisplay();
   dsp.setFont((GFXfont *)&DisplayFont);
   displayQueue=NULL;
@@ -556,8 +556,8 @@ void Display::loop() {
     switch (request.type) {
         case NEWMODE: _swichMode((displayMode_e)request.payload); break;
         case CLOSEPLAYLIST: player.sendCommand({PR_PLAY, request.payload});
-        case CLOCK: 
-          if (_mode==PLAYER || _mode==SCREENSAVER) _time(); 
+        case CLOCK:
+          if (_mode==PLAYER || _mode==SCREENSAVER) _time(request.payload);
           break;
         case NEWTITLE: _title(); break;
         case NEWSTATION: _station(); break;
@@ -815,7 +815,7 @@ void Display::_time(bool redraw) {
     //_clock->moveTo({clockConf.left, ft, 0});
     _clock->moveTo({lt, ft, 0});
   }
-  _clock->draw();
+  if (redraw) _clock->forceDraw(); else _clock->draw();
 }
 
 void Display::_volume() {

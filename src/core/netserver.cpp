@@ -365,6 +365,9 @@ bool NetServer::begin(bool quiet) {
   webserver.on("/ready", HTTP_GET, handleReady);
   webserver.on("/locale.json", HTTP_GET, handleDynamicLocale);
   webserver.on("/wwwlocale.json", HTTP_GET, handleWWWLocaleIndex);
+  webserver.on("/dsplocale.json", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "application/json", dsplocale_index);
+  });
   webserver.on("/search", HTTP_GET, handleSearch);
   webserver.on("/search", HTTP_POST, handleSearchPost);
 
@@ -606,7 +609,7 @@ void NetServer::processQueue() {
                                   break;
       case GETLOCALE:     snprintf(wsbuf, sizeof(wsbuf), "{\"locale_webui\":\"%s\",\"locale_disp\":\"%s\",\"tz_name\":\"%s\",\"tzposix\":\"%s\",\"sntp1\":\"%s\",\"sntp2\":\"%s\",\"timeinterval\":%d}",
                                   config.store.locale_webui,
-                                  DSP_LOCALE,
+                                  config.store.locale_display,
                                   config.store.tz_name,
                                   config.store.tzposix,
                                   config.store.sntp1,
@@ -1621,16 +1624,12 @@ void handleNotFound(AsyncWebServerRequest * request) {
     utility.escapeQuotes(GITHUBURL, escapedGithubUrl, sizeof(escapedGithubUrl));
     snprintf(varjsbuf, sizeof(varjsbuf),
       "var radioVersion='%s';\n"
-      "var htmlLocale='%s';\n"
-      "var uiLocale='%s';\n"
       "var formAction='%s';\n"
       "var playMode='%s';\n"
       "var onlineUpdCapable=%s;\n"
       "var newVerAvailable=%s;\n"
       "var updateUrl='%s';\n",
       escapedRadioVersion,
-      HARDCODED_WEBUI_LOCALE,
-      config.store.locale_webui,
       (network.status == CONNECTED && config.wwwFilesExist) ? "webboard" : "",
       (network.status == CONNECTED) ? "player" : "ap",
       #ifdef UPDATEURL

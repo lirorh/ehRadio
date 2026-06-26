@@ -206,6 +206,7 @@ class ClockWidget: public Widget {
     using Widget::init;
     void init(WidgetConfig wconf, uint16_t fgcolor, uint16_t bgcolor);
     void draw();
+    void forceDraw() { _draw(); }
     uint8_t textsize(){ return _config.textsize; }
     void clear(){ _clearClock(); }
     inline uint16_t dateSize(){ return _space+ _dateheight; }

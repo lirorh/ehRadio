@@ -671,6 +671,7 @@ namespace WeatherCache {
   int wind_deg = 0;
   char description[64] = "";
   int wmo_code = 0;    // For OpenMeteo
+  bool has_wmo = false;
 }
 
 static void markWeatherFetchSuccess() {
@@ -743,7 +744,8 @@ bool MyNetwork::buildWeatherString() {
     char *p = weatherBuf;
     size_t remaining = WEATHER_STRING_L;
     int written;
-    written = snprintf(p, remaining, "%s, %.1f%s", WeatherCache::description, temp_display, tempUnit);
+    const char* desc = WeatherCache::has_wmo ? getWMODescription(WeatherCache::wmo_code) : WeatherCache::description;
+    written = snprintf(p, remaining, "%s, %.1f%s", desc, temp_display, tempUnit);
     if (written > 0 && (size_t)written < remaining) { p += written; remaining -= written; }
     
     if (config.store.weatherfeels && remaining > 1) {
@@ -840,6 +842,7 @@ bool getWeather_OpenMeteo(char *wstr) {
     WeatherCache::wind_speed_ms = wind_speed_ms;  // Stored in consistent m/s
     WeatherCache::wind_deg = wind_deg;
     WeatherCache::wmo_code = wmo_code;
+    WeatherCache::has_wmo = true;
     strncpy(WeatherCache::description, description, sizeof(WeatherCache::description) - 1);
     WeatherCache::description[sizeof(WeatherCache::description) - 1] = '\0';
     

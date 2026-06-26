@@ -5649,7 +5649,7 @@ const char* const l10n_strings[36][74] PROGMEM = {
   }
 };
 
-// Active locale index — set at boot from config.store.displaylocale
+// Active locale index — set at boot from config.store.locale_display
 extern uint8_t _activeLocale;
 
 // Find locale index by code. Returns 0 (en_US) if not found.
@@ -5699,3 +5699,45 @@ inline const char* l10n_month(uint8_t idx) {
     };
     return l10n((L10nKey)pgm_read_byte(&month_keys[idx % 12]));
 }
+
+// ── WebUI dsplocale.json index (flat object: {"en_US": "English", ...}) ──
+const char dsplocale_index[] PROGMEM = R"DSEND(
+{
+  "be_BY": "беларуская мова",
+  "bg_BG": "български език",
+  "bs_BA": "bosanski jezik",
+  "bs_ME": "crnogorski jezik",
+  "cs_CZ": "čeština",
+  "da_DK": "dansk",
+  "de_DE": "Deutsch",
+  "el_GR": "Ελληνικά",
+  "en_US": "English",
+  "es_ES": "español",
+  "et_EE": "eesti keel",
+  "fi_FI": "suomi",
+  "fr_FR": "français",
+  "hr_HR": "hrvatski jezik",
+  "hu_HU": "magyar nyelv",
+  "is_IS": "íslenska",
+  "kk_KZ": "қазақ тілі",
+  "ky_KG": "кыргызча",
+  "lt_LT": "lietuvių kalba",
+  "lv_LV": "latviešu valoda",
+  "mk_MK": "македонски јазик",
+  "mn_MN": "монгол хэл",
+  "nl_NL": "Nederlands",
+  "no_NO": "norsk",
+  "pl_PL": "polski",
+  "pt_PT": "português",
+  "ro_RO": "română",
+  "ru_RU": "русский язык",
+  "sk_SK": "slovenčina",
+  "sl_SI": "slovenščina",
+  "sr_RS": "српски језик",
+  "sv_SE": "svenska",
+  "tg_TJ": "тоҷикӣ",
+  "tr_TR": "Türkçe",
+  "uk_UA": "українська мова",
+  "uz_UZ": "oʻzbek tili"
+}
+)DSEND";

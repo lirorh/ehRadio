@@ -1427,9 +1427,19 @@ function buildDefaultsSection() {
       var ctrlDiv = document.createElement('div');
       ctrlDiv.className = 'default-item-ctrl hidden';
       ctrlDiv.id = uid('defctrl');
+
+      // Info hint text (revealed when checkbox is checked, like peripherals check-items)
+      if (item.info) {
+        var infoDiv = document.createElement('div');
+        infoDiv.className = 'section-info';
+        infoDiv.textContent = item.info;
+        ctrlDiv.appendChild(infoDiv);
+      }
+
       var defCtrlRow = document.createElement('div');
       defCtrlRow.style.display = 'flex';
       defCtrlRow.style.alignItems = 'center';
+      defCtrlRow.style.justifyContent = 'center';
       defCtrlRow.style.gap = '2px';
       defCtrlRow.appendChild(makeControl(item, 'defaults'));
       var defRstBtn = document.createElement('span');
@@ -2134,7 +2144,7 @@ function outputLocaleSection() {
   if (!sel) return '';
   var code = sel.value;
   return sectionHeader(typeof gData.locale[0] === 'string' ? gData.locale[0] : 'Locale') +
-    outputFlagLine('DSP_LANGUAGE_' + code);
+    outputLine('DSP_LOCALE', '"' + code + '"');
 }
 
 function outputDefaultsSection() {

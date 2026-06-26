@@ -1628,7 +1628,8 @@ void handleNotFound(AsyncWebServerRequest * request) {
       "var playMode='%s';\n"
       "var onlineUpdCapable=%s;\n"
       "var newVerAvailable=%s;\n"
-      "var updateUrl='%s';\n",
+      "var updateUrl='%s';\n"
+      "var casetransform=%s;\n",
       escapedRadioVersion,
       (network.status == CONNECTED && config.wwwFilesExist) ? "webboard" : "",
       (network.status == CONNECTED) ? "player" : "ap",
@@ -1638,7 +1639,12 @@ void handleNotFound(AsyncWebServerRequest * request) {
         "false",
       #endif
       (netserver.newVersionAvailable) ? "true" : "false",
-      escapedGithubUrl
+      escapedGithubUrl,
+      #ifdef WWW_CASETRANSFORM
+        "true"
+      #else
+        "false"
+      #endif
    );
     AsyncWebServerResponse *response = request->beginResponse(200, "application/javascript", varjsbuf);
     response->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");

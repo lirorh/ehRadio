@@ -342,17 +342,15 @@
 /* --- Clock Fonts --- */
 // CHUNKY6_PX is default...
 //#define CLOCKFONT CHUNKY6
-#define CLOCKFONT YO_MONO
+//#define CLOCKFONT YO_MONO
 
-#define DSP_LOCALE "en_US"
+//#define DSP_LOCALE "en_US"
 //#define DISPLAYFONT MATRIXCHUNKY
-#define DISPLAYFONT MATRIXLIGHT
+//#define DISPLAYFONT MATRIXLIGHT
 //#define DISPLAYFONT X11
 //#define PRETEXT_ALLCAPS
 //#define PRETEXT_FOLDACCENT
+//#define WWW_CASETRANSFORM
 //#define CLOCKGLOW false
-
-#define COLOR_CLOCK_BG              100,   100,   255 // clock color background
-#define PLAYLIST_MODE_PAGED false
 
 #endif // myoptions_h

@@ -243,7 +243,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #define X11             2   // Unix X11 6x9 fixed-width
 
 #ifndef DISPLAYFONT
-  #define DISPLAYFONT MATRIXLIGHT
+  #define DISPLAYFONT MATRIXCHUNKY
 #endif
 
 /* Define your clock/volume page font as #define CLOCKFONT CHUNKY6 */
@@ -251,9 +251,9 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #define CHUNKY6_PX      1  // Default (spacing pixels) - great on color screens
 #define CHUNKY6         2  // Really heavy looking - great on mono screens
 
-/* Chunky6 with spaces between pixels is the default (except on smaller displays) */
+/* Chunky6 with spaces between pixels is the default (except on OLEDs) */
 #ifndef CLOCKFONT
-  #if DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SH1106 || DSP_MODEL==DSP_SH1107 || DSP_MODEL==DSP_SSD1305
+  #if DSP_MODEL==DSP_SH1106 || DSP_MODEL==DSP_SH1107 || DSP_MODEL==DSP_SSD1305 || DSP_MODEL==DSP_SSD1306 || DSP_MODEL==DSP_SSD1327
   // note that using YO_MONO on the above list of displays will revert to the display font.
     #define CLOCKFONT CHUNKY6
   #else
@@ -292,6 +292,14 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 // #define SCROLLDELAY 5000 // delay time (ms) for widgets: meta, title1, title2 / playlist mode scroll divides by 5
 // #define SCROLLTIME 15 // time (ms) per pixel-column movement (a column of font pixels, not display pixels)
 // if using an LCD screen, check dspcore.h for safe values
+
+/* Pre-processed Text: Prefer ALL CAPS? Maybe all latin accents removed from your display? */
+// #define PRETEXT_ALLCAPS
+// #define PRETEXT_FOLDACCENT
+
+/* If using PRETEXT_ALLCAPS, why not do the same to your WebUI? */
+// #define WWW_CASETRANSFORM
+
 
 /* ============================== SPI BUSES AND PINS ============================== */
 
@@ -1220,6 +1228,12 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #endif
 #endif
 
+// Is the hardcoded text in the HTML files not English?  If yes, then you should override this
+// OVERRIDE WITH EXTREME CAUTION !!!  You must prepare the HTML files with hardcode_locale_to_html.py
+#ifndef HARDCODED_WEBUI_LOCALE
+  #define HARDCODED_WEBUI_LOCALE "en_US"
+#endif
+
 /* --- RADIO BROWSER API SERVER --- */
 /* Used as fallback for search and primary for sending clicks */
 #ifndef RADIO_BROWSER_SERVER
@@ -1602,13 +1616,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef WEBUI_LOCALE
   #define WEBUI_LOCALE DSP_LOCALE // use the same as display by default
 #endif
-// Is the hardcoded text in the HTML files not English?  If yes, then you should override this
-// OVERRIDE WITH EXTREME CAUTION !!!  You must prepare the HTML files with hardcode_locale_to_html.py
-#ifndef HARDCODED_WEBUI_LOCALE
-  #define HARDCODED_WEBUI_LOCALE "en_US"
-#endif
-// OpenWeatherMap API requires its own language code - this is still editable in WebUI
-// https://openweathermap.org/current?collection=current_forecast#multi
+// OpenWeatherMap API requires its own language code https://openweathermap.org/current?collection=current_forecast#multi
 #ifndef WEATHER_LANG_OWM
   #define WEATHER_LANG_OWM "en"
 #endif

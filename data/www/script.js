@@ -956,6 +956,87 @@ function exportCurrentPlaylist() {
   document.body.removeChild(link);
   URL.revokeObjectURL(link.href);
 }
+
+// === Webstations Share ===
+const SHARE_BODY_CORE =
+`This form will submit your playlist to webstations and will appear soon in ehRadio Curated Lists. Enter your playlist name below between the quotes. It will be processed using your Github user ID as a prefix.
+
+PLAYLIST_NAME="Playlist"
+
+To avoid overloading this repo, users will be restricted to 2 unique playlist submissions. Older playlists will be replaced by newer submissions. Same-name submissions will always be replaced.
+
+You can enter comments but it's unlikely they will ever be read.
+
+Thanks for participating!
+
+- Trip5`;
+
+const SHARE_BODY_FALLBACK_HEADER =
+`Wow! That's a lot of radio stations! Unfortunately, ehRadio can't automatically submit such a large playlist. But you can still submit it!
+
+Go back to ehRadio, export the playlist, save it, then attach the file to this message.
+
+`;
+
+const SHARE_MAX_BODY_BYTES = 60000;
+
+function sharePlaylist() {
+  const items = getId('pleditorcontent').getElementsByTagName('li');
+  if (items.length === 0) {
+    alert(t('msg_pl_empty', 'Playlist is empty, nothing to share.'));
+    return;
+  }
+
+  let csvData = '';
+  for (let i = 0; i < items.length; i++) {
+    const inputs = items[i].getElementsByTagName('input');
+    const name = inputs[1].value;
+    const url = inputs[2].value;
+    const ovol = inputs[3].value;
+
+    if (name === '' || url === '') {
+      alert(t('msg_pl_missing', 'Station {0} is missing name or URL. Please fill in all fields before sharing.', i + 1));
+      return;
+    }
+
+    csvData += name + '\t' + url + '\t' + ovol + '\r\n';
+  }
+
+  const inlineBody = SHARE_BODY_CORE + '\n\nPLAYLIST_START/\n' + csvData + '\n/PLAYLIST_END';
+
+  if (new Blob([inlineBody]).size <= SHARE_MAX_BODY_BYTES) {
+    // Inline path: pre-fill the entire playlist in the issue body
+    const url = 'https://github.com/trip5/webstations/issues/new' +
+      '?template=' +
+      '&title=' + encodeURIComponent('Playlist Submission') +
+      '&body=' + encodeURIComponent(inlineBody) +
+      '&labels=playlist';
+    window.open(url, '_blank');
+  } else {
+    // Fallback path: download the file + open issue with attachment instructions
+    downloadCSV(csvData);
+    const fallbackBody = SHARE_BODY_FALLBACK_HEADER + '\n' + SHARE_BODY_CORE;
+    const url = 'https://github.com/trip5/webstations/issues/new' +
+      '?template=' +
+      '&title=' + encodeURIComponent('Playlist Submission') +
+      '&body=' + encodeURIComponent(fallbackBody) +
+      '&labels=playlist';
+    window.open(url, '_blank');
+  }
+}
+
+function downloadCSV(csvContent) {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  link.href = URL.createObjectURL(blob);
+  link.download = 'playlist_' + timestamp + '.csv';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
 /***--- eof playlist ---***/
 let pleditorTimeout = null;
 function toggleTarget(el, id){
@@ -1179,6 +1260,7 @@ function continueLoading(mode){
           case "pldel": plRemove(); break;
           case "plsubmit": submitPlaylist(); break;
           case "plundo": undoPlaylistChanges(); break;
+          case "plshare": sharePlaylist(); break;
           case "fwupdate": window.location.href=`http://${hostname}/update.html`; break;
           case "webboard": window.location.href=`http://${hostname}/webboard`; break;
           case "setupir": window.location.href=`http://${hostname}/ir.html`; break;

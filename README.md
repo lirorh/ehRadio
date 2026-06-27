@@ -53,7 +53,8 @@ especially in terms of how they are used and how they are built.
 | - edit/import/export playlists                | - edit/import/export/merge playlists |
 | - English UI                                  | - 50 Languages (easily changeable)
 |                                               | - easy to locate with [ehDP](https://github.com/trip5/eh-Device-Scanner) |
-|                                               | - Radio Station search using Radio-browser API | 
+|                                               | - Radio Station search using Radio-browser API |
+|                                               | - Playlists can be shared via `
 |                                               | - Curated lists can download/merge/preview other playlists |
 
 ### Features For Builders
@@ -245,7 +246,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.06.25 | Unicode 8x6 fonts now in, Nextion support removed |
+| 2026.06.25 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed |
 | 2026.06.18 | WebUI files now served from PSRAM cache (if available) which eliminates audio stuttering for I2S decoders, adjustments to PSRAM-related code, rotary encoders fix |
 | 2026.06.15 | SPI fixed so SPI Display and VS1053 are possible, SD fixes, Wi-fi reconnect smarter, generator indicates safe pins |
 | 2026.06.08 | Fixed Search/Curated additions corrupting the playlist, changing stations faster, connect errors fail faster, safe mode entered after unsuccessful boot (disables smartstart, autoupdate) |

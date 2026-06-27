@@ -19,6 +19,10 @@ Options:
     --yes       Same as --auto.
 
 Copyright (c) 2026 Trip5
+
+This is not the same as the tool in the Matrix Fonts repo.
+This one is specifically for ehRadio.
+
 SPDX-License-Identifier: GPL-3.0-only
 """
 

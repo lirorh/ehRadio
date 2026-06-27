@@ -54,7 +54,7 @@ especially in terms of how they are used and how they are built.
 | - English UI                                  | - 50 Languages (easily changeable)
 |                                               | - easy to locate with [ehDP](https://github.com/trip5/eh-Device-Scanner) |
 |                                               | - Radio Station search using Radio-browser API |
-|                                               | - Playlists can be shared via `
+|                                               | - Playlists can be shared via [webstations](https://github.com/trip5/webstations) |
 |                                               | - Curated lists can download/merge/preview other playlists |
 
 ### Features For Builders

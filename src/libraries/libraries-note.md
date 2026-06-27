@@ -65,6 +65,9 @@ Sorry and good luck.
 #### ES8311_Audio
   - made by https://github.com/kasperaitis for ehRadio
 
+### The NOtes Below Are Kinda Wrong
+  - Like both adapted from Maleksm's v0.9.434m(04.04.25) version
+
 #### I2S_Audio
   - likely adapted https://github.com/schreibfaul1/ESP32-audioI2S
   - from Maleksm's yoRadio mod v0.9.512m: https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228

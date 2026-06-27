@@ -353,4 +353,6 @@
 //#define WWW_CASETRANSFORM
 //#define CLOCKGLOW false
 
+#define VS_PATCH_ENABLE true
+
 #endif // myoptions_h

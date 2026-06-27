@@ -4,14 +4,12 @@
  *  Created on: Jul 09.2017
  *  Updated on: Apr 04.2025 (Maleksm)
  *      Author: Wolle (Dec 15.2023), easy
- *  Some adjustments by Trip5 for ehRadio
  */
-#include "../../core/options.h"
+#include "../core/options.h"
 
-#if defined(USE_AUDIO_VS1053)
+#if I2S_DOUT==255
 
-#include "../../core/config.h"
-#include "../../core/logging.h"
+#include "../core/config.h"
 #include "audioVS1053Ex.h"
 
 //#ifdef SDFATFS_USED
@@ -334,9 +332,9 @@ void Audio::begin(){
     CS_HIGH();
     delay(170);
 
-    // Init SPI in slow mode ( 0.2 MHz ) — matches Maleksm's original yoRadio config
-    VS1053_SPI_CTL   = SPISettings( 200000, MSBFIRST, SPI_MODE0);
-    VS1053_SPI_DATA  = SPISettings(6700000, MSBFIRST, SPI_MODE0); // SPIDIV 12 -> 80/12=6.66 MHz
+    // Init SPI in slow mode ( 0.25 MHz )
+    VS1053_SPI_CTL   = SPISettings( 250000, MSBFIRST, SPI_MODE0);
+    VS1053_SPI_DATA  = SPISettings(8000000, MSBFIRST, SPI_MODE0); // SPIDIV 10 -> 80/10=8.00 MHz	//800000
     delay(20);
 //    VS1053_SPI._clock    = 250000;
 //    VS1053_SPI._bitOrder = MSBFIRST;
@@ -396,27 +394,22 @@ void Audio::setVUmeter() {
   if(!VS_PATCH_ENABLE) return;
   uint16_t VSstatus = read_register(SCI_STATUS);
   if(VSstatus==0) {
-        ERRORLOG("VS1053 Error: Unable to write SCI_STATUS");
+    Serial.println("VS1053 Error: Unable to write SCI_STATUS");
     _vuInitalized = false;
     return;
   }
   _vuInitalized = true;
-    SERIALLOGX("patch applied\t");
+  Serial.println("VS1053 status: OK!");
   write_register(SCI_STATUS, VSstatus | _BV(9));
 }
 //###################################################################
-// VU meter thresholds and decay
-const uint8_t everyn = 4;            // SCI_AICTRL3 read throttling: 1 of every N computeVUlevel() calls reads the register
-const uint8_t VU_THRESHOLD_DECAY = 1; // vuThreshold decrement per decay interval
-const uint8_t VU_DECAY_INTERVAL = 20; // number of computeVUlevel() calls between threshold decays
-
+const uint8_t everyn = 4;
 void Audio::computeVUlevel() {
 
 // * \brief get current measured VU Meter
-// * Returns the calculated peak sample values from both channels in 1 dB increments.
-// * Where the high byte represent the left channel, and the low byte the right channel.
-// * Values from 0 to 95 are valid for both channels (0 dB = silent, 95 dB = max).
-// * The vuThreshold peak-hold decays slowly so the VU display tracks dynamic range.
+// * Returns the calculated peak sample values from both channels in 3 dB increaments through.
+// * Where the high byte represent the left channel, and the low bytes the right channel.
+// * Values from 0 to 31 are valid for both channels.
 // *
 // * \warning This feature is only available with patches that support VU meter.
 
@@ -425,40 +418,16 @@ void Audio::computeVUlevel() {
   cc++;
   if(!_vuInitalized || !config.store.vumeter || cc!=everyn) return;
   if(cc==everyn) cc=0;
-  int16_t reg = read_register(SCI_AICTRL3);  // returns 0..95 dB per channel (1 dB resolution)
-
-  // Map the full 0..95 dB range to 0..255 so audio at any level produces visible VU movement
-  vuLeft  = map((uint8_t)(reg & 0x00FF), 0, 95, 0, 255);
-  vuRight = map((uint8_t)(reg >> 8),     0, 95, 0, 255);
-
-  // Clamp to valid range (safeguard against out-of-range register values)
-  if(vuLeft  > 255) vuLeft  = 255;
-  if(vuRight > 255) vuRight = 255;
-
-  // Peak-hold detector with slow decay.
-  // vuThreshold rises instantly to the current peak, then decays gradually.
-  // This allows get_VUlevel() to map the current level relative to a recent
-  // peak, giving dynamic bars instead of a permanently pinned 100%.
-  if(vuLeft > config.vuThreshold) {
-    config.vuThreshold = vuLeft;
-  } else if(vuRight > config.vuThreshold) {
-    config.vuThreshold = vuRight;
-  } else if(config.vuThreshold > 0) {
-    static uint8_t decayCnt = 0;
-    if(++decayCnt >= VU_DECAY_INTERVAL) {
-      decayCnt = 0;
-      if(config.vuThreshold >= VU_THRESHOLD_DECAY)
-        config.vuThreshold -= VU_THRESHOLD_DECAY;
-      else
-        config.vuThreshold = 0;
-    }
-  }
+  int16_t reg = read_register(SCI_AICTRL3); 	 // returns the values in 1 dB resolution from 0 (lowest) 95 (highest)
+  vuLeft = map((uint8_t)(reg & 0x00FF), 85, 95, 0, 255);
+  vuRight = map((uint8_t)(reg >> 8), 85, 95, 0, 255);
+  if(vuLeft>config.vuThreshold) config.vuThreshold = vuLeft;
+  if(vuRight>config.vuThreshold) config.vuThreshold=vuRight;
 }
 
 uint16_t Audio::get_VUlevel(uint16_t dimension){
   if(!VS_PATCH_ENABLE) return 0;
   if(!_vuInitalized || !config.store.vumeter || config.vuThreshold==0) return 0;
-  computeVUlevel();
   uint8_t L = map(vuLeft, config.vuThreshold, 0, 0, dimension);
   uint8_t R = map(vuRight, config.vuThreshold, 0, 0, dimension);
   return (L << 8) | R;
@@ -578,46 +547,37 @@ uint32_t Audio::stopSong(){
             pos = getFilePos() - inBufferFilled();
         }
         // if(_client->connected()) _client->stop();
-
-        // Send SM_CANCEL only when a song was actually playing.
-        // If m_f_running was already false (e.g. stopSong() called from
-        // setDefaults() before connecttohost()), the chip has no frame
-        // to cancel — writing SM_CANCEL would stall permanently because
-        // no decode pipeline is active to clear it.
-        sdi_send_fillers(2052);
-    //    sdi_send_fillers(vs1053_chunk_size * 54);
-        delay(10);
-        write_register(SCI_MODE, _BV (SM_SDINEW) | _BV(SM_CANCEL));
-        for(i=0; i < 200; i++) {
-            sdi_send_fillers(32);
-            modereg = read_register(SCI_MODE);  			// Read status
-            if((modereg & _BV(SM_CANCEL)) == 0) {
-                sdi_send_fillers(2052);
-                sprintf(m_chbuf, "Song stopped correctly after %d msec", i * 10);
-                audio_info(m_chbuf);
-                break;
-            }
-            delay(10);
-        }
-        if(i >= 200) {
-            audio_info("Song stopped incorrectly!");
-            printDetails("after song stopped incorrectly");
-        }
     }
-
     if(audiofile) {
         // added this before putting 'm_f_localfile = false' in stopSong(); should never occur....
         AUDIO_INFO("Closing audio file \"%s\"", audiofile.name());
         audiofile.close();
     }
 
-    m_validSamples = 0;
-    m_audioCurrentTime = 0;
-    m_audioFileDuration = 0;
-    m_codec = CODEC_NONE;
-    m_dataMode = AUDIO_NONE;
-    m_f_lockInBuffer = false;
-    return pos;
+    sdi_send_fillers(2052);
+//    sdi_send_fillers(vs1053_chunk_size * 54);
+    delay(10);
+    write_register(SCI_MODE, _BV (SM_SDINEW) | _BV(SM_CANCEL));
+    for(i=0; i < 200; i++) {
+        sdi_send_fillers(32);
+        modereg = read_register(SCI_MODE);  			// Read status
+        if((modereg & _BV(SM_CANCEL)) == 0) {
+            sdi_send_fillers(2052);
+            sprintf(m_chbuf, "Song stopped correctly after %d msec", i * 10);
+            audio_info(m_chbuf);
+            m_validSamples = 0;
+            m_audioCurrentTime = 0;
+            m_audioFileDuration = 0;
+            m_codec = CODEC_NONE;
+            m_dataMode = AUDIO_NONE;
+            m_f_lockInBuffer = false;
+            return pos;
+//            return;
+        }
+        delay(10);
+    }
+    audio_info("Song stopped incorrectly!");
+    printDetails("after song stopped incorrectly");
 }
 //###################################################################
 /*//void Audio::softReset()
@@ -956,30 +916,12 @@ void Audio::showstreamtitle(const char* ml) {
 
         if(m_streamTitleHash != hash) {
             m_streamTitleHash = hash;
-
+//            AUDIO_INFO("%s", sTit);
+           AUDIO_INFO("%.*s", m_ibuffSize, sTit);
             uint8_t pos = 12;                                                 // remove "StreamTitle="
             if(sTit[pos] == '\'') pos++;                                      // remove leading  \'
-            size_t sLen = strlen(sTit);
-            if (sLen > 0 && sTit[sLen - 1] == '\'') sTit[sLen - 1] = '\0'; // remove trailing \'
-
-            /* Trim and ignore placeholder titles such as "-" or empty strings.
-               Remembering the hash prevents repeated placeholder logging. */
-            char* titlePtr = sTit + pos;
-            while(*titlePtr == ' ' || *titlePtr == '\t' || *titlePtr == '\r' || *titlePtr == '\n') titlePtr++;
-            char* endp = titlePtr + strlen(titlePtr);
-            if (endp > titlePtr) {
-                endp--;
-                while(endp >= titlePtr && (*endp == ' ' || *endp == '\t' || *endp == '\r' || *endp == '\n')) { *endp = '\0'; if (endp == titlePtr) break; endp--; }
-            }
-
-            if (titlePtr[0] == '\0' || (titlePtr[0] == '-' && titlePtr[1] == '\0')) {
-                #ifdef AUDIO_DEBUG
-                  AUDIO_INFO("StreamTitle ignored (placeholder): '%s'", titlePtr);
-                #endif
-            } else {
-                AUDIO_INFO("%.*s", m_ibuffSize, sTit);
-                if(audio_showstreamtitle) audio_showstreamtitle(titlePtr);
-            }
+            if(sTit[strlen(sTit) - 1] == '\'') sTit[strlen(sTit) - 1] = '\0'; // remove trailing \'
+            if(audio_showstreamtitle) audio_showstreamtitle(sTit + pos);
         }
         x_ps_free(&sTit);
     }
@@ -1063,7 +1005,7 @@ void Audio::loop(){
            case HTTP_RESPONSE_HEADER:
                 static uint8_t count = 0;
                 if(!parseHttpResponseHeader()) {
-                    if(m_f_timeout && count < MAX_STREAM_RETRIES) {m_f_timeout = false; count++; connecttohost(m_lastHost);}
+                    if(m_f_timeout && count < 3) {m_f_timeout = false; count++; connecttohost(m_lastHost);}
                 }
                 else{
                     count = 0;
@@ -1090,7 +1032,7 @@ void Audio::loop(){
             case HTTP_RESPONSE_HEADER:
                 static uint8_t count = 0;
                 if(!parseHttpResponseHeader()) {
-                    if(m_f_timeout && count < MAX_STREAM_RETRIES) {m_f_timeout = false; count++; connecttohost(m_lastHost);}
+                    if(m_f_timeout && count < 3) {m_f_timeout = false; count++; connecttohost(m_lastHost);}
                 }
                 else{
                     count = 0;
@@ -1107,7 +1049,7 @@ void Audio::loop(){
                     m_dataMode = HTTP_RESPONSE_HEADER;
                 }
                 else { 								// host == NULL means connect to m3u8 URL
-                    if(m_lastM3U8host) {httpPrint(m_lastM3U8host);}
+                    if(m_lastM3U8host) {connecttohost(m_lastM3U8host);}
                     else               {httpPrint(m_lastHost);} 		// if url has no first redirection
                     m_dataMode = HTTP_RESPONSE_HEADER; 	// we have a new playlist now
                 }
@@ -3063,7 +3005,6 @@ const char* Audio::parsePlaylist_M3U8() {
             if (startsWith(m_playlistContent[i], "##")) continue;
             if (startsWith(m_playlistContent[i], "#EXT-X-INDEPENDENT-SEGMENTS")) continue;
             if (startsWith(m_playlistContent[i], "#EXT-X-PROGRAM-DATE-TIME:")) continue;
-            if(startsWith(m_playlistContent[i], "#") && !startsWith(m_playlistContent[i], "#EXTINF")) continue; // skip unrecognized directives (e.g. #ENCODER:, #EXT-X-MEDIA-SEQUENCE:, etc.)
 
             if(!f_mediaSeq_found){
                 xMedSeq = m3u8_findMediaSeqInURL();
@@ -3603,7 +3544,7 @@ bool Audio::parseHttpResponseHeader() { 		// this is the response to a GET / req
     if(!m_lastHost) {log_e("m_lastHost is NULL"); return false;}
 
     uint32_t ctime = millis();
-    uint32_t timeout = STREAM_TIMEOUT_MS; 				// ms
+    uint32_t timeout = 3000; 				// ms
 
     static uint32_t stime;
     static bool     f_time = false;
@@ -4179,9 +4120,10 @@ bool Audio::connecttohost(const char* host, const char* user, const char* pwd) {
     else        { _client = static_cast<WiFiClient*>(&client); }
 
     timestamp = millis();
+    _client->setTimeout(m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
 
     AUDIO_INFO("connect to: \"%s\" on port %d path \"/%s\"", h_host + hostwoext_begin, port, h_host + pos_slash + 1);
-    res = _client->connect(h_host + hostwoext_begin, port, m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
+    res = _client->connect(h_host + hostwoext_begin, port);
 
     if(pos_slash > 0) h_host[pos_slash] = '/';
     if(pos_colon > 0) h_host[pos_colon] = ':';
@@ -4190,7 +4132,6 @@ bool Audio::connecttohost(const char* host, const char* user, const char* pwd) {
     m_expectedPlsFmt = FORMAT_NONE;
 
     if(res) {
-        _client->setTimeout(m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
         uint32_t dt = millis() - timestamp;
         x_ps_free(&m_lastHost);
         m_lastHost = x_ps_strdup(c_host);
@@ -4269,7 +4210,7 @@ bool Audio::httpPrint(const char* host) {
     char* extension = NULL;  			// "/mp3" in "skonto.ls.lv:8002/mp3"
 
     if(pos_slash > 1) {
-        hostwoext = (char*)malloc(pos_slash + 2);
+        hostwoext = (char*)malloc(pos_slash + 1);
         memcpy(hostwoext, h_host, pos_slash);
         hostwoext[pos_slash] = '\0';
         extension = urlencode(h_host + pos_slash, true);
@@ -4300,16 +4241,17 @@ bool Audio::httpPrint(const char* host) {
     strcat(rqh, "Accept-Encoding: identity;q=1,*;q=0\r\n");
     strcat(rqh, "Connection: keep-alive\r\n\r\n");
 
+    AUDIO_INFO("connect to: \"%s\"", host);
+
     if(!_client->connected()) {
          if(m_f_ssl) { _client = static_cast<WiFiClient*>(&clientsecure); if(m_f_ssl && port == 80) port = 443;}
          else        { _client = static_cast<WiFiClient*>(&client); }
         AUDIO_INFO("The host has disconnected, reconnecting");
-        if(!_client->connect(hostwoext, port, m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms)) {
+        if(!_client->connect(hostwoext, port)) {
             log_e("connection lost");
             stopSong();
             return false;
         }
-        _client->setTimeout(m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
     }
     _client->print(rqh);
 
@@ -4377,7 +4319,7 @@ bool Audio::httpRange(const char* host, uint32_t range){
     char* extension = NULL; // "/mp3" in "skonto.ls.lv:8002/mp3"
 
     if(pos_slash > 1) {
-        hostwoext = (char*)malloc(pos_slash + 2);
+        hostwoext = (char*)malloc(pos_slash + 1);
         memcpy(hostwoext, h_host, pos_slash);
         hostwoext[pos_slash] = '\0';
         extension = urlencode(h_host + pos_slash, true);
@@ -4418,12 +4360,11 @@ log_e("%s", rqh);
     if(m_f_ssl) { _client = static_cast<WiFiClient*>(&clientsecure); if(m_f_ssl && port == 80) port = 443;}
     else        { _client = static_cast<WiFiClient*>(&client); }
     AUDIO_INFO("The host has disconnected, reconnecting");
-    if(!_client->connect(hostwoext, port, m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms)) {
+    if(!_client->connect(hostwoext, port)) {
         log_e("connection lost");
         stopSong();
         return false;
     }
-    _client->setTimeout(m_f_ssl ? m_timeout_ms_ssl : m_timeout_ms);
     _client->print(rqh);
     if(endsWith(extension, ".mp3"))       m_expectedCodec  = CODEC_MP3;
     if(endsWith(extension, ".aac"))       m_expectedCodec  = CODEC_AAC;
@@ -4624,12 +4565,11 @@ bool Audio::connecttospeech(const char* speech, const char* lang) {
 
     _client = static_cast<WiFiClient*>(&client);
     AUDIO_INFO("connect to \"%s\"", host);
-    if(!_client->connect(host, 80, m_timeout_ms)) {
+    if(!_client->connect(host, 80)) {
         log_e("Connection failed");
         xSemaphoreGiveRecursive(mutex_playAudioData);
         return false;
     }
-    _client->setTimeout(m_timeout_ms);
     _client->print(resp);
 
     m_streamType = ST_WEBFILE;
@@ -4816,7 +4756,7 @@ void Audio::showID3Tag(const char* tag, const char* value){
     if(!strcmp(tag, "TSI")) sprintf(m_chbuf, "Size: %s", value);
     if(!strcmp(tag, "TSS")) sprintf(m_chbuf, "Software/hardware and settings used for encoding: %s", value);
     if(!strcmp(tag, "TT1")) sprintf(m_chbuf, "Content group description: %s", value);
-    if(!strcmp(tag, "TT2")) { sprintf(m_chbuf, "Title/Songname/Content description: %s", value); if(audio_id3title) audio_id3title(value); }
+    if(!strcmp(tag, "TT2")) { sprintf(m_chbuf, "Title/Songname/Content description: %s", value); if(audio_id3album) audio_id3album(value); }
     if(!strcmp(tag, "TT3")) sprintf(m_chbuf, "Subtitle/Description refinement: %s", value);
     if(!strcmp(tag, "TXT")) sprintf(m_chbuf, "Lyricist/text writer: %s", value);
     if(!strcmp(tag, "TXX")) sprintf(m_chbuf, "User defined text information frame: %s", value);
@@ -4846,7 +4786,7 @@ void Audio::showID3Tag(const char* tag, const char* value){
     if(!strcmp(tag, "TEXT")) sprintf(m_chbuf, "Lyricist: %s", value);
     if(!strcmp(tag, "TIME")) sprintf(m_chbuf, "Time: %s", value);
     if(!strcmp(tag, "TIT1")) sprintf(m_chbuf, "Grouping: %s", value);
-    if(!strcmp(tag, "TIT2")) { sprintf(m_chbuf, "Title: %s", value); if(audio_id3title) audio_id3title(value); }
+    if(!strcmp(tag, "TIT2")) { sprintf(m_chbuf, "Title: %s", value); if(audio_id3album) audio_id3album(value); }
     if(!strcmp(tag, "TIT3")) sprintf(m_chbuf, "Subtitle: %s", value);
     if(!strcmp(tag, "TLAN")) sprintf(m_chbuf, "Language: %s", value);
     if(!strcmp(tag, "TLEN")) sprintf(m_chbuf, "Length (ms): %s", value);
@@ -6108,8 +6048,7 @@ int8_t Audio::parseFlacComment(uint8_t *inbuf, int16_t nBytes){
     uint8_t  blockType = 0;
     uint16_t s_f_lastMetaDataBlock = 0;
     uint16_t s_flacRemainBlockPicLen = 0;
-    //char*    vb[2] = {0}; 					// vorbis comment (original Maleksma, warning: iteration 2 invokes undefined behavior )
-    char*    vb[8] = {0}; 					// vorbis comment, matches loop limit
+    char*    vb[2] = {0}; 					// vorbis comment
 
 //    enum {streamInfo, padding, application, seekTable, vorbisComment, cueSheet, picture};
 
@@ -6272,4 +6211,4 @@ uint32_t Audio::getHighWatermark(){
     return highWaterMark; // dwords
 }
 //****************************************************************************************
-#endif  //  if defined(USE_AUDIO_VS1053)
+#endif  //  if I2S_DOUT==255

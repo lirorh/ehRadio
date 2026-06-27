@@ -474,7 +474,7 @@ size_t Audio::bufferFree(){
 //###################################################################
 void Audio::setVolume(uint8_t vol){
     // Set volume.  Both left and right.
-    // Input value is 0..21.  21 is the loudest.
+    // Input value is 0..VOLUME_SCALE (the loudest).
     // Clicking reduced by using 0xf8 to 0x00 as limits.
 //    uint16_t value;					// Value to send to SCI_VOL
 	uint8_t valueL, valueR;			// Value to send to SCI_VOL

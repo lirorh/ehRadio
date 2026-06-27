@@ -424,6 +424,10 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define VS1053_SPIBUS SPIA // VS1053 on Bus A
   #endif
 #endif
+/* The PR226 audioVS1053Ex.h declares 'SPISettings VS1053_SPI' as a member.
+   VS1053_SPI is consumed above to resolve VS1053_SPIBUS, so undefine it
+   now to avoid colliding with that member name. */
+#undef VS1053_SPI
 /* Enables flac decoding on true VS1053B boards - will be disabled unless explicitly set true in myoptions.h */
 #ifndef VS_PATCH_ENABLE
   #define VS_PATCH_ENABLE false /* Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V. */
@@ -881,8 +885,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 
 /* --- CPU CORES --- */
-/* ESP32 and ESP32-S3 have 2 cores. Core 0 will handle audio processes. */
-/* Core 1 will handle everything else. Overrides are possible with these but be careful. */
+/* ESP32 and ESP32-S3 have 2 cores (Main loop runs on Core 1). ESP32-C3 has 1 core (Main loop runs on Core 0) .*/
+/* Default assignments: Core 0 Audio / Core 1 Main + Display + Net + TCP */
 #if defined(CONFIG_FREERTOS_UNICORE) // will automatically activate on compiling for ESP32-C3 or other single-core ESPs
   #ifdef AUDIO_CORE
     #error Do not try to define AUDIO_CORE on a single-core ESP - it will be handled automatically!
@@ -892,10 +896,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #else // If not 1 Core, then define core processes
   #ifndef AUDIO_CORE
     #define AUDIO_CORE 0
-  #else
-    #if (AUDIO_CORE==0)
-	    #warning Only add #define AUDIO_CORE 1 to options.h to move Audio to CPU core 1. Leave it undefined for core 0.
-    #endif
   #endif
 #endif
 #if defined(CONFIG_FREERTOS_UNICORE)
@@ -907,10 +907,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #else
   #ifndef NETWORK_CORE
     #define NETWORK_CORE 1
-  #else
-    #if (NETWORK_CORE==1)
-	    #warning Only add #define NETWORK_CORE 0 to options.h to move Netserver to CPU core 0. Leave it undefined for core 1.
-    #endif
   #endif
 #endif
 #if defined(CONFIG_FREERTOS_UNICORE)
@@ -922,10 +918,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #else
   #ifndef DSP_TASK_CORE_ID
     #define DSP_TASK_CORE_ID 1
-  #else
-    #if (DSP_TASK_CORE_ID==1)
-	    #warning Only add #define DSP_TASK_CORE_ID 0 to options.h to move display process to CPU core 0. Leave it undefined for core 1.
-    #endif
   #endif
 #endif
 
@@ -964,9 +956,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #elif (DSP_TASK_STACK_SIZE < 2) || (DSP_TASK_STACK_SIZE > 32)
   #error define error in myoptions.h: DSP_TASK_STACK_SIZE must be between 2 and 32 (value in KB)
 #endif
-#ifndef DSP_TASK_PRIORITY
-  #define DSP_TASK_PRIORITY 2 // 2 = above Arduino loop() (1), below audio-critical tasks (3)
-#endif
 #ifndef DSP_TASK_DELAY
   #define DSP_TASK_DELAY 10 // ms; minimum sleep between display iterations. Actual frame rate depends on display SPI write time — typically ~50fps at slow SPI speeds, up to 100fps on faster displays
 #endif
@@ -991,9 +980,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #elif (NETSERVER_TASK_STACK_SIZE < 2) || (NETSERVER_TASK_STACK_SIZE > 32)
   #error define error in myoptions.h: NETSERVER_TASK_STACK_SIZE must be between 2 and 32 (value in KB)
 #endif
-#ifndef NETSERVER_TASK_PRIORITY
-  #define NETSERVER_TASK_PRIORITY 2 // 2 = above Arduino loop() (1), same tier as display
-#endif
 #ifndef NETSERVER_TASK_DELAY
   #define NETSERVER_TASK_DELAY 1 // ms; yield between netserver.loop() iterations
 #endif
@@ -1013,11 +999,17 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 
 /* Priority scale for all pinned tasks (FreeRTOS: higher number = more CPU, preempts lower tasks) */
 /* Arduino loop() runs at priority 1. Priority 0 = idle-level (starved by any other task — do not use). */
-#ifndef PLAYBACK_TASK_PRIORITY
-  #define PLAYBACK_TASK_PRIORITY 3 // highest: stream connection / playback start
+#ifndef DSP_TASK_PRIORITY
+  #define DSP_TASK_PRIORITY 2 // 2 = above Arduino loop() (1), below audio-critical tasks (3)
+#endif
+#ifndef NETSERVER_TASK_PRIORITY
+  #define NETSERVER_TASK_PRIORITY 2 // 2 = above Arduino loop() (1), same tier as display
 #endif
 #ifndef NET_TASK_PRIORITY
   #define NET_TASK_PRIORITY 3 // highest: WiFi search, stream retry, OTA download
+#endif
+#ifndef PLAYBACK_TASK_PRIORITY
+  #define PLAYBACK_TASK_PRIORITY 3 // highest: stream connection / playback start
 #endif
 #ifndef LOW_TASK_PRIORITY
   #define LOW_TASK_PRIORITY 1 // lowest: background/deferrable tasks (round-robin with loop())

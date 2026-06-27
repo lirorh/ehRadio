@@ -1,8 +1,0 @@
-src\core\audiohandlers.cpp
-src\core\display.cpp
-src\core\netserver.cpp
-src\core\network.cpp
-src\core\player.cpp
-src\core\startup.cpp
-
-Done: 6 files

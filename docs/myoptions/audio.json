@@ -34,6 +34,6 @@
       { "define": "PLAYER_FORCE_MONO", "type": "boolean", "default": true, "optional": false, "comment": "forces VU meter to mono mode"}
     ],
     "lib_deps": "",
-    "build_src_filter": "+<libraries/I2S_Audio/*>+<libraries/ES8311_Audio/*>"
+    "build_src_filter": ["+<libraries/I2S_Audio/*>", "+<libraries/ES8311_Audio/*>"]
   }
 ]

@@ -68,18 +68,21 @@ void Controls::btnDoubleClickCb(void* p)     { controls.onBtnDoubleClick((int)p)
 void Controls::btnLongPressStartCb(void* p)  { controls.onBtnLongPressStart((int)p); }
 void Controls::btnLongPressStopCb(void* p)   { controls.onBtnLongPressStop((int)p); }
 
+// Lookup table: user-facing 0-7 scale → raw encoder acceleration 0-700
+static const uint16_t encAccelLUT[8] = {0, 5, 11, 26, 59, 135, 307, 700};
+
 void Controls::init() {
   #if ENC_DT!=255
     encoder.begin();
     encoder.setup(readEncoderISR);
     encoder.setBoundaries(0, 254, true);
-    encoder.setAcceleration(config.store.encacc);
+    encoder.setAcceleration(encAccelLUT[config.store.encacc]);
   #endif
   #if ENC2_DT!=255
     encoder2.begin();
     encoder2.setup(readEncoder2ISR);
     encoder2.setBoundaries(0, 254, true);
-    encoder2.setAcceleration(config.store.encacc);
+    encoder2.setAcceleration(encAccelLUT[config.store.encacc]);
   #endif
 
   #if ISPUSHBUTTONS
@@ -580,13 +583,14 @@ void Controls::setIRTolerance(uint8_t tl) {
   #endif
 }
 
-void Controls::setEncAcceleration(uint16_t acc) {
-  config.saveValue(&config.store.encacc, acc);
+void Controls::setEncAcceleration(uint8_t userVal) {
+  uint16_t raw = (userVal <= 7) ? encAccelLUT[userVal] : 700;
+  config.saveValue(&config.store.encacc, userVal);
   #if ENC_DT!=255
-    encoder.setAcceleration(config.store.encacc);
+    encoder.setAcceleration(raw);
   #endif
   #if ENC2_DT!=255
-    encoder2.setAcceleration(config.store.encacc);
+    encoder2.setAcceleration(raw);
   #endif
 }
 

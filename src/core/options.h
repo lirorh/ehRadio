@@ -1591,12 +1591,12 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef TOUCH_DEBUG
   #define TOUCH_DEBUG false
 #endif
-#if defined(ROTARY_ACCEL) && ((ROTARY_ACCEL < 1) || (ROTARY_ACCEL > 700))
-  #warning "define warning in myoptions.h: ROTARY_ACCEL is out of range (1-700), reverting to default 200"
+#if defined(ROTARY_ACCEL) && ((ROTARY_ACCEL < 0) || (ROTARY_ACCEL > 7))
+  #warning "define warning in myoptions.h: ROTARY_ACCEL is out of range (0-7), reverting to default 2"
   #undef ROTARY_ACCEL
 #endif
 #ifndef ROTARY_ACCEL
-  #define ROTARY_ACCEL 200
+  #define ROTARY_ACCEL 2
 #endif
 #ifndef ONE_CLICK_SWITCH
   #define ONE_CLICK_SWITCH false

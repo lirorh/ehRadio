@@ -2500,6 +2500,11 @@ function buildEnvSection_pio(bd, envName, firmwareName) {
 
   function addLibDep(val) {
     if (!val || val === '') return;
+    // Handle JSON arrays (multiple library references)
+    if (Array.isArray(val)) {
+      val.forEach(function(v) { addLibDep(v); });
+      return;
+    }
     // Keep ${library.xxx} references unresolved - the [library] section is in the header
     var trimmed = val.trim();
     if (!trimmed) return;
@@ -2510,8 +2515,15 @@ function buildEnvSection_pio(bd, envName, firmwareName) {
 
   function addBuildFilter(val) {
     if (!val || val === '') return;
-    if (!buildFilterStr.includes(val)) {
-      buildFilterStr += val;
+    // Handle JSON arrays (multiple source filter patterns)
+    if (Array.isArray(val)) {
+      val.forEach(function(v) { addBuildFilter(v); });
+      return;
+    }
+    var trimmed = val.trim();
+    if (!trimmed) return;
+    if (!buildFilterStr.includes(trimmed)) {
+      buildFilterStr += (buildFilterStr ? '\n  ' : '') + trimmed;
     }
   }
 
@@ -2566,7 +2578,9 @@ function buildEnvSection_pio(bd, envName, firmwareName) {
   out += 'build_src_filter =\n';
   out += '  ${ehradio.build_src_filter}\n';
   if (buildFilterStr) {
-    out += '  ' + buildFilterStr + '\n';
+    buildFilterStr.split('\n').forEach(function(l) {
+      if (l.trim()) out += '  ' + l.trim() + '\n';
+    });
   }
 
   return out;

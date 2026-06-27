@@ -28,7 +28,6 @@ Order and sections match that file.
 | `stop` | Stop playback. |
 | `sleep` | Set sleep timer using for,after values. |
 | `mode` | Change playback mode: `0` = Radio/Web, `1` = SD Card, out-of-range values cycle modes (`2` cycles in Telnet). |
-| `reset` | Reset runtime config state when cid is 0. |
 | `submitplaylist` | Stop playback before playlist submit flow. |
 | `submitplaylistdone` | Finalize playlist submit flow, reload best station target, and trigger MQTT playlist sync. |
 
@@ -65,7 +64,6 @@ Order and sections match that file.
 | `ehdpname` | Set eHDP name and reinitialize eHDP. |
 | `softap` | Set soft AP delay setting. |
 | `mdnsname` | Set mDNS host name. |
-| `rebootmdns` | Reboot device after short delay. |
 
 ## Options: Battery
 
@@ -111,7 +109,8 @@ Order and sections match that file.
 
 | Command(s) | Action |
 | --- | --- |
-| `locale_webui` | Update WebUI locale file asynchronously. Blocked in HTTP/MQTT/Telnet. |
+| `locale_webui` | Update WebUI locale. Blocked in HTTP/MQTT/Telnet. |
+| `locale_disp` | Update display locale. |
 | `tz_name` | Set timezone display name. |
 | `tzposix` | Set POSIX timezone string and force time sync. |
 | `sntp1` | Set primary SNTP server and force time sync. |

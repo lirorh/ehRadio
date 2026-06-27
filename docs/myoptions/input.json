@@ -29,7 +29,7 @@
       { "define": "ENC_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary (default true)" },
       { "define": "ENC_SW_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
-    "lib_deps": "${library.rotaryencoder}"
+    "lib_deps": ["${library.rotaryencoder}", "${library.onebutton}"]
   },
   {
     "name": "Rotary Encoder 2",
@@ -40,7 +40,7 @@
       { "define": "ENC2_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on rotary (default true)" },
       { "define": "ENC2_SW_PULLUP", "type": "boolean", "default": true, "comment": "use internal pullup on button (default true)" }
     ],
-    "lib_deps": "${library.rotaryencoder}"
+    "lib_deps": ["${library.rotaryencoder}", "${library.onebutton}"]
   },
   {
     "name": "Button: Play/Pause",

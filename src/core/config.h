@@ -127,7 +127,7 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   uint8_t   dimmingBrightness = DIMMING_BRIGHTNESS;
   bool      fliptouch = TOUCH_FLIP;
   bool      dbgtouch = TOUCH_DEBUG;
-  uint16_t  encacc = ROTARY_ACCEL;
+  uint8_t   encacc = ROTARY_ACCEL;
   uint16_t  battery_adc_ref_mv = BATTERY_ADC_REF_MV;
   bool      skipPlaylistUpDown = ONE_CLICK_SWITCH;
   uint8_t   irtlp = IR_TOLERANCE;

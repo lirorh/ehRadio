@@ -158,7 +158,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
     return true;
   }
   if (cmdIs(command, "screenon", "dspon"))    { config.setDspOn(static_cast<bool>(atoi(value))); backlightControls.restart(); return true; }
-  if (cmdIs(command, "contrast"))      { int con=atoi(value); config.saveValueButWait(&config.store.contrast, (uint8_t)(con < 0 ? 0 : (con > 100 ? 100 : con)), 4000); display.setContrast(); return true; }
+  if (cmdIs(command, "contrast"))             { int con=atoi(value); config.saveValueButWait(&config.store.contrast, (uint8_t)(con < 0 ? 0 : (con > 100 ? 100 : con)), 4000); display.setContrast(); return true; }
   /* De-deplicated helper for screensaver / No-op for LCDs */
   auto screensaverHelper = []() {
     #ifndef DSP_LCD
@@ -187,7 +187,7 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   /* Options: Controls */
   if (cmdIs(command, "fliptouch"))         { config.saveValue(&config.store.fliptouch, static_cast<bool>(atoi(value))); controls.flipTS(); return true; }
   if (cmdIs(command, "dbgtouch"))          { config.saveValue(&config.store.dbgtouch, static_cast<bool>(atoi(value))); return true; }
-  if (cmdIs(command, "encacc"))            { controls.setEncAcceleration(static_cast<uint16_t>(atoi(value))); return true; }
+  if (cmdIs(command, "encacc"))            { int e=atoi(value); controls.setEncAcceleration(static_cast<uint8_t>(e < 0 ? 0 : (e > 7 ? 7 : e))); return true; }
   if (cmdIs(command, "oneclickswitching")) { config.saveValue(&config.store.skipPlaylistUpDown, static_cast<bool>(atoi(value))); return true; }
   if (cmdIs(command, "irtlp"))             { controls.setIRTolerance(static_cast<uint8_t>(atoi(value))); return true; }
 

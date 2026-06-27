@@ -266,7 +266,7 @@ void Startup::startupServicesAsync(void* param) {
   vTaskDelay(pdMS_TO_TICKS(1000*STARTUP_ASYNC_SERVICES_DELAY));
   BOOTLOG("Startup Async Services starting", STARTUP_ASYNC_SERVICES_DELAY);
   #ifdef UPDATEURL
-    utility.updateFile(param, "/data/new_ver.txt", CHECKUPDATEURL, CHECKUPDATEURL_TIME, "New version number");
+    utility.updateFile(param, "/data/new_ver.txt", CHECKUPDATEURL, CHECKUPDATEURL_TIME, "New version check");
     startup.checkNewVersionFile();
     if (config.store.autoupdate && netserver.newVersionAvailable) {
       FUNCTIONLOG("AutoUpdate", "New version detected - starting online update");

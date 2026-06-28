@@ -424,13 +424,11 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define VS1053_SPIBUS SPIA // VS1053 on Bus A
   #endif
 #endif
-/* The PR226 audioVS1053Ex.h declares 'SPISettings VS1053_SPI' as a member.
-   VS1053_SPI is consumed above to resolve VS1053_SPIBUS, so undefine it
-   now to avoid colliding with that member name. */
+// audioVS1053Ex.h declares 'SPISettings VS1053_SPI' so now we need to undefine it
 #undef VS1053_SPI
 /* Enables flac decoding on true VS1053B boards - will be disabled unless explicitly set true in myoptions.h */
 #ifndef VS_PATCH_ENABLE
-  #define VS_PATCH_ENABLE true /* Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V. */
+  #define VS_PATCH_ENABLE false /* Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V. */
 #endif
 #if VS_PATCH_ENABLE==false && VS1053_CS != 255 // unfortunately, the VU Meter doesn't work on VS1053 without the patch
   #undef SHOW_VU_METER

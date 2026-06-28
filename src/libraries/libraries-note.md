@@ -65,30 +65,20 @@ Sorry and good luck.
 #### ES8311_Audio
   - made by https://github.com/kasperaitis for ehRadio
 
-### The NOtes Below Are Kinda Wrong
-  - Like both adapted from Maleksm's v0.9.434m(04.04.25) version
-
 #### I2S_Audio
-  - likely adapted https://github.com/schreibfaul1/ESP32-audioI2S
-v0.9.434m(04.04.25)
-  
-  - from Maleksm's yoRadio mod v0.9.512m: https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
-    - Maleksm says source from Wolle (schreibfaul1) 3.3.2l on 2025.07.09
-    - But source mostly matches 3.1.0 - so perhaps there's a few minor fixes from 3.3.2 or...?
-  - attempt to update using Maleksm's mod v0.9.533m failed (probably due to similar issues as below)
-
+  - likely adapted from https://github.com/schreibfaul1/ESP32-audioI2S (a long time ago)
+  - ehRadio uses libraries adapted from Maleksm's yoRadio mod https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
+  - first used v0.9.434m(04.04.25)
+  - attempt to update using Maleksm's mod v0.9.533m failed at first...
+  - ehRadio 2026.06.28 adapts Maleksm v0.9.720m(23.06.26)
 
 #### VS1053_Audio
   - original DNA in https://github.com/Edzelf/Esp-radio and https://github.com/Edzelf/ESP32Radio-V2
   - but then replaced with https://github.com/schreibfaul1/ESP32-vs1053_ext
   - ehRadio at first adapted Maleksm's yoRadio mod v0.9.434m(04.04.25): https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
   - attempts to update using Maleksm's mod v0.9.533m failed
-  - replaced 2026.06.28 with nsteplanet's PR to yoRadio November 28, 2025: https://github.com/e2002/yoradio/pull/226
-    - this was abandoned due to problems with skipping but placed in folder: VS1053_Audio (ehRadio nsteplanets 2026.06.28)
-    - had to reconfigure cores because it does not honor core assignment and will always run on the same core as Main loop
-      - Core 0 Display Core 1 Main + Audio + Net + TCP
+  - ehRadio 2026.06.28 adapts nsteplanet's PR to yoRadio November 28, 2025: https://github.com/e2002/yoradio/pull/226
     
-
 #### Further notes
 
 See also this issue: https://github.com/trip5/ehRadio/issues/39

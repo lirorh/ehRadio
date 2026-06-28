@@ -6,8 +6,8 @@ The following libraries are custom to ehRadio, mostly inherited from yoRadio v0.
 
 It seems to me most of this codebase was actually developed for Arduino IDE by hand and if it compiled, it was left alone until functionality was broke and it had to be fixed.
 
-This file was my own hand-made hand-googled investigation of the source of the libraries.
-Actually there used to be dozens of libraries just for displays but they were literally copies of libraries available on Platformio.
+This file was my own (and AI-assisted) investigation of the source of the libraries.
+Actually there used to be dozens of libraries just for displays but they were copies of libraries available on Platformio.
 Some libraries like encoder and onebutton were outdated and benefitted from using online libraries.
 
 But the audio decoding libraries are troublesome. They are extremely modified from whatever their original source was.

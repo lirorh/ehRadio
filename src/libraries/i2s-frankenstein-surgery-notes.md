@@ -167,6 +167,34 @@ Additionally, v0.9.720 I2S is a prerequisite for the v0.9.720 VS1053 library —
 
 ---
 
+### Stage 1 Result: BLOCKED — Toolchain Incompatibility (2026-06-28)
+
+Stage 1 was attempted with the v0.9.512m library copied into the active folder. The build failed with three categories of errors:
+
+#### Error 1: C++20 Standard Required
+`psram_unique_ptr.hpp` uses C++20 features: `requires` keyword (concepts) and `inline` variables. The project compiles with C++17 at best. Adding `-std=gnu++2a -fconcepts` to `platformio.ini` resolved the language-level errors.
+
+#### Error 2: `<span>` Header Not Available (Fatal)
+The v0.9.720m `psram_unique_ptr.hpp` (used as replacement for missing methods) includes `#include <span>` which is a C++20 standard library header. GCC 8.4 (bundled with `framework-arduinoespressif32 @ 3.20017`) does NOT ship `<span>` — it was introduced in GCC 10. This is a **toolchain-level** blocker.
+
+#### Error 3: GCC 8.4 Internal Compiler Error
+With `-std=gnu++2a -fconcepts`, GCC 8.4 crashed with `internal compiler error: in type_unification_real` on C++20 range-for syntax in `utility.cpp`. The compiler is not stable with C++20 constructs.
+
+#### Root Cause Summary
+
+| Requirement | v0.9.512m+ Needs | Project Has | Status |
+|-------------|-----------------|-------------|--------|
+| C++ standard | C++20 (`requires`, `inline` vars) | C++17 at best | ❌ |
+| `<span>` header | GCC 10+ | GCC 8.4 | ❌ |
+| `-std=gnu++20` flag | GCC 11+ | GCC 8.4 (only `-std=gnu++2a`) | ❌ |
+
+Maleksm v0.9.512m+ was developed for ESP-IDF v5.4+ which bundles GCC 13+. The project's Arduino 3.0 framework bundles GCC 8.4. To use Maleksm's newer I2S libraries, the project would need to upgrade to Arduino 3.1+ or direct ESP-IDF v5.3+.
+
+#### Conclusion
+The v0.9.434m I2S library is the **maximum compatible version** for the current toolchain. Both Stage 1 (v0.9.512m) and Stage 2 (v0.9.720m) are blocked until a toolchain upgrade. The active library was restored from backup and builds successfully.
+
+---
+
 ### STAGE 2 — v0.9.720m (High Risk)
 
 **Target**: Maleksm v0.9.720m (I2S 3.4.6w)

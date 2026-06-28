@@ -67,10 +67,9 @@ Sorry and good luck.
 
 #### I2S_Audio
   - likely adapted from https://github.com/schreibfaul1/ESP32-audioI2S (a long time ago)
-  - ehRadio uses libraries adapted from Maleksm's yoRadio mod https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
-  - first used v0.9.434m(04.04.25)
-  - attempt to update using Maleksm's mod v0.9.533m failed at first...
-  - ehRadio 2026.06.28 adapts Maleksm v0.9.720m(23.06.26)
+  - ehRadio uses a library adapted from Maleksm's yoRadio mod https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
+  - currently using v0.9.434m(04.04.25)
+  - using Maleksm's v0.9.720m(23.06.26) will require GCC 11+
 
 #### VS1053_Audio
   - original DNA in https://github.com/Edzelf/Esp-radio and https://github.com/Edzelf/ESP32Radio-V2
@@ -78,10 +77,11 @@ Sorry and good luck.
   - ehRadio at first adapted Maleksm's yoRadio mod v0.9.434m(04.04.25): https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
   - attempts to update using Maleksm's mod v0.9.533m failed
   - ehRadio 2026.06.28 adapts nsteplanet's PR to yoRadio November 28, 2025: https://github.com/e2002/yoradio/pull/226
+  - might update to Maleksm's v0.9.720m(23.06.26) after I2S is updated
     
 #### Further notes
 
 See also this issue: https://github.com/trip5/ehRadio/issues/39
 
-Other folders (especially those with notes in brackets) are not compatible with the current codebase.
-They are for study purposes and meant for further advancements of the existing audio libraries.
+Other folders (especially those with notes in brackets) are for study purposes and meant for further advancements of the existing audio libraries.
+See the "frankenstein-surgery-notes" files for more information.

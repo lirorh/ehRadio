@@ -430,11 +430,11 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #undef VS1053_SPI
 /* Enables flac decoding on true VS1053B boards - will be disabled unless explicitly set true in myoptions.h */
 #ifndef VS_PATCH_ENABLE
-  #define VS_PATCH_ENABLE false /* Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V. */
+  #define VS_PATCH_ENABLE true /* Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V. */
 #endif
-#if (VS_PATCH_ENABLE==false && VS1053_CS != 255) // unfortunately, the VU Meter doesn't work on VS1053 without the patch
+#if VS_PATCH_ENABLE==false && VS1053_CS != 255 // unfortunately, the VU Meter doesn't work on VS1053 without the patch
   #undef SHOW_VU_METER
-  #define SHOW_VU_METER false
+  //#define SHOW_VU_METER false
 #endif
 
 /* --- ESP32 INTERNAL DAC --- */
@@ -506,13 +506,13 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef VOLUME_SCALE // Default 42 doubles upstream library's scale of 21; 50-100 gives extremely fine control
   #define VOLUME_SCALE 42
 #endif
-#if (VOLUME_SCALE < 21) || (VOLUME_SCALE > 255)
+#if VOLUME_SCALE < 21 || VOLUME_SCALE > 255
   #error VOLUME_SCALE must be between 21 and 255
 #endif
 
 
 /* --- CHECK DECODER OPTIONS --- */
-#if (I2S_DOUT!=255) && (VS1053_CS!=255)
+#if I2S_DOUT!=255 && VS1053_CS!=255
   #error define error in myoptions.h: both I2S_DOUT and VS1053_CS are active - set I2S_DOUT 255 or VS1053_CS 255 to disable one
 #endif
 
@@ -520,10 +520,10 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* USE_AUDIO_VS1053 is defined when all six required VS1053 pins are present. */
 /* USE_AUDIO_I2S is defined when the three required I2S pins are present. */
 /* These replace the old I2S_DOUT==255 / VS1053_CS==255 gate pattern used in yoRadio */
-#if (VS1053_CS!=255) && (VS1053_DCS!=255) && (VS1053_DREQ!=255) && (VS1053_MOSI!=255) && (VS1053_MISO!=255) && (VS1053_SCK!=255)
+#if VS1053_CS!=255 && VS1053_DCS!=255 && VS1053_DREQ!=255 && VS1053_MOSI!=255 && VS1053_MISO!=255 && VS1053_SCK!=255
   #define USE_AUDIO_VS1053
 #endif
-#if (I2S_DOUT != 255) && (I2S_BCLK!=255) && (I2S_LRC!=255)
+#if I2S_DOUT != 255 && I2S_BCLK!=255 && I2S_LRC!=255
   #define USE_AUDIO_I2S
 #endif
 #if defined(USE_AUDIO_ESP32_DAC) && !defined(ARDUINO_ESP32_DEV)
@@ -575,7 +575,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef SD_MAX_LEVELS
   #define SD_MAX_LEVELS 5 // search depth for files on the SD card
 #endif
-#if (SD_MAX_LEVELS < 1) || (SD_MAX_LEVELS > 10)
+#if SD_MAX_LEVELS < 1 || SD_MAX_LEVELS > 10
   #error define error in myoptions.h: SD_MAX_LEVELS must be between 1 and 10
 #endif
 
@@ -754,7 +754,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef RTC_MODULE
   #define RTC_MODULE RTC_MODULE_UNDEFINED  /*  DS3231 or DS1307  */
 #endif
-#if (RTC_MODULE < 0) || (RTC_MODULE > 2)
+#if RTC_MODULE < 0 || RTC_MODULE > 2
   #error define error in myoptions.h: RTC_MODULE must be DS3231 or DS1307 (or leave undefined)
 #endif
 #ifndef RTC_SDA
@@ -813,7 +813,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #else // ESP32 and ESP32-C3
     #define SEARCHRESULTS_BUFFER 4 // KB
   #endif
-#elif (SEARCHRESULTS_BUFFER < 4) || (SEARCHRESULTS_BUFFER > 64)
+#elif SEARCHRESULTS_BUFFER < 4 || SEARCHRESULTS_BUFFER > 64
   #error define error in myoptions.h: SEARCHRESULTS_BUFFER must be between 4 and 64 (value in KB)
 #endif
 #ifndef SEARCHRESULTS_YIELDINTERVAL
@@ -874,19 +874,20 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef BUFFERBAR_VISUAL_FULL_KB
   #define BUFFERBAR_VISUAL_FULL_KB 250
 #endif
-#if (BUFFERBAR_VISUAL_FULL_KB < 16) || (BUFFERBAR_VISUAL_FULL_KB > 500)
+#if BUFFERBAR_VISUAL_FULL_KB < 16 || BUFFERBAR_VISUAL_FULL_KB > 500
   #warning BUFFERBAR_VISUAL_FULL_KB is outside 16 to 500 range, using default of 250KB
   #undef BUFFERBAR_VISUAL_FULL_KB
   #define BUFFERBAR_VISUAL_FULL_KB 250
 #endif
-#if (PSRAM_BUFSIZE < BUFFERBAR_VISUAL_FULL_KB)
+#if PSRAM_BUFSIZE < BUFFERBAR_VISUAL_FULL_KB
   #undef BUFFERBAR_VISUAL_FULL_KB
   #define BUFFERBAR_VISUAL_FULL_KB (PSRAM_BUFSIZE)
 #endif
 
 /* --- CPU CORES --- */
 /* ESP32 and ESP32-S3 have 2 cores (Main loop runs on Core 1). ESP32-C3 has 1 core (Main loop runs on Core 0) .*/
-/* Default assignments: Core 0 Audio / Core 1 Main + Display + Net + TCP */
+/* Default VS1053 assignments: Core 0 Audio + Net + TCP / Core 1 Main + Display */
+/* Default I2S assignments: Core 0 Audio / Core 1 Main + Display + Net + TCP */
 #if defined(CONFIG_FREERTOS_UNICORE) // will automatically activate on compiling for ESP32-C3 or other single-core ESPs
   #ifdef AUDIO_CORE
     #error Do not try to define AUDIO_CORE on a single-core ESP - it will be handled automatically!
@@ -906,7 +907,11 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #endif
 #else
   #ifndef NETWORK_CORE
-    #define NETWORK_CORE 1
+    #if VS1053_CS!=255
+      #define NETWORK_CORE 0
+    #else
+      #define NETWORK_CORE 1
+    #endif
   #endif
 #endif
 #if defined(CONFIG_FREERTOS_UNICORE)
@@ -934,7 +939,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define STACK_MULTIPLIER 1 // ESP32 and ESP32-C3: conservative defaults
   #endif
 #endif
-#if (STACK_MULTIPLIER != 1 && STACK_MULTIPLIER != 2)
+#if STACK_MULTIPLIER != 1 && STACK_MULTIPLIER != 2
   #error define error in myoptions.h: STACK_MULTIPLIER must be 1 or 2
 #endif
 
@@ -946,14 +951,14 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* Arduino loop() task (main.cpp) — SET_LOOP_TASK_STACK_SIZE() uses this directly in bytes */
 #ifndef LOOP_TASK_STACK_SIZE
   #define LOOP_TASK_STACK_SIZE (8 * STACK_MULTIPLIER) // KB; 8 (ESP32/C3) or 16 (S3)
-#elif (LOOP_TASK_STACK_SIZE < 4) || (LOOP_TASK_STACK_SIZE > 64)
+#elif LOOP_TASK_STACK_SIZE < 4 || LOOP_TASK_STACK_SIZE > 64
   #error define error in myoptions.h: LOOP_TASK_STACK_SIZE must be between 4 and 64 (value in KB)
 #endif
 
 /* DspTask (display.cpp): render loop task */
 #ifndef DSP_TASK_STACK_SIZE
-  #define DSP_TASK_STACK_SIZE  (4 * STACK_MULTIPLIER) // KB; 4 (ESP32/C3) or 8 (S3)
-#elif (DSP_TASK_STACK_SIZE < 2) || (DSP_TASK_STACK_SIZE > 32)
+  #define DSP_TASK_STACK_SIZE (4 * STACK_MULTIPLIER) // KB; 4 (ESP32/C3) or 8 (S3)
+#elif DSP_TASK_STACK_SIZE < 2 || DSP_TASK_STACK_SIZE > 32
   #error define error in myoptions.h: DSP_TASK_STACK_SIZE must be between 2 and 32 (value in KB)
 #endif
 #ifndef DSP_TASK_DELAY
@@ -976,8 +981,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 
 /* netserverLoopTask (netserver.cpp): runs netserver.loop() on its own pinned task */
 #ifndef NETSERVER_TASK_STACK_SIZE
-  #define NETSERVER_TASK_STACK_SIZE  (4 * STACK_MULTIPLIER) // KB; 4 (ESP32/C3) or 8 (S3)
-#elif (NETSERVER_TASK_STACK_SIZE < 2) || (NETSERVER_TASK_STACK_SIZE > 32)
+  #define NETSERVER_TASK_STACK_SIZE (4 * STACK_MULTIPLIER) // KB; 4 (ESP32/C3) or 8 (S3)
+#elif NETSERVER_TASK_STACK_SIZE < 2 || NETSERVER_TASK_STACK_SIZE > 32
   #error define error in myoptions.h: NETSERVER_TASK_STACK_SIZE must be between 2 and 32 (value in KB)
 #endif
 #ifndef NETSERVER_TASK_DELAY
@@ -993,7 +998,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* Network utility tasks (network.cpp, player.cpp): doSync, searchWiFi, retryStreamConnection */
 #ifndef NETWORK_TASK_STACK_SIZE
   #define NETWORK_TASK_STACK_SIZE (4 * STACK_MULTIPLIER) // KB; 4 (ESP32/C3) or 8 (S3)
-#elif (NETWORK_TASK_STACK_SIZE < 2) || (NETWORK_TASK_STACK_SIZE > 32)
+#elif NETWORK_TASK_STACK_SIZE < 2 || NETWORK_TASK_STACK_SIZE > 32
   #error define error in myoptions.h: NETWORK_TASK_STACK_SIZE must be between 2 and 32 (value in KB)
 #endif
 
@@ -1314,44 +1319,44 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* CPU CORE NAMES: Name the Cores for what they do... */
 /* Do not use any of these macros directly in myoptions.h! */
 /* Use #define CORE_MONITOR to show how busy the cores are... this gives them friendly names */
-#if (!CONFIG_FREERTOS_UNICORE && defined(CORE_MONITOR))
-  #if (AUDIO_CORE==0)
+#if !CONFIG_FREERTOS_UNICORE && defined(CORE_MONITOR)
+  #if AUDIO_CORE==0
     #define CORE_0A "Audio"
     #define CORE_1A ""
-  #elif (AUDIO_CORE==1)
+  #elif AUDIO_CORE==1
     #define CORE_0A ""
     #define CORE_1A "+Audio"
   #endif
-  #if (NETWORK_CORE==0)
-    #if (AUDIO_CORE==0)
+  #if NETWORK_CORE==0
+    #if AUDIO_CORE==0
       #define CORE_0B "+Net"
     #else
       #define CORE_0B "Net"
     #endif
     #define CORE_1B ""
-  #elif (NETWORK_CORE==1)
+  #elif NETWORK_CORE==1
     #define CORE_0B ""
     #define CORE_1B "+Net"
   #endif
-  #if (CONFIG_ASYNC_TCP_RUNNING_CORE==0)
-    #if (AUDIO_CORE==0) || (NETWORK_CORE==0)
+  #if CONFIG_ASYNC_TCP_RUNNING_CORE==0
+    #if AUDIO_CORE==0 || NETWORK_CORE==0
       #define CORE_0C "+TCP"
     #else
       #define CORE_0C "TCP"
     #endif
     #define CORE_1C ""
-  #elif (CONFIG_ASYNC_TCP_RUNNING_CORE==1)
+  #elif CONFIG_ASYNC_TCP_RUNNING_CORE==1
     #define CORE_0C ""
     #define CORE_1C "+TCP"
   #endif
-  #if (DSP_TASK_CORE_ID==0)
-    #if (AUDIO_CORE==0) || (NETWORK_CORE==0) || (CONFIG_ASYNC_TCP_RUNNING_CORE==0)
+  #if DSP_TASK_CORE_ID==0
+    #if AUDIO_CORE==0 || NETWORK_CORE==0 || CONFIG_ASYNC_TCP_RUNNING_CORE==0
       #define CORE_0D "+Disp"
     #else
       #define CORE_0D "Disp"
     #endif
     #define CORE_1D ""
-  #elif (DSP_TASK_CORE_ID==1)
+  #elif DSP_TASK_CORE_ID==1
     #define CORE_0D ""
     #define CORE_1D "+Disp"
   #endif
@@ -1423,7 +1428,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef BATTERY_CRITICAL_THRESHOLD
   #define BATTERY_CRITICAL_THRESHOLD 5 // Critical battery threshold (percentage, 0-100)
 #endif
-#if (BATTERY_CRITICAL_THRESHOLD < 0) || (BATTERY_CRITICAL_THRESHOLD > 100)
+#if BATTERY_CRITICAL_THRESHOLD < 0 || BATTERY_CRITICAL_THRESHOLD > 100
   #error define error in myoptions.h: BATTERY_CRITICAL_THRESHOLD must be a percentage between 0 and 100
 #endif
 #if BATTERY_CRITICAL_THRESHOLD >= BATTERY_LOW_THRESHOLD
@@ -1437,35 +1442,35 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* ============================== USER DEFAULTS ============================== */
 /* Sets defaults but still editable in WebUI */
 
-#if defined(SOUND_VOLUME) && ((SOUND_VOLUME < 0) || (SOUND_VOLUME > VOLUME_SCALE))
+#if defined(SOUND_VOLUME) && (SOUND_VOLUME < 0 || SOUND_VOLUME > VOLUME_SCALE)
   #warning "define warning in myoptions.h: SOUND_VOLUME is out of range (0-" #VOLUME_SCALE "), reverting to a safe default"
   #undef SOUND_VOLUME
 #endif
 #ifndef SOUND_VOLUME
   #define SOUND_VOLUME (VOLUME_SCALE / 21 * 9) // a little below middle
 #endif
-#if defined(SOUND_BALANCE) && ((SOUND_BALANCE < -16) || (SOUND_BALANCE > 16))
+#if defined(SOUND_BALANCE) && (SOUND_BALANCE < -16 || SOUND_BALANCE > 16)
   #warning "define warning in myoptions.h: SOUND_BALANCE is out of range (-16 to 16), reverting to default 0"
   #undef SOUND_BALANCE
 #endif
 #ifndef SOUND_BALANCE
   #define SOUND_BALANCE 0
 #endif
-#if defined(EQ_TREBLE) && ((EQ_TREBLE < -16) || (EQ_TREBLE > 16))
+#if defined(EQ_TREBLE) && (EQ_TREBLE < -16 || EQ_TREBLE > 16)
   #warning "define warning in myoptions.h: EQ_TREBLE is out of range (-16 to 16), reverting to default 0"
   #undef EQ_TREBLE
 #endif
 #ifndef EQ_TREBLE
   #define EQ_TREBLE 0
 #endif
-#if defined(EQ_MIDDLE) && ((EQ_MIDDLE < -16) || (EQ_MIDDLE > 16))
+#if defined(EQ_MIDDLE) && (EQ_MIDDLE < -16 || EQ_MIDDLE > 16)
   #warning "define warning in myoptions.h: EQ_MIDDLE is out of range (-16 to 16), reverting to default 0"
   #undef EQ_MIDDLE
 #endif
 #ifndef EQ_MIDDLE
   #define EQ_MIDDLE 0
 #endif
-#if defined(EQ_BASS) && ((EQ_BASS < -16) || (EQ_BASS > 16))
+#if defined(EQ_BASS) && (EQ_BASS < -16 || EQ_BASS > 16)
   #warning "define warning in myoptions.h: EQ_BASS is out of range (-16 to 16), reverting to default 0"
   #undef EQ_BASS
 #endif
@@ -1512,14 +1517,14 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef VOLUME_PAGE
   #define VOLUME_PAGE false
 #endif
-#if defined(SCREEN_BRIGHTNESS) && ((SCREEN_BRIGHTNESS < 1) || (SCREEN_BRIGHTNESS > 100))
+#if defined(SCREEN_BRIGHTNESS) && (SCREEN_BRIGHTNESS < 1 || SCREEN_BRIGHTNESS > 100)
   #warning "define warning in myoptions.h: SCREEN_BRIGHTNESS is out of range (1-100), reverting to default 100"
   #undef SCREEN_BRIGHTNESS
 #endif
 #ifndef SCREEN_BRIGHTNESS
   #define SCREEN_BRIGHTNESS 100
 #endif
-#if defined(SCREEN_CONTRAST) && ((SCREEN_CONTRAST < 1) || (SCREEN_CONTRAST > 100))
+#if defined(SCREEN_CONTRAST) && (SCREEN_CONTRAST < 1 || SCREEN_CONTRAST > 100)
   #warning "define warning in myoptions.h: SCREEN_CONTRAST is out of range (1-100), reverting to default 55"
   #undef SCREEN_CONTRAST
 #endif
@@ -1532,7 +1537,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef SS_NOTPLAYING_BLANK
   #define SS_NOTPLAYING_BLANK false
 #endif
-#if defined(SS_NOTPLAYING_TIME) && ((SS_NOTPLAYING_TIME < 5) || (SS_NOTPLAYING_TIME > 65520))
+#if defined(SS_NOTPLAYING_TIME) && (SS_NOTPLAYING_TIME < 5 || SS_NOTPLAYING_TIME > 65520)
   #warning "define warning in myoptions.h: SS_NOTPLAYING_TIME is out of range (5-65520), reverting to default 120"
   #undef SS_NOTPLAYING_TIME
 #endif
@@ -1545,7 +1550,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef SS_PLAYING_BLANK
   #define SS_PLAYING_BLANK false
 #endif
-#if defined(SS_PLAYING_TIME) && ((SS_PLAYING_TIME < 1) || (SS_PLAYING_TIME > 1080))
+#if defined(SS_PLAYING_TIME) && (SS_PLAYING_TIME < 1 || SS_PLAYING_TIME > 1080)
   #warning "define warning in myoptions.h: SS_PLAYING_TIME is out of range (1-1080), reverting to default 5"
   #undef SS_PLAYING_TIME
 #endif
@@ -1558,17 +1563,17 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef DIMMING_ENABLED
     #define DIMMING_ENABLED false
 #endif  
-#if defined(DIMMING_TIMEOUT) && ((DIMMING_TIMEOUT < 5) || (DIMMING_TIMEOUT > 65520))
+#if defined(DIMMING_TIMEOUT) && (DIMMING_TIMEOUT < 5 || DIMMING_TIMEOUT > 65520)
   #warning "define warning in myoptions.h: DIMMING_TIMEOUT is out of range (5-65520), reverting to default 120"
   #undef DIMMING_TIMEOUT
 #endif
 #ifndef DIMMING_TIMEOUT
   #define DIMMING_TIMEOUT 120
 #endif
-#if defined(DIMMING_BRIGHTNESS) && ((DIMMING_BRIGHTNESS < 0) || (DIMMING_BRIGHTNESS > 100))
+#if defined(DIMMING_BRIGHTNESS) && (DIMMING_BRIGHTNESS < 0 || DIMMING_BRIGHTNESS > 100)
   #warning "define warning in myoptions.h: DIMMING_BRIGHTNESS is out of range (0-100), reverting to default 50"
   #undef DIMMING_BRIGHTNESS
-#elif defined(DIMMING_BRIGHTNESS) && (DIMMING_BRIGHTNESS < SCREEN_BRIGHTNESS)
+#elif defined(DIMMING_BRIGHTNESS) && DIMMING_BRIGHTNESS < SCREEN_BRIGHTNESS
   #warning "define warning in myoptions.h: DIMMING_BRIGHTNESS is less than SCREEN_BRIGHTNESS, reverting to default 50 and 100"
   #undef SCREEN_BRIGHTNESS
   #undef DIMMING_BRIGHTNESS
@@ -1583,7 +1588,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef TOUCH_DEBUG
   #define TOUCH_DEBUG false
 #endif
-#if defined(ROTARY_ACCEL) && ((ROTARY_ACCEL < 0) || (ROTARY_ACCEL > 7))
+#if defined(ROTARY_ACCEL) && (ROTARY_ACCEL < 0 || ROTARY_ACCEL > 7)
   #warning "define warning in myoptions.h: ROTARY_ACCEL is out of range (0-7), reverting to default 2"
   #undef ROTARY_ACCEL
 #endif
@@ -1593,7 +1598,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef ONE_CLICK_SWITCH
   #define ONE_CLICK_SWITCH false
 #endif
-#if defined(IR_TOLERANCE) && ((IR_TOLERANCE < 10) || (IR_TOLERANCE > 80))
+#if defined(IR_TOLERANCE) && (IR_TOLERANCE < 10 || IR_TOLERANCE > 80)
   #warning "define warning in myoptions.h: IR_TOLERANCE is out of range (10-80), reverting to default 35"
   #undef IR_TOLERANCE
 #endif
@@ -1631,7 +1636,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define TIME_SYNC_INTERVAL 1
   #endif
 #endif
-#if (TIME_SYNC_INTERVAL < 1) || (TIME_SYNC_INTERVAL > 24)
+#if TIME_SYNC_INTERVAL < 1 || TIME_SYNC_INTERVAL > 24
   #error define error in myoptions.h: TIME_SYNC_INTERVAL must be a number from 1 to 24 (hours)
 #endif
 #ifndef WEATHER_API
@@ -1652,7 +1657,7 @@ static_assert(
 #ifndef WEATHER_SYNC_INTERVAL // minutes
   #define WEATHER_SYNC_INTERVAL 15
 #endif
-#if (WEATHER_SYNC_INTERVAL < 10) || (WEATHER_SYNC_INTERVAL > 60)
+#if WEATHER_SYNC_INTERVAL < 10 || WEATHER_SYNC_INTERVAL > 60
   #error define error in myoptions.h: WEATHER_SYNC_INTERVAL must be a number from 10 to 60 (minutes)
 #endif
 /* Most of the world uses Metric but you can override in myoptions.h */

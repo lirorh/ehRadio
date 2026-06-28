@@ -354,5 +354,10 @@
 //#define CLOCKGLOW false
 
 #define VS_PATCH_ENABLE true
+//#define DSP_TASK_PRIORITY 3 // 3 = highest, because VS1053 handles decoding well
+//#define DSP_TASK_CORE_ID 1
+//#define AUDIO_CORE 0
+#define NETWORK_CORE 0
+
 
 #endif // myoptions_h

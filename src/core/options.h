@@ -432,7 +432,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #endif
 #if VS_PATCH_ENABLE==false && VS1053_CS != 255 // unfortunately, the VU Meter doesn't work on VS1053 without the patch
   #undef SHOW_VU_METER
-  //#define SHOW_VU_METER false
+  #define SHOW_VU_METER false
 #endif
 
 /* --- ESP32 INTERNAL DAC --- */

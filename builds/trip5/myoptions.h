@@ -225,6 +225,9 @@
   #if defined(SH1106_PCM_REMOTE)
     #define ENC_STEPS          4
   #endif
+  #if defined(ILI9488_VS1053_1BUTTON)
+    #define VS_PATCH_ENABLE true
+  #endif
 #elif defined(SH1106_PCM_1BUTTON)
   #define ENC_CLK            7
   #define ENC_DT             15
@@ -353,7 +356,7 @@
 //#define WWW_CASETRANSFORM
 //#define CLOCKGLOW false
 
-#define VS_PATCH_ENABLE true
+
 //#define DSP_TASK_PRIORITY 3 // 3 = highest, because VS1053 handles decoding well
 //#define DSP_TASK_CORE_ID 1
 //#define AUDIO_CORE 0

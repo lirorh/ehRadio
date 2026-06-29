@@ -14,7 +14,7 @@ class Controls {
 public:
   void init();
   void loop();
-  void setEncAcceleration(uint16_t acc);
+  void setEncAcceleration(uint8_t acc);
   void setIRTolerance(uint8_t tl);
   void flipTS();
   void controlsEvent(bool toRight, int8_t volDelta = 0);

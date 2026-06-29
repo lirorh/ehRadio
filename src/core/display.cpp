@@ -6,21 +6,18 @@
 #include "config.h"
 #include "display.h"
 #include "logging.h"
-#include "locale.h"
 #include "netserver.h"
 #include "network.h"
 #include "player.h"
 #include "utility.h"
 #include "backlightcontrols.h"
 #include "rgbled.h"
+#include "../locale/dsplocale.h"
 #include "../displays/dspcore.h"
 #include "../displays/widgets/pages.h"
 #include "../displays/widgets/widgets.h"
 #if defined(BATTERY_PIN) && (BATTERY_PIN!=255)
   #include "battery.h"
-#endif
-#ifdef USE_NEXTION
-  #include "../displays/nextion.h"
 #endif
 
 #ifndef IP_WEATHER_SHARED
@@ -28,9 +25,6 @@
 #endif
 
 Display display;
-#ifdef USE_NEXTION
-  Nextion nextion;
-#endif
 
 QueueHandle_t displayQueue;
 
@@ -94,13 +88,12 @@ Display::~Display() {
 
 void Display::init() {
   BOOTLOGX("display.init\t");
-  #ifdef USE_NEXTION
-    nextion.begin();
-  #endif
   #if LIGHT_SENSOR!=255
     analogSetAttenuation(ADC_0db);
   #endif
+  _activeLocale = l10n_findLocale(config.store.locale_display);
   dsp.initDisplay();
+  dsp.setFont((GFXfont *)&DisplayFont);
   displayQueue=NULL;
   displayQueue = xQueueCreate(5, sizeof(requestParams_t));
   if (displayQueue==NULL) { log_e("[display] displayQueue alloc failed — rebooting"); ESP.restart(); }
@@ -279,17 +272,21 @@ void Display::_apScreen() {
     ScrollWidget *bootTitle = (ScrollWidget*) &_boot->addWidget(new ScrollWidget("*", apTitleConf, config.theme.meta, config.theme.metabg));
     bootTitle->setText("AP/Improv Mode");
     TextWidget *apname = (TextWidget*) &_boot->addWidget(new TextWidget(apNameConf, 30, false, config.theme.title1, config.theme.background));
-    apname->setText(LANG::apNameTxt);
+    apname->setText(l10n(L10N_LBL_APNAME));
     TextWidget *apname2 = (TextWidget*) &_boot->addWidget(new TextWidget(apName2Conf, 30, false, config.theme.clock, config.theme.background));
     apname2->setText(AP_SSID);
     TextWidget *appass = (TextWidget*) &_boot->addWidget(new TextWidget(apPassConf, 30, false, config.theme.title1, config.theme.background));
-    appass->setText(LANG::apPassTxt);
+    #ifdef AP_PASSWORD
+      appass->setText(l10n(L10N_LBL_APPASS));
+    #else 
+      appass->setText(l10n(L10N_LBL_APNOPASS));
+    #endif
     TextWidget *appass2 = (TextWidget*) &_boot->addWidget(new TextWidget(apPass2Conf, 30, false, config.theme.clock, config.theme.background));
     #ifdef AP_PASSWORD
       appass2->setText(AP_PASSWORD);
     #endif
     ScrollWidget *bootSett = (ScrollWidget*) &_boot->addWidget(new ScrollWidget("*", apSettConf, config.theme.title2, config.theme.background));
-    bootSett->setText(utility.ipToStr(WiFi.softAPIP()), LANG::apSettFmt);
+    bootSett->setText(utility.ipToStr(WiFi.softAPIP()), l10n(L10N_MSG_CONNECT_OPEN));
     _pager->addPage(_boot);
     _pager->setPage(_boot);
   #else
@@ -299,24 +296,14 @@ void Display::_apScreen() {
 
 void Display::_start() {
   if (_boot) _pager->removePage(_boot);
-  #ifdef USE_NEXTION
-    nextion.wake();
-  #endif
   if (network.status != CONNECTED && network.status != SDREADY) {
     _apScreen();
-    #ifdef USE_NEXTION
-      nextion.apScreen();
-    #endif
       _bootStep = 2;
     return;
   }
-  #ifdef USE_NEXTION
-    //nextion.putcmd("page player");
-    nextion.start();
-  #endif
   _buildPager();
   _mode = PLAYER;
-  config.setTitle(LANG::const_PlReady);
+  config.setTitle(l10n(L10N_MSG_READY));
   
   if (_bufferbar)  _bufferbar->lock(!config.store.bufferbar);
   
@@ -361,10 +348,6 @@ void Display::_setReturnTicker(uint8_t time_s) {
 }
 
 void Display::_swichMode(displayMode_e newmode) {
-  #ifdef USE_NEXTION
-    //nextion.swichMode(newmode);
-    nextion.putRequest({NEWMODE, newmode});
-  #endif
   if (newmode == _mode || (network.status != CONNECTED && network.status != SDREADY)) return;
   _mode = newmode;
   dsp.setScrollId(NULL);
@@ -427,22 +410,22 @@ void Display::_swichMode(displayMode_e newmode) {
       }
     #endif
     if (config.store.volumepage) {
-      _showDialog(LANG::const_DlgVolume);
+      _showDialog(l10n(L10N_LBL_VOLUME));
     }
     #ifndef HIDE_IP
       if (_volip) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
     #endif
     _nums->setText(config.store.volume, numtxtFmt);
   }
-  if (newmode == LOST)      _showDialog(LANG::const_DlgLost);
-  if (newmode == UPDATING)  { _showDialog(LANG::const_DlgUpdate);
+  if (newmode == LOST)      _showDialog(l10n(L10N_LBL_LOST));
+  if (newmode == UPDATING)  { _showDialog(l10n(L10N_LBL_UPDATE));
     #ifdef UPDATEURL
       _updFirstCall = true;
     #endif
   }
   if (newmode == SLEEPING)  _showDialog("SLEEPING");
-  if (newmode == SDCHANGE)  _showDialog(LANG::const_waitForSD);
-  if (newmode == INFO || newmode == SETTINGS || newmode == TIMEZONE || newmode == WIFI) _showDialog(LANG::const_DlgNextion);
+  if (newmode == SDCHANGE)  _showDialog(l10n(L10N_LBL_WAITFORSD));
+  if (newmode == INFO || newmode == SETTINGS || newmode == TIMEZONE || newmode == WIFI) _showDialog("");
   if (newmode == NUMBERS) _showDialog("");
   if (newmode == STATIONS) {
     _pager->setPage(pages[PG_PLAYLIST]);
@@ -479,9 +462,6 @@ void Display::putRequest(displayRequestType_e type, int payload) {
   request.type = type;
   request.payload = payload;
   xQueueSend(displayQueue, &request, pdMS_TO_TICKS(DSQ_SEND_DELAY));
-  #ifdef USE_NEXTION
-    nextion.putRequest(request);
-  #endif
 }
 
 void Display::updateProgress(const char* label, float progress) {
@@ -575,20 +555,13 @@ void Display::loop() {
   }
   if (displayQueue==NULL || _locked) return;
   _pager->loop();
-  #ifdef USE_NEXTION
-    nextion.loop();
-  #endif
   requestParams_t request;
   if (xQueueReceive(displayQueue, &request, DSP_QUEUE_TICKS)) {
     switch (request.type) {
         case NEWMODE: _swichMode((displayMode_e)request.payload); break;
         case CLOSEPLAYLIST: player.sendCommand({PR_PLAY, request.payload});
-        case CLOCK: 
-          if (_mode==PLAYER || _mode==SCREENSAVER) _time(); 
-          /*#ifdef USE_NEXTION
-            if (_mode==TIMEZONE) nextion.localTime(network.timeinfo);
-            if (_mode==INFO)     nextion.rssi();
-          #endif*/
+        case CLOCK:
+          if (_mode==PLAYER || _mode==SCREENSAVER) _time(request.payload);
           break;
         case NEWTITLE: _title(); break;
         case NEWSTATION: _station(); break;
@@ -653,16 +626,11 @@ void Display::loop() {
           break;
         }
         case BOOTSTRING: {
-          if (_bootstring) _bootstring->setText(config.ssids[request.payload].ssid, LANG::bootstrFmt);
-          /*#ifdef USE_NEXTION
-            char buf[50];
-            snprintf(buf, 50, bootstrFmt, config.ssids[request.payload].ssid);
-            nextion.bootString(buf);
-          #endif*/
+          if (_bootstring) _bootstring->setText(config.ssids[request.payload].ssid, l10n(L10N_MSG_WIFI));
           break;
         }
         case WAITFORSD: {
-          if (_bootstring) _bootstring->setText(LANG::const_waitForSD);
+          if (_bootstring) _bootstring->setText(l10n(L10N_LBL_WAITFORSD));
           break;
         }
         case SDFILEINDEX: {
@@ -819,9 +787,6 @@ void Display::_title() {
       _title1->setText(config.station.title);
       if (_title2) _title2->setText("");
     }
-    /*#ifdef USE_NEXTION
-      nextion.newTitle(config.station.title);
-    #endif*/
     
   } else {
     _title1->setText("");
@@ -839,9 +804,10 @@ void Display::_time(bool redraw) {
       config.setBrightness();
     }
   #endif
-  if (config.isScreensaver && network.timeinfo.tm_sec % 60 == 0) {
-    int32_t minTop = TFT_FRAMEWDT + _clock->clockHeight();
-    int32_t maxTop = dsp.height() - TFT_FRAMEWDT;
+  if (config.isScreensaver && network.timeinfo.tm_sec % SCREENSAVERMOVE == 0) {
+    int32_t clockH = _clock->clockHeight();
+    int32_t minTop = max((int32_t)TFT_FRAMEWDT, (int32_t)_clock->timeHeight());
+    int32_t maxTop = dsp.height() - clockH - TFT_FRAMEWDT;
     uint16_t ft = (maxTop > minTop) ? static_cast<uint16_t>(random(minTop, maxTop + 1)) : static_cast<uint16_t>(minTop);
 
     int32_t minLeft = TFT_FRAMEWDT;
@@ -853,10 +819,7 @@ void Display::_time(bool redraw) {
     //_clock->moveTo({clockConf.left, ft, 0});
     _clock->moveTo({lt, ft, 0});
   }
-  _clock->draw();
-  /*#ifdef USE_NEXTION
-    nextion.printClock(network.timeinfo);
-  #endif*/
+  if (redraw) _clock->forceDraw(); else _clock->draw();
 }
 
 void Display::_volume() {
@@ -868,9 +831,6 @@ void Display::_volume() {
     _setReturnTicker(3);
     _nums->setText(config.store.volume, numtxtFmt);
   }
-  /*#ifdef USE_NEXTION
-    nextion.setVol(config.store.volume, _mode == VOL);
-  #endif*/
 }
 
 void Display::flip() { dsp.flip(); }
@@ -901,28 +861,13 @@ void Display::wakeup() {
 
 void Display::init() {
   _createDspTask();
-  #ifdef USE_NEXTION
-    nextion.begin(true);
-  #endif
 }
 void Display::_start() {
-  #ifdef USE_NEXTION
-    //nextion.putcmd("page player");
-    nextion.start();
-  #endif
-  config.setTitle(LANG::const_PlReady);
+  config.setTitle(l10n(L10N_MSG_READY));
 }
 
 void Display::putRequest(displayRequestType_e type, int payload) {
   if (type==DSP_START) _start();
-  #ifdef USE_NEXTION
-    requestParams_t request;
-    request.type = type;
-    request.payload = payload;
-    nextion.putRequest(request);
-  #else
-    if (type==NEWMODE) mode((displayMode_e)payload);
-  #endif
 }
 
 #endif // ============================== DUMMYDISPLAY Ends ==============================

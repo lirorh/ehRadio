@@ -8,7 +8,6 @@
 #include <ImprovWiFiLibrary.h>
 #include "config.h"
 #include "display.h"
-#include "locale.h"
 #include "logging.h"
 #include "mqtt.h"
 #include "netserver.h"
@@ -18,6 +17,7 @@
 #include "startup.h"
 #include "telnet.h"
 #include "utility.h"
+#include "../locale/dsplocale.h"
 
 #define NETWORK_TASK_STACK_BYTES (NETWORK_TASK_STACK_SIZE * 1024)
 
@@ -73,7 +73,7 @@ void ticks() {
     }
   }
   #ifndef DSP_LCD
-    bool connectingStream = display.mode()==PLAYER && !player.isRunning() && strcmp_P(config.station.title, LANG::const_PlConnect) == 0;
+    bool connectingStream = display.mode()==PLAYER && !player.isRunning() && strcmp_P(config.station.title, l10n(L10N_MSG_CONNECT)) == 0;
     if (connectingStream) {
       config.screensaverTicks = 0;
       config.screensaverPlayingTicks = 0;
@@ -522,7 +522,7 @@ void MyNetwork::setWifiParams() {
   WiFi.onEvent(WiFiReconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
   WiFi.onEvent(WiFiLostConnection, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
   weatherBuf=NULL;
-  #if (DSP_MODEL!=DSP_DUMMY || defined(USE_NEXTION)) && !defined(HIDE_WEATHER)
+  #if (DSP_MODEL!=DSP_DUMMY ) && !defined(HIDE_WEATHER)
     if (weatherBuf) { free(weatherBuf); weatherBuf = nullptr; }
     weatherBuf = (char *) malloc(sizeof(char) * WEATHER_STRING_L);
     memset(weatherBuf, 0, WEATHER_STRING_L);
@@ -642,19 +642,19 @@ bool downloadToTempFile(const char* url) {
 // WMO Weather Code to Description (for Open-Meteo)
 const char* getWMODescription(int code) {
   switch(code) {
-    case 0:  return LANG::w_clear_sky;
-    case 1: case 2: case 3: return LANG::w_overcast;
-    case 45: case 48: return LANG::w_foggy;
-    case 51: case 53: case 55: return LANG::w_drizzle;
-    case 56: case 57: return LANG::w_freezing_drizzle;
-    case 61: case 63: case 65: return LANG::w_rain;
-    case 66: case 67: return LANG::w_freezing_rain;
-    case 71: case 73: case 75: return LANG::w_snow;
-    case 77: return LANG::w_snow_grains;
-    case 80: case 81: case 82: return LANG::w_rain_showers;
-    case 85: case 86: return LANG::w_snow_showers;
-    case 95: return LANG::w_thunderstorm;
-    case 96: case 99: return LANG::w_thunderstorm_hail;
+    case 0:  return l10n(L10N_MSG_W_CLEAR_SKY);
+    case 1: case 2: case 3: return l10n(L10N_MSG_W_OVERCAST);
+    case 45: case 48: return l10n(L10N_MSG_W_FOGGY);
+    case 51: case 53: case 55: return l10n(L10N_MSG_W_DRIZZLE);
+    case 56: case 57: return l10n(L10N_MSG_W_FREEZING_DRIZZLE);
+    case 61: case 63: case 65: return l10n(L10N_MSG_W_RAIN);
+    case 66: case 67: return l10n(L10N_MSG_W_FREEZING_RAIN);
+    case 71: case 73: case 75: return l10n(L10N_MSG_W_SNOW);
+    case 77: return l10n(L10N_MSG_W_SNOW_GRAINS);
+    case 80: case 81: case 82: return l10n(L10N_MSG_W_RAIN_SHOWERS);
+    case 85: case 86: return l10n(L10N_MSG_W_SNOW_SHOWERS);
+    case 95: return l10n(L10N_MSG_W_THUNDERSTORM);
+    case 96: case 99: return l10n(L10N_MSG_W_THUNDERSTORM_HAIL);
     default: return "Unknown";
   }
 }
@@ -670,8 +670,8 @@ namespace WeatherCache {
   float wind_speed_ms = 0;  // Always stored in m/s (meters per second) for both APIs
   int wind_deg = 0;
   char description[64] = "";
-  char icon[8] = "";  // For OpenWeather
   int wmo_code = 0;    // For OpenMeteo
+  bool has_wmo = false;
 }
 
 static void markWeatherFetchSuccess() {
@@ -699,12 +699,12 @@ static bool shouldClearWeatherCacheOnFailure() {
 
 // Build weather display string from cached data (no API refetch)
 bool MyNetwork::buildWeatherString() {
-  #if (DSP_MODEL!=DSP_DUMMY || defined(USE_NEXTION)) && !defined(HIDE_WEATHER)
+  #if (DSP_MODEL!=DSP_DUMMY ) && !defined(HIDE_WEATHER)
     if (!weatherBuf) return false;
 
     // If no cached data or cache expired, show loading message
     if (!WeatherCache::valid) {
-      snprintf(weatherBuf, WEATHER_STRING_L, "%s", LANG::weather_loading);
+      snprintf(weatherBuf, WEATHER_STRING_L, "%s", l10n(L10N_LBL_W_LOADING));
       display.putRequest(NEWWEATHER);
       return false;
     }
@@ -714,7 +714,7 @@ bool MyNetwork::buildWeatherString() {
     // Convert temperature based on user preference
     float temp_display = config.store.weathertempimp ? (WeatherCache::temp_c * 9.0 / 5.0 + 32.0) : WeatherCache::temp_c;
     float feels_display = config.store.weathertempimp ? (WeatherCache::feels_like_c * 9.0 / 5.0 + 32.0) : WeatherCache::feels_like_c;
-    const char *tempUnit = config.store.weathertempimp ? "\011F" : "\011C";
+    const char *tempUnit = config.store.weathertempimp ? "°F" : "°C";
     
     // Convert pressure based on user preference
     float press_display = config.store.weatherpressimp ? (WeatherCache::pressure_hpa * 0.750062) : WeatherCache::pressure_hpa;
@@ -744,23 +744,24 @@ bool MyNetwork::buildWeatherString() {
     char *p = weatherBuf;
     size_t remaining = WEATHER_STRING_L;
     int written;
-    written = snprintf(p, remaining, "%s, %.1f%s", WeatherCache::description, temp_display, tempUnit);
+    const char* desc = WeatherCache::has_wmo ? getWMODescription(WeatherCache::wmo_code) : WeatherCache::description;
+    written = snprintf(p, remaining, "%s, %.1f%s", desc, temp_display, tempUnit);
     if (written > 0 && (size_t)written < remaining) { p += written; remaining -= written; }
     
     if (config.store.weatherfeels && remaining > 1) {
-      written = snprintf(p, remaining, " \007 %s %.1f%s", LANG::weather_feelslike, feels_display, tempUnit);
+      written = snprintf(p, remaining, " \007 %s %.1f%s", l10n(L10N_LBL_W_FEELSLIKE), feels_display, tempUnit);
       if (written > 0 && (size_t)written < remaining) { p += written; remaining -= written; }
     }
     if (config.store.weatherpressure && remaining > 1) {
-      written = snprintf(p, remaining, " \007 %s %.0f %s", LANG::weather_pressure, press_display, pressUnit);
+      written = snprintf(p, remaining, " \007 %s %.0f %s", l10n(L10N_LBL_W_PRESSURE), press_display, pressUnit);
       if (written > 0 && (size_t)written < remaining) { p += written; remaining -= written; }
     }
     if (config.store.weatherhumidity && remaining > 1) {
-      written = snprintf(p, remaining, " \007 %s %d%%", LANG::weather_humidity, WeatherCache::humidity);
+      written = snprintf(p, remaining, " \007 %s %d%%", l10n(L10N_LBL_W_HUMIDITY), WeatherCache::humidity);
       if (written > 0 && (size_t)written < remaining) { p += written; remaining -= written; }
     }
     if (config.store.weatherwind && remaining > 1) {
-      written = snprintf(p, remaining, " \007 %s %.1f %s [%s]", LANG::weather_wind, wind_display, windUnit, LANG::wind[wind_dir_idx]);
+      written = snprintf(p, remaining, " \007 %s %.1f %s [%s]", l10n(L10N_LBL_W_WIND), wind_display, windUnit, l10n_wind(wind_dir_idx));
       if (written > 0 && (size_t)written < remaining) { p += written; remaining -= (size_t)written; }
     }
     
@@ -773,7 +774,7 @@ bool MyNetwork::buildWeatherString() {
 
 // Get weather from Open-Meteo API (free, no API key)
 bool getWeather_OpenMeteo(char *wstr) {
-  #if (DSP_MODEL!=DSP_DUMMY || defined(USE_NEXTION)) && !defined(HIDE_WEATHER)
+  #if (DSP_MODEL!=DSP_DUMMY ) && !defined(HIDE_WEATHER)
     FUNCTIONLOG("Weather", "Calling Open-Meteo v1 API for current weather...");
     
     // Build URL - always request metric (Celsius, m/s, hPa) for consistent processing
@@ -841,24 +842,10 @@ bool getWeather_OpenMeteo(char *wstr) {
     WeatherCache::wind_speed_ms = wind_speed_ms;  // Stored in consistent m/s
     WeatherCache::wind_deg = wind_deg;
     WeatherCache::wmo_code = wmo_code;
+    WeatherCache::has_wmo = true;
     strncpy(WeatherCache::description, description, sizeof(WeatherCache::description) - 1);
     WeatherCache::description[sizeof(WeatherCache::description) - 1] = '\0';
     
-    #ifdef USE_NEXTION
-      // For Nextion, need to compute display values
-      float temp_display = config.store.weathertempimp ? (temp_c * 9.0 / 5.0 + 32.0) : temp_c;
-      float press_display = config.store.weatherpressimp ? (pressure_hpa * 0.750062) : pressure_hpa;
-      const char *pressUnit = config.store.weatherpressimp ? "mmHg" : "hPa";
-      
-      nextion.putcmdf("press_txt.txt=\"%.0f%s\"", press_display, pressUnit);
-      nextion.putcmdf("hum_txt.txt=\"%d%%\"", humidity);
-      nextion.putcmdf("temp_txt.txt=\"%.1f\"", temp_display);
-      // WMO codes don't map 1:1 to OpenWeather icons, use generic mapping
-      int iconoffset = (wmo_code == 0) ? 0 : (wmo_code <= 3) ? 1 : (wmo_code < 50) ? 2 : 
-                       (wmo_code < 60) ? 4 : (wmo_code < 70) ? 5 : (wmo_code < 80) ? 7 : 4;
-      nextion.putcmd("cond_img.pic", 50 + iconoffset);
-      nextion.weatherVisible(1);
-    #endif
     
     // Build display string from cached data
     network.requestWeatherSync();
@@ -867,23 +854,9 @@ bool getWeather_OpenMeteo(char *wstr) {
   return false;
 }
 
-// Helper: Get icon offset from OpenWeather icon code
-int getWeatherIconOffset(const char* icon) {
-  if (strstr(icon,"01")!=NULL)      return 0;
-  else if (strstr(icon,"02")!=NULL) return 1;
-  else if (strstr(icon,"03")!=NULL) return 2;
-  else if (strstr(icon,"04")!=NULL) return 3;
-  else if (strstr(icon,"09")!=NULL) return 4;
-  else if (strstr(icon,"10")!=NULL) return 5;
-  else if (strstr(icon,"11")!=NULL) return 6;
-  else if (strstr(icon,"13")!=NULL) return 7;
-  else if (strstr(icon,"50")!=NULL) return 8;
-  else                             return 9;
-}
-
 // Get weather from OpenWeather API 2.5 (legacy)
 bool getWeather_OpenWeather25(char *wstr) {
-  #if (DSP_MODEL!=DSP_DUMMY || defined(USE_NEXTION)) && !defined(HIDE_WEATHER)
+  #if (DSP_MODEL!=DSP_DUMMY ) && !defined(HIDE_WEATHER)
     FUNCTIONLOG("Weather", "Calling OpenWeather API 2.5 for current weather...");
     
     // Check for API key
@@ -925,7 +898,6 @@ bool getWeather_OpenWeather25(char *wstr) {
     
     // Extract data (metric: Celsius, m/s, hPa)
     const char* description = doc["weather"][0]["description"];
-    const char* icon = doc["weather"][0]["icon"];
     float temp_c = doc["main"]["temp"];
     float feels_like_c = doc["main"]["feels_like"];
     
@@ -954,22 +926,6 @@ bool getWeather_OpenWeather25(char *wstr) {
     WeatherCache::wind_deg = wind_deg;
     strncpy(WeatherCache::description, description, sizeof(WeatherCache::description) - 1);
     WeatherCache::description[sizeof(WeatherCache::description) - 1] = '\0';
-    strncpy(WeatherCache::icon, icon, sizeof(WeatherCache::icon) - 1);
-    WeatherCache::icon[sizeof(WeatherCache::icon) - 1] = '\0';
-    
-    #ifdef USE_NEXTION
-      // For Nextion, need to compute display values
-      float temp_display = config.store.weathertempimp ? (temp_c * 9.0 / 5.0 + 32.0) : temp_c;
-      float press_display = config.store.weatherpressimp ? (pressure_hpa * 0.750062) : pressure_hpa;
-      const char *pressUnit = config.store.weatherpressimp ? "mmHg" : "hPa";
-      
-      nextion.putcmdf("press_txt.txt=\"%.0f%s\"", press_display, pressUnit);
-      nextion.putcmdf("hum_txt.txt=\"%d%%\"", humidity);
-      nextion.putcmdf("temp_txt.txt=\"%.1f\"", temp_display);
-      int iconoffset = getWeatherIconOffset(icon);
-      nextion.putcmd("cond_img.pic", 50 + iconoffset);
-      nextion.weatherVisible(1);
-    #endif
     
     // Build display string from cached data
     network.requestWeatherSync();
@@ -1051,7 +1007,7 @@ float calculateGroundPressure(float seaLevelPressure, float elevationMeters) {
 
 // Get weather from OpenWeather API 3.0 (current)
 bool getWeather_OpenWeather30(char *wstr) {
-  #if (DSP_MODEL!=DSP_DUMMY || defined(USE_NEXTION)) && !defined(HIDE_WEATHER)
+  #if (DSP_MODEL!=DSP_DUMMY ) && !defined(HIDE_WEATHER)
     FUNCTIONLOG("Weather", "Calling OpenWeather API 3.0 for current weather...");
     
     // Check for API key
@@ -1099,7 +1055,6 @@ bool getWeather_OpenWeather30(char *wstr) {
     
     // Extract data (metric: Celsius, m/s, hPa)
     const char* description = current["weather"][0]["description"];
-    const char* icon = current["weather"][0]["icon"];
     float temp_c = current["temp"];
     float feels_like_c = current["feels_like"];
     float pressure_sea_hpa = current["pressure"];  // Sea-level pressure
@@ -1134,22 +1089,6 @@ bool getWeather_OpenWeather30(char *wstr) {
     WeatherCache::wind_deg = wind_deg;
     strncpy(WeatherCache::description, description, sizeof(WeatherCache::description) - 1);
     WeatherCache::description[sizeof(WeatherCache::description) - 1] = '\0';
-    strncpy(WeatherCache::icon, icon, sizeof(WeatherCache::icon) - 1);
-    WeatherCache::icon[sizeof(WeatherCache::icon) - 1] = '\0';
-    
-    #ifdef USE_NEXTION
-      // For Nextion, need to compute display values
-      float temp_display = config.store.weathertempimp ? (temp_c * 9.0 / 5.0 + 32.0) : temp_c;
-      float press_display = config.store.weatherpressimp ? (pressure_hpa * 0.750062) : pressure_hpa;
-      const char *pressUnit = config.store.weatherpressimp ? "mmHg" : "hPa";
-      
-      nextion.putcmdf("press_txt.txt=\"%.0f%s\"", press_display, pressUnit);
-      nextion.putcmdf("hum_txt.txt=\"%d%%\"", humidity);
-      nextion.putcmdf("temp_txt.txt=\"%.1f\"", temp_display);
-      int iconoffset = getWeatherIconOffset(icon);
-      nextion.putcmd("cond_img.pic", 50 + iconoffset);
-      nextion.weatherVisible(1);
-    #endif
     
     // Build display string from cached data
     network.requestWeatherSync();
@@ -1159,7 +1098,7 @@ bool getWeather_OpenWeather30(char *wstr) {
 }
 
 bool getWeather(char *wstr) {
-  #if (DSP_MODEL!=DSP_DUMMY || defined(USE_NEXTION)) && !defined(HIDE_WEATHER)
+  #if (DSP_MODEL!=DSP_DUMMY ) && !defined(HIDE_WEATHER)
     // Provider dispatcher - route to appropriate weather API
     if (strcmp(config.store.weatherapi, "OW30") == 0) {
       return getWeather_OpenWeather30(wstr);

@@ -16,9 +16,6 @@
 #include "core/startup.h"
 #include "core/telnet.h"
 #include "displays/tools/psframebuffer.h"
-#ifdef USE_NEXTION
-  #include "displays/nextion.h"
-#endif
 
 SET_LOOP_TASK_STACK_SIZE(LOOP_TASK_STACK_SIZE * 1024);
 
@@ -150,7 +147,7 @@ void loop() {
           size_t psramUsed  = psramTotal - ESP.getFreePsram();
           size_t known      = (1024 * PSRAM_BUFSIZE) + netserver.getFileCache().totalBytes() + psramFrameBufferBytes;
           size_t audioFill  = player.inBufferFilled();
-          FUNCTIONLOG("PSRAM", "Allocated: %uKB / %uKB: Framebuffer: %uKB, WebUI Cache: %uKB, Other: %uKB, Audio: %uKB used / %uKB allocated",
+          FUNCTIONLOG("PSRAM", "Allocated: %uKB / %uKB total: Framebuffer: %uKB, WebUI Cache: %uKB, Other: %uKB, Audio: buffered %uKB / %uKB allocated",
               psramUsed / 1024,
               psramTotal / 1024,
               psramFrameBufferBytes / 1024,

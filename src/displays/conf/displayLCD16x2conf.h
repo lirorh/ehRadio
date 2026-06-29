@@ -23,11 +23,11 @@
 #define BOOTLOGOTOP     0
 
 /* SCROLLS  */                           /* {{ left, top, fontsize, align }, buffsize, uppercase, width, scrolldelay, scrolldelta, scrolltime } */
-#define SDELTA          2
-#define STIME           400
-const ScrollConfig metaConf       PROGMEM = {{ 0, 0, 1, WA_LEFT }, 140, true, MAX_WIDTH-6, 2000, SDELTA, STIME };
-const ScrollConfig title1Conf     PROGMEM = {{ 0, 1, 1, WA_LEFT }, 140, true, MAX_WIDTH-4, 2000, SDELTA, STIME };
-const ScrollConfig playlistConf   PROGMEM = {{ 1, 1, 1, WA_LEFT }, 140, true, MAX_WIDTH-1, 2000, SDELTA, STIME };
+// SDELTA removed - using SCROLLDELTA from dspconf.h
+// STIME removed - using SCROLLTIME from dspconf.h
+const ScrollConfig metaConf       PROGMEM = {{ 0, 0, 1, WA_LEFT }, 140, true, MAX_WIDTH-6, SCROLLDELAY, 2, SCROLLTIME };
+const ScrollConfig title1Conf     PROGMEM = {{ 0, 1, 1, WA_LEFT }, 140, true, MAX_WIDTH-4, SCROLLDELAY, 2, SCROLLTIME };
+const ScrollConfig playlistConf   PROGMEM = {{ 1, 1, 1, WA_LEFT }, 140, true, MAX_WIDTH-1, SCROLLDELAY, 2, SCROLLTIME };
 
 /* WIDGETS  */                           /* { left, top, fontsize, align } */
 const WidgetConfig bootstrConf    PROGMEM = { 0, 0, 1, WA_CENTER };
@@ -41,10 +41,10 @@ const ProgressConfig bootPrgConf  PROGMEM = { 250, 10, 4 };
 const char numtxtFmt[]            PROGMEM = "%d";
 const char bitrateFmt[]           PROGMEM = "%d";
 const char rssiFmt[]              PROGMEM = "";
-const char const_lcdApMode[]      PROGMEM = "AP/IMPROV MODE";
+const char const_lcdApMode[]      PROGMEM = "AP-IMPROV MODE";
 const char const_lcdApName[]      PROGMEM = "AP NAME: ";
 const char const_lcdApPass[]      PROGMEM = "PASSWORD: ";
-//const char bootstrFmt[]           PROGMEM = "Trying to %s";
+//const char bootstrFmt[]           PROGMEM = "Wifi- %s";
 
 /* MOVES  */                             /* { left, top, width } */
 const MoveConfig metaMove         PROGMEM = { 0, 0, MAX_WIDTH };
@@ -53,3 +53,4 @@ const MoveConfig weatherMove      PROGMEM = { 0, 0, -1 };
 const MoveConfig weatherMoveVU    PROGMEM = { 0, 0, -1 };
 
 #endif
+

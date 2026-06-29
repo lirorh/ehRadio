@@ -1,7 +1,7 @@
 // Options/Settings page specific functions
 
 const localTZjson = 'timezones.json';
-const localLocalesJson = 'locales.json';
+const localLocalesJson = 'wwwlocale.json';
 let timezoneData = null;
 let localesData = null;
 let pendingTZData = null; // Store WebSocket data if it arrives before timezones load
@@ -20,6 +20,7 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     loadTimezones();
     loadLocales();
+    loadDisplayLocales();
     setupWeatherProviderToggle();
     setupDimmingControls();
   });
@@ -27,6 +28,7 @@ if (document.readyState === 'loading') {
   // DOM already loaded (script loaded dynamically)
   loadTimezones();
   loadLocales();
+  loadDisplayLocales();
   setupWeatherProviderToggle();
   setupDimmingControls();
 }
@@ -204,58 +206,39 @@ async function loadLocales() {
   }
 }
 
+let displayLocalesData = null;
+
+async function loadDisplayLocales() {
+  try {
+    const response = await fetch('dsplocale.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    displayLocalesData = await response.json();
+    populateDisplayLocaleDropdown(displayLocalesData);
+    // If WebSocket data arrived before locales loaded, apply it now
+    if (pendingLocaleData) {
+      applyPendingLocaleData();
+    }
+  } catch (err) {
+    console.error("Failed to load display locales:", err);
+  }
+}
+
+function populateDisplayLocaleDropdown(locales) {
+  const select = getId('locale_disp');
+  if (!select) return;
+  select.innerHTML = '';
+  Object.entries(locales).sort().forEach(([code, name]) => {
+    const option = document.createElement('option');
+    option.value = code;
+    option.textContent = `${code}: ${name}`;
+    select.appendChild(option);
+  });
+}
+
 function populateLocaleDropdown(locales) {
   const select = getId('locale_webui');
   if (!select) return;
   select.innerHTML = '';
-  // Check if online update capable (defined in variables.js)
-  const canUpdate = typeof onlineUpdCapable !== 'undefined' && onlineUpdCapable;
-  if (!canUpdate) {
-    // Can't update - show htmlLocale and optionally device locale if locale.json exists
-    // Get htmlLocale from variables.js and add as first option
-    const htmlLocaleCode = (typeof htmlLocale !== 'undefined') ? htmlLocale : 'en_US';
-    const htmlLocaleName = locales[htmlLocaleCode] || htmlLocaleCode;
-    const htmlOption = document.createElement('option');
-    htmlOption.value = htmlLocaleCode;
-    htmlOption.textContent = `${htmlLocaleCode}: ${htmlLocaleName}`;
-    select.appendChild(htmlOption);
-    // Try to fetch locale.json to see if there's a second locale available
-    fetch('locale.json')
-      .then(response => response.ok ? response.json() : Promise.reject('Not found'))
-      .then(data => {
-        if (data.locale_code && data.locale_code !== htmlLocaleCode) {
-          // Device has a different locale file - add it as second option
-          const code = data.locale_code;
-          const name = data.locale || locales[code] || code;
-          const option = document.createElement('option');
-          option.value = code;
-          option.textContent = `${code}: ${name}`;
-          select.appendChild(option);
-          select.disabled = false;
-          // Select currently active locale (check uiLocale variable or pendingLocaleData)
-          let currentLocale = htmlLocaleCode;
-          if (typeof uiLocale !== 'undefined') {
-            currentLocale = uiLocale;
-          } else if (pendingLocaleData && pendingLocaleData.locale_webui) {
-            currentLocale = pendingLocaleData.locale_webui;
-          }
-          const i = [...select.options].findIndex(opt => opt.value === currentLocale);
-          if (i !== -1) {
-            select.selectedIndex = i;
-          }
-        } else {
-          // locale.json exists but same as htmlLocale, only 1 option
-          select.disabled = true;
-        }
-      })
-      .catch(() => {
-        // locale.json doesn't exist, only htmlLocale available
-        console.log('locale.json not available, using htmlLocale only');
-        select.disabled = true;
-      });
-    return;
-  }
-  // Populate all locales
   Object.entries(locales).sort().forEach(([code, name]) => {
     const option = document.createElement('option');
     option.value = code;
@@ -269,46 +252,33 @@ function applyPendingLocaleData() {
   const select = getId('locale_webui');
   const display = getId('locale_disp');
   // Check if online update capable (defined in variables.js)
-  const canUpdate = typeof onlineUpdCapable !== 'undefined' && onlineUpdCapable;
-  
   const newLocaleCode = pendingLocaleData.locale_webui;
   const oldLocaleCode = window.originalLocaleWebui;
   const localeChangedByReset = (oldLocaleCode !== null && newLocaleCode !== oldLocaleCode);
   
-  // Set WebUI locale dropdown (only when canUpdate is true)
-  if (select && localesData && canUpdate) {
-    const code = newLocaleCode;
-    const i = [...select.options].findIndex(opt => opt.value === code);
-    if (i !== -1) {
-      select.selectedIndex = i;
-    } else {
-      // Locale not in list - add it as fallback
-      const name = localesData[code] || code;
-      const option = new Option(`${code}: ${name}`, code, true, true);
-      select.appendChild(option);
-      select.selectedIndex = select.options.length - 1;
-    }
-  } else if (select && !canUpdate) {
-    // When canUpdate is false, dropdown is already populated by populateLocaleDropdown
-    // Update the selected option
+  let webuiDone = false, dispDone = false;
+  // Set WebUI locale dropdown
+  if (select && localesData) {
     const code = newLocaleCode;
     const i = [...select.options].findIndex(opt => opt.value === code);
     if (i !== -1) {
       select.selectedIndex = i;
     }
+    webuiDone = true;
   }
-  // Format display locale field nicely
-  if (display && localesData) {
+  // Set display locale dropdown
+  if (display && displayLocalesData) {
     const dispCode = pendingLocaleData.locale_disp;
-    // Try to extract just the locale code (e.g., "lt_LT" from longer string)
     const match = dispCode.match(/([a-z]{2}_[A-Z]{2})/);
     const code = match ? match[1] : dispCode;
-    const name = localesData[code] || dispCode;
-    const displayValue = `${code}: ${name}`;
-    display.value = displayValue;
-    window.originalLocaleDisp = displayValue; // Store original display value globally
+    const i = [...display.options].findIndex(opt => opt.value === code);
+    if (i !== -1) {
+      display.selectedIndex = i;
+    }
+    window.originalLocaleDisp = code;
+    dispDone = true;
   }
-  pendingLocaleData = null;
+  if (webuiDone && dispDone) pendingLocaleData = null;
   
   // If locale was changed by reset, trigger apply automatically to show message and reload
   if (localeChangedByReset) {
@@ -326,14 +296,16 @@ function applyLocale(){
   const selectedName = select.selectedOptions[0].textContent;
   // Check if locale actually changed
   const localeChanged = (selectedCode !== window.originalLocaleWebui);
+  // Always send display locale change
+  const dispSelect = getId('locale_disp');
+  if (dispSelect && dispSelect.value) {
+    websocket.send("locale_disp=" + dispSelect.value);
+  }
   if (localeChanged) {
-    // Show downloading message
-    const display = getId('locale_disp');
-    if (display) {
-      display.value = t('msg_please_wait', 'Please wait...');
-    }
-    console.log(`[Locale] Requesting locale change to ${selectedCode}`);
+    console.log(`[Locale] Applying WebUI locale change to ${selectedCode}`);
     websocket.send("locale_webui=" + selectedCode);
+    // Reload page after short delay to apply new locale
+    setTimeout(function(){ window.location.reload(); }, 1000);
   } else {
     console.log(`[Locale] Locale unchanged (${selectedCode}), skipping download`);
   }

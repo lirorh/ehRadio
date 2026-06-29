@@ -815,7 +815,7 @@ function makeSpiSelect(defName, defObj, scopeId) {
   buses.forEach(function(b) {
     var opt = document.createElement('option');
     opt.value = b;
-    opt.textContent = b;
+    opt.textContent = b + (b === defaultBus ? ' (default)' : '');
     if (b === defaultBus) opt.selected = true;
     sel.appendChild(opt);
   });
@@ -1150,7 +1150,7 @@ function makeControl(def, scopeId) {
     opts.forEach(function(o) {
       var opt = document.createElement('option');
       opt.value = o;
-      opt.textContent = o;
+      opt.textContent = o + (o === defVal ? ' (default)' : '');
       if (o === defVal) opt.selected = true;
       sel.appendChild(opt);
     });
@@ -1211,7 +1211,7 @@ function makeBooleanControl(def, scopeId) {
     rad.dataset.scope = scopeId || '';
     if (v === defStr) rad.checked = true;
     lbl.appendChild(rad);
-    lbl.appendChild(document.createTextNode(' ' + v));
+    lbl.appendChild(document.createTextNode(' ' + v + (v === defStr ? ' (default)' : '')));
     wrap.appendChild(lbl);
   });
   return wrap;
@@ -1427,9 +1427,19 @@ function buildDefaultsSection() {
       var ctrlDiv = document.createElement('div');
       ctrlDiv.className = 'default-item-ctrl hidden';
       ctrlDiv.id = uid('defctrl');
+
+      // Info hint text (revealed when checkbox is checked, like peripherals check-items)
+      if (item.info) {
+        var infoDiv = document.createElement('div');
+        infoDiv.className = 'section-info';
+        infoDiv.textContent = item.info;
+        ctrlDiv.appendChild(infoDiv);
+      }
+
       var defCtrlRow = document.createElement('div');
       defCtrlRow.style.display = 'flex';
       defCtrlRow.style.alignItems = 'center';
+      defCtrlRow.style.justifyContent = 'center';
       defCtrlRow.style.gap = '2px';
       defCtrlRow.appendChild(makeControl(item, 'defaults'));
       var defRstBtn = document.createElement('span');
@@ -2134,7 +2144,7 @@ function outputLocaleSection() {
   if (!sel) return '';
   var code = sel.value;
   return sectionHeader(typeof gData.locale[0] === 'string' ? gData.locale[0] : 'Locale') +
-    outputFlagLine('DSP_LANGUAGE_' + code);
+    outputLine('DSP_LOCALE', '"' + code + '"');
 }
 
 function outputDefaultsSection() {
@@ -2490,6 +2500,11 @@ function buildEnvSection_pio(bd, envName, firmwareName) {
 
   function addLibDep(val) {
     if (!val || val === '') return;
+    // Handle JSON arrays (multiple library references)
+    if (Array.isArray(val)) {
+      val.forEach(function(v) { addLibDep(v); });
+      return;
+    }
     // Keep ${library.xxx} references unresolved - the [library] section is in the header
     var trimmed = val.trim();
     if (!trimmed) return;
@@ -2500,8 +2515,15 @@ function buildEnvSection_pio(bd, envName, firmwareName) {
 
   function addBuildFilter(val) {
     if (!val || val === '') return;
-    if (!buildFilterStr.includes(val)) {
-      buildFilterStr += val;
+    // Handle JSON arrays (multiple source filter patterns)
+    if (Array.isArray(val)) {
+      val.forEach(function(v) { addBuildFilter(v); });
+      return;
+    }
+    var trimmed = val.trim();
+    if (!trimmed) return;
+    if (!buildFilterStr.includes(trimmed)) {
+      buildFilterStr += (buildFilterStr ? '\n  ' : '') + trimmed;
     }
   }
 
@@ -2556,7 +2578,9 @@ function buildEnvSection_pio(bd, envName, firmwareName) {
   out += 'build_src_filter =\n';
   out += '  ${ehradio.build_src_filter}\n';
   if (buildFilterStr) {
-    out += '  ' + buildFilterStr + '\n';
+    buildFilterStr.split('\n').forEach(function(l) {
+      if (l.trim()) out += '  ' + l.trim() + '\n';
+    });
   }
 
   return out;

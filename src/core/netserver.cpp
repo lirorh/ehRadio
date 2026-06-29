@@ -14,7 +14,6 @@
 #include "config.h"
 #include "controls.h"
 #include "display.h"
-#include "locale.h"
 #include "logging.h"
 #include "mqtt.h"
 #include "netserver.h"
@@ -22,6 +21,8 @@
 #include "player.h"
 #include "telnet.h"
 #include "utility.h"
+#include "../locale/wwwlocale.h"
+#include "../locale/dsplocale.h"
 #include "../displays/dspcore.h"
 #include "../displays/widgets/widgetsconfig.h" //BitrateFormat
 #if USE_OTA
@@ -189,31 +190,26 @@ char* updateError() {
 }
 
 void handleDynamicLocale(AsyncWebServerRequest *request) {
-  // Dynamically serve the current locale file as /locale.json
-  // Maps to /www/{locale_code}.json[.gz] based on config.store.locale_webui or WEBUI_LOCALE
-  char localeFile[64];
-  #ifdef UPDATEURL
-    // Update capability enabled - use config.store.locale_webui (user can download locales)
-    const char* localeCode = config.store.locale_webui;
-  #else
-    // Update capability disabled - use hardcoded WEBUI_LOCALE
-    const char* localeCode = WEBUI_LOCALE;
-  #endif
-  // Try .gz version first (production builds use gzipped files)
-  snprintf(localeFile, sizeof(localeFile), "/www/%s.json.gz", localeCode);
-  if (SPIFFS.exists(localeFile)) {
-    AsyncWebServerResponse *response = request->beginResponse(SPIFFS, localeFile, "application/json");
-    response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
+  // Serve locale.json (gzip-compressed) from PROGMEM based on config.store.locale_webui
+  if (strcmp(config.store.locale_webui, HARDCODED_WEBUI_LOCALE) == 0) {
+    request->send(404); // No locale needed — hardcoded text matches target language
     return;
   }
-  // Try non-gzipped version
-  snprintf(localeFile, sizeof(localeFile), "/www/%s.json", localeCode);
-  if (SPIFFS.exists(localeFile)) {
-    request->send(SPIFFS, localeFile, "application/json");
-    return;
+  for (uint8_t i = 0; i < WWW_LOCALE_COUNT; i++) {
+    if (strcmp_P(config.store.locale_webui, ((const char*)pgm_read_ptr(&www_locales[i].code))) == 0) {
+      uint16_t size = pgm_read_word(&www_locales[i].size);
+      AsyncWebServerResponse *response = request->beginResponse(200, "application/json",
+        (const uint8_t*)pgm_read_ptr(&www_locales[i].data), size);
+      response->addHeader("Content-Encoding", "gzip");
+      request->send(response);
+      return;
+    }
   }
-  request->send(404, "text/plain", "Locale file not found");
+  request->send(404);
+}
+
+void handleWWWLocaleIndex(AsyncWebServerRequest *request) {
+  request->send(200, "application/json", wwwlocale_index);
 }
 
 void handleSearch(AsyncWebServerRequest *request) {
@@ -368,6 +364,10 @@ bool NetServer::begin(bool quiet) {
   webserver.on("/", HTTP_ANY, handleIndex);
   webserver.on("/ready", HTTP_GET, handleReady);
   webserver.on("/locale.json", HTTP_GET, handleDynamicLocale);
+  webserver.on("/wwwlocale.json", HTTP_GET, handleWWWLocaleIndex);
+  webserver.on("/dsplocale.json", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "application/json", dsplocale_index);
+  });
   webserver.on("/search", HTTP_GET, handleSearch);
   webserver.on("/search", HTTP_POST, handleSearchPost);
 
@@ -476,7 +476,7 @@ void NetServer::chunkedHtmlPage(const String& contentType, AsyncWebServerRequest
 #else
   #define DSP_CAN_FLIPPED false
 #endif
-#if !defined(HIDE_WEATHER) && (!defined(DUMMYDISPLAY) && !defined(USE_NEXTION))
+#if !defined(HIDE_WEATHER) && (!defined(DUMMYDISPLAY) )
   #define SHOW_WEATHER  true
 #else
   #define SHOW_WEATHER  false
@@ -525,11 +525,6 @@ void NetServer::processQueue() {
                                                                 act += F("\"group_mqtt\",");
                                                               #endif
             if (BRIGHTNESS_PIN != 255 || DSP_CAN_FLIPPED || DSP_MODEL == DSP_NOKIA5110 || dbgact)    act += F("\"group_display\",");
-          #ifdef USE_NEXTION
-                                                                act += F("\"group_nextion\",");
-            if (!SHOW_WEATHER || dbgact)                        act += F("\"group_weather\",");
-            nxtn=true;
-          #endif
                                                               #if defined(LCD_I2C) || defined(DSP_OLED)
                                                                 act += F("\"group_oled\",");
                                                               #endif
@@ -614,7 +609,7 @@ void NetServer::processQueue() {
                                   break;
       case GETLOCALE:     snprintf(wsbuf, sizeof(wsbuf), "{\"locale_webui\":\"%s\",\"locale_disp\":\"%s\",\"tz_name\":\"%s\",\"tzposix\":\"%s\",\"sntp1\":\"%s\",\"sntp2\":\"%s\",\"timeinterval\":%d}",
                                   config.store.locale_webui,
-                                  DSP_LOCALE,
+                                  config.store.locale_display,
                                   config.store.tz_name,
                                   config.store.tzposix,
                                   config.store.sntp1,
@@ -1496,7 +1491,7 @@ void startOnlineUpdate() {
               char progMsg[64];
               snprintf(progMsg, sizeof(progMsg), "{\"onlineupdateprogress\":%d}", percent);
               websocket.textAll(progMsg);
-              display.updateProgress(LANG::updFirmware, (float)written / (float)contentLength);
+              display.updateProgress(l10n(L10N_MSG_UPD_FIRMWARE), (float)written / (float)contentLength);
             }
           }
           if (Update.end(true)) { // end(true) will finish and commit the update
@@ -1629,16 +1624,13 @@ void handleNotFound(AsyncWebServerRequest * request) {
     utility.escapeQuotes(GITHUBURL, escapedGithubUrl, sizeof(escapedGithubUrl));
     snprintf(varjsbuf, sizeof(varjsbuf),
       "var radioVersion='%s';\n"
-      "var htmlLocale='%s';\n"
-      "var uiLocale='%s';\n"
       "var formAction='%s';\n"
       "var playMode='%s';\n"
       "var onlineUpdCapable=%s;\n"
       "var newVerAvailable=%s;\n"
-      "var updateUrl='%s';\n",
+      "var updateUrl='%s';\n"
+      "var casetransform=%s;\n",
       escapedRadioVersion,
-      HARDCODED_WEBUI_LOCALE,
-      config.store.locale_webui,
       (network.status == CONNECTED && config.wwwFilesExist) ? "webboard" : "",
       (network.status == CONNECTED) ? "player" : "ap",
       #ifdef UPDATEURL
@@ -1647,7 +1639,12 @@ void handleNotFound(AsyncWebServerRequest * request) {
         "false",
       #endif
       (netserver.newVersionAvailable) ? "true" : "false",
-      escapedGithubUrl
+      escapedGithubUrl,
+      #ifdef WWW_CASETRANSFORM
+        "true"
+      #else
+        "false"
+      #endif
    );
     AsyncWebServerResponse *response = request->beginResponse(200, "application/javascript", varjsbuf);
     response->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");

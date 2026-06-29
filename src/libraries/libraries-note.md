@@ -6,8 +6,8 @@ The following libraries are custom to ehRadio, mostly inherited from yoRadio v0.
 
 It seems to me most of this codebase was actually developed for Arduino IDE by hand and if it compiled, it was left alone until functionality was broke and it had to be fixed.
 
-This file was my own hand-made hand-googled investigation of the source of the libraries.
-Actually there used to be dozens of libraries just for displays but they were literally copies of libraries available on Platformio.
+This file was my own (and AI-assisted) investigation of the source of the libraries.
+Actually there used to be dozens of libraries just for displays but they were copies of libraries available on Platformio.
 Some libraries like encoder and onebutton were outdated and benefitted from using online libraries.
 
 But the audio decoding libraries are troublesome. They are extremely modified from whatever their original source was.
@@ -66,23 +66,22 @@ Sorry and good luck.
   - made by https://github.com/kasperaitis for ehRadio
 
 #### I2S_Audio
-  - likely adapted https://github.com/schreibfaul1/ESP32-audioI2S
-  - from Maleksm's yoRadio mod v0.9.512m: https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
-    - Maleksm says source from Wolle (schreibfaul1) 3.3.2l on 2025.07.09
-    - But source mostly matches 3.1.0 - so perhaps there's a few minor fixes from 3.3.2 or...?
-  - attempt to update using Maleksm's mod v0.9.533m failed (probably due to similar issues as below)
+  - likely adapted from https://github.com/schreibfaul1/ESP32-audioI2S (a long time ago)
+  - ehRadio uses a library adapted from Maleksm's yoRadio mod https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
+  - currently using v0.9.434m(04.04.25)
+  - using Maleksm's v0.9.720m(23.06.26) will require GCC 11+
 
 #### VS1053_Audio
   - original DNA in https://github.com/Edzelf/Esp-radio and https://github.com/Edzelf/ESP32Radio-V2
   - but then replaced with https://github.com/schreibfaul1/ESP32-vs1053_ext
-  - likely adapted from https://github.com/nstepanets/ESP32-vs1053_ext
-  - from Maleksm's yoRadio mod v0.9.512m: https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
-    - Maleksm says source from Wolle (schreibfaul1) 3.0.13t on 2024.11.16
-  - attempt to update using Maleksm's mod v0.9.533m failed (probably due to similar issues)
-
+  - ehRadio at first adapted Maleksm's yoRadio mod v0.9.434m(04.04.25): https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
+  - attempts to update using Maleksm's mod v0.9.533m failed
+  - ehRadio 2026.06.28 adapts nsteplanet's PR to yoRadio November 28, 2025: https://github.com/e2002/yoradio/pull/226
+  - might update to Maleksm's v0.9.720m(23.06.26) after I2S is updated
+    
 #### Further notes
 
 See also this issue: https://github.com/trip5/ehRadio/issues/39
 
-Other folders (especially those with notes in brackets) are not compatible with the current codebase.
-They are for study purposes and meant for further advancements of the existing audio libraries.
+Other folders (especially those with notes in brackets) are for study purposes and meant for further advancements of the existing audio libraries.
+See the "frankenstein-surgery-notes" files for more information.

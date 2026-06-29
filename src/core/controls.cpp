@@ -68,18 +68,21 @@ void Controls::btnDoubleClickCb(void* p)     { controls.onBtnDoubleClick((int)p)
 void Controls::btnLongPressStartCb(void* p)  { controls.onBtnLongPressStart((int)p); }
 void Controls::btnLongPressStopCb(void* p)   { controls.onBtnLongPressStop((int)p); }
 
+// Lookup table: user-facing 0-7 scale → raw encoder acceleration 0-700
+static const uint16_t encAccelLUT[8] = {0, 5, 11, 26, 59, 135, 307, 700};
+
 void Controls::init() {
   #if ENC_DT!=255
     encoder.begin();
     encoder.setup(readEncoderISR);
     encoder.setBoundaries(0, 254, true);
-    encoder.setAcceleration(config.store.encacc);
+    encoder.setAcceleration(encAccelLUT[config.store.encacc]);
   #endif
   #if ENC2_DT!=255
     encoder2.begin();
     encoder2.setup(readEncoder2ISR);
     encoder2.setBoundaries(0, 254, true);
-    encoder2.setAcceleration(config.store.encacc);
+    encoder2.setAcceleration(encAccelLUT[config.store.encacc]);
   #endif
 
   #if ISPUSHBUTTONS
@@ -143,13 +146,13 @@ void Controls::loop() {
     int8_t encoderDelta = enc->encoderChanged();
     if (encoderDelta!=0) {
       uint8_t encBtnState = digitalRead(first?ENC_SW:ENC2_SW);
-    #if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
+    #if defined(DUMMYDISPLAY)
       first = first?(first && encBtnState):(!encBtnState);
       if (first) {
         int nv = config.store.volume+encoderDelta;
         if (nv<0) nv=0;
         if (nv>VOLUME_SCALE) nv=VOLUME_SCALE;
-        player.setVol((uint8_t)nv);  
+        player.setVol((uint8_t)nv);
       } else {
         if (encoderDelta > 0) player.next(); else player.prev();
       }
@@ -168,7 +171,7 @@ void Controls::loop() {
         }
         controlsEvent(encoderDelta > 0, encoderDelta);
       }
-    #endif //#if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
+    #endif
     }
   }
 #endif //#if (ENC_DT!=255 && ENC_CLK!=255) || (ENC2_DT!=255 && ENC2_CLK!=255)
@@ -346,14 +349,14 @@ void Controls::onBtnLongPressStart(int id) {
       }
     case EVT_BTN_PLAY:
     case EVT_ENC_SW: {
-        #if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
+        #if defined(DUMMYDISPLAY)
           break;
         #endif
         display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
         break;
       }
     case EVT_ENC2_SW: {
-        #if defined(DUMMYDISPLAY) && !defined(USE_NEXTION)
+        #if defined(DUMMYDISPLAY)
           break;
         #endif
         display.putRequest(NEWMODE, display.mode() == PLAYER ? VOL : PLAYER);
@@ -448,7 +451,7 @@ void Controls::controlsEvent(bool toRight, int8_t volDelta) {
     display.putRequest(NEWMODE, PLAYER);
   }
   if (display.mode() != STATIONS) {
-    #if !defined(DUMMYDISPLAY) || defined(USE_NEXTION)
+    #if !defined(DUMMYDISPLAY)
       display.putRequest(NEWMODE, VOL);
     #endif
     if (volDelta!=0) {
@@ -580,13 +583,14 @@ void Controls::setIRTolerance(uint8_t tl) {
   #endif
 }
 
-void Controls::setEncAcceleration(uint16_t acc) {
-  config.saveValue(&config.store.encacc, acc);
+void Controls::setEncAcceleration(uint8_t userVal) {
+  uint16_t raw = (userVal <= 7) ? encAccelLUT[userVal] : 700;
+  config.saveValue(&config.store.encacc, userVal);
   #if ENC_DT!=255
-    encoder.setAcceleration(config.store.encacc);
+    encoder.setAcceleration(raw);
   #endif
   #if ENC2_DT!=255
-    encoder2.setAcceleration(config.store.encacc);
+    encoder2.setAcceleration(raw);
   #endif
 }
 

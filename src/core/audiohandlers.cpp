@@ -11,9 +11,6 @@
 #include "netserver.h"
 #include "player.h"
 #include "utility.h"
-#ifdef USE_NEXTION
-  #include "../displays/nextion.h"
-#endif
 
 namespace {
 
@@ -175,9 +172,6 @@ void AudioHandlers::handleInfo(const char* info) {
 
   if (strcmp(info, "StreamTitle=''") != 0) FUNCTIONLOG("Audio.info", "%s", info);
   
-  #ifdef USE_NEXTION
-    nextion.audioinfo(info);
-  #endif
 
   if (strstr(info, "format is mp3") != NULL) { config.setBitrateFormat(BF_MP3); display.putRequest(DBITRATE); }
   if (strstr(info, "format is aac") != NULL) { config.setBitrateFormat(BF_AAC); display.putRequest(DBITRATE); }
@@ -188,7 +182,7 @@ void AudioHandlers::handleInfo(const char* info) {
   if (strstr(info, "format is opus") != NULL) { config.setBitrateFormat(BF_OPU); display.putRequest(DBITRATE); }
   if (strstr(info, "skip metadata") != NULL) config.setTitle(config.station.name);
   if (strstr(info, "stream ready") != NULL) {
-    if (strcmp_P(config.station.title, LANG::const_PlConnect) == 0) config.setTitle("");
+    if (strcmp_P(config.station.title, l10n(L10N_MSG_CONNECT)) == 0) config.setTitle("");
   }
   if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) {
     player.setError(info);
@@ -204,9 +198,6 @@ void AudioHandlers::handleBitrate(const char* info) {
   FUNCTIONLOG("Audio.bitrate", "%s", info);
   config.station.bitrate = atoi(info) / 1000;
   display.putRequest(DBITRATE);
-  #ifdef USE_NEXTION
-    nextion.bitrate(config.station.bitrate);
-  #endif
   netserver.requestOnChange(BITRATE, 0);
 }
 

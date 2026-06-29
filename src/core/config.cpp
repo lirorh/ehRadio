@@ -19,17 +19,13 @@
 #include "telnet.h"
 #include "utility.h"
 #include "../displays/dspcore.h"
-#include "../displays/tools/utf8_common.h"
 #ifdef USE_SD
   #include "sdmanager.h"
-#endif
-#ifdef USE_NEXTION
-  #include "../displays/nextion.h"
 #endif
 
 
 const char* const Config::wwwFiles[] = {"curated.js", "options.js", "script.js", "script2.js", "search.js",
-                                        "logo.svg", "icon.png", "locales.json", "rb_srvrs.json", "timezones.json", "style.css", "theme.css",
+                                        "logo.svg", "icon.png", "style.css", "theme.css", "rb_srvrs.json", "timezones.json",
                                         "curated.html", "irrecord.html", "options.html", "search.html", "updform.html",
                                         "player.html"}; // keep main page at end (deleted when upgraded, last to be downloaded, so user sees emptyfs_html with wait message)
 const size_t Config::wwwFilesCount = sizeof(Config::wwwFiles) / sizeof(Config::wwwFiles[0]);
@@ -42,6 +38,7 @@ const size_t Config::dataFilesCount = sizeof(Config::dataFiles) / sizeof(Config:
 #endif
 
 Config config;
+uint8_t _activeLocale = 0;  // default en_US, updated at boot from config.store.locale_display
 
 bool wasUpdated(ESPFileUpdater::UpdateStatus status) { return status == ESPFileUpdater::UPDATED; }
 
@@ -451,6 +448,10 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
   }
   if (strcmp(val, "locale") == 0) {
     saveValue(store.locale_webui, WEBUI_LOCALE);
+    saveValue(store.locale_display, DSP_LOCALE);
+    _activeLocale = l10n_findLocale(config.store.locale_display);
+    network.buildWeatherString();
+    display.putRequest(CLOCK, true);
     saveValue(store.tz_name, TIMEZONE_NAME);
     saveValue(store.tzposix, TIMEZONE_POSIX);
     saveValue(store.sntp1, SNTP_1);
@@ -472,7 +473,7 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     saveValue(&store.weatherhumidity, false);
     saveValue(&store.weatherpressure, false);
     saveValue(&store.weatherwind, false);
-    saveValue(store.weatherlang, WEATHER_LANG);
+    saveValue(store.weatherlang, WEATHER_LANG_OWM);
     saveValue(store.weatherlat, WEATHER_LAT);
     saveValue(store.weatherlon, WEATHER_LON);
     saveValue(store.weatherapi, WEATHER_API);
@@ -610,17 +611,6 @@ void Config::setBrightness(bool dosave) {
       saveValue(&store.dspon, store.dspon);
     }
   #endif
-  #ifdef USE_NEXTION
-    nextion.wake();
-    char cmd[15];
-    snprintf(cmd, 15, "dims=%d", store.brightness);
-    nextion.putcmd(cmd);
-    if (!store.dspon) store.dspon = true;
-    if (dosave) {
-      saveValueButWait(&store.brightness, store.brightness, 4000);
-      saveValue(&store.dspon, store.dspon);
-    }
-  #endif
 }
 
 void Config::setDspOn(bool dspon, bool saveval) {
@@ -628,10 +618,6 @@ void Config::setDspOn(bool dspon, bool saveval) {
     store.dspon = dspon;
     saveValue(&store.dspon, store.dspon);
   }
-  #ifdef USE_NEXTION
-    if (!dspon) nextion.sleep();
-    else nextion.wake();
-  #endif
   if (!dspon) {
     #if BRIGHTNESS_PIN!=255
       analogWrite(BRIGHTNESS_PIN, 0);
@@ -664,9 +650,15 @@ void Config::bootInfo() {
     if (SPIB_SCK!=255) BOOTLOG("SPIB:\t\tSCK: %d, MISO: %d, MOSI: %d", SPIB_SCK, SPIB_MISO, SPIB_MOSI);
   #endif
   BOOTLOG("Display %d:\t%s (width: %d, height: %d)", DSP_MODEL, DISPLAY_MODEL_NAME, DSP_WIDTH, DSP_HEIGHT);
-  if (I2C_SDA!=255) BOOTLOG("\t\tI2C SDA: %d, SCL: %d, RST: %d", I2C_SDA, I2C_SCL, I2C_RST);
-  if (LCD_RS!=255) BOOTLOG("\t\tLCD RS: %d, E: %d, D4: %d, D5: %d, D6: %d, D7: %d,", LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
-  if (TFT_DC!=255) BOOTLOG("\t\tTFT SPIA, CS: %d, RST: %d, DC: %d", TFT_CS, TFT_RST, TFT_DC);
+  #if I2C_SDA!=255
+    BOOTLOG("\t\tI2C SDA: %d, SCL: %d, RST: %d", I2C_SDA, I2C_SCL, I2C_RST);
+  #endif
+  #if LCD_RS!=255
+    BOOTLOG("\t\tLCD RS: %d, E: %d, D4: %d, D5: %d, D6: %d, D7: %d,", LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+  #endif
+  #if TFT_DC!=255
+    BOOTLOG("\t\tTFT SPIA, CS: %d, RST: %d, DC: %d", TFT_CS, TFT_RST, TFT_DC);
+  #endif
   BOOTLOG("\t\tInvert Quirk: %s, Brightness Pin: %d, Dimming Enabled: %s", DSP_INVERT_QUIRK?"true":"false", BRIGHTNESS_PIN, DIMMING_ENABLED?"true":"false");
   #ifdef AUTOBACKLIGHT
     if (LIGHT_SENSOR!=255) BOOTLOG("Autobacklight Enabled: Light Sensor Pin: %d Max: %d Min: %d", LIGHT_SENSOR, AUTOBACKLIGHT_MAX, AUTOBACKLIGHT_MIN);
@@ -684,19 +676,46 @@ void Config::bootInfo() {
     #endif
   #endif
   BOOTLOGX("\t\tVolume Scale: %d, Force Mono: %s", VOLUME_SCALE, PLAYER_FORCE_MONO?"true":"false");
-  if (MUTE_PIN!=255) SERIALLOG(", Mute Pin: %d, Mute Val: %d, Mute Lock: %s", MUTE_PIN, MUTE_VAL, MUTE_LOCK?"true":"false"); else SERIALLOG("");
-  if (BTN_DOWN!=255) BOOTLOG("Button Down:\tPin: %d, Pullup: %s", BTN_DOWN, BTN_DOWN_PULLUP?"true":"false");
-  if (BTN_PLAY!=255) BOOTLOG("Button Play:\tPin: %d, Pullup: %s", BTN_PLAY, BTN_PLAY_PULLUP?"true":"false");
-  if (BTN_UP!=255) BOOTLOG("Button Up:\tPin: %d, Pullup: %s", BTN_UP, BTN_UP_PULLUP?"true":"false");
-  if (BTN_PREV!=255) BOOTLOG("Button Prev:\tPin: %d, Pullup: %s", BTN_PREV, BTN_PREV_PULLUP?"true":"false");
-  if (BTN_NEXT!=255) BOOTLOG("Button Next:\tPin: %d, Pullup: %s", BTN_NEXT, BTN_NEXT_PULLUP?"true":"false");
-  if (BTN_MODE!=255) BOOTLOG("Button Mode:\tPin: %d, Pullup: %s", BTN_MODE, BTN_MODE_PULLUP?"true":"false");
-  if (WAKE_PIN!=255) BOOTLOG("Wake:\t\tPin: %d, State: %s", WAKE_PIN, WAKE_PIN_STATE?"high":"low");
-  if (ENC_DT!=255) BOOTLOG("Encoder 1:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC_DT, ENC_CLK, ENC_PULLUP?"true":"false", ENC_SW, ENC_SW_PULLUP?"true":"false", ENC_STEPS);
-  if (ENC2_DT!=255) BOOTLOG("Encoder 2:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC2_DT, ENC2_CLK, ENC2_PULLUP?"true":"false", ENC2_SW, ENC2_SW_PULLUP?"true":"false", ENC2_STEPS);
-  if (IR_PIN!=255) BOOTLOG("IR:\t\tPin: %d", IR_PIN);
-  if (SD_CS!=255) BOOTLOGX("SD:\t\tSPI%c Pin: %d", SD_SPI, SD_CS);
-  if (SD_CARD_DETECT_PIN!=255) SERIALLOG("Detect Pin: %d Autoplay: %s", SD_CARD_DETECT_PIN, SD_AUTOPLAY?"true":"false"); else SERIALLOG("");
+  #if MUTE_PIN!=255
+    SERIALLOG(", Mute Pin: %d, Mute Val: %d, Mute Lock: %s", MUTE_PIN, MUTE_VAL, MUTE_LOCK?"true":"false"); else SERIALLOG("");
+  #endif
+  #if BTN_DOWN!=255
+    BOOTLOG("Button Down:\tPin: %d, Pullup: %s", BTN_DOWN, BTN_DOWN_PULLUP?"true":"false");
+  #endif
+  #if BTN_PLAY!=255
+    BOOTLOG("Button Play:\tPin: %d, Pullup: %s", BTN_PLAY, BTN_PLAY_PULLUP?"true":"false");
+  #endif
+  #if BTN_UP!=255
+    BOOTLOG("Button Up:\tPin: %d, Pullup: %s", BTN_UP, BTN_UP_PULLUP?"true":"false");
+  #endif
+  #if BTN_PREV!=255
+    BOOTLOG("Button Prev:\tPin: %d, Pullup: %s", BTN_PREV, BTN_PREV_PULLUP?"true":"false");
+  #endif
+  #if BTN_NEXT!=255
+    BOOTLOG("Button Next:\tPin: %d, Pullup: %s", BTN_NEXT, BTN_NEXT_PULLUP?"true":"false");
+  #endif
+  #if BTN_MODE!=255
+    BOOTLOG("Button Mode:\tPin: %d, Pullup: %s", BTN_MODE, BTN_MODE_PULLUP?"true":"false");
+  #endif
+  #if WAKE_PIN!=255
+    BOOTLOG("Wake:\t\tPin: %d, State: %s", WAKE_PIN, WAKE_PIN_STATE?"high":"low");
+  #endif
+  #if ENC_DT!=255
+    BOOTLOG("Encoder 1:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC_DT, ENC_CLK, ENC_PULLUP?"true":"false", ENC_SW, ENC_SW_PULLUP?"true":"false", ENC_STEPS);
+  #endif
+  #if ENC2_DT!=255
+    BOOTLOG("Encoder 2:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC2_DT, ENC2_CLK, ENC2_PULLUP?"true":"false", ENC2_SW, ENC2_SW_PULLUP?"true":"false", ENC2_STEPS);
+  #endif
+  #if IR_PIN!=255
+    BOOTLOG("IR:\t\tPin: %d", IR_PIN);
+  #endif
+  #if SD_CS!=255
+    #if SD_CARD_DETECT_PIN!=255
+      BOOTLOG("SD:\t\tSPI%c Pin: %d Detect Pin: %d Autoplay: %s", SD_SPI, SD_CS, SD_CARD_DETECT_PIN, SD_AUTOPLAY?"true":"false");
+    #else
+      BOOTLOG("SD:\t\tSPI%c Pin: %d", SD_SPI, SD_CS);
+    #endif
+  #endif
   #if (TS_MODEL!=TS_MODEL_UNDEFINED)
     #if (TS_CS!=255)
       BOOTLOG("Touchscreen:\t Model: %d, SPI%c CS: %d", TS_MODEL, TS_SPI, TS_CS);
@@ -740,7 +759,7 @@ void Config::bootInfo() {
   #if defined(BATTERY_DEBUG)
     BOOTLOG("BATTERY_DEBUG\tenabled");
   #endif
-  BOOTLOG("Display Locale:\t%s", DSP_LOCALE);
+  BOOTLOG("Display Locale:\t%s", store.locale_display);
   BOOTLOG("WebUI Locale:\t%s", store.locale_webui);
   BOOTLOG("Smartstart:\t%s", store.smartstart?"true":"false");
   BOOTLOG("Wifi Scan Best:\t%s", store.wifiscanbest?"true":"false");
@@ -792,10 +811,11 @@ const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(dimmingBrightness, "dimmingbr"),
   CONFIG_KEY_ENTRY(fliptouch, "fliptouch"),
   CONFIG_KEY_ENTRY(dbgtouch, "dbgtouch"),
-  CONFIG_KEY_ENTRY(encacc, "encacc"),
+  CONFIG_KEY_ENTRY(encacc, "encaccel"),
   CONFIG_KEY_ENTRY(skipPlaylistUpDown, "skipplupdn"),
   CONFIG_KEY_ENTRY(irtlp, "irtlp"),
   CONFIG_KEY_ENTRY(locale_webui, "localewebui"),
+  CONFIG_KEY_ENTRY(locale_display, "localedsp"),
   CONFIG_KEY_ENTRY(tz_name, "tzname"),
   CONFIG_KEY_ENTRY(tzposix, "tzposix"),
   CONFIG_KEY_ENTRY(sntp1, "sntp1"),
@@ -827,6 +847,7 @@ const configKeyMap Config::keyMap[] = {
 
 void Config::deleteOldKeys() {
   // List any old/legacy keys to remove here (they will be deleted from prefs if found)
+  prefs.remove("encacc"); // previous encoder acceleration was scale 0 to 700
   prefs.remove("smartstart"); // previous smartstart was numeric 0, 1, 2
   prefs.remove("vsteps"); // volume steps was needed when volume was 0 to 254
   // prefs.remove("removedkey"); // note

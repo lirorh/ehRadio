@@ -4,6 +4,16 @@
     "define": "CLOCK_TWELVE", "type": "boolean", "optional": true, "default": false
   },
   {
+    "name": "Clock Font",
+    "info": "Select font to use for clock - CHUNKY6 is default on OLEDs, CHUNKY6_PX is default on TFTs,\nYO_MONO is the classic 7 Segment font on TFTs and Display Font on OLEDs\nSelecting this overrides the default",
+    "define": "CLOCKFONT", "type": "enum", "options": ["CHUNKY6", "CHUNKY6_PX", "YO_MONO"], "optional": true
+  },
+  {
+    "name": "Display Font",
+    "info": "Select font to use for display text",
+    "define": "DISPLAYFONT", "type": "enum", "options": ["MATRIXCHUNKY", "MATRIXLIGHT", "X11"], "default": "MATRIXCHUNKY", "optional": true
+  },
+  {
     "name": "Numbered Playlist",
     "define": "NUMBERED_PLAYLIST", "type": "boolean", "optional": true, "default": false
   },

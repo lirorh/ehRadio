@@ -677,7 +677,7 @@ void Config::bootInfo() {
   #endif
   BOOTLOGX("\t\tVolume Scale: %d, Force Mono: %s", VOLUME_SCALE, PLAYER_FORCE_MONO?"true":"false");
   #if MUTE_PIN!=255
-    SERIALLOG(", Mute Pin: %d, Mute Val: %d, Mute Lock: %s", MUTE_PIN, MUTE_VAL, MUTE_LOCK?"true":"false")
+    SERIALLOG(", Mute Pin: %d, Mute Val: %d, Mute Lock: %s", MUTE_PIN, MUTE_VAL, MUTE_LOCK?"true":"false");
   #else
     SERIALLOG("");
   #endif

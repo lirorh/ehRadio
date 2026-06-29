@@ -10,6 +10,7 @@ This document records the complete process of grafting Maleksm's anti-skip FreeR
 | Name | Folder | Description |
 |------|--------|-------------|
 | **Grafted (current)** | `src/libraries/VS1053_Audio/` | Result of this surgery — PR226 core + Maleksm task + ehRadio adaptations |
+| **Backup of current** | `src/libraries/VS1053_Audio (ehRadio nsteplanets PR226 frankenstein)` | Backup of this surgery — PR226 core + Maleksm task + ehRadio adaptations |
 | **ehRadio PR226 copy** | `VS1053_Audio (ehRadio nsteplanets yoRadio PR226)` | PR226 with Trip5's minimal ehRadio adaptations. **This was the graft base.** |
 | **Active (old)** | `VS1053_Audio (ehRadio Maleksm v0.9.434m(04.04.25))` | Backup of previous Maleksm-based library, preserved for reference |
 | **Maleksm** | `VS1053_Audio (yoRadio Maleksm v0.9.434m(04.04.25))` | Original Maleksm v0.9.434m — FreeRTOS task infrastructure originates here |

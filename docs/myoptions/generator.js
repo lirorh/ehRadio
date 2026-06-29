@@ -815,7 +815,7 @@ function makeSpiSelect(defName, defObj, scopeId) {
   buses.forEach(function(b) {
     var opt = document.createElement('option');
     opt.value = b;
-    opt.textContent = b;
+    opt.textContent = b + (b === defaultBus ? ' (default)' : '');
     if (b === defaultBus) opt.selected = true;
     sel.appendChild(opt);
   });
@@ -1150,7 +1150,7 @@ function makeControl(def, scopeId) {
     opts.forEach(function(o) {
       var opt = document.createElement('option');
       opt.value = o;
-      opt.textContent = o;
+      opt.textContent = o + (o === defVal ? ' (default)' : '');
       if (o === defVal) opt.selected = true;
       sel.appendChild(opt);
     });
@@ -1211,7 +1211,7 @@ function makeBooleanControl(def, scopeId) {
     rad.dataset.scope = scopeId || '';
     if (v === defStr) rad.checked = true;
     lbl.appendChild(rad);
-    lbl.appendChild(document.createTextNode(' ' + v));
+    lbl.appendChild(document.createTextNode(' ' + v + (v === defStr ? ' (default)' : '')));
     wrap.appendChild(lbl);
   });
   return wrap;

@@ -32,7 +32,7 @@
     "type": "I2C",
     "pins": [ "RTC_SDA", "RTC_SCL" ],
     "defines": [
-      { "define": "RTC_MODULE", "type": "enum", "options": ["DS3231", "DS1307"], "default": "DS3231", "optional": false }
+      { "define": "RTC_MODULE", "type": "enum", "options": ["DS3231", "DS1307"], "optional": false }
     ],
     "lib_deps": "${library.rtclib}"
   },

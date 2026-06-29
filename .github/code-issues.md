@@ -29,54 +29,7 @@ Add `(ALL FIXED)` to title/section after issues are resolved and an [X] to Overv
 
 ## [ ] 1. Audio Library Updating (goal changed from de-fork) `[MEDIUM]`
 
-### 1.1 Background
-
-The vendored audio folders `src/libraries/I2S_Audio/` and `src/libraries/VS1053_Audio/` are local forks of schreibfaul1's ESP32-audioI2S (~3.1.0) and nsteplanets' ESP32-vs1053_ext (2025-11-10). Both were reshaped to expose a unified `class Audio` API so that `class Player : public Audio` could compile against a single interface.
-
-**Original goal** (abandoned June 2026): Replace both local forks with unmodified upstream copies via an `AudioEncoderShim` abstraction layer. This was prototyped, built, and tested, then reverted.
-
-**Current goal**: Keep the existing local libraries. Selectively merge useful fixes and features from upstream sources into them, rather than replacing them outright.
-
----
-
-### 1.2 What Was Learned During the Attempt
-
-**AudioEncoderShim** (`src/core/audioencodershim.h`) was created as a single ehRadio-owned header that would isolate `Player` from vendor library internals. `class AudioEncoderShim` inherited `class Audio` (I2S) or `class VS1053` (nsteplanets) depending on the build environment. The shim was functional — both VS1053 and I2S environments compiled and ran through it — but it was ultimately reverted when upstream replacement was abandoned. The file has been deleted; `class Player : public Audio` direct inheritance restored.
-
-**Key discoveries:**
-
-| Finding | Impact |
-|---------|--------|
-| VS1053B FLAC patches (`vs1053b-patches290.zip`) are **incompatible** with Trip5's VS1053 variants | Patches cause complete audio silence. `VS_PATCH_ENABLE` now defaults to `false`. VU meter (which requires patches) is unavailable on VS1053 builds. |
-| `stopSong()` wrote `SM_CANCEL` to SCI_MODE unconditionally, even when no song was running | The CANCEL bit got permanently stuck because no decoder pipeline was active to clear it. Subsequent audio data was never decoded. Fixed by guarding SM_CANCEL with `if(m_f_running)`. Also eliminated 2-second "Song stopped incorrectly!" boot delay. |
-| The local VS1053 library has valuable ehRadio additions absent from upstream: `setBalance(int8_t)`, `setTone(int8_t,int8_t,int8_t)` (3-param), `forceMono(bool)`, `connecttoSD()`, SPI bus support via `SPIClass*` constructor, and normalized `audio_*` callbacks | Upstream replacement would require re-adding all of these in the shim. Not worth the maintenance burden. |
-| PSRAM buffer sizes were hardcoded in both library headers | Now configurable via `PSRAM_BUFSIZE` / `PSRAM_RES_BUFSIZE` macros in `options.h` / `myoptions.h`. Both I2S and VS1053 libraries use them. |
-| SPI bus re-initialization (`end()` + `begin()` dance) needed in `sdmanager.cpp` | SD library internally calls `SPI.begin()` which overrides bus pins. The re-init restores correct pins after SD init. Touchscreen libraries don't need this — they use the bus as-is. |
-
-**SPI infrastructure changes that survived both the migration and reversion:**
-- `SPI_BUS_SECONDARY = HSPI` (symbolic constant) in `options.h`
-- `deassertCsPins()` early-boot function in `startup.cpp`
-- `PSRAM_BUFSIZE` / `PSRAM_RES_BUFSIZE` macros
-
----
-
-### 1.3 Current State
-
-| Library | Status | Notes |
-|---------|--------|-------|
-| `src/libraries/VS1053_Audio/` | Active, original library | Patches disabled. SM_CANCEL fix applied. VU meter functions kept (full-range mapping + threshold decay) but gated behind `VS_PATCH_ENABLE`. |
-| `src/libraries/I2S_Audio/` | Active, original library | PSRAM buffer sizes now configurable. No other changes. |
-| `src/libraries/ESP32-audioI2S (schreibfaul1 3.1.0)/` | Reference copy | Keep as reference for selective merges. |
-| `src/libraries/ESP32-audioI2S (schreibfaul1 3.4.5)/` | Deferred reference | Larger API changes; not a priority. |
-| `src/libraries/ESP32-vs1053_ext-master (nsteplanets 2025-11-10)/` | Reference copy | Keep as reference. Note: its FLAC patches also produce silence on this VS1053 variant. |
-
----
-
-### 1.4 Future Updating Strategy
-
-1. **Selective feature merges**: Pull individual fixes/features from upstream reference copies into the local libraries when a clear benefit exists (e.g. a bug fix in HTTP streaming, a new codec optimization).
-2. **PSRAM_BUFSIZE tuning**: Adjust the `myoptions.h` defaults per-board if experience shows the current values cause buffer underruns or waste memory.
-3. **No full library replacement**: The cost of re-adding ehRadio-specific adaptations (SPI bus abstraction, volume curve, timeout configuration, callback normalization) exceeds the benefit of being on the latest upstream commit.
+This section removed.  See `src/libraries/` for more note files.
 
 ---
 

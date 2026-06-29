@@ -137,6 +137,27 @@ function commentText(comment) {
   return comment.replace(/(https?:\/\/[^\s)]+)/g, function(url) { return url; });
 }
 
+// Helper: extract title, info, items from section JSON arrays
+// First element can be a string (title only) or object {title, info}
+function getSectionMeta(dataArr) {
+  var first = dataArr[0];
+  if (typeof first === 'string') return { title: first, info: null, items: dataArr.slice(1) };
+  if (typeof first === 'object' && first !== null && !Array.isArray(first)) {
+    var title = first.title || first.name || '';
+    var info = first.info || null;
+    return { title: title, info: info, items: dataArr.slice(1) };
+  }
+  return { title: '', info: null, items: dataArr.slice(1) };
+}
+
+// Helper: linkify URLs in info text for innerHTML rendering
+function sectionInfoHTML(info) {
+  if (!info) return '';
+  return info.replace(/(https?:\/\/[^\s)]+)/g, function(url) {
+    return '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
+  });
+}
+
 // ============================================================
 // Build entire page
 // ============================================================
@@ -170,16 +191,10 @@ function buildPage() {
   // 8. Peripherals section
   root.appendChild(buildCheckboxGroupSection(gData.peripherals, 'peripherals-section'));
 
-  // 9. Locale section
-  root.appendChild(buildLocaleSection());
-
-  // 10. User Defaults section
+  // 9. User Defaults section (includes Locale and Time Zone)
   root.appendChild(buildDefaultsSection());
 
-  // 11. Timezone section
-  root.appendChild(buildTimezoneSection());
-
-  // 12. Extra custom defines section
+  // 10. Extra custom defines section
   root.appendChild(buildExtraDefinesSection());
 
   // Show buttons
@@ -196,11 +211,10 @@ function buildPage() {
 // Name section
 // ============================================================
 function buildNameSection() {
-  var nameData = gData.name;
-  var sectionTitle = typeof nameData[0] === 'string' ? nameData[0] : 'Firmware Name';
-  var item = nameData[1];
+  var meta = getSectionMeta(gData.name);
+  var item = meta.items[0];
 
-  var sec = makeSection(sectionTitle);
+  var sec = makeSection(meta.title || 'Firmware Name', meta.info);
   var row = document.createElement('div');
   row.className = 'ctrl-row';
 
@@ -848,10 +862,10 @@ function updateAllSpiSelectors() {
 // Build a single-select section (Display / Audio)
 // ============================================================
 function buildSingleSelectSection(dataArr, secId, selId, onChangeFn) {
-  var sectionTitle = typeof dataArr[0] === 'string' ? dataArr[0] : 'Section';
-  var items = dataArr.slice(1);
+  var meta = getSectionMeta(dataArr);
+  var items = meta.items;
 
-  var sec = makeSection(sectionTitle);
+  var sec = makeSection(meta.title || 'Section', meta.info);
   sec.id = secId;
 
   var selRow = document.createElement('div');
@@ -1221,10 +1235,10 @@ function makeBooleanControl(def, scopeId) {
 // Checkbox group sections (Input, Peripherals)
 // ============================================================
 function buildCheckboxGroupSection(dataArr, secId) {
-  var sectionTitle = typeof dataArr[0] === 'string' ? dataArr[0] : 'Section';
-  var items = dataArr.slice(1);
+  var meta = getSectionMeta(dataArr);
+  var items = meta.items;
 
-  var sec = makeSection(sectionTitle);
+  var sec = makeSection(meta.title || 'Section', meta.info);
   sec.id = secId;
 
   items.forEach(function(item, idx) {
@@ -1320,80 +1334,90 @@ function toggleCheckItemBody(chk, body) {
   validateAllPins();
   updateAllResetButtons();
 }
-
 // ============================================================
-// Locale section
-// ============================================================
-function buildLocaleSection() {
-  var sectionTitle = typeof gData.locale[0] === 'string' ? gData.locale[0] : 'Locale';
-  var locales = gData.locale.slice(1);
 
-  var sec = makeSection(sectionTitle);
-  sec.id = 'locale-section';
-
-  var header = document.createElement('div');
-  header.className = 'default-item-header';
-  var chk = document.createElement('input');
-  chk.type = 'checkbox';
-  chk.id = 'locale-chk';
-  var lbl = document.createElement('span');
-  lbl.className = 'item-name';
-  lbl.textContent = 'Display Language';
-  header.appendChild(chk);
-  header.appendChild(lbl);
-
-  var ctrlDiv = document.createElement('div');
-  ctrlDiv.id = 'locale-ctrl';
-  ctrlDiv.className = 'hidden';
-  ctrlDiv.style.marginTop = '10px';
-  ctrlDiv.style.textAlign = 'center';
-
-  var sel = document.createElement('select');
-  sel.id = 'locale-sel';
-  sel.className = 'wide';
-  locales.forEach(function(loc) {
-    var opt = document.createElement('option');
-    opt.value = loc.locale_code;
-    var parts = [loc.locale_code];
-    if (loc.locale) parts.push(loc.locale);
-    if (loc.locale_en) parts.push(loc.locale_en);
-    opt.textContent = parts.join(' - ');
-    sel.appendChild(opt);
-  });
-  ctrlDiv.appendChild(sel);
-
-  sec.appendChild(header);
-  sec.appendChild(ctrlDiv);
-
-  chk.addEventListener('change', function() {
-    if (chk.checked) {
-      ctrlDiv.classList.remove('hidden');
-      lbl.style.color = '#fff';
-    } else {
-      ctrlDiv.classList.add('hidden');
-      lbl.style.color = '';
-    }
-  });
-  header.addEventListener('click', function(e) {
-    if (e.target === chk) return;
-    chk.checked = !chk.checked;
-    chk.dispatchEvent(new Event('change'));
-  });
-
-  return sec;
-}
-
-// ============================================================
 // User Defaults section
 // ============================================================
 function buildDefaultsSection() {
-  var sectionTitle = typeof gData.defaults[0] === 'string' ? gData.defaults[0] : 'User Defaults';
-  var items = gData.defaults.slice(1);
+  var meta = getSectionMeta(gData.defaults);
+  var items = meta.items;
 
-  var sec = makeSection(sectionTitle);
+  var sec = makeSection(meta.title || 'User Defaults', meta.info);
   sec.id = 'defaults-section';
 
   items.forEach(function(item) {
+    // Locale select — render complex dropdown from gData.locale
+    if (item.type === 'locale_select') {
+      var locales = gData.locale.slice(1);
+      var lDiv = document.createElement('div');
+      lDiv.className = 'default-item';
+      var lHdr = document.createElement('div');
+      lHdr.className = 'default-item-header';
+      var lChk = document.createElement('input');
+      lChk.type = 'checkbox'; lChk.id = 'locale-chk'; lChk.dataset.defItem = item.define;
+      var lLbl = document.createElement('span');
+      lLbl.className = 'item-name'; lLbl.textContent = item.name;
+      lHdr.appendChild(lChk); lHdr.appendChild(lLbl);
+      lDiv.appendChild(lHdr);
+      var lCtrl = document.createElement('div');
+      lCtrl.className = 'default-item-ctrl hidden'; lCtrl.id = 'locale-ctrl';
+      lCtrl.style.marginTop = '10px'; lCtrl.style.textAlign = 'center';
+      var lSel = document.createElement('select');
+      lSel.id = 'locale-sel'; lSel.className = 'wide';
+      lSel.dataset.define = item.define;
+      locales.forEach(function(loc) {
+        var opt = document.createElement('option');
+        opt.value = loc.locale_code;
+        var parts = [loc.locale_code];
+        if (loc.locale) parts.push(loc.locale);
+        if (loc.locale_en) parts.push(loc.locale_en);
+        opt.textContent = parts.join(' - ');
+        lSel.appendChild(opt);
+      });
+      lCtrl.appendChild(lSel); lDiv.appendChild(lCtrl);
+      lChk.addEventListener('change', function() {
+        if (lChk.checked) { lCtrl.classList.remove('hidden'); lLbl.style.color = '#fff'; }
+        else { lCtrl.classList.add('hidden'); lLbl.style.color = ''; }
+      });
+      lHdr.addEventListener('click', function(e) { if (e.target === lChk) return; lChk.checked = !lChk.checked; lChk.dispatchEvent(new Event('change')); });
+      sec.appendChild(lDiv);
+      return;
+    }
+
+    // Timezone select — render complex dropdown from gData.timezones
+    if (item.type === 'timezone_select') {
+      var tzKeys = Object.keys(gData.timezones);
+      var tDiv = document.createElement('div');
+      tDiv.className = 'default-item';
+      var tHdr = document.createElement('div');
+      tHdr.className = 'default-item-header';
+      var tChk = document.createElement('input');
+      tChk.type = 'checkbox'; tChk.id = 'tz-chk'; tChk.dataset.defItem = item.define;
+      var tLbl = document.createElement('span');
+      tLbl.className = 'item-name'; tLbl.textContent = item.name;
+      tHdr.appendChild(tChk); tHdr.appendChild(tLbl);
+      tDiv.appendChild(tHdr);
+      var tCtrl = document.createElement('div');
+      tCtrl.className = 'default-item-ctrl hidden'; tCtrl.id = 'tz-ctrl';
+      tCtrl.style.marginTop = '10px'; tCtrl.style.textAlign = 'center';
+      var tSel = document.createElement('select');
+      tSel.id = 'tz-sel'; tSel.className = 'wide';
+      tSel.dataset.define = item.define;
+      tzKeys.forEach(function(tz) {
+        var opt = document.createElement('option');
+        opt.value = tz; opt.textContent = tz;
+        tSel.appendChild(opt);
+      });
+      tCtrl.appendChild(tSel); tDiv.appendChild(tCtrl);
+      tChk.addEventListener('change', function() {
+        if (tChk.checked) { tCtrl.classList.remove('hidden'); tLbl.style.color = '#fff'; }
+        else { tCtrl.classList.add('hidden'); tLbl.style.color = ''; }
+      });
+      tHdr.addEventListener('click', function(e) { if (e.target === tChk) return; tChk.checked = !tChk.checked; tChk.dispatchEvent(new Event('change')); });
+      sec.appendChild(tDiv);
+      return;
+    }
+
     var div = document.createElement('div');
     div.className = 'default-item';
 
@@ -1472,66 +1496,8 @@ function buildDefaultsSection() {
 
   return sec;
 }
-
 // ============================================================
-// Timezone section
-// ============================================================
-function buildTimezoneSection() {
-  var tzKeys = Object.keys(gData.timezones);
 
-  var sec = makeSection('Time Zone');
-  sec.id = 'timezone-section';
-
-  var header = document.createElement('div');
-  header.className = 'default-item-header';
-  var chk = document.createElement('input');
-  chk.type = 'checkbox';
-  chk.id = 'tz-chk';
-  var lbl = document.createElement('span');
-  lbl.className = 'item-name';
-  lbl.textContent = 'Time Zone';
-  header.appendChild(chk);
-  header.appendChild(lbl);
-
-  var ctrlDiv = document.createElement('div');
-  ctrlDiv.id = 'tz-ctrl';
-  ctrlDiv.className = 'hidden';
-  ctrlDiv.style.marginTop = '10px';
-  ctrlDiv.style.textAlign = 'center';
-
-  var sel = document.createElement('select');
-  sel.id = 'tz-sel';
-  sel.className = 'wide';
-  tzKeys.forEach(function(tz) {
-    var opt = document.createElement('option');
-    opt.value = tz;
-    opt.textContent = tz;
-    sel.appendChild(opt);
-  });
-  ctrlDiv.appendChild(sel);
-
-  sec.appendChild(header);
-  sec.appendChild(ctrlDiv);
-
-  chk.addEventListener('change', function() {
-    if (chk.checked) {
-      ctrlDiv.classList.remove('hidden');
-      lbl.style.color = '#fff';
-    } else {
-      ctrlDiv.classList.add('hidden');
-      lbl.style.color = '';
-    }
-  });
-  header.addEventListener('click', function(e) {
-    if (e.target === chk) return;
-    chk.checked = !chk.checked;
-    chk.dispatchEvent(new Event('change'));
-  });
-
-  return sec;
-}
-
-// ============================================================
 // Extra custom text section
 // ============================================================
 function buildExtraDefinesSection() {
@@ -1585,7 +1551,7 @@ function buildExtraDefinesSection() {
 // ============================================================
 // Section factory
 // ============================================================
-function makeSection(title) {
+function makeSection(title, info) {
   var sec = document.createElement('div');
   sec.className = 'gen-section';
   var titleDiv = document.createElement('div');
@@ -1594,6 +1560,18 @@ function makeSection(title) {
   span.textContent = title;
   titleDiv.appendChild(span);
   sec.appendChild(titleDiv);
+  // Optional section-level info text (supports http/https links)
+  if (info) {
+    var infoDiv = document.createElement('div');
+    infoDiv.className = 'section-info';
+    var html = sectionInfoHTML(info);
+    if (html !== info) {
+      infoDiv.innerHTML = html;
+    } else {
+      infoDiv.textContent = info;
+    }
+    sec.appendChild(infoDiv);
+  }
   return sec;
 }
 
@@ -1762,8 +1740,8 @@ function clearAllSections() {
     }
   });
 
-  // Locale, timezone, extra defines
-  ['locale-chk', 'tz-chk', 'extra-defines-chk'].forEach(function(id) {
+  // Extra defines
+  ['extra-defines-chk'].forEach(function(id) {
     var chk = document.getElementById(id);
     if (chk && chk.checked) chk.checked = false;
     var ctrl = document.getElementById(id.replace('-chk', '-ctrl'));
@@ -1901,9 +1879,7 @@ function generateOptionsH() {
   out += outputSingleSelectSection(gData.audio, 'audio-section', 'aud-sel', 'Audio Decoder');
   out += outputCheckboxGroupSection(gData.input, 'input-section', 'Input');
   out += outputCheckboxGroupSection(gData.peripherals, 'peripherals-section', 'Peripherals');
-  out += outputLocaleSection();
   out += outputDefaultsSection();
-  out += outputTimezoneSection();
   out += outputExtraDefinesSection();
 
   out += '\n#endif // myoptions_h\n';
@@ -1934,9 +1910,9 @@ function outputFlagLine(define) {
 }
 
 function outputNameSection() {
-  var nameData = gData.name;
-  if (!nameData || nameData.length < 2) return '';
-  var out = sectionHeader(typeof nameData[0] === 'string' ? nameData[0] : 'Firmware File & Board');
+  var meta = getSectionMeta(gData.name);
+  if (!meta.items.length) return '';
+  var out = sectionHeader(meta.title || 'Firmware File & Board');
   var item = nameData[1];
   if (item && item.defines) {
     item.defines.forEach(function(def) {
@@ -1972,18 +1948,18 @@ function outputSpiSection() {
     }
   });
   if (!hasAny) return '';
-  return sectionHeader(typeof gData.spi[0] === 'string' ? gData.spi[0] : 'SPI BUS PINS') + body;
+  return sectionHeader(getSectionMeta(gData.spi).title || 'SPI BUS PINS') + body;
 }
 
 function outputSingleSelectSection(dataArr, secId, selId, defaultTitle) {
-  var sectionTitle = typeof dataArr[0] === 'string' ? dataArr[0] : defaultTitle;
-  var items = dataArr.slice(1);
+  var meta = getSectionMeta(dataArr);
+  var items = meta.items;
   var sel = document.getElementById(selId);
   if (!sel) return '';
   var item = items[parseInt(sel.value)];
   if (!item) return '';
 
-  var out = sectionHeader(sectionTitle);
+  var out = sectionHeader(meta.title || defaultTitle);
 
   var isValueDefine = item.define && item.define.indexOf(' ') >= 0;
   var isBareFlag    = item.define && item.define.indexOf(' ') < 0;
@@ -2065,8 +2041,8 @@ function outputSingleSelectSection(dataArr, secId, selId, defaultTitle) {
 }
 
 function outputCheckboxGroupSection(dataArr, secId, defaultTitle) {
-  var sectionTitle = typeof dataArr[0] === 'string' ? dataArr[0] : defaultTitle;
-  var items = dataArr.slice(1);
+  var meta = getSectionMeta(dataArr);
+  var items = meta.items;
   var out = '';
   var body = '';
 
@@ -2134,25 +2110,36 @@ function outputCheckboxGroupSection(dataArr, secId, defaultTitle) {
   });
 
   if (!body) return '';
-  return sectionHeader(sectionTitle) + body;
-}
-
-function outputLocaleSection() {
-  var chk = document.getElementById('locale-chk');
-  if (!chk || !chk.checked) return '';
-  var sel = document.getElementById('locale-sel');
-  if (!sel) return '';
-  var code = sel.value;
-  return sectionHeader(typeof gData.locale[0] === 'string' ? gData.locale[0] : 'Locale') +
-    outputLine('DSP_LOCALE', '"' + code + '"');
+  return sectionHeader(meta.title || defaultTitle) + body;
 }
 
 function outputDefaultsSection() {
-  var sectionTitle = typeof gData.defaults[0] === 'string' ? gData.defaults[0] : 'User Defaults';
-  var items = gData.defaults.slice(1);
+  var meta = getSectionMeta(gData.defaults);
+  var items = meta.items;
   var body = '';
 
   items.forEach(function(item) {
+    // Locale select — output DSP_LOCALE
+    if (item.type === 'locale_select') {
+      var locChk = document.querySelector('[data-def-item="' + item.define + '"]');
+      if (!locChk || !locChk.checked) return;
+      var locSel = document.getElementById('locale-sel');
+      if (locSel) body += outputLine(item.define, '"' + locSel.value + '"');
+      return;
+    }
+    // Timezone select — output TIMEZONE name and posix
+    if (item.type === 'timezone_select') {
+      var tzChk = document.querySelector('[data-def-item="' + item.define + '"]');
+      if (!tzChk || !tzChk.checked) return;
+      var tzSel = document.getElementById('tz-sel');
+      if (!tzSel) return;
+      var tzName = tzSel.value;
+      var tzPosix = gData.timezones[tzName] || '';
+      body += outputLine(item.define + '_NAME', '"' + tzName + '"', null);
+      body += outputLine(item.define + '_POSIX', '"' + tzPosix + '"', null);
+      return;
+    }
+
     var chk = document.querySelector('[data-def-item="' + item.define + '"]');
     if (!chk || !chk.checked) return;
 
@@ -2173,20 +2160,7 @@ function outputDefaultsSection() {
   });
 
   if (!body) return '';
-  return sectionHeader(sectionTitle) + body;
-}
-
-function outputTimezoneSection() {
-  var chk = document.getElementById('tz-chk');
-  if (!chk || !chk.checked) return '';
-  var sel = document.getElementById('tz-sel');
-  if (!sel) return '';
-  var tzName = sel.value;
-  var posix = gData.timezones[tzName] || '';
-  var out = sectionHeader('Time Zone');
-  out += outputLine('TIMEZONE_NAME', '"' + tzName + '"', null);
-  out += outputLine('TIMEZONE_POSIX', '"' + posix + '"', null);
-  return out;
+  return sectionHeader(meta.title || 'User Defaults') + body;
 }
 
 function outputExtraDefinesSection() {
@@ -2753,7 +2727,7 @@ function serializeState() {
 
   // All visible non-pin define values (selects, radios, text/number inputs)
   var v = {};
-  var _skipIds = { 'board-sel': 1, 'dsp-sel': 1, 'aud-sel': 1, 'locale-sel': 1, 'tz-sel': 1 };
+  var _skipIds = { 'board-sel': 1, 'dsp-sel': 1, 'aud-sel': 1 };
   document.querySelectorAll('select[data-define]').forEach(function(sel) {
     if (_skipIds[sel.id]) return;
     if (isElementVisible(sel)) v[sel.dataset.define] = sel.value;
@@ -2767,16 +2741,6 @@ function serializeState() {
     if (isElementVisible(inp)) v[inp.dataset.define] = inp.value;
   });
   if (Object.keys(v).length) state.v = v;
-
-  // Locale (only if enabled — no point saving selector value if unchecked)
-  var locChk = document.getElementById('locale-chk');
-  var locSel = document.getElementById('locale-sel');
-  if (locChk && locChk.checked && locSel) state.lc = locSel.value;
-
-  // Timezone (only if enabled)
-  var tzChk = document.getElementById('tz-chk');
-  var tzSel = document.getElementById('tz-sel');
-  if (tzChk && tzChk.checked && tzSel) state.tz = tzSel.value;
 
   // Extra custom text (enabled flag + text)
   var xChk = document.getElementById('extra-defines-chk');
@@ -2956,35 +2920,7 @@ function applyStateNew(state) {
     });
   }
 
-  // 7. Locale (compact: state.lc holds the code, presence means enabled)
-  if (state.lc) {
-    var locChk = document.getElementById('locale-chk');
-    var locCtrl = document.getElementById('locale-ctrl');
-    var locSel = document.getElementById('locale-sel');
-    if (locChk) {
-      locChk.checked = true;
-      if (locCtrl) locCtrl.classList.remove('hidden');
-      var locLbl = locChk.nextElementSibling;
-      if (locLbl) locLbl.style.color = '#fff';
-    }
-    if (locSel) locSel.value = state.lc;
-  }
-
-  // 8. Timezone (compact: state.tz holds the name, presence means enabled)
-  if (state.tz) {
-    var tzChk = document.getElementById('tz-chk');
-    var tzCtrl = document.getElementById('tz-ctrl');
-    var tzSel = document.getElementById('tz-sel');
-    if (tzChk) {
-      tzChk.checked = true;
-      if (tzCtrl) tzCtrl.classList.remove('hidden');
-      var tzLbl = tzChk.nextElementSibling;
-      if (tzLbl) tzLbl.style.color = '#fff';
-    }
-    if (tzSel) tzSel.value = state.tz;
-  }
-
-  // 9. Extra custom text (xe = enabled flag, xd = text)
+  // 7. Extra custom text (xe = enabled flag, xd = text)
   var xChk = document.getElementById('extra-defines-chk');
   var xCtrl = document.getElementById('extra-defines-ctrl');
   var xTxt = document.getElementById('extra-defines-text');

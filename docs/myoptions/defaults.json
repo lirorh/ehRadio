@@ -1,4 +1,8 @@
-[ "User Defaults",
+[ { "title": "User Defaults",
+    "info": "This sets first-boot defaults and are still changeable in the WebUI." },
+
+  { "type": "locale_select", "name": "Display Language", "define": "DSP_LANGUAGE" },
+  { "type": "timezone_select", "name": "Time Zone", "define": "TIMEZONE" },
   {
     "name": "Clock 12 Hour Mode",
     "define": "CLOCK_TWELVE", "type": "boolean", "optional": true, "default": false

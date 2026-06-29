@@ -1,4 +1,5 @@
-[
+[ { "title": "ESP Board",
+    "info": "An ESP32-S3 Board with minimum 8MB Flash and 2MB PSRAM is highly recommended." },
   {
     "name": "ESP32-S3-DevKitC-1 N16R4 (16MB Flash 4MB PSRAM)",
     "file": "ESP32-S3-DevKitC-1_N16R4.json"

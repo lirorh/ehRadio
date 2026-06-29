@@ -53,12 +53,12 @@
 
 /* --- Display --- */
 #define DSP_MODEL            DSP_ILI9341
-#define TFT_CS               10
 #define TFT_DC               46
 #define TFT_RST              -1        /* pin RST is attached to (-1 = EN pin) */
 #define BRIGHTNESS_PIN       45        /* pin that controls brightness / backlight (255 = unused) */
 #define DSP_DIMMING_ENABLED  true      /* enable screen dimming (depends on brightness pin) */
 #define DSP_INVERT_QUIRK     true      /* fixes display inversion quirk (very common) */
+#define TFT_CS               10        /* pin CS is attached to (255 = tied to GND) */
 
 /* --- Audio Decoder --- */
 #define I2S_MCLK             4
@@ -89,13 +89,12 @@
 #define SD_SPI               'B'       /* assign SD to SPI bus */
 
 /* --- Locale --- */
-#define DSP_LANGUAGE_lt_LT
+#define DSP_LOCALE           "lt_LT"
 
 /* --- User Defaults --- */
 #define ONE_CLICK_SWITCH     true
-#define SS_PLAYING           true
 #define SCREEN_FLIP          true
-#define SHOW_BUFFERBAR       true
+#define SS_PLAYING           true
 #define SHOW_VU_METER        true
 #define SMART_START          true
 #define SNTP_1               "lt.pool.ntp.org"

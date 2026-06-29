@@ -11,8 +11,8 @@ padding/cutting rules to normalise every glyph to the target 6×8 cell:
   - All other sizes are rejected with a clear error message.
 
 Usage:
-    py bdf2adafruit3.py MatrixChunky8.bdf 0x0020 0x04FF -o MatrixChunky8.h
-    py bdf2adafruit3.py MatrixLight8.bdf 0x20 0x04FF --auto -o MatrixLight8.h
+    py bdf2adafruit3.py MatrixChunky8x6.bdf 0x0020 0x04FF -o MatrixChunky8x6.h
+    py bdf2adafruit3.py MatrixLight8x6.bdf 0x20 0x04FF --auto -o MatrixLight8x6.h
 
 Options:
     --auto      Use default choices for padding/cutting (non-interactive).

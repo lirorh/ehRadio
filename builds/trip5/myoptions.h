@@ -310,7 +310,7 @@
 
 
 /* --- Other Useful Options --- */
-/* options.h will list even more but it can be pretty tough... */
+/* options.h will list even more but it's a big file... */
 
 /* --- Hate the idea of your device reporting to Radio Browser API which stations you like? --- */
 //#define RADIO_BROWSER_NO_SEND_CLICKS
@@ -326,41 +326,35 @@
 //#define WEATHER_WIND_SPEED_UNITS "kmh" // valid: "kmh" or "mph" or "kn" or "m/s"
 
 /* Only use this if you've decided to use your own Github as the source of files */
-/* ...or your firmware is not available from Trip5's Github... sorry! */
+/* ...or your firmware is not available from Trip5's Github... yet. */
 /* Read the notes in the ./builds folder for more detailed information */
-
-//#define GITHUBURL "https://github.com/kasperaitis/ehradio" // used by the radio to update firmware and files...
+//#define GITHUBURL "https://github.com/myid/ehradio" // used by the radio to update firmware and files...
 
 /* Disable automatic runtime downloads from GitHub (ESPFileUpdater) for this board only. */
 //#define DISABLE_UPDATER
 
 /* --- Locales Notes --- */
-//#define DSP_LANGUAGE_de_DE // sets the display language - see the available options by checking `displayL10n_*.h` files in `locale` folder 
+//#define DSP_LOCALE "de_DE" // sets the display language - see the available options by checking files in locale/display folder 
 //#define WEBUI_LOCALE "de_DE" // can set a default WebUI locale different than the display - check locale/webui folder .json files (user-configurable)
 
 /* --- Debug? --- */
 //#define CORE_MONITOR
 #define ALL_DEBUG_LOGS
 
-/* --- Clock Fonts --- */
-// CHUNKY6_PX is default...
-//#define CLOCKFONT CHUNKY6
-//#define CLOCKFONT YO_MONO
-
-//#define DSP_LOCALE "en_US"
+/* --- Fonts --- */
+// Display Text:
 //#define DISPLAYFONT MATRIXCHUNKY
 //#define DISPLAYFONT MATRIXLIGHT
 //#define DISPLAYFONT X11
+
+// Clock:
+//#define CLOCKFONT CHUNKY6
+//#define CLOCKFONT YO_MONO
+
+// Transform:
 //#define PRETEXT_ALLCAPS
 //#define PRETEXT_FOLDACCENT
 //#define WWW_CASETRANSFORM
 //#define CLOCKGLOW false
-
-
-//#define DSP_TASK_PRIORITY 3 // 3 = highest, because VS1053 handles decoding well
-//#define DSP_TASK_CORE_ID 1
-//#define AUDIO_CORE 0
-#define NETWORK_CORE 0
-
 
 #endif // myoptions_h

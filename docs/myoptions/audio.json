@@ -6,7 +6,7 @@
     "defines": [
       { "define": "VS1053_SPI", "type": "spi", "comment": "assign VS1053 to SPI bus" },
       { "define": "VS1053_RST", "type": "pin", "default": -1, "optional": true, "comment": "pin RST is attached to (-1 for EN pin"},
-      { "define": "VS_PATCH_ENABLE", "type": "boolean", "default": false, "comment": "Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V." }
+      { "define": "VS_PATCH_ENABLE", "type": "boolean", "default": false, "comment": "Enables VU Meter with VS1053b boards - disabled by default" }
     ],
     "lib_deps": "",
     "build_src_filter": "+<libraries/VS1053_Audio/*>"
@@ -34,6 +34,6 @@
       { "define": "PLAYER_FORCE_MONO", "type": "boolean", "default": true, "optional": false, "comment": "forces VU meter to mono mode"}
     ],
     "lib_deps": "",
-    "build_src_filter": "+<libraries/I2S_Audio/*>+<libraries/ES8311_Audio/*>"
+    "build_src_filter": ["+<libraries/I2S_Audio/*>", "+<libraries/ES8311_Audio/*>"]
   }
 ]

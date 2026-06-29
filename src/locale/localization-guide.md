@@ -1,6 +1,6 @@
-# ehRadio — Languages, Fonts & Codepages
+# ehRadio — Languages, Fonts & Localization
 
-This document explains the full localization pipeline: how a language selection flows from a single define in `myoptions.h` all the way to characters appearing on the display.
+This document explains the localization pipeline: how language selection flows from JSON source files through PROGMEM-compiled headers, the GFXfont renderer, and the WebUI.
 
 ---
 
@@ -8,31 +8,29 @@ This document explains the full localization pipeline: how a language selection 
 
 1. [Overview](#overview)
 2. [Configuration Cascade](#configuration-cascade)
-3. [Picking a Language — `DSP_LANGUAGE`](#picking-a-language--DSP_LANGUAGE)
-4. [Codepages — `L10N_CODEPAGE`](#codepages--l10n_codepage)
-5. [Locale Files (`displayL10n_*.h`)](#locale-files-displayl10n_h)
-6. [The Include Chain (`l10n.h`)](#the-include-chain-l10nh)
-7. [Custom Locale Override](#custom-locale-override)
-8. [UTF-8 Text Processing Pipeline](#utf-8-text-processing-pipeline)
-9. [GLCD Font & Glyph System](#glcd-font--glyph-system)
-10. [How to Add a New Glyph](#how-to-add-a-new-glyph)
-11. [Weather Language (`weatherLang`)](#weather-language-weatherlang)
-12. [How to Add a New Language](#how-to-add-a-new-language)
-13. [WebUI i18n](#webui-i18n)
-14. [Developer Tools](#developer-tools)
+3. [Picking a Language — `DSP_LOCALE`](#picking-a-language--dsp_locale)
+4. [Display Locale Files (`src/locale/display/*.json`)](#display-locale-files-srclocaledisplayjson)
+5. [The Compile Chain (`dsplocale.h`)](#the-compile-chain-dsplocaleh)
+6. [Runtime Locale Switching](#runtime-locale-switching)
+7. [Display Font (`dspfont.h`)](#display-font-dspfonth)
+8. [Text Rendering Pipeline](#text-rendering-pipeline)
+9. [Weather Descriptions (WMO Codes)](#weather-descriptions-wmo-codes)
+10. [How to Add a New Language](#how-to-add-a-new-language)
+11. [WebUI i18n](#webui-i18n)
+12. [Developer Tools](#developer-tools)
 
 ---
 
 ## Overview
 
-The display on an ESP32 radio uses a **bitmap GLCD font** (Adafruit GFX style). This font has a fixed set of glyphs — it cannot render arbitrary Unicode on the fly. The localization system solves this in two ways:
+The display uses a **Unicode GFXfont** (Adafruit GFXfont format, converted from BDF), selected via the `DISPLAYFONT` macro in `dspfont.h`. The font contains 400+ glyphs covering Latin, Cyrillic, Greek, and other scripts — it can render these characters directly without transliteration or codepage switching.
 
-- For **ASCII + a small set of extended characters** that are baked into the active font file, strings are passed straight to the display renderer.
-- For everything else (accented Latin letters, Cyrillic letters not in the font, etc.), a **UTF-8 → transliteration / normalization** pass converts the string to displayable characters before rendering.
+The active language controls:
+- UI strings (day names, month names, wind directions, weather labels, status messages) from JSON source files compiled into `dsplocale.h`
+- Weather descriptions via WMO code → locale-aware lookup
+- Optional all-caps conversion for languages with no lowercase distinction in the font
 
-The active language also controls UI strings (day names, month names, wind directions, etc.) and the language code sent to the OpenWeather API.
-
-Separately, the **WebUI** (served from the device over Wi-Fi) has its own runtime i18n layer: translated strings are loaded from a small JSON file on the device filesystem, so the settings and player pages can be displayed in the local language without any firmware recompile.
+Separately, the **WebUI** has its own runtime i18n layer: translated strings are compiled into `wwwlocale.h` as gzip-compressed PROGMEM arrays and served directly from firmware flash.
 
 ---
 
@@ -48,358 +46,233 @@ myoptions.h                 ← your hardware & locale overrides
 mytheme.h                   ← colour / UI overrides (optional)
 ```
 
-All language and codepage configuration belongs in **`myoptions.h`**.
-
-Language selection is **compile‑time only**.
+The display locale default is set via `DSP_LOCALE` in `myoptions.h`. Both display and WebUI locales can also be changed at runtime via the settings page.
 
 ---
 
-## Picking a Language — `DSP_LANGUAGE`
+## Picking a Language — `DSP_LOCALE`
 
-In `myoptions.h`, set something like:
+In `myoptions.h`, set:
 
 ```cpp
-#define DSP_LANGUAGE_de_DE
+#define DSP_LOCALE "de_DE"
 ```
 
-If a `DSP_LANGUAGE_*` is not defined, it defaults to `DSP_LANGUAGE_en_US`.
+If `DSP_LOCALE` is not defined, it defaults to `"en_US"`. A `static_assert` in `dsplocale.h` validates the value at compile time against all known locale codes.
 
-The full list is viewable in `locale.h`.
+At boot, `_activeLocale` is set from the saved `config.store.locale_display` preference (which defaults to `DSP_LOCALE`). Runtime changes persist to NVS and take effect immediately.
 
 ---
 
-## Codepages — `L10N_CODEPAGE`
+## Display Locale Files (`src/locale/display/*.json`)
 
-The codepage controls **which extended character set is baked into the GLCD font** and therefore which characters can be rendered natively without transliteration.
-
-| Constant | Value | Meaning |
-|---|:---:|---|
-| `L10N_CP_LATIN` | 1 | Latin extended glyphs (accented Latin letters: à, é, ü, ø, etc.) |
-| `L10N_CP_CYRILLIC` | 2 | Cyrillic glyphs (А–Я, plus language-specific extras like Є, Ї, Ґ, Ё, І) |
-
-### Auto-detection
-
-You do **not** need to set `L10N_CODEPAGE` manually. The preprocessor in `options.h` automatically selects the correct codepage based on `DSP_LANGUAGE`:
-
-- Cyrillic is automatically selected for: `ru_RU`, `uk_UA`, `be_BY`, `bg_BG`, `mk_MK`, `sr_RS`, `me_ME`, `uz_UZ`, `kk_KZ`, `tg_TJ`, `ky_KG`, `mn_MN`
-- All other languages default to `L10N_CP_LATIN`
-
-### Forcing a codepage
-
-To override the auto-detected codepage, add to `myoptions.h`:
-
-```cpp
-#define L10N_CP_CYRILLIC   // or L10N_CP_LATIN
-```
-
-### Effect on rendering
-
-The active codepage affects three things:
-
-1. **Which GLCD font file is linked** — `glcdfont_Latin.c` or `glcdfont_Cyrillic.c` (selected by `builds/platformio_pre_replace_font.py` during the build). Display drivers use the static `font[]` array provided by the Adafruit GFX library; no runtime pointer or switching is involved.
-2. **Which characters `shouldPreserveChar()` passes through** — preserved characters are written as raw UTF-8 bytes directly to the display buffer; non-preserved characters are transliterated.
-3. **Case handling** — both font variants carry **uppercase glyphs only**. In both codepages, lowercase extended characters are accepted and rendered using the uppercase glyph. The mechanism differs:
-   - **Cyrillic:** lowercase codepoints U+0430–U+044F fall inside the preserve range and are explicitly remapped to their uppercase equivalents U+0410–U+042F before being written to the output buffer.
-   - **Latin:** both the uppercase and lowercase codepoint for each accented letter are listed in `LATIN_PRESERVE[]`, and `utf8Latin.cpp` maps both to the same (uppercase) glyph slot — e.g. `à` (C3 A0) and `À` (C3 80) both write glyph index `0x80`, which holds the uppercase `À` bitmap.
-
----
-
-## Locale Files (`displayL10n_*.h`)
-
-Each locale file lives in `src/locale/` and is named using the full IETF BCP 47 format:
+Each locale file lives in `src/locale/display/` and is named using IETF BCP 47 format:
 
 ```
-src/locale/displayL10n_en_US.h
-src/locale/displayL10n_ru_RU.h
-src/locale/displayL10n_uk_UA.h
+src/locale/display/en_US.json  ← master (canonical key set)
+src/locale/display/ru_RU.json
+src/locale/display/uk_UA.json
 ...
 ```
 
-Every locale file defines the same set of `PROGMEM` string constants placed in the `LANG` namespace:
+Every locale file contains the same set of 67 keys, defined by `en_US.json`:
 
-| Constant group | Example values |
+| Key group | Examples |
 |---|---|
-| Short day names | `mon`, `tue`, `wed`, `thu`, `fri`, `sat`, `sun` |
-| Full day names | `monday`, `tuesday`, `wednesday`, … |
-| Month names | `jan`, `feb`, `mar`, … `dec` |
-| Wind direction strings | `wn_N`, `wn_NE`, `wn_E`, … `wn_NNW` |
-| Weather condition labels | `wc_thunder`, `wc_rain`, `wc_snow`, `wc_clear`, etc. |
-| OpenWeather language code | `weatherLang[]` — the API lang parameter sent to OpenWeather |
+| Short day names | `day_mon`, `day_tue`, … `day_sun` |
+| Month names | `mon_jan`, `mon_feb`, … `mon_dec` |
+| Wind direction strings | `msg_wind_n`, `msg_wind_ne`, … `msg_wind_nnw` |
+| Weather condition labels | `msg_w_clear_sky`, `msg_w_overcast`, `msg_w_foggy`, … `msg_w_thunderstorm_hail` |
+| Status/UI labels | `msg_ready`, `msg_stopped`, `lbl_volume`, `lbl_w_feelslike`, etc. |
+| Metadata | `locale_code`, `locale`, `locale_en` |
 
-All strings are stored in flash (`PROGMEM`) to conserve RAM on the ESP32.
-
----
-
-## The Include Chain (`l10n.h`)
-
-`src/displays/tools/l10n.h` is the single include point for locale strings. It:
-
-1. Checks `DSP_LANGUAGE_*` with an `#if / #elif` ladder and sets `L10N_INCLUDE` to the matching locale file path.
-2. Checks whether `src/locale/displayL10n_custom.h` exists — if so, it is included **instead** of the auto-selected locale file (see [Custom Locale Override](#custom-locale-override)).
-3. Wraps `L10N_INCLUDE` inside `namespace LANG { ... }` so locale strings don't pollute the global namespace.
-
-All display code that needs localized strings includes `l10n.h` and accesses strings as `LANG::mon`, `LANG::weatherLang`, etc.
+`en_US.json` is the **master key reference** — all other files are validated against it. Any key not present in `en_US.json` is considered stale and removed by the clean tool.
 
 ---
 
-## Custom Locale Override
+## The Compile Chain (`dsplocale.h`)
 
-If you need to modify UI strings without touching the built-in locale files, create:
+`src/locale/dsplocale.h` is AUTO-GENERATED by `make_dsplocale.py`. It is the single include point for display locale strings:
 
-```
-src/locale/displayL10n_custom.h
-```
+1. Validates all JSON files: missing keys, extra keys, `locale_code` mismatches.
+2. Generates a `L10nKey` enum (e.g., `L10N_DAY_MON`, `L10N_MSG_WIND_N`).
+3. Generates per-string PROGMEM constants for every locale.
+4. Generates a 2D pointer table `l10n_strings[36][67]` for O(1) runtime lookup.
+5. Generates `l10n_findLocale()`, `l10n_str()`, `l10n()`, `l10n_dow()`, `l10n_month()`, `l10n_wind()` inline helpers.
+6. Embeds `dsplocale_index` — a PROGMEM JSON string served at `/dsplocale.json` for the WebUI display locale dropdown.
 
-This file, if present, completely replaces the auto-selected locale — the compiler will not include the standard `displayL10n_*.h` at all. Copy the locale you want to base yours on and edit from there.
-
-Add it to your `.gitignore` so it will persist across project updates.
-
----
-
-## UTF-8 Text Processing Pipeline
-
-Station metadata (song titles, station names) arrives as UTF-8 strings. These strings may contain characters that the GLCD font cannot display directly. The processing pipeline decides what to do with each character.
-
-### Modules
-
-| File | Role |
-|---|---|
-| `utf8To.cpp/.h` | **Entry point.** `utf8To(str, uppercase)` — calls `canRenderNative()` first; if the string is fully renderable, returns it unchanged. Otherwise calls `utf8ToAscii()`. |
-| `utf8_common.h/.cpp` | Shared tables and inline logic: `shouldPreserveChar()`, `canRenderNative()`, `utf8ToAscii()`, `transliterateCyrillic()`. Contains both the Latin mapping table (`LATIN_MAP`) and the Cyrillic transliteration table (`CYRILLIC_MAP`). |
-| `utf8Cyrillic.cpp/.h` | Cyrillic-specific processing (used by the Cyrillic codepage path). |
-| `utf8Latin.cpp/.h` | Latin extended normalization (used by the Latin codepage path). |
-
-### Decision flow
-
-```
-utf8To(str)
-    │
-    ├─ canRenderNative(str)?
-    │       │
-    │       YES → return str unchanged (font can display it directly)
-    │       │
-    │       NO  → utf8ToAscii(str)
-    │                   │
-    │                   ├─ ASCII byte (< 0x80) → keep as-is
-    │                   │
-    │                   ├─ 2-byte sequence (0xC2–0xDF)
-    │                   │       ├─ shouldPreserveChar()? → write both bytes (native glyph)
-    │                   │       ├─ Cyrillic (0xD0/0xD1)? → transliterateCyrillic() → ASCII letter
-    │                   │       └─ Latin extended? → LATIN_MAP lookup → ASCII equivalent(s)
-    │                   │
-    │                   ├─ 3-byte: ellipsis (U+2026) → "..."
-    │                   ├─ 3-byte: trademark (U+2122) → "TM"
-    │                   └─ other → space
-    │
-    └─ return processed string
-```
-
-### `shouldPreserveChar()` and codepage
-
-`shouldPreserveChar()` checks whether a two-byte UTF-8 sequence maps to a glyph slot in the **currently compiled font**:
-
-- **Latin codepage:** looks up the codepoint in `LATIN_PRESERVE[]` — a list of accented Latin codepoints that the `glcdfont_Latin.c` font provides.
-- **Cyrillic codepage:** preserves the main Cyrillic block U+0410–U+044F (А–я) plus additional entries from `CYRILLIC_PRESERVE[]`. Latin accented letters are **not** preserved on the Cyrillic codepage — they are transliterated to plain ASCII instead.
+All display code that needs localized strings calls `l10n(L10N_XXX)`.
 
 ---
 
-## GLCD Font & Glyph System
+## Runtime Locale Switching
 
-The project uses a modified **Adafruit GFX GLCD** bitmap font stored in `src/locale/glcdfont/` (previously under `builds/`). Two variants are maintained:
+Unlike the old compile-time-only system, the display locale can be changed at runtime:
 
-| File | Purpose |
-|---|---|
-| `glcdfont-lib.c` | Original Adafruit font (reference only, not linked directly) |
-| `glcdfont_Latin.c` | Latin variant — slots 0x80–0xFF filled with accented Latin glyphs |
-| `glcdfont_Latin.md` | Latin glyph map and documentation |
-| `glcdfont_Cyrillic.c` | Cyrillic variant — slots 0x80–0xFF filled with Cyrillic glyphs |
-| `glcdfont_Cyrillic.md` | Cyrillic glyph map and documentation |
+1. WebUI sends `locale_disp=fr_FR` over websocket.
+2. `commandhandler.cpp` persists to `config.store.locale_display` and sets `_activeLocale = l10n_findLocale(value)`.
+3. Weather string is rebuilt with new locale via `network.buildWeatherString()`.
+4. Clock widget is force-redrawn via `display.putRequest(CLOCK, true)`.
 
-The build script `builds/platformio_pre_replace_font.py` copies the appropriate `.c` variant into the Adafruit GFX library directory before compilation, based on `L10N_CP_LATIN` or `L10N_CP_CYRILLIC`.
-
-### Cyrillic glyph layout
-
-The Cyrillic font uses the upper half of the 256-glyph table (slots 0x80–0xFF):
-
-- **0x80–0x9F** (slots 128–159): Main Cyrillic uppercase block U+0410–U+042F (А–Я)
-- **0xA0–0xAF** (slots 160–175): Language-specific extras — Є (Ukrainian IE), Ґ, Ї, І, Ё (Russian IO), etc.
-- **0xB0–0xFF**: Available for additional glyphs or left as unused
-
-Because only uppercase Cyrillic is stored, the UTF-8 processing layer automatically converts any preserved lowercase Cyrillic character (U+0430–U+044F) to its uppercase equivalent (U+0410–U+042F) before storing it in the output buffer.
-
-### Latin glyph layout
-
-The Latin font fills slots 0x80–0xC8 with **uppercase** accented Latin and Greek characters needed by Western European languages: À, Á, Â, Ã, Ä, Å, Æ, Ç, È, É, Í, Î, Ð, Ñ, Ó, Ô, Õ, Ö, Ø, Ú, Ü, Ý, Þ, and extended Latin letters for Czech, Slovak, Polish, Baltic, Romanian, Hungarian, Croatian, and Greek scripts. Lowercase accented variants have no separate glyph slots — `LATIN_PRESERVE[]` lists both the uppercase and lowercase codepoint for each character, and `utf8Latin.cpp` maps both to the same uppercase glyph index. The result is that `à`, `á`, etc. are displayed identically to `À`, `Á`.
+The `_activeLocale` index (0-35) is used by all `l10n()` calls — zero RAM cost for string storage (all PROGMEM).
 
 ---
 
-## How to Add a New Glyph
 
-This covers the full process of adding a brand-new character to the GLCD font and wiring it into the UTF-8 processing pipeline so it renders natively on the display instead of being transliterated.
+## Display Font (`dspfont.h`)
 
-There are two independent codepaths — one for the **Latin** codepage and one for the **Cyrillic** codepage. Identify which font variant you are modifying and follow that path.
+The display font is selected at compile time via the `DISPLAYFONT` macro, resolved in `src/displays/dspfont.h`:
 
----
+| `DISPLAYFONT` value | Font file | Description |
+|---|---|---|
+| `MATRIXLIGHT` (default) | `MatrixLight8x6.h` | 6×8 pixel, ~400 glyphs |
+| `MATRIXCHUNKY` | `MatrixChunky8x6.h` | 6×8 bold variant |
+| `X11` | `UnixX11_6x9.h` | 6×9, 1421 glyphs (largest coverage) |
 
-### Latin codepage (`glcdfont_Latin.c` + `utf8Latin.cpp`)
-
-**Step 1 — Find a free glyph slot**
-
-Open `src/locale/glcdfont/glcdfont_Latin.c`. Pick the lowest unused slot.
-
-**Step 2 — Draw the glyph**
-
-Use `scripts/glyph_creator_gui.py` to edit `src/locale/glcdfont/glcdfont_Latin.c`. Design the glyph bitmap for the **uppercase** form of the character (the font carries uppercase only; both cases will be directed to this slot).
-
-**Step 3 — Update the glyph map documentation**
-
-Add a row to `src/locale/glcdfont/glcdfont_Latin.md` for the new slot, following the existing column format (`dec`, `hex`, `U+`, `char`, Unicode name, Languages).
-
-**Step 4 — Register the codepoints in `LATIN_PRESERVE[]`** (`utf8_common.cpp`)
-
-`LATIN_PRESERVE[]` lists every codepoint that has a native glyph. Add **both** the uppercase and lowercase codepoint as a pair (uppercase first):
-
+Override in `myoptions.h`:
 ```cpp
-// utf8_common.cpp — inside LATIN_PRESERVE[]
-0x0XYZ, 0x0xyz,   // Ẋ / ẋ  (example)
+#define DISPLAYFONT MATRIXCHUNKY
 ```
 
-This tells `shouldPreserveChar()` and `canRenderNative()` that these codepoints are renderable and must not be transliterated.
+The selected font is assigned to the `DisplayFont` symbol and used by `_writeGlyph()` in `src/displays/tools/commongfx.h` for all text rendering. It supports Latin, Cyrillic, Greek, and extended punctuation — no codepage switching or glcdfont replacement is needed.
 
-**Step 5 — Add the byte mapping in `utf8Latin.cpp`**
-
-`utf8Latin.cpp` maps raw UTF-8 byte pairs to glyph slot indices via `switch` statements grouped by the first byte. Find the `switch` block matching the first UTF-8 byte of your character (e.g. `0xC4` for Latin Extended-A U+0100–U+017F, `0xC5` for U+0180–U+024F, `0xCE`/`0xCF` for Greek) and add a `case` for both the uppercase and lowercase second byte, both resolving to your new slot:
-
-```cpp
-// Example: adding Ẋ (C4 AB) / ẋ (C4 AC) at slot 0xC9
-case 0xAB: case 0xAC: code = 0xC9; break; // Ẋ / ẋ -> 0xC9
-```
-
-If no `switch` block exists for the first byte yet, add a new `if (b1 == 0xXX && str[r+1]) { ... }` block following the same pattern as the existing ones.
+Clock fonts are separate — they live in `src/displays/clockfonts/` and are selected via the `CLOCKFONT` macro.
 
 ---
 
-### Cyrillic codepage (`glcdfont_Cyrillic.c` + `utf8Cyrillic.cpp`)
+## Text Rendering Pipeline
 
-**Step 1 — Find a free glyph slot**
+All text rendering goes through `DspCore::write(uint8_t)` → `_writeGlyph(uint16_t cp)` in `src/displays/tools/commongfx.h`.
 
-Open `src/locale/glcdfont/glcdfont_Cyrillic.c`. Used slots:
-- 0x80–0x9F: main Cyrillic А–Я (fixed, do not touch)
-- 0xA0–0xB7: language-specific extras
+### Per-character processing
 
-Pick the lowest unused slow.
+1. **UTF-8 decode** — `write()` accumulates bytes into a full codepoint.
+2. **Icon check** — codepoints 0x01–0x1F render from `ICON_TABLE[]`.
+3. **Space** — advances cursor by the font's `xAdvance`.
+4. **Clock font dispatch** — if a special clock font is active (`gfxFont != NULL && gfxFont != &DisplayFont`), delegates to `Adafruit_GFX::write()`.
+5. **Preprocessing** — `preText(cp, f)` applies:
+   - `allCaps()` if the locale requires uppercase-only display
+   - `foldAccent()` for accent-stripping fallback
+6. **Glyph lookup** — searches `DisplayFont` for the codepoint. If found, renders the glyph bitmap (foreground + background fill). If not found, tries `foldAccent()` recursion; if still unmapped, advances cursor by `xAdvance` (blank space).
 
-**Step 2 — Draw the glyph**
+### Key rendering invariants
 
-Use `scripts/glyph_creator_gui.py` to add the glyph bitmap at your chosen slot. Draw the uppercase form; lowercase will be mapped to the same slot by the converter.
-
-**Step 3 — Update the glyph map documentation**
-
-Add a row to `src/locale/glcdfont/glcdfont_Cyrillic.md`.
-
-**Step 4 — Register the codepoint in `CYRILLIC_PRESERVE[]`** (`utf8_common.cpp`)
-
-Add the **uppercase** codepoint to `CYRILLIC_PRESERVE[]`. Only the uppercase is needed here because the main Cyrillic block (U+0410–U+044F) is already handled by a range check; `CYRILLIC_PRESERVE[]` covers the extras outside that range:
-
-```cpp
-// utf8_common.cpp — inside CYRILLIC_PRESERVE[]
-0x04XY,   // new letter (uppercase)
-```
-
-**Step 5 — Add the codepoint mapping in `utf8Cyrillic.cpp`**
-
-In `map_cyrillic_cp_to_glyph()`, add a `case` for both the uppercase and lowercase codepoints, returning your new slot index:
-
-```cpp
-// utf8Cyrillic.cpp — inside map_cyrillic_cp_to_glyph()
-case 0x04XY: case 0x04Xy: return 0xB8; // Ӿ / ӿ
-```
+- All glyph rendering uses `&DisplayFont` (the Unicode GFXfont), NOT the built-in 256-slot glcdfont.
+- `startWrite()`/`endWrite()` wrap icon and glyph rendering blocks (required by Adafruit SPI TFT drivers; no-ops on I2C OLEDs).
+- Glyph columns beyond `xAdvance` are bit-consumed but not rendered — prevents bleed into adjacent characters.
+- `resetUTF8()` must be called before every `print()` in scroll widgets to prevent orphan UTF-8 bytes from corrupting the first glyph of the next frame.
 
 ---
 
-### Alternative: transliteration only (no new glyph)
+## Weather Descriptions (WMO Codes)
 
-If you just want an unfamiliar character to fall back to an ASCII approximation rather than a blank/space **without** adding a font glyph, add an entry to `LATIN_MAP[]` in `utf8_common.cpp` (do **not** add it to `LATIN_PRESERVE[]`):
+Weather condition text uses WMO (World Meteorological Organization) codes, not API language parameters. The `getWMODescription()` function in `network.cpp` maps WMO codes 0–99 to `L10nKey` enum values:
 
-```cpp
-// utf8_common.cpp — inside LATIN_MAP[]
-{0xC4, 0xBF, "L"},  // example: Ŀ -> "L"
-```
+| WMO Code | L10nKey | Example (en_US) |
+|---|---|---|
+| 0 | `L10N_MSG_W_CLEAR_SKY` | Clear sky |
+| 1-3 | `L10N_MSG_W_OVERCAST` | Overcast |
+| 45, 48 | `L10N_MSG_W_FOGGY` | Fog |
+| 51-57 | `L10N_MSG_W_DRIZZLE` | Drizzle |
+| 56-57 | `L10N_MSG_W_FREEZING_DRIZZLE` | Freezing drizzle |
+| 61-67 | `L10N_MSG_W_RAIN` | Rain |
+| 66-67 | `L10N_MSG_W_FREEZING_RAIN` | Freezing rain |
+| 71-77 | `L10N_MSG_W_SNOW` | Snow |
+| 77 | `L10N_MSG_W_SNOW_GRAINS` | Snow grains |
+| 80-82 | `L10N_MSG_W_RAIN_SHOWERS` | Rain showers |
+| 85-86 | `L10N_MSG_W_SNOW_SHOWERS` | Snow showers |
+| 95 | `L10N_MSG_W_THUNDERSTORM` | Thunderstorm |
+| 96, 99 | `L10N_MSG_W_THUNDERSTORM_HAIL` | Thunderstorm with hail |
 
-This is sufficient for characters whose script is already covered by the font script (e.g. an obscure Latin letter that should just render as its base letter).
+A `has_wmo` flag ensures code 0 ("Clear sky") is not confused with "no WMO data". The weather string is rebuilt whenever the locale changes via `buildWeatherString()` + `NEWWEATHER` request.
 
 ---
 
 ## How to Add a New Language
 
-1. **Copy an existing locale file** as a starting point:
+### Display locale
+
+1. **Create the display JSON:**
    ```
-   src/locale/displayL10n_en_US.h  →  src/locale/displayL10n_xx_XX.h
+   py display_tool.py xx_XX --create
+   ```
+   This copies `en_US.json` to `src/locale/display/xx_XX.json` with empty translation values.
+
+2. **Translate:**
+   ```
+   py display_tool.py xx_XX --translate --fast --clean --sort
+   ```
+   Uses DeepL auto-translation (requires `trans_deepl.key` setup). Alternatively, edit the JSON manually.
+
+3. **Rebuild `dsplocale.h`:**
+   ```
+   py src/locale/make_dsplocale.py
+   ```
+   This validates all files, generates the PROGMEM header, and updates the WebUI index.
+
+### WebUI locale
+
+1. **Create the www JSON:**
+   ```
+   py www_tool.py xx_XX --create
+   ```
+   Copies `src/locale/www/en_US.json` with empty values.
+
+2. **Translate:**
+   ```
+   py www_tool.py xx_XX --translate --fast --clean --sort
    ```
 
-2. **Translate all string constants** in the new file (day names, month names, weather labels, wind directions).
+3. **Rebuild `wwwlocale.h`:**
+   ```
+   py src/locale/make_wwwlocale.py
+   ```
+   Gzip-compresses all www JSONs into PROGMEM byte arrays.
 
-3. **Add an `#elif` branch** in `src/core/locale.h` with it's proper includes, codepage (font), weather language preference, etc. Try to keep it in alphabetic order.
+4. **Rebuild firmware** — both `dsplocale.h` and `wwwlocale.h` are compile-time includes.
 
-4. **Determine codepage.** If the language uses a Cyrillic script, make sure it's part of the `#elif` condition in `locale.h`. If it uses an unusual script not covered by either existing codepage, a new codepage and corresponding font would be needed.
-
-5. **Update `src/locale/l10n.md`** with the new entry in the languages table.
-
-6. **Add a WebUI locale JSON file** in `src/locale/webui/`. Copy `src/locale/webui/en_US.json` as a template, rename it to `{code}.json`, and translate all values. The build script (`platformio_pre_gzip_www.py`) will deploy can deploy a locale `.json` into `data/www/locale/` during the SPIFFS build.
-
-7. **Set a `DSP_LANGUAGE_xx_XX`** in `myoptions.h` and build... that is, use `#define DSP_LANGUAGE_de_DE` for German, `#define DSP_LANGUAGE_en_US` for English, etc.
-   *Optionally* also define `WEBUI_LANGUAGE` if you want the
-   WebUI to use a different locale than the display firmware.  If this
-   macro is omitted the web interface simply inherits `DSP_LANGUAGE`.
 ---
 
 ## WebUI i18n
 
-The WebUI served over Wi-Fi has its own runtime translation layer that operates independently of the compile-time firmware locale.
+The WebUI has its own runtime translation layer, independent of the firmware display locale.
 
 ### How it works
 
-1. **Language detection** — The server handles when the WebUI requests `locale.json` by redirecting to a `.json` on SPIFFS that coincides with the preferred locale code.  If the language selected is `en_US` and the HTML contains English, there is no `.json` to fetch so it reverts to built-in hardcoded text.
+1. **Language detection** — `script2.js` fetches `/locale.json` from the device. If the locale matches the hardcoded `HARDCODED_WEBUI_LOCALE`, the server returns 404 and built-in English text is used.
 
-If using a firmware with online updating enabled, this option is changeable and the appropriate `.json` file may be downloaded to SPIFFS (old files are deleted).  If online updating is disabled, then only two options will be available
+2. **`t(key, ...args)` helper** — looks up `key` in the loaded `i18n` object. Positional placeholders `{0}`, `{1}` are substituted with extra arguments.
 
-2. **`t(key, ...args)` helper** — looks up `key` in the loaded `i18n` object and returns the translated string. Positional placeholders `{0}`, `{1}` are substituted with extra arguments.
+3. **`applyI18n()` DOM walker** — queries every `[data-i18n]` element and replaces its text content (or `value`/`placeholder` for inputs) with `t(key)`.
 
-3. **`applyI18n()` DOM walker** — called after the JSON is loaded; it queries every `[data-i18n]` element and replaces its text content (or `value` / `placeholder` for inputs) with `t(key)`.
+4. **`data-i18n` attributes** — every translatable label in the HTML files carries a `data-i18n="key"` attribute with English fallback text as the element's default content.
 
-4. **`data-i18n` attributes** — every translatable label in `options.html`, `player.html`, `search.html`, `curated.html`, and `updform.html` carries a `data-i18n="key"` attribute with the fallback English text left as the element's default content.
+5. **Dynamic strings** — JS-generated text (OTA progress, update buttons, battery status) calls `t()` directly.
 
-5. **Dynamic strings** — JS-generated text (OTA progress messages, update-available button, redirect notice, battery status) calls `t()` directly in the event handler.
+6. **Battery status** — the firmware sends battery info as an English string; `script.js` parses and rebuilds it using `t()` keys.
 
-6. **Battery status** — the firmware sends battery info as an English string (`volt: Xmv, percentage: X%, status: Idle`). `script.js` parses this and rebuilds it using `t('lbl_batt_volt')`, `t('lbl_batt_percentage')`, `t('lbl_batt_status')`, and `t('st_batt_{state}')` keys, so the display language matches the rest of the UI without any firmware change.
+7. **CSS knob labels** — toggle switch text is set via CSS custom properties from `t('lbl_off')` / `t('lbl_on')`.
 
-7. **CSS knob labels** — the toggle switch on/off text is translated via CSS custom properties `--knob-off` and `--knob-on`, set from `t('lbl_off')` / `t('lbl_on')`.
+### PROGMEM serving
 
-### JSON locale files
+All WebUI locale data is compiled into `wwwlocale.h` as gzip-compressed PROGMEM byte arrays. The server serves:
 
-WebUI locale JSONs live in `src/locale/webui/` (co‑located with the
-firmware locale headers in the parent directory). The build script
-(`platformio_pre_gzip_www.py`) automatically copies whichever JSON is needed
-from that `webui` folder into `data/www/locale/` before the SPIFFS image is
-built. No JSON is deployed if using the language hardcoded into the HTML/JS files.
+| Route | Content | Header |
+|---|---|---|
+| `/locale.json` | Gzip-compressed locale JSON | `Content-Encoding: gzip` |
+| `/wwwlocale.json` | Locale index (native names) | `application/json` |
+| `/dsplocale.json` | Display locale index | `application/json` |
 
-Locale JSON files in `src/locale/` are named using just the
-BCP‑47 language code (e.g. `en_US.json`, `ru_RU.json`). The build script
-copies the selected file directly to `data/www/locale/<code>.json` when
-building the filesystem image. The loaders in the javascript files request
-`locale.json` but the firmware serves whichever json file is currently
-selected by the user (or none if the hardcoded language is selected).
+No SPIFFS files are needed — everything is zero-RAM PROGMEM.
+
+### JSON source files
+
+WebUI locale JSONs live in `src/locale/www/`.
 
 | File | Purpose |
 |---|---|
-| `src/locale/webui/en_US.json` | Master key reference — all keys with English values (not deployed to device) |
-| `src/locale/webui/lt_LV.json` | Latvian translation (example of a complete translation) |
-
-To add a new language, copy `src/locale/webui/en_US.json`, rename it to
-`<code>.json` (matching the BCP‑47 code in `_langCodes[]` in `script.js`),
-translate all values, and run `make_data_www_locales_json.py` to generate the
-`locales.json` file which is used to select the WebUI locale. Untranslated keys fall
-back to displaying the text that has been hardcoded into the HTML and JS files.
+| `src/locale/www/en_US.json` | Master key reference |
+| `src/locale/www/ru_RU.json` | Russian translation example |
 
 ### Key categories
 
@@ -413,52 +286,46 @@ back to displaying the text that has been hardcoded into the HTML and JS files.
 
 ---
 
-## Several Python tools in `locale/` assist with `.json` file work:
+## Developer Tools
+
+### Build tools
 
 | Tool | Purpose |
 |---|---|
-| `scan_www_check_json.py` | Checks `.html` and`.js` files in the `data/www` folder against a `.json` file for keys - can automatically translate, add, sort, and delete missing keys |
-| `hardcode_locale_to_webui.py` | This can replace all text in `.html` and`.js` files in the `data/www` folder using a locale `.json` file... will also update `#define HARDCODED_WEBUI_LOCALE` in `locale.h` to make sure the radio knows what it's hardcoded language is |
-| `make_data_www_locales_json.py` | Generates `locales.json` in the `data/www` folder using a list of all `.json` files for the locales dropdown selector in the Web UI |
+| `make_dsplocale.py` | Validates display JSONs, generates `dsplocale.h` PROGMEM header |
+| `make_wwwlocale.py` | Validates www JSONs, gzip-compresses into `wwwlocale.h` PROGMEM header |
+| `hardcode_locale_to_webui.py` | Replaces all text in `data/www` files using a locale `.json`; updates `#define HARDCODED_WEBUI_LOCALE` |
 
-### Translation Assistance to `scan_www_check_json.py`:
-| `scan_trans_deepl.py` | Assists in auto-translating for `scan_www_check_json.py` using DeepL |
-| `scan_trans_deepl.md` | Contains instructions for installing and signing up to use DeepL |
-| `scan_trans_deepl.key` | Make this file and put your API Key in here (`*.key` already in `.gitignore`) |
+### Maintenance tools
 
-You can test it out with:
-`py scan_trans_deepl.py en_US de_DE Hello`
+| Tool | Purpose |
+|---|---|
+| `www_tool.py` | Scan HTML/JS for i18n keys, check/add/translate/sort/clean www locale JSONs. Use `--create` to create new locale from `en_US`. |
+| `display_tool.py` | Manage display JSONs against master (`en_US.json`). Sort uses master key order. Clean never touches master. `--create` copies master with empty values. |
+| `trans_deepl.py` | Auto-translation via DeepL API |
+| `trans_deepl.md` | Setup instructions for DeepL (API key, installation, usage) |
 
-It should output:
-`Hallo`
+### Translation discovery
 
-An input with special characters may require quotes:
-`py scan_trans_deepl.py en_US de_DE "Hello. Is it me you're looking for?"`
+`www_tool.py` and `display_tool.py` automatically discover translation services by scanning for `trans_*.key` files paired with `trans_*.py` scripts. To add another translation API, create `trans_<api>.py` and `trans_<api>.key` matching the same command-line structure:
 
-It should output:
-`Hallo. Suchst du nach mir?`
+```bash
+py trans_deepl.py en_US de_DE "Hello"   # → Hallo
+```
 
-Note that most APIs may normalize punctuation (quotes, apostrophes) as it's designed for natural language translation, not exact character preservation.
+### Font conversion
 
-For UI translations, this is rarely an issue as most strings don't contain literal quote marks.
-
-### Adding Another API
-
-This can be used to harness another translation API... just make a python script that matches the naming scheme of `scan_trans_*.py` works (with the API name as the `*`).
-
-The script `scan_www_check_json.py` scans for `scan_trans_*.py` scripts and will use whichever file has a matching `scan_trans_*.key` file.
-
-If making a script that uses a translation API, make sure it has the same commandline and output structure as shown above.
-
-It should also handle `HTTP 429 "Too Many Requests" errors` gracefully.
+The BDF→GFXfont converter is `src/displays/fonts/bdf2adafruit3.py`. It converts `.bdf` bitmap font files into Adafruit GFXfont format (`.h` header with PROGMEM bitmaps, glyph table, and font struct).
 
 ---
 
-## Two Python GUI tools in `locale/glcdfont/glyph_scripts/` assist with font glyph work:
+## Legacy: GLCD Font System (Removed)
 
-| Tool | Purpose |
-|---|---|
-| `glyph_creator_gui.py` | Create and edit individual glyph bitmaps in the Adafruit GLCD format. Supports importing and exporting `.c` font files. |
-| `glyph_compare_gui.py` | Visually compare two glyph sets side-by-side. Useful for auditing differences between `glcdfont_Latin.c` and `glcdfont_Cyrillic.c`. |
+Prior versions used a 256-slot `glcdfont` system with codepage-based font swapping:
 
-See `scripts.md` in the same folder for usage instructions.
+- `glcdfont_Latin.c` — Latin extended glyphs in slots 0x80–0xFF
+- `glcdfont_Cyrillic.c` — Cyrillic glyphs in the same slots
+- `platformio_pre_replace_font.py` — swapped the `.c` file at build time based on `L10N_CP_LATIN` / `L10N_CP_CYRILLIC`
+- `utf8To()`, `shouldPreserveChar()`, `canRenderNative()` — filtered characters to what the active codepage could display
+
+This system has been replaced by the Unicode GFXfont pipeline described above. The old `glcdfont/` directory, `utf8To.*`, `utf8_common.*`, `utf8Latin.*`, and `utf8Cyrillic.*` files are retained for reference but are no longer compiled into builds.

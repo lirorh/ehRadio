@@ -42,9 +42,9 @@ especially in terms of how they are used and how they are built.
 | - up to 2 rotaries and 6 buttons              | - same |
 | - touchscreen control (basic swipes and taps) | - same | 
 | - IR remote control                           | - same |
-| - Nextion uses advanced control               | - Nextion support is incomplete or broken |
+| - Nextion uses advanced control               | - Nextion support removed |
 | Must be flashed using VS Code / Arduino IDE   | Web flasher & Internet OTA updates make getting a new version easy-peasy |
-| English or Russian display                    | 37 Display languages (Latin & Cyrillic) (builder's choice)
+| English or Russian display                    | 36 Display languages (using a single Unicode font) (easily changeable)
 | MQTT, Telnet, HTTP                            | MQTT, Telnet, HTTP |
 | - mostly used for playback                    | - all WebUI commands are available |
 | Home Assistant integration (through MQTT)     | Home Assistant integration (through MQTT) - improved |
@@ -53,7 +53,8 @@ especially in terms of how they are used and how they are built.
 | - edit/import/export playlists                | - edit/import/export/merge playlists |
 | - English UI                                  | - 50 Languages (easily changeable)
 |                                               | - easy to locate with [ehDP](https://github.com/trip5/eh-Device-Scanner) |
-|                                               | - Radio Station search using Radio-browser API | 
+|                                               | - Radio Station search using Radio-browser API |
+|                                               | - Playlists can be shared via [webstations](https://github.com/trip5/webstations) |
 |                                               | - Curated lists can download/merge/preview other playlists |
 
 ### Features For Builders
@@ -61,7 +62,7 @@ especially in terms of how they are used and how they are built.
 | ёRadio | ehRadio |
 | ------ | --------|
 | Primarily focused on ESP32                           | Primarily focused on ESP32-S3 |
-| - 4MB of flash is fine                               | - 8MB flash recommended, 4MB certain features will break (until fixed) |
+| - 4MB of flash is fine                               | - 8MB flash recommended, 4MB possible but will break features |
 | - ESP-WROVER has PSRAM, works better                 | - ESP-WROVER with PSRAM probably supported but untested |
 | - ESP32-WROOM has no PSRAM but still functions       | - ESP32-WROOM likely doesn't work at all |  
 | - Some support for ESP32-S3 and ESP32-C3             | - ESP32-S3 well-tested, ESP32-C3 untested |
@@ -69,7 +70,7 @@ especially in terms of how they are used and how they are built.
 | - I2S PCM decoder                                    | - I2S and VS1053 updated (for higher bitrate streams) |
 | - VS1053 (or VS1003)                                 | - ES8311 works (a common codec on ESP32-S3 display boards) |
 | - ESP32's builtin DAC                                |   |
-| Multiple displays                                    | Uses 'ёRadio' display architecture |
+| Multiple displays                                    | Based on 'ёRadio' display architecture |
 | - see `options.h` for a full list                    | - ёRadio and ehRadio display configs should be compatible with each other |
 | SPI buses use default pins                           | SPI buses can use custom pins |
 | - SPI display and VS1053 can only use VSPI or HSPI   | - non-standard bus pins may be assigned to Bus A or B |
@@ -81,14 +82,6 @@ especially in terms of how they are used and how they are built.
 
 ---
 
-## Controls
-
-ehRadio can be built with various control methods, including rotary encoders, buttons, an IR receiver, touchscreen, WebUI, Home Assistant, MQTT, Telnet, and HTTP.
-
-Information on how the controls function detailed are [here](Controls.md).
-
----
-
 ## WebUI
 
 The WebUI is optimized for mobile browsers but looks great on PCs, too.
@@ -96,6 +89,60 @@ The WebUI is optimized for mobile browsers but looks great on PCs, too.
 ![image](images/Screenshot_Player.jpg)
 
 More screenshots from the WebUI are [here](WebUI.md).
+
+---
+
+## Hardware Choices
+
+There are many considerations to make when building a radio.
+
+### ESP Board
+
+I personally build with ESP32-S3 boards.  I recommend using an S3 board with at least 2MB of PSRAM and 8MB of flash.
+
+This code may still run on an ESP32 but without at least 1MB of PSRAM will have serious issues.
+
+I recommend choosing a board which has the option of an external antenna.
+
+### Display
+
+ILI9488 is big but uses a 24-bit bus so can be slow to update (so choose the ST7796 if you want a display that updates faster).
+
+SPI color TFT displays all look pretty good.
+
+OLEDs are cheap, beautiful and just as functional (SPI or I2C doesn't matter).
+
+### Audio Decoder
+
+VS1053b can be a tricky decoder to buy - some are sold as VS1003/1053 which are almost certainly a VS1003.
+Genuine VS1053 is usually $10 minimum. Shop carefully and don't buy the cheapest one.
+
+The VS1053's advantage is that it takes pressure off the CPU and decodes streams on-board.
+It also has an amplifer. For the VU Meter to function, the patch MUST be enabled.
+Even with the patch, though, it cannot decode FLAC streams and some other "unusal" stream types.
+
+A VS1003 will still be functional for MP3 stations but not much else. It cannot use the patch.
+
+I2S Decoders use the CPU to decode data so it can be used with many types of streams.
+It does put pressure on the CPU so it does have trouble running with large SPI displays.
+I have done my best to mitigate that but it is what is.
+
+I2S decoders are cheap and plentiful and I don't think anyone has ever worrried about buying a fake..
+
+A good I2S Decoder is the PCM5102. The UDA1334 should work and there are likely others.
+
+You will need an amplifer when building with a DAC like these. I have used the PAM8406.
+PAM IC amps are generally easy to work with but... your mileage will vary.
+
+The ES8311 is a mono I2S decoder included on some dev board / display combos.  It's not terrible.
+
+### Controls
+
+ehRadio can be built with various control methods, including rotary encoders, buttons, an IR receiver, touchscreen, WebUI, Home Assistant, MQTT, Telnet, and HTTP.
+
+The most basic physical control is a rotary encoder.  All functions can be accomplished with just one encoder.
+
+Information on how the controls function detailed are [here](Controls.md).
 
 ---
 
@@ -245,6 +292,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
+| 2026.06.28 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional),  |
 | 2026.06.18 | WebUI files now served from PSRAM cache (if available) which eliminates audio stuttering for I2S decoders, adjustments to PSRAM-related code, rotary encoders fix |
 | 2026.06.15 | SPI fixed so SPI Display and VS1053 are possible, SD fixes, Wi-fi reconnect smarter, generator indicates safe pins |
 | 2026.06.08 | Fixed Search/Curated additions corrupting the playlist, changing stations faster, connect errors fail faster, safe mode entered after unsuccessful boot (disables smartstart, autoupdate) |
@@ -274,7 +322,7 @@ A full history of ёRadio from v0.4.177 to v0.9.533 can be seen in the [old Read
 ### Credit
 
 Thanks to:
-
-  - [Kasperaitis](https://github.com/kasperaitis) - for work initiating locales (WebUI and display language, display fonts, etc.) and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
+  - [https://github.com/kle7rx] - `ru_RU` translation and debugging
+  - [Kasperaitis](https://github.com/kasperaitis) - `lt_LT` translation, initiating locales (WebUI and display language) and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
   - [e2002](https://github.com/e2002) - for [ёRadio](https://github.com/e2002/yoradio/) without which ehRadio would not be possible
 

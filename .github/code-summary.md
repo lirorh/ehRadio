@@ -21,7 +21,7 @@ This document is intentionally per-file focused for:
 Grouped (not one-by-one deep explained) areas:
 - `src/displays/display*.cpp/.h` (drivers follow similar shape)
 - `src/displays/conf/*.h` (widget placement/config pattern files)
-- `src/displays/ehfonts/*` (font assets)
+- `src/displays/clockfonts/*` (font assets)
 
 ---
 
@@ -151,7 +151,6 @@ This codebase is strongly compile-time modular. Runtime behavior can differ sign
   - Conf files no longer define DSP_WIDTH/DSP_HEIGHT (set upstream in options.h).
   - **Removed enum values** (collapsed into resolution variants): DSP_ST7789_240, DSP_ST7789_76, DSP_SSD1306x32, DSP_SSD1305I2C, DSP_1602I2C, DSP_2004I2C, DSP_SSD1327_64. I2C variants detected by `I2C_SDA` and `I2C_SCL`.
   - ST7735 DTYPE still required for library; resolution auto-derived from DTYPE in displayST7735.h.
-  - Nextion is a special path (`src/displays/nextion.cpp`) with its own command protocol and UI assumptions.
 - Network/update features:
   - some online update and service behavior is compiled out by feature flags.
 - MQTT, touch, RTC, SD, battery helper behavior:
@@ -664,8 +663,6 @@ All modules in `src/core/` follow the **class + global instance** pattern:
   - `SliderWidget` buffer/volume bar rendering now repaints the full inner area each update to avoid stale pixels after page/mode transitions.
 - `src/displays/widgets/pages.h`, `pages.cpp`
   - page and pager composition framework.
-- `src/displays/nextion.h`, `nextion.cpp`
-  - Nextion display integration path.
 
 ## Display driver files (`src/displays/display*.h/.cpp`)
 - Similar pattern:
@@ -707,8 +704,42 @@ Purpose:
 - display utility support
 
 ## Display fonts/assets
-- `src/displays/ehfonts/*` for digit/font assets.
-- `font15.h` is wired for 128x64 mono-OLED clock paths (SH1106/SH1107, SSD1306 128x64, SSD1305). Clock font dispatch headers now live under `src/displays/ehfonts/` (`font15.h`, `font19.h`, `font35.h`, `font52.h`, `font70.h`), and DS_DIGI/Chunky6 families also live there (`src/displays/ehfonts/DS_DIGI/`, `src/displays/ehfonts/Chunky6/`). `font15.h` maps CHUNKY6 modes directly to Chunky6_15 variants; `font19.h` is retained for possible future use. For clock rendering fallback, widgets now force `CLOCKFONT5x7` when `TIME_SIZE<15`, or when `TIME_SIZE==15` with `CLOCKFONT` set to `YO_MONO` or `YO_CLASSIC`.
+- `src/displays/clockfonts/*` for digit/font assets.
+- `font15.h` is wired for 128x64 mono-OLED clock paths (SH1106/SH1107, SSD1306 128x64, SSD1305). Clock font dispatch headers now live under `src/displays/clockfonts/` (`font15.h`, `font19.h`, `font35.h`, `font52.h`, `font70.h`), and DS_DIGI/Chunky6 families also live there (`src/displays/clockfonts/DS_DIGI/`, `src/displays/clockfonts/Chunky6/`). `font15.h` maps CHUNKY6 modes directly to Chunky6_15 variants; `font19.h` is retained for possible future use. For clock rendering fallback, widgets now force `CLOCKFONT5x7` when `TIME_SIZE<15`, or when `TIME_SIZE==15` with `CLOCKFONT` set to `YO_MONO`.
+
+## GFXfont Rendering Pipeline (`src/displays/tools/commongfx.h`, `psframebuffer.h`)
+
+`DspCore::_writeGlyph(uint16_t cp)` is the central glyph renderer replacing the legacy 256-slot glcdfont system. Key behaviors:
+
+- **Dispatch:** When `gfxFont != NULL && gfxFont != &DisplayFont` (a special clock font is active), delegates to `Adafruit_GFX::write()` which uses the font's native `drawChar`. Otherwise renders via `&DisplayFont` (the configured Unicode GFXfont).
+- **Icon rendering:** Codepoints `0x01-0x1F` map to `ICON_TABLE[]`; rendered with `startWrite()`/`endWrite()` wrapping (needed for Adafruit SPI TFT drivers).
+- **Font glyph rendering:** Similarly wrapped in `startWrite()`/`endWrite()`. The inner loop iterates all `width` bitmap columns but only renders columns where `(xOffset + xx) < xAdvance` — prevents glyph bleed beyond the cell boundary (fixes colon/digit overlap on SH1106 YO_MONO). Bleed columns have their bits consumed from the bitmap stream but are not rendered.
+- **Space handler:** Advances cursor by the font's first-glyph `xAdvance` without drawing pixels.
+- **Unrenderable fallback:** Falls through `foldAccent()`; if still unmapped, advances cursor by the font's `xAdvance` (blank space).
+- **`psframebuffer.h`** mirrors the same `_writeGlyph` logic for PSRAM-framebuffer TFT displays.
+
+Important rendering invariants:
+- Never call `startWrite()`/`endWrite()` in `write()` or `writePixel`/`writeFillRect` overrides — SPI nesting causes hangs on Adafruit TFT drivers.
+- The `gfxFont == NULL` case (YO_MONO / display font) runs through `_writeGlyph` using DisplayFont, NOT the built-in glcdfont. This means glyph metrics (yAdvance, yOffset, xAdvance) come from DisplayFont.
+
+## Screen Rendering Fixes (Session: SH1106 YO_MONO)
+
+### ClockWidget colon blink (widgets.cpp)
+- The seconds-area `fillRect` at line 813 is guarded by `if (Clock_GFXfontPtr != NULL)` — its Y-position formula (`_top() - _timeheight + _space`) is only correct for special clock fonts; YO_MONO renders at `_top()` directly and the fillRect would clear into title rows.
+
+### Screensaver clock boundaries (display.cpp, widgets.h)
+- `minTop = max(TFT_FRAMEWDT, _clock->timeHeight())` — for framebuffer displays, `_config.top - _timeheight` must stay >= 0 to avoid framebuffer clipping above the display.
+- `maxTop = dsp.height() - clockH - TFT_FRAMEWDT` — was missing the `-clockH` term, allowing the clock to render partially off-screen.
+- Movement interval now uses `% SCREENSAVERMOVE` (default 5 seconds) instead of hardcoded `% 60`.
+- `ClockWidget::timeHeight()` accessor added to expose `_timeheight`.
+
+### NumWidget volume-digit clearing (widgets.cpp)
+- YO_MONO clear height: `realth = _textheight * CHARHEIGHT` (was OLED-only; now applies to all displays with `Clock_GFXfontPtr == NULL`).
+- Special-font clear height: `realth = _textHeight() + 1` — uses the font's actual glyph height + 1px margin, matching `_clearClock()`'s pattern.
+
+### Font directory renamed
+- `src/displays/ehfonts/` → `src/displays/clockfonts/`
+- `YO_CLASSIC` removed as a clock font option (variable-width variant of YO_MONO that broke layout assumptions).
 
 ---
 
@@ -761,8 +792,6 @@ A board-aware multiplier scales all five user-configurable FreeRTOS task stacks 
 - `searchWiFi` (WiFi connection/retry loop) is pinned to `NETWORK_CORE`.
 - `retryStreamConnection` (post-disconnect reconnect) is pinned to `NETWORK_CORE`.
 
-#### `src/displays/nextion.cpp`
-- `nextionCore0` is pinned to `NETWORK_CORE` explicitly (previously used `!xPortGetCoreID()` which unsafely resolved to Core 0 at runtime — now fixed).
 
 #### `src/core/netserver.cpp` — `netserverLoopTask` + all utility tasks pinned to `NETWORK_CORE`
 - `netserverLoopTask` (started by `NetServer::startLoopTask()`, called from `main.cpp` after each `netserver.begin()`) is pinned to `NETWORK_CORE`. It is the sole caller of `netserver.loop()`.
@@ -787,7 +816,6 @@ Stack sizes and priorities are controlled by macros in `src/core/options.h` (`/*
 | `loopTask` | main.cpp | `LOOP_TASK_STACK_SIZE` KB (8 / 16) | 1 (framework) | Arduino loop(); `SET_LOOP_TASK_STACK_SIZE()` applies at boot |
 | `DspTask` | display.cpp | `DSP_TASK_STACK_SIZE` KB (4 / 8) | `DSP_TASK_PRIORITY` (2) | — |
 | `netserverLoopTask` | netserver.cpp | `NETSERVER_TASK_STACK_SIZE` KB (4 / 8) | `NETSERVER_TASK_PRIORITY` (2) | — |
-| `nextionCore0` | nextion.cpp | `NEXTION_TASK_STACK_SIZE` KB (3 / 6) | `NEXTION_TASK_PRIORITY` (2) | Nextion display only |
 | `doSync` | network.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `LOW_TASK_PRIORITY` (1) | Time/weather sync |
 | `searchWiFi` ×2 | network.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `NET_TASK_PRIORITY` (3) | — |
 | `retryStreamConnection` | network.cpp | `NETWORK_TASK_STACK_SIZE` KB (4 / 8) | `NET_TASK_PRIORITY` (3) | Post-disconnect reconnect |
@@ -821,10 +849,8 @@ Implementation:
 
 This section calls out hardware implementations that diverge from the common code path and are more likely to regress.
 
-## Nextion (`src/displays/nextion.cpp/.h`)
 - Separate serial protocol parser and command emitter (`^...$` framed messages).
 - Uses dedicated queue and task loop; does not behave like generic TFT/OLED widget drivers.
-- Has direct config mutation paths (volume/EQ/timezone/wifi writes) from Nextion events.
 - Includes an explicit maintainer warning in file header about potential breakage.
 - Risk notes:
   - page/component names are hardcoded strings, so HMI/editor changes can silently break firmware integration.
@@ -894,29 +920,31 @@ These are **not** third-party packages installable via PlatformIO's registry. Th
 ## Locale and Translation Map (`src/locale`)
 
 ## `src/core/locale.h` (selector)
-- compile-time locale selection and weather language fallback mapping.
-- `WEBUI_LOCALE` default behavior and hardcoded locale fallback constants.
+- Thin include wrapper: includes `dsplocale.h` and defines `WEBUI_LOCALE` from `DSP_LOCALE` if not overridden.
+- `_activeLocale` runtime index (set from `config.store.locale_display`), `l10n()` / `l10n_dow()` / `l10n_month()` / `l10n_wind()` helpers.
+- `l10n_findLocale()` resolves locale code to array index at runtime.
 
-## Display locale files (`src/locale/displayL10n_*.h`)
-- one file per display locale string set.
-- used via `LANG::` namespace throughout display/system text.
+## Display locale files (`src/locale/display/*.json`)
+- 36 JSON source files (one per locale), compiled via `make_dsplocale.py` into `dsplocale.h` PROGMEM mega-header.
+- Master key set defined by `en_US.json` (67 keys: days, months, wind, weather, status labels).
+- `static_assert` validates `DSP_LOCALE` at compile time against known locale codes.
+- `dsplocale_index` PROGMEM string served at `/dsplocale.json` for WebUI dropdown.
 
-## WebUI locale files (`src/locale/webui/*.json`)
-- one JSON per WebUI language.
-- consumed by `data/www/locale.js`.
+## WebUI locale files (`src/locale/www/*.json`)
+- 50 JSON source files, compiled via `make_wwwlocale.py` into `wwwlocale.h` PROGMEM (gzip-compressed byte arrays).
+- Served from PROGMEM at `/locale.json` (with `Content-Encoding: gzip`) and `/wwwlocale.json` (index).
+- No SPIFFS files needed — all locale data is compile-time embedded.
 
-## Locale docs/scripts
-- `src/locale/l10n.md`: locale listing matrix.
-- `src/locale/localization-guide.md`: full localization/font pipeline doc.
-- `src/locale/make_data_www_locales_json.py`: regenerate `locales.json`.
-- `src/locale/scan_www_check_json.py`: check i18n key consistency.
-- `src/locale/hardcode_locale_to_webui.py`: bake locale text into WebUI assets.
-- `src/locale/scan_trans_deepl.py` and notes: translation helper.
+## Locale build tools
+- `src/locale/make_dsplocale.py`: validates display JSONs, generates `dsplocale.h` with PROGMEM string tables + enum.
+- `src/locale/make_wwwlocale.py`: validates webui JSONs, gzip-compresses into `wwwlocale.h` PROGMEM byte arrays.
+- `src/locale/hardcode_locale_to_webui.py`: bake locale text into WebUI assets (for `HARDCODED_WEBUI_LOCALE`).
 
-## GLCD font files
-- `src/locale/glcdfont/glcdfont_Latin.c` / `glcdfont_Cyrillic.c` / docs.
-- `glcdfont-lib.c` for base/reference.
-- glyph tool scripts under `src/locale/glcdfont/glyph_scripts`.
+## Locale maintenance tools
+- `src/locale/www_tool.py` (was `scan_www_check_json.py`): scan HTML/JS for i18n keys, check/add/translate/sort www locale JSONs. Supports `--create`.
+- `src/locale/display_tool.py` (NEW): manage display JSONs against master. Sort uses master key order (never alphabetizes). Clean never touches master. Supports `--create`.
+- `src/locale/trans_deepl.py` (was `scan_trans_deepl.py`): DeepL translation module. Uses `trans_*.key` discovery pattern (was `scan_trans_*.key`).
+- `src/locale/trans_deepl.md` (was `scan_trans_deepl.md`): DeepL setup + usage docs.
 
 ---
 
@@ -939,7 +967,7 @@ This section is specifically for adding/removing settings and avoiding missed li
 7. Add WebUI wiring:
    - element in `data/www/settings.html` with id and `data-command`.
    - fallback label text + `data-i18n` key.
-   - add i18n key in `src/locale/webui/en_US.json` (and optionally others).
+   - add i18n key in `src/locale/www/en_US.json` (and optionally others).
 8. Ensure websocket UI apply path exists in `data/www/script.js`:
    - `setupElement(...)` supports element type/id.
    - incoming `GET*` payload key matches DOM element id or custom handler.
@@ -956,7 +984,7 @@ This section is specifically for adding/removing settings and avoiding missed li
 3. Remove UI controls and JS references.
 4. Remove from `config_t` + `keyMap`.
 5. Add removed key to `Config::deleteOldKeys()` if old persisted value should be cleaned.
-6. Remove locale keys from `src/locale/webui/en_US.json` (and regenerate/check).
+6. Remove locale keys from `src/locale/www/en_US.json` (and regenerate/check).
 7. Check telnet/mqtt code paths for orphan logic.
 8. Update this file.
 

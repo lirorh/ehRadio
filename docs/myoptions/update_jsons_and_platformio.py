@@ -30,10 +30,10 @@ SCRIPT_DIR = pathlib.Path(__file__).parent.resolve()
 TIMEZONE_SRC = SCRIPT_DIR / '../../data/www/timezones.json'
 
 # Webui locale JSON files (one per locale, each contains locale_code / locale / locale_en)
-WEBUI_LOCALE_DIR = SCRIPT_DIR / '../../src/locale/webui'
+WEBUI_LOCALE_DIR = SCRIPT_DIR / '../../src/locale/www'
 
-# Directory containing displayL10n_*.h files - used to filter available locales
-LOCALE_H_DIR = SCRIPT_DIR / '../../src/locale'
+# Directory containing display/*.json files - used to filter available locales (only include locales that have BOTH webui AND display translations)
+DISPLAY_LOCALE_DIR = SCRIPT_DIR / '../../src/locale/display'
 
 # Output files (written next to this script, i.e. into docs/myoptions/)
 TIMEZONE_OUT = SCRIPT_DIR / 'timezones.json'
@@ -78,20 +78,20 @@ def update_timezones():
 
 def update_locale():
     webui_dir = WEBUI_LOCALE_DIR.resolve()
-    h_dir     = LOCALE_H_DIR.resolve()
+    display_dir = DISPLAY_LOCALE_DIR.resolve()
 
     if not webui_dir.exists():
         print(f'ERROR: webui locale directory not found:\n  {webui_dir}')
         return False
-    if not h_dir.exists():
-        print(f'ERROR: locale .h directory not found:\n  {h_dir}')
+    if not display_dir.exists():
+        print(f'ERROR: display locale directory not found:\n  {display_dir}')
         return False
 
-    # Collect all .h filenames directly inside LOCALE_H_DIR (not subdirs)
-    h_filenames = {
+    # Collect all .json filenames in display directory (e.g., be_BY.json, en_US.json)
+    display_filenames = {
         f.name
-        for f in h_dir.iterdir()
-        if f.is_file() and f.suffix == '.h'
+        for f in display_dir.iterdir()
+        if f.is_file() and f.suffix == '.json'
     }
 
     entries = []
@@ -121,11 +121,9 @@ def update_locale():
             print(f'  WARNING: no locale_code in {json_file.name}, skipping')
             continue
 
-        # Only include this locale if a .h filename in LOCALE_H_DIR contains
-        # the locale code string anywhere in the filename.
-        # e.g. "be_BY" matches "displayL10n_be_BY.h"
-        has_h = any(code in fname for fname in h_filenames)
-        if not has_h:
+        # Only include this locale if a matching .json exists in the display directory.
+        # e.g. "be_BY" matches "be_BY.json" in src/locale/display/
+        if f'{code}.json' not in display_filenames:
             skipped.append(code)
             continue
 
@@ -136,7 +134,7 @@ def update_locale():
         })
 
     if skipped:
-        print(f'  Skipped (no .h file found): {", ".join(skipped)}')
+        print(f'  Skipped (no matching display .json): {", ".join(skipped)}')
 
     # Build output text that exactly matches the original locale.json format:
     #

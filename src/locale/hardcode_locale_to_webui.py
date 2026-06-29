@@ -32,7 +32,7 @@ from pathlib import Path
 
 def load_translations(locale_code):
     """Load translations from the specified locale JSON file"""
-    locale_path = Path(__file__).parent / 'webui' / f'{locale_code}.json'
+    locale_path = Path(__file__).parent / 'www' / f'{locale_code}.json'
     
     if not locale_path.exists():
         print(f"Error: Locale file not found: {locale_path}")

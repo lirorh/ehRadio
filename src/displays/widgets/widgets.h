@@ -206,11 +206,13 @@ class ClockWidget: public Widget {
     using Widget::init;
     void init(WidgetConfig wconf, uint16_t fgcolor, uint16_t bgcolor);
     void draw();
+    void forceDraw() { _draw(); }
     uint8_t textsize(){ return _config.textsize; }
     void clear(){ _clearClock(); }
     inline uint16_t dateSize(){ return _space+ _dateheight; }
     inline uint16_t clockWidth(){ return _clockwidth; }
     inline uint16_t clockHeight(){ return _clockheight; }
+    inline uint16_t timeHeight(){ return _timeheight; }
   private:
   #ifndef DSP_LCD
     Adafruit_GFX &getRealDsp();

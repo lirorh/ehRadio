@@ -4,7 +4,7 @@
     <div class="navigation group group_system hidden" id="navigation">
       <div class="navitem group group_system hidden" data-target="group_system" data-i18n="ttl_system">System</div>
       <div class="navitem group group_battery hidden" data-target="group_battery" data-i18n="ttl_battery">Battery</div>
-      <div class="navitem group group_display group_nextion hidden" data-target="group_display" data-i18n="ttl_screen">Screen</div>
+      <div class="navitem group group_display hidden" data-target="group_display" data-i18n="ttl_screen">Screen</div>
       <div class="navitem group group_controls hidden" data-target="group_controls" data-i18n="ttl_controls">Controls</div>
       <div class="navitem group group_locale hidden" data-target="group_locale" data-i18n="ttl_locale">Locale</div>
       <div class="navitem group group_wifi hidden" data-target="group_wifi" data-i18n="ttl_wifi">Wi-Fi</div>
@@ -94,7 +94,7 @@
           </div>
         </section>
         <a name="screen"></a>
-        <section class="group group_display group_oled group_nextion hidden" id="group_display">
+        <section class="group group_display group_oled hidden" id="group_display">
           <div class="title"><span data-i18n="ttl_screen">Screen</span></div>
           <div class="reset" data-name="screen" title="reset"></div>
           <div class="flex-row group_tft hidden">
@@ -146,7 +146,7 @@
             </div>
           </div>
           <div class="row-title"><span data-i18n="ttl_screensaver">Screensaver</span></div>
-          <div class="flex-row group group_tft group_oled group_nextion hidden">
+          <div class="flex-row group group_tft group_oled hidden">
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_while_not_playing">While Not Playing</span>
               <div class="checkbox ssoption" id="scre" data-command="screensaverenabled"><div class="knob"></div></div>
@@ -160,7 +160,7 @@
               <input type="number" id="scrt" data-command="screensavertimeout" value="" maxlength="3" min="5" max="65520" />
             </div>
           </div>
-          <div class="flex-row group group_tft group_oled group_nextion hidden">
+          <div class="flex-row group group_tft group_oled hidden">
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_while_playing">While Playing</span>
               <div class="checkbox ssoption" id="scrpe" data-command="screensaverplayingenabled"><div class="knob"></div></div>
@@ -223,7 +223,7 @@
             <div class="inputwrap pad">
               <span class="inputtitle" data-i18n="lbl_enc_acc">Rotary Encoder Acceleration</span>
               <span class="inputinfo" id="slencaccelerationinfo">0</span>
-              <input type="range" id="enca" data-command="encacc" data-slaveid="slencaccelerationinfo" min="0" max="700" value="200">
+              <input type="range" id="enca" data-command="encacc" data-slaveid="slencaccelerationinfo" min="0" max="7" value="0">
             </div>
           </div>
           <div class="flex-row group group_ir hidden">
@@ -251,7 +251,9 @@
             </div>
             <div class="inputwrap">
               <span class="inputtitle" data-i18n="lbl_display_locale">Display Locale</span>
-              <input type="text" id="locale_disp" name="locale_disp" maxlength="50" readonly="readonly" />
+              <select type="text" id="locale_disp" name="locale_disp">
+                <option value="">Locales Load Here</option>
+              </select>
             </div>
           </div>
           <div class="flex-row">
@@ -546,7 +548,7 @@
         <div class="hr">&nbsp;</div>
       </div>
     </div><!--playerwrap-->
-    <div class="fb done group group_system hidden" data-name="settingsdone" id="settingsdone" data-i18n="btn_done">done</div>
+    <div class="fb done group group_system hidden" data-name="settingsdone" id="settingsdone" data-i18n="btn_done">Done</div>
     <div id="copy">powered by <a target="_blank" href="https://github.com/trip5/ehRadio/">ehRadio</a> |
       <span id="version"></span>
       <span id="update_available" class="hidden">| <a href="/update.html" data-i18n="msg_update_available">Update Available</a></span>

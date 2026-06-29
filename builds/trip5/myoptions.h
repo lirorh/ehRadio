@@ -225,6 +225,9 @@
   #if defined(SH1106_PCM_REMOTE)
     #define ENC_STEPS          4
   #endif
+  #if defined(ILI9488_VS1053_1BUTTON)
+    #define VS_PATCH_ENABLE true
+  #endif
 #elif defined(SH1106_PCM_1BUTTON)
   #define ENC_CLK            7
   #define ENC_DT             15
@@ -337,12 +340,27 @@
 
 /* --- Debug? --- */
 //#define CORE_MONITOR
-//#define ALL_DEBUG_LOGS
+#define ALL_DEBUG_LOGS
 
 /* --- Clock Fonts --- */
 // CHUNKY6_PX is default...
 //#define CLOCKFONT CHUNKY6
 //#define CLOCKFONT YO_MONO
-//#define CLOCKFONT YO_CLASSIC
+
+//#define DSP_LOCALE "en_US"
+//#define DISPLAYFONT MATRIXCHUNKY
+//#define DISPLAYFONT MATRIXLIGHT
+//#define DISPLAYFONT X11
+//#define PRETEXT_ALLCAPS
+//#define PRETEXT_FOLDACCENT
+//#define WWW_CASETRANSFORM
+//#define CLOCKGLOW false
+
+
+//#define DSP_TASK_PRIORITY 3 // 3 = highest, because VS1053 handles decoding well
+//#define DSP_TASK_CORE_ID 1
+//#define AUDIO_CORE 0
+#define NETWORK_CORE 0
+
 
 #endif // myoptions_h

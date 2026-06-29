@@ -19,7 +19,6 @@ private:
   void cleanStaleSearchResults();
   void getRequiredFiles();
   void checkNewVersionFile();
-  bool checkLocaleFile();
   static void startupServicesAsync(void* param);
 
   uint32_t _bootStartMs = 0;

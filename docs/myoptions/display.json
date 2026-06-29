@@ -1,4 +1,5 @@
-[ "Display",
+[ { "title": "Display",
+    "info": "It is highly recommended to choose an OLED or TFT Screen.\nST7796 is more capable that ILI9488. ST7735 is well-supported." },
   {
     "name": "Dummy (no physical display)",
     "type": "",

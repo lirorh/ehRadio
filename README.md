@@ -277,7 +277,7 @@ e2002 began sharing his work on the 4PDA "WI-FI internet radio DIY" thread [Janu
 In July 2023, I built my first radio using Edzelf's [ESP32Radio-V2](https://github.com/Edzelf/ESP32Radio-V2/).
 In November 2024, I discovered [ёRadio](https://github.com/e2002/yoradio/) and on December 26, 2024, I made my [first PR](https://github.com/e2002/yoradio/pull/125).
 
-In May 2005 I began adding full support for Radio-browser API with the hope it would improve a user's experience. I also merged many of maleksm's mods.
+In May 2025 I began adding full support for Radio-browser API with the hope it would improve a user's experience. I also merged many of maleksm's mods.
 That PR started [June 13, 2025](https://github.com/e2002/yoradio/pull/184) was abandoned June 19, 2025 with a ridiculous amount of changes.
 
 In retrospect, proposing thousands of lines of changes was rude and unrealistic.  After some thought, ehRadio was forked August 10, 2025.

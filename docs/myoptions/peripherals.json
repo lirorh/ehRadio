@@ -1,4 +1,5 @@
-[ "Peripherals and Build Options",
+[ { "title": "Peripherals and Build Options",
+    "info": "Other hardware of the build." },
   {
     "name": "LED",
     "pins": [ "LED_PIN" ],

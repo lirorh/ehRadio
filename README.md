@@ -6,7 +6,7 @@
 
 ## Introduction
 
-<img src="images/Trip5_ES3C28P.jpg" width="50%">
+<img src="images/Trip5_ILI9488.jpg" width="50%">
 
 ehRadio runs on an ESP32 to play Internet radio streams. 
 

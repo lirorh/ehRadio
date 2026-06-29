@@ -161,18 +161,21 @@ Want to get even more advanced? There are bunches of notes and tools in the code
 
 ### Audio Libraries and Other Issues
 
-ehRadio currently uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.512m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
+ehRadio currently uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.434m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
 likely mostly from schreibfaul1's library [3.1.0 January 7, 2025](https://github.com/schreibfaul1/ESP32-audioI2S/releases/tag/3.1.0).
 
-ehRadio also currently uses the `ESP32-vs1053_ext` library from Maleksm's ёRadio mod v0.9.512m, likely mostly from schreibfaul1's [final version](https://github.com/schreibfaul1/ESP32-vs1053_ext).
-These libraries are so intertwined with the codebase that it may be impossible to migrate to newer versions, but... I will try.
+ehRadio also currently uses the `ESP32-vs1053_ext` library from `nsteplanets` [PR226](https://github.com/e2002/yoradio/pull/226) to yoRadio.
 
 Both libraries have been further optimized to get the best playback possible... and further optimization is possible.
+
+There are notes in the `libraries` folder regarding some of the "Frankenstein" operations I have performed (since I know very little about decoding libraries).
+
 For that and other major needed changes to the codebase, there is a `code-issues.md` file which may be a messy file to look at, depending on how these efforts are going.
 
 ### Languages
 
 If using a display other than English (either on the display or in the WebUI), there be errors in the translation.
+
 They are really there as proof-of-concept.  They were translated by machines.  Fixes or additions are absolutely welcome.
 
 There are tools in the codebase to assist with translation work.

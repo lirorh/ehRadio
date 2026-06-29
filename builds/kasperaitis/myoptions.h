@@ -74,7 +74,7 @@
 #define ES8311_MAX_I2S       180       /* maximum I2S value to allow when mapping to ES8311 codec (0..254) */
 #define PLAYER_FORCE_MONO    true      /* forces VU meter to mono mode */
 
-/* --- Input --- */
+/* --- Inputs --- */
 #define TS_MODEL             TS_MODEL_FT6336
 #define TS_SDA               16
 #define TS_SCL               15
@@ -88,10 +88,10 @@
 #define SD_CS                47
 #define SD_SPI               'B'       /* assign SD to SPI bus */
 
-/* --- Locale --- */
-#define DSP_LOCALE           "lt_LT"
-
 /* --- User Defaults --- */
+#define DSP_LANGUAGE         "lt_LT"
+#define TIMEZONE_NAME        "Europe/Vilnius"
+#define TIMEZONE_POSIX       "EET-2EEST,M3.5.0/3,M10.5.0/4"
 #define ONE_CLICK_SWITCH     true
 #define SCREEN_FLIP          true
 #define SS_PLAYING           true
@@ -102,10 +102,6 @@
 #define WEATHER_LAT          "55.721924" /* latitude */
 #define WEATHER_LON          "21.117868" /* longitude */
 #define WIFI_SCAN_BEST_RSSI  true
-
-/* --- Time Zone --- */
-#define TIMEZONE_NAME        "Europe/Vilnius"
-#define TIMEZONE_POSIX       "EET-2EEST,M3.5.0/3,M10.5.0/4"
 
 /* --- Extra defines --- */
 /* --- Battery --- */

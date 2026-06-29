@@ -1913,7 +1913,7 @@ function outputNameSection() {
   var meta = getSectionMeta(gData.name);
   if (!meta.items.length) return '';
   var out = sectionHeader(meta.title || 'Firmware File & Board');
-  var item = nameData[1];
+  var item = meta.items[0];
   if (item && item.defines) {
     item.defines.forEach(function(def) {
       var ctrl = findVisibleControl(def.define, null);
@@ -2119,17 +2119,17 @@ function outputDefaultsSection() {
   var body = '';
 
   items.forEach(function(item) {
-    // Locale select — output DSP_LOCALE
+    // Locale select — output DSP_LANGUAGE
     if (item.type === 'locale_select') {
-      var locChk = document.querySelector('[data-def-item="' + item.define + '"]');
+      var locChk = document.getElementById('locale-chk');
       if (!locChk || !locChk.checked) return;
       var locSel = document.getElementById('locale-sel');
       if (locSel) body += outputLine(item.define, '"' + locSel.value + '"');
       return;
     }
-    // Timezone select — output TIMEZONE name and posix
+    // Timezone select — output TIMEZONE_NAME and TIMEZONE_POSIX
     if (item.type === 'timezone_select') {
-      var tzChk = document.querySelector('[data-def-item="' + item.define + '"]');
+      var tzChk = document.getElementById('tz-chk');
       if (!tzChk || !tzChk.checked) return;
       var tzSel = document.getElementById('tz-sel');
       if (!tzSel) return;

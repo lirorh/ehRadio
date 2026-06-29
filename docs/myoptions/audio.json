@@ -6,7 +6,7 @@
     "pins": [ "VS1053_CS", "VS1053_DCS", "VS1053_DREQ" ],
     "defines": [
       { "define": "VS1053_SPI", "type": "spi", "comment": "assign VS1053 to SPI bus" },
-      { "define": "VS1053_RST", "type": "pin", "default": -1, "optional": true, "comment": "pin RST is attached to (-1 for EN pin"},
+      { "define": "VS1053_RST", "type": "pin", "default": -1, "optional": true, "comment": "pin RST is attached to (-1 for EN pin)"},
       { "define": "VS_PATCH_ENABLE", "type": "boolean", "default": false, "comment": "Enables VU Meter with VS1053b boards - disabled by default" }
     ],
     "lib_deps": "",

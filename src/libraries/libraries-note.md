@@ -76,7 +76,7 @@ Sorry and good luck.
   - but then replaced with https://github.com/schreibfaul1/ESP32-vs1053_ext
   - ehRadio at first adapted Maleksm's yoRadio mod v0.9.434m(04.04.25): https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228
   - attempts to update using Maleksm's mod v0.9.533m failed
-  - ehRadio 2026.06.28 adapts nsteplanet's PR to yoRadio November 28, 2025: https://github.com/e2002/yoradio/pull/226
+  - ehRadio 2026.06.29 adapts nsteplanet's PR to yoRadio November 28, 2025: https://github.com/e2002/yoradio/pull/226
   - might update to Maleksm's v0.9.720m(23.06.26) after I2S is updated
     
 #### Further notes

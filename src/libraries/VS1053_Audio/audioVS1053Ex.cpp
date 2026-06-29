@@ -7,7 +7,7 @@
  *  Updated on: Oct 22.2023
  *      Author: Wolle
  *  From yoRadio PR226 by nsteplanets Nov 28, 205
- *  To ehRadio 2026.06.28 with minimal changes
+ *  To ehRadio 2026.06.2 with minimal changes
  * 
  */
 #ifndef VS_PATCH_ENABLE

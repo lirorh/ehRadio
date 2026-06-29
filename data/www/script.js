@@ -209,7 +209,7 @@ function onMessage(event) {
         }
       }
       
-      // Store locale data for pending application after locales.json loads
+      // Store locale data for pending application after locales json files loads
       if (data.locale_webui && data.locale_disp) {
         pendingLocaleData = { locale_webui: data.locale_webui, locale_disp: data.locale_disp };
         

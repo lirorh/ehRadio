@@ -1,21 +1,21 @@
 [ { "title": "User Defaults",
-    "info": "This sets first-boot defaults and are still changeable in the WebUI." },
+    "info": "This sets first-boot defaults and are still changeable in the WebUI.\nThese are only defaults and will not be applied if the setting is found in NVS Preferences.\nPreferences are only saved to NVS if changed from the default." },
 
-  { "type": "locale_select", "name": "Display Language", "define": "DSP_LANGUAGE" },
+  { "type": "locale_select", "name": "Display Locale", "define": "DSP_LOCALE" },
   { "type": "timezone_select", "name": "Time Zone", "define": "TIMEZONE" },
   {
     "name": "Clock 12 Hour Mode",
     "define": "CLOCK_TWELVE", "type": "boolean", "optional": true, "default": false
   },
   {
-    "name": "Clock Font",
-    "info": "Select font to use for clock - CHUNKY6 is default on OLEDs, CHUNKY6_PX is default on TFTs,\nYO_MONO is the classic 7 Segment font on TFTs and Display Font on OLEDs\nSelecting this overrides the default",
-    "define": "CLOCKFONT", "type": "enum", "options": ["CHUNKY6", "CHUNKY6_PX", "YO_MONO"], "optional": true
-  },
-  {
     "name": "Display Font",
     "info": "Select font to use for display text",
     "define": "DISPLAYFONT", "type": "enum", "options": ["MATRIXCHUNKY", "MATRIXLIGHT", "X11"], "default": "MATRIXCHUNKY", "optional": true
+  },
+  {
+    "name": "Clock Font",
+    "info": "Usually the clock font is selected based on display type:\nOLEDs get CHUNKY6, TFTs get CHUNKY6_PX (which is the same but with separators between the 'pixels'.\nSelecting YO_MONO on a TFT will get the classic ёRadio 7-segment font but OLED will use the same font as display text.\nSelecting this overrides the default auto-selection.",
+    "define": "CLOCKFONT", "type": "enum", "options": ["CHUNKY6", "CHUNKY6_PX", "YO_MONO"], "optional": true
   },
   {
     "name": "Numbered Playlist",

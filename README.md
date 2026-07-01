@@ -295,18 +295,18 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch |
+| 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |
 | 2026.06.18 | WebUI files now served from PSRAM cache (if available) which eliminates audio stuttering for I2S decoders, adjustments to PSRAM-related code, rotary encoders fix |
 | 2026.06.15 | SPI fixed so SPI Display and VS1053 are possible, SD fixes, Wi-fi reconnect smarter, generator indicates safe pins |
 | 2026.06.08 | Fixed Search/Curated additions corrupting the playlist, changing stations faster, connect errors fail faster, safe mode entered after unsuccessful boot (disables smartstart, autoupdate) |
 | 2026.06.03 | Displays overhauled to support more displays more easily, I2S volume now cubic polynomial, `VOLUME_SCALE 42` reduces volume increments from 254, volume steps removed, generator updated |
 | 2026.05.29 | IR fixed, HA component updated, playlist page mode added for ILI9486/9488, playing current station does nothing, documentation completely overhauled |
-| 2026.05.26 | `Feature Freeze` `De-fork from ёRadio` Theme updated, Chunky6 font, fixes to `options.h`: `BTN_*` fixed & `ENC_*` renamed, screensaver fixes, battery widgets, ILI9225 from ёRadio v0.9.710, generator updated, partitions changed |
-| 2026.05.19 | `Feature Freeze` This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
-| 2026.05.08 | `Feature Freeze` SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
-| 2026.04.09 | `Feature Freeze` major and minor changes to structure, aggressive reconnect to wi-fi |
-| 2026.03.30 | `Feature Freeze` begins, OTA page reload graceful, 3 javascript files combined to 1 (`script2.js`) |
+| 2026.05.26 | `De-fork from ёRadio` Theme updated, Chunky6 font, fixes to `options.h`: `BTN_*` fixed & `ENC_*` renamed, screensaver fixes, battery widgets, ILI9225 from ёRadio v0.9.710, generator updated, partitions changed |
+| 2026.05.19 | This readme, myoptions generator, cpu cores/stack sizes optimized (monitor added), auto dimming, plugins removed, general & specific code repair, refactor, optimization |
+| 2026.05.08 | SPI buses more flexible, unified commandhandler and error logging, Home Assistant component fixed, OTA & naming methods finalized |
+| 2026.04.09 | major and minor changes to structure, aggressive reconnect to wi-fi |
+| 2026.03.30 | OTA page reload graceful, 3 javascript files combined to 1 (`script2.js`) |
 | 2026.03.22 | ehDP added, playlist editor grabbable fixed |
 | 2026.03.18 | multiple weather providers, screensaver mode fixed, https connection improved, w/Kasperaitis: multi-locales in display and WebUI, Kasperaitis: battery handling |
 | 2026.02.18 | WebUI improved, Curated Lists, default playlist on first boot, Smart start fixed, SPIFFS cleanup, Kasperaitis: battery monitor and telnet formatting |

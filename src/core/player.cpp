@@ -226,7 +226,14 @@ bool Player::queueResolvedUrl(const char* url) {
 }
 
 bool Player::resumeLastWebSource() {
-  if (config.hasLastStationUrl() && queueResolvedUrl(config.getLastStationUrl())) return true;
+  if (config.store.lastStationUrl[0] != '\0') {
+    uint16_t foundIdx = utility.findStationByUrl(config.store.lastStationUrl);
+    if (foundIdx > 0) {
+      sendCommand({PR_PLAY, foundIdx});
+      return true;
+    }
+    return queueResolvedUrl(config.store.lastStationUrl);
+  }
 
   uint16_t stationId = config.lastStation();
   if (stationId == 0) return false;
@@ -287,7 +294,7 @@ void Player::_play(uint16_t stationId) {
       config.sdResumePos = 0;
       config.saveValue(&config.store.lastSdStation, stationId);
     } else {
-      config.setLastStationUrl(config.station.url);
+      config.saveLastStationUrl(config.station.url);
     }
     //config.setTitle("");
     netserver.requestOnChange(MODE, 0);
@@ -326,7 +333,7 @@ void Player::playUrl(const char* url) {
   config.setTitle(l10n(L10N_MSG_CONNECT));
   if (connecttohost(url)) {
     _status = PLAYING;
-    config.setLastStationUrl(url);
+    config.saveLastStationUrl(url);
     config.setTitle("");
     netserver.requestOnChange(MODE, 0);
     setOutputPins(true);

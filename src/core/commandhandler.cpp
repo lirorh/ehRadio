@@ -193,7 +193,25 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
 
   /* Options: Locale */
   if (cmdIs(command, "locale_webui")) { config.saveValue(config.store.locale_webui, value); return true; }
-  if (cmdIs(command, "locale_disp"))  { config.saveValue(config.store.locale_display, value); _activeLocale = l10n_findLocale(value); network.buildWeatherString(); display.putRequest(CLOCK, true); return true; }
+  if (cmdIs(command, "locale_disp"))  {
+    config.saveValue(config.store.locale_display, value);
+    _activeLocale = l10n_findLocale(value);
+    display.putRequest(CLOCK, true);
+    if (config.store.showweather) network.buildWeatherString();
+    if (player.status() != PLAYING && display.mode() != UPDATING) {
+      if (player.hasError()) {
+        player.setError("");  // we don't remember the error so can not translate - so just clear and do "ready"
+        config.setTitle(l10n(L10N_MSG_READY));
+      } else if (display.mode() == LOST) {
+        display.putRequest(NEWMODE, LOST);
+      } else if (display.mode() == PLAYER && !player.isRunning()) {
+        config.setTitle(l10n(L10N_MSG_CONNECT));
+      } else {
+        config.setTitle(l10n(L10N_MSG_READY));
+      }
+    }
+    return true;
+  }
   if (cmdIs(command, "tz_name"))      { config.saveValue(config.store.tz_name, value); return true; }
   if (cmdIs(command, "tzposix"))      { config.saveValue(config.store.tzposix, value); network.forceTimeSync = true; network.requestTimeSync(true); return true; }
   if (cmdIs(command, "sntp1"))        { config.saveValue(config.store.sntp1, value); network.forceTimeSync = true; network.requestTimeSync(true); return true; }
@@ -209,9 +227,9 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "wtempunit"))     { config.saveValue(&config.store.weathertempimp, (atoi(value) != 0)); network.buildWeatherString(); return true; }
   if (cmdIs(command, "wpressunit"))    { config.saveValue(&config.store.weatherpressimp, (atoi(value) != 0)); network.buildWeatherString(); return true; }
   if (cmdIs(command, "wspeedunit"))    { config.saveValue(config.store.weatherwindspeed, value); network.buildWeatherString(); return true; }
-  if (cmdIs(command, "wapi"))          { config.saveValue(config.store.weatherapi, value); network.forceWeather = true; return true; }
-  if (cmdIs(command, "wlang"))         { config.saveValue(config.store.weatherlang, value); network.forceWeather = true; return true; }
-  if (cmdIs(command, "wkey"))          { config.saveValue(config.store.weatherkey, value); display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER); return true; }
+  if (cmdIs(command, "wapi"))          { config.saveValue(config.store.weatherapi, value); network.forceWeather = true; display.putRequest(SHOWWEATHER); return true; }
+  if (cmdIs(command, "wlang"))         { config.saveValue(config.store.weatherlang, value); network.forceWeather = true; display.putRequest(SHOWWEATHER); return true; }
+  if (cmdIs(command, "wkey"))          { config.saveValue(config.store.weatherkey, value); network.forceWeather=true; display.putRequest(SHOWWEATHER); return true; }
   if (cmdIs(command, "winterval"))     { config.saveValue(&config.store.weathersyncinterval, static_cast<uint8_t>(atoi(value))); return true; }
   if (cmdIs(command, "wlat"))          { config.saveValue(config.store.weatherlat, value); config.store.weatherelevation = 0; config.saveValue(&config.store.weatherelevation, static_cast<int16_t>(0)); network.forceWeather = true; return true; }
   if (cmdIs(command, "wlon"))          { config.saveValue(config.store.weatherlon, value); config.store.weatherelevation = 0; config.saveValue(&config.store.weatherelevation, static_cast<int16_t>(0)); network.forceWeather = true; return true; }

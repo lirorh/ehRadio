@@ -116,7 +116,7 @@
   "lbl_wifi_scan": "Scan for Best Wi-Fi on Boot",
   "lbl_wind_info": "Show Wind Information",
   "lbl_wind_speed_unit": "Wind Speed Unit",
-  "btn_apply": "Apply",
+  "btn_apply_changes": "Apply Changes",
   "btn_board": "Board",
   "btn_calibrate": "Calibrate",
   "btn_cancel": "Cancel",

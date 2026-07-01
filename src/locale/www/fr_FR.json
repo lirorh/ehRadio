@@ -116,7 +116,7 @@
   "lbl_wifi_scan": "Scanner le meilleur Wi-Fi au démarrage",
   "lbl_wind_info": "Afficher les informations sur le vent",
   "lbl_wind_speed_unit": "Unité de vitesse du vent",
-  "btn_apply": "Appliquer",
+  "btn_apply_changes": "Appliquer les modifications",
   "btn_board": "Carte",
   "btn_calibrate": "étalonner",
   "btn_cancel": "Annuler",

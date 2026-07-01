@@ -100,6 +100,24 @@ bool copyStringIfChanged(char* dest, size_t destSize, const char* src) {
   return true;
 }
 
+static bool handleAccountError(const char* info) {
+  if (strstr(info, "Account already in use")) {
+    char errbuf[PLERR_LN];
+    strncpy_P(errbuf, l10n(L10N_MSG_ACCOUNT_IN_USE), PLERR_LN - 1);
+    errbuf[PLERR_LN - 1] = '\0';
+    player.setError(errbuf);
+    return true;
+  }
+  if (strstr(info, "HTTP/1.0 401")) {
+    char errbuf[PLERR_LN];
+    strncpy_P(errbuf, l10n(L10N_MSG_ACCOUNT_ERROR), PLERR_LN - 1);
+    errbuf[PLERR_LN - 1] = '\0';
+    player.setError(errbuf);
+    return true;
+  }
+  return false;
+}
+
 } // namespace
 
 AudioHandlers audioHandlers;
@@ -184,9 +202,7 @@ void AudioHandlers::handleInfo(const char* info) {
   if (strstr(info, "stream ready") != NULL) {
     if (strcmp_P(config.station.title, l10n(L10N_MSG_CONNECT)) == 0) config.setTitle("");
   }
-  if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) {
-    player.setError(info);
-  }
+  handleAccountError(info);
 
   char* ici;
   if ((ici = strstr(info, "BitRate: ")) != NULL) {
@@ -211,7 +227,7 @@ void AudioHandlers::handleShowStation(const char* info) {
 }
 
 void AudioHandlers::handleShowStreamTitle(const char* info) {
-  if (strstr(info, "Account already in use") != NULL || strstr(info, "HTTP/1.0 401") != NULL) player.setError(info);
+  handleAccountError(info);
   bool printable = isPrintable(info) && (strlen(info) > 0);
   #ifdef DEBUG_TITLES
     config.setTitle(DEBUG_TITLES);

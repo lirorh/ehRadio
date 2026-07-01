@@ -261,6 +261,37 @@ See "Critical Bug" section above. Added at 5 stream-ready locations + resets in 
 
 ---
 
+## Post-Graft Patch Fixes (2026-07-01)
+
+Two reliability issues found during hardware testing with `VS_PATCH_ENABLE=true`:
+
+### Problem
+- Intermittent hung boot: `"patch applied"` printed but `"VS chip: VS1053 done"` never appeared — `read_register(SCI_STATUS)` hung after patch load
+- Intermittent no-audio: boot completed but VS1053 DSP wouldn't decode (confirmed by `AICTRL3 = 0x0000`)
+
+### Root Causes
+1. **SPI speed too high for patch loading**: Patch was applied at 6.7 MHz, but VS1053B SCI max is CLKI/4 ≈ 3 MHz at 12.288 MHz CLKI. This marginal overclocking could corrupt patch data on some chips.
+2. **Chip ID query ran AFTER patch**: `read_register(SCI_STATUS)` at `player.cpp:60` ran after `loadUserCode()` — if the patch corrupted chip state, the register read could hang or return garbage.
+
+### Fixes Applied
+| # | File | Change |
+|---|------|--------|
+| 1 | `audioVS1053Ex.cpp` `begin()` | Moved chip ID query before `loadUserCode()` — reads `SCI_STATUS` bits 4-7 while chip is in known-good reset state |
+| 2 | `audioVS1053Ex.cpp` `begin()` | Patch loaded at 6.7 MHz (same as data, same as PR226 upstream). 200 kHz was tried but caused patch failure — VS1053B's patch-loading protocol has a timeout; bytes arriving too slowly cause the state machine to fail. |
+| 3 | `player.cpp` | Removed duplicate chip ID query (now handled inside `begin()`) |
+
+### Template for Future Grafts
+When porting to a new library version, any `if(VS_PATCH_ENABLE) { loadUserCode(); }` block should:
+1. Query chip type via `read_register(SCI_STATUS)` **before** the block
+2. Load the patch at the same SPI speed as normal data (6.7 MHz) — VS1053B patch-loading protocol has a timeout; speeds below ~1 MHz may fail
+3. Print success/failure log lines inside the block
+
+### Hardware Notes
+- **Brown-out**: Fast power-cycling can leave VS1053 in undefined state. Large bulk capacitors on modules hold charge >10 seconds. If needed, add hardware reset supervisor or RC delay on RST pin.
+- **Factory rejects**: Boards that decode AAC (proving VS1053B silicon) but fail patching are likely factory seconds with defective WRAM or DSP coprocessor. These chips pass basic testing (ROM codecs, SPI, register map) but fail when VS1053B-specific features are exercised. Common from gray market sellers.
+
+---
+
 ## Open Items
 
 1. **Mutex guards on connect functions** (Step 9 deferred): `connecttohost()` and `connecttoFS()` should be wrapped with `mutex_playAudioData` to prevent race conditions. Same pattern Maleksm used.

@@ -116,7 +116,7 @@
   "lbl_wifi_scan": "起動時に最適なWi-Fiをスキャン",
   "lbl_wind_info": "風の情報を表示",
   "lbl_wind_speed_unit": "風速単位",
-  "btn_apply": "適用",
+  "btn_apply_changes": "変更を適用する",
   "btn_board": "ボード",
   "btn_calibrate": "校正",
   "btn_cancel": "キャンセル",

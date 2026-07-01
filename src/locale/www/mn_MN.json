@@ -116,7 +116,7 @@
   "lbl_wifi_scan": "Эхлэх үед хамгийн сайн Wi-Fi хайх",
   "lbl_wind_info": "Салхины мэдээллийг харуулах",
   "lbl_wind_speed_unit": "Салхины хурдны нэгж",
-  "btn_apply": "Хэрэгжүүлэх",
+  "btn_apply_changes": "Өөрчлөлтийг хэрэгжүүлэх",
   "btn_board": "Плита",
   "btn_calibrate": "калибрлэх",
   "btn_cancel": "Цуцлах",

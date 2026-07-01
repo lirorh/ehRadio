@@ -116,7 +116,7 @@
   "lbl_wifi_scan": "启动时扫描最佳 Wi-Fi",
   "lbl_wind_info": "显示风向信息",
   "lbl_wind_speed_unit": "风速单位",
-  "btn_apply": "应用",
+  "btn_apply_changes": "应用更改",
   "btn_board": "主板",
   "btn_calibrate": "校准",
   "btn_cancel": "取消",

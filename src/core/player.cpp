@@ -56,9 +56,7 @@ void Player::init() {
   #else
     // SPI.begin(); // started in config.init()
     if (VS1053_RST>0) ResetChip();
-    begin();
-    { uint8_t v = ((read_register(0x01/*SCI_STATUS*/) >> 4) & 15);
-      SERIALLOGX("VS chip: VS%d\t", v==3?1003:v==4?1053:v==6?1063:v==8?1073:0); }
+    begin(); // chip query + patch load now handled inside begin()
   #endif
   setAudioTaskCore(AUDIO_CORE);
   #if defined(USE_ES8311) && defined(ES8311_I2C_SDA) && defined(ES8311_I2C_SCL)
@@ -304,7 +302,9 @@ void Player::_play(uint16_t stationId) {
     backlightControls.restart();
   } else {
     ERRORLOG("Error connecting to %s", config.station.url);
-    SET_PLAY_ERROR("Error connecting to %s", config.station.url);
+    char errbuf[STATION_FIELD_LENGTH];
+    snprintf_P(errbuf, sizeof(errbuf), l10n(L10N_MSG_CONNECT_ERROR), config.station.url);
+    player.setError(errbuf);
     _stop(true);
   };
 }

@@ -491,6 +491,9 @@ void Controls::onBtnClick(int id) {
           display.numOfNextStation = 0;
           display.putRequest(NEWMODE, PLAYER);
         }
+        if (display.mode() == VOL) {
+          display.putRequest(NEWMODE, PLAYER);
+        }
         if (display.mode() == PLAYER) {
           player.toggle();
         }

@@ -30,7 +30,7 @@ const char* const Config::wwwFiles[] = {"curated.js", "options.js", "script.js",
                                         "player.html"}; // keep main page at end (deleted when upgraded, last to be downloaded, so user sees emptyfs_html with wait message)
 const size_t Config::wwwFilesCount = sizeof(Config::wwwFiles) / sizeof(Config::wwwFiles[0]);
 
-const char* const Config::dataFiles[] = {PLAYLIST_FILE, SSIDS_FILE, VERSION_FILE, LASTSTATION_URL_FILE};
+const char* const Config::dataFiles[] = {PLAYLIST_FILE, SSIDS_FILE, VERSION_FILE};
 const size_t Config::dataFilesCount = sizeof(Config::dataFiles) / sizeof(Config::dataFiles[0]);
 
 #if defined(SPI_BUS_SECONDARY)
@@ -105,7 +105,6 @@ void Config::init() {
   #else
     _SDplaylistFS = &SPIFFS;
   #endif
-  loadLastStationUrl();
 }
 
 void Config::loadPreferences() {
@@ -133,68 +132,11 @@ void Config::loadPreferences() {
   prefs.end();
 }
 
-void Config::loadLastStationUrl() {
-  memset(_lastStationUrl, 0, sizeof(_lastStationUrl));
-  _lastStationUrlDirty = false;
-  _lastStationUrlDueMs = 0;
-
-  if (!SPIFFS.exists(LASTSTATION_URL_PATH)) return;
-
-  File file = SPIFFS.open(LASTSTATION_URL_PATH, "r");
-  if (!file) return;
-
-  String url = file.readStringUntil('\n');
-  file.close();
-  url.trim();
-  if (!isHttpUrl(url.c_str())) {
-    FUNCTIONLOG("Config.lasturl", "Ignoring invalid laststation.url contents");
-    return;
+void Config::saveLastStationUrl(const char* url, uint16_t waitMs) {
+  if (url != nullptr && url[0] != '\0') {
+    strlcpy(store.lastStationUrl, url, STATION_FIELD_LENGTH);
   }
-
-  strlcpy(_lastStationUrl, url.c_str(), sizeof(_lastStationUrl));
-}
-
-void Config::setLastStationUrl(const char* url, uint16_t waitMs) {
-  char normalizedUrl[MQTT_URL_SIZE + 1] = {0};
-  if (url != nullptr) strlcpy(normalizedUrl, url, sizeof(normalizedUrl));
-  utility.stripWhitespace(normalizedUrl);
-
-  if (normalizedUrl[0] != '\0' && !isHttpUrl(normalizedUrl)) return;
-
-  bool changed = strcmp(_lastStationUrl, normalizedUrl) != 0;
-  if (changed) {
-    strlcpy(_lastStationUrl, normalizedUrl, sizeof(_lastStationUrl));
-  }
-
-  if (changed || _lastStationUrlDirty) {
-    _lastStationUrlDirty = true;
-    _lastStationUrlDueMs = millis() + waitMs;
-  }
-}
-
-bool Config::_writeLastStationUrlFile() {
-  if (_lastStationUrl[0] == '\0') {
-    if (!SPIFFS.exists(LASTSTATION_URL_PATH)) return true;
-    return SPIFFS.remove(LASTSTATION_URL_PATH);
-  }
-
-  File file = SPIFFS.open(LASTSTATION_URL_PATH, "w");
-  if (!file) return false;
-
-  bool wroteAll = file.print(_lastStationUrl) == strlen(_lastStationUrl);
-  file.close();
-  return wroteAll;
-}
-
-void Config::flushLastStationUrl() {
-  if (!_lastStationUrlDirty) return;
-
-  if (_writeLastStationUrlFile()) {
-    _lastStationUrlDirty = false;
-    return;
-  }
-
-  _lastStationUrlDueMs = millis() + 1000;
+  _lastStationUrlDueMs = millis() + waitMs;
 }
 
 void Config::changeMode(int newmode) {
@@ -546,8 +488,9 @@ void Config::processDeferredSaves() {
     }
   }
 
-  if (_lastStationUrlDirty && (int32_t)(millis() - _lastStationUrlDueMs) >= 0) {
-    flushLastStationUrl();
+  if (_lastStationUrlDueMs != 0 && (int32_t)(millis() - _lastStationUrlDueMs) >= 0) {
+    _lastStationUrlDueMs = 0;
+    saveValue(store.lastStationUrl, store.lastStationUrl);
   }
 }
 
@@ -773,6 +716,7 @@ void Config::bootInfo() {
 const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(config_set, "cfgset"),
   CONFIG_KEY_ENTRY(lastStation, "laststa"),
+  CONFIG_KEY_ENTRY(lastStationUrl, "lasturl"),
   CONFIG_KEY_ENTRY(countStation, "countsta"),
   CONFIG_KEY_ENTRY(lastSSID, "lastssid"),
   CONFIG_KEY_ENTRY(lastSdStation, "lastsdsta"),
@@ -849,8 +793,8 @@ const configKeyMap Config::keyMap[] = {
 
 void Config::deleteOldKeys() {
   // List any old/legacy keys to remove here (they will be deleted from prefs if found)
+  prefs.remove("laststa"); // previous numeric, replaced by lastStationUrl
   prefs.remove("encacc"); // previous encoder acceleration was scale 0 to 700
   prefs.remove("smartstart"); // previous smartstart was numeric 0, 1, 2
   prefs.remove("vsteps"); // volume steps was needed when volume was 0 to 254
-  // prefs.remove("removedkey"); // note
 }

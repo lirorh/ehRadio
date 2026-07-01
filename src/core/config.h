@@ -16,7 +16,6 @@
 #define PLAYLIST_FILE        "playlist.csv"
 #define SSIDS_FILE           "wifi.csv"
 #define VERSION_FILE         "ehradio.ver"
-#define LASTSTATION_URL_FILE "laststation.url"
 #define TMP_FILE             "tmpfile.txt"
 #define INDEX_FILE           "index.dat"
 #define PLAYLIST_SD_FILE     "playlistsd.csv"
@@ -25,7 +24,6 @@
 #define PLAYLIST_PATH        "/data/" PLAYLIST_FILE
 #define SSIDS_PATH           "/data/" SSIDS_FILE
 #define VERSION_PATH         "/data/" VERSION_FILE
-#define LASTSTATION_URL_PATH "/data/" LASTSTATION_URL_FILE
 #define TMP_PATH             "/data/" TMP_FILE
 #define INDEX_PATH           "/data/" INDEX_FILE
 #define PLAYLIST_SD_PATH     "/data/" PLAYLIST_SD_FILE
@@ -88,6 +86,7 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
 {
   uint16_t  config_set = 4262;
   uint16_t  lastStation = 0;
+  char      lastStationUrl[STATION_FIELD_LENGTH] = "";
   uint16_t  countStation = 0;
   uint8_t   lastSSID = 0;
   uint16_t  lastSdStation = 0;
@@ -228,7 +227,6 @@ class Config {
 
     void init();
     void loadPreferences();
-    void loadLastStationUrl();
     void changeMode(int newmode=-1);
     void initSDPlaylist();
     void initPlaylistMode();
@@ -247,16 +245,13 @@ class Config {
     void setDspOn(bool dspon, bool saveval = true);
     void bootInfo();
     void deleteOldKeys();
-    void setLastStationUrl(const char* url, uint16_t waitMs = 5000);
-    void flushLastStationUrl();
+    void saveLastStationUrl(const char* url, uint16_t waitMs = 10000);
     void setBitrateFormat(BitrateFormat fmt) { configFmt = fmt; }
-    const char* getLastStationUrl() const { return _lastStationUrl; }
-    bool hasLastStationUrl() const { return _lastStationUrl[0] != '\0'; }
     uint16_t lastStation() {
       return getMode()==PM_WEB?store.lastStation:store.lastSdStation;
     }
     void lastStation(uint16_t newstation) {
-      if (getMode()==PM_WEB) saveValue(&store.lastStation, newstation);
+      if (getMode()==PM_WEB) store.lastStation = newstation;
       else saveValue(&store.lastSdStation, newstation);
     }
     uint8_t getMode() { return store.play_mode; }
@@ -361,8 +356,6 @@ class Config {
     bool _bootDone = false;
     bool _rtcFound = false;
     FS* _SDplaylistFS = nullptr;
-    char _lastStationUrl[MQTT_URL_SIZE + 1] = {0};
-    bool _lastStationUrlDirty = false;
     uint32_t _lastStationUrlDueMs = 0;
 
     static constexpr uint8_t DEFERRED_SAVE_SLOTS = 8;
@@ -375,7 +368,6 @@ class Config {
 
     bool _wwwFilesExist();
     void _initHW();
-    bool _writeLastStationUrlFile();
     uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
     void setDefaults();
 

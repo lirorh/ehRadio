@@ -116,7 +116,7 @@
   "lbl_wifi_scan": "Skannaa paras Wi-Fi käynnistyksen yhteydessä",
   "lbl_wind_info": "Näytä tuulitiedot",
   "lbl_wind_speed_unit": "Tuulen nopeuden yksikkö",
-  "btn_apply": "Käytä",
+  "btn_apply_changes": "Tallenna muutokset",
   "btn_board": "Levy",
   "btn_calibrate": "kalibroi",
   "btn_cancel": "Peruuta",

@@ -304,7 +304,9 @@ void Player::_play(uint16_t stationId) {
     backlightControls.restart();
   } else {
     ERRORLOG("Error connecting to %s", config.station.url);
-    SET_PLAY_ERROR("Error connecting to %s", config.station.url);
+    char errbuf[STATION_FIELD_LENGTH];
+    snprintf_P(errbuf, sizeof(errbuf), l10n(L10N_MSG_CONNECT_ERROR), config.station.url);
+    player.setError(errbuf);
     _stop(true);
   };
 }

@@ -357,4 +357,6 @@
 //#define WWW_CASETRANSFORM
 //#define CLOCKGLOW false
 
+//#define DEEP_SLEEP_DISABLE
+
 #endif // myoptions_h

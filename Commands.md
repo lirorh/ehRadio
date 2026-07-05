@@ -26,7 +26,7 @@ Order and sections match that file.
 | `shuffle` | Enable/disable SD shuffle; if enabled, advance to next entry. |
 | `start` | Start playback from last station. |
 | `stop` | Stop playback. |
-| `sleep` | Set sleep timer using for,after values. |
+| `sleep` | Set sleep timer using for,after values (may be disabled by build) |
 | `mode` | Change playback mode: `0` = Radio/Web, `1` = SD Card, out-of-range values cycle modes (`2` cycles in Telnet). |
 | `submitplaylist` | Stop playback before playlist submit flow. |
 | `submitplaylistdone` | Finalize playlist submit flow, reload best station target, and trigger MQTT playlist sync. |

@@ -569,13 +569,13 @@ void Display::loop() {
         case DRAWPLAYLIST: _drawPlaylist(); break;
         case DRAWVOL: _volume(); break;
         case DBITRATE: {
-            char buf[20]; 
-            snprintf(buf, 20, bitrateFmt, config.station.bitrate); 
-            if (_bitrate) { _bitrate->setText(config.station.bitrate==0?"":buf); } 
-            if (_fullbitrate) { 
-              _fullbitrate->setBitrate(config.station.bitrate); 
-              _fullbitrate->setFormat(config.configFmt); 
-            } 
+            char buf[20];
+            snprintf(buf, 20, bitrateFmt, config.station.bitrate);
+            if (_bitrate) { _bitrate->setText(config.station.bitrate==0?"":buf); }
+            if (_fullbitrate) {
+              _fullbitrate->setBitrate(config.station.bitrate);
+              _fullbitrate->setFormat(config.configFmt);  // UNKNOWN clears badge via _draw() → _clear()
+            }
           }
           break;
         case SHOWBUFFERBAR: if (_bufferbar)  {

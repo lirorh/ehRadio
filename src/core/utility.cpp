@@ -38,29 +38,51 @@ uint16_t Utility::sleepfor = 0;
 void Utility::sleepCore() {
   if (BRIGHTNESS_PIN != 255) analogWrite(BRIGHTNESS_PIN, 0);
   display.deepsleep();
-  #if defined(ARDUINO_ESP32C3_DEV)
-    if (WAKE_PIN != 255) {
-      esp_deep_sleep_enable_gpio_wakeup((1ULL << WAKE_PIN), WAKE_PIN_STATE ? ESP_GPIO_WAKEUP_GPIO_HIGH : ESP_GPIO_WAKEUP_GPIO_LOW);
-    }
-  #else
-    if (WAKE_PIN != 255) {
-      // Digital GPIO pull resistors power off during deep sleep — configure the RTC domain pull instead
-      if (WAKE_PIN_STATE == HIGH) {
-        rtc_gpio_pulldown_en((gpio_num_t)WAKE_PIN);
-        rtc_gpio_pullup_dis((gpio_num_t)WAKE_PIN);
-      } else {
-        rtc_gpio_pullup_en((gpio_num_t)WAKE_PIN);
-        rtc_gpio_pulldown_dis((gpio_num_t)WAKE_PIN);
+  #ifndef DEEP_SLEEP_DISABLE
+    // Configure RTC-domain pulls on all wake pins (digital pulls power off during deep sleep)
+    {
+      uint64_t mask = WAKE_GPIO_MASK;
+      for (uint8_t i = 0; i < 40; i++) {
+        if (mask & (1ULL << i)) {
+          rtc_gpio_init((gpio_num_t)i);
+          rtc_gpio_set_direction((gpio_num_t)i, RTC_GPIO_MODE_INPUT_ONLY);
+          rtc_gpio_pullup_en((gpio_num_t)i);
+          rtc_gpio_pulldown_dis((gpio_num_t)i);
+        }
       }
-      esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKE_PIN, WAKE_PIN_STATE);
+      #if defined(ARDUINO_ESP32C3_DEV) || defined(ARDUINO_ESP32S3_DEV)
+        // S3/C3: native GPIO wake on LOW level (button PRESS, not release)
+        for (uint8_t i = 0; i < 40; i++) {
+          if (mask & (1ULL << i)) {
+            gpio_wakeup_enable((gpio_num_t)i, GPIO_INTR_LOW_LEVEL);
+          }
+        }
+        esp_sleep_enable_gpio_wakeup();
+      #else
+        // ESP32 classic: ext1 wake on HIGH transition (button RELEASE)
+        // Wait for all wake pins to be released before sleeping
+        for (uint8_t retry = 0; retry < 300; retry++) {  // ~3s max
+          bool allHigh = true;
+          for (uint8_t i = 0; i < 40; i++) {
+            if (mask & (1ULL << i)) {
+              if (digitalRead(i) == LOW) { allHigh = false; break; }
+            }
+          }
+          if (allHigh) break;
+          delay(10);
+        }
+        esp_sleep_enable_ext1_wakeup(WAKE_GPIO_MASK, ESP_EXT1_WAKEUP_ANY_HIGH);
+      #endif
     }
   #endif
 }
 
 void Utility::doSleep() {
-  sleepCore();
-  esp_sleep_enable_timer_wakeup(sleepfor * 60 * 1000000ULL);
-  esp_deep_sleep_start();
+  #ifndef DEEP_SLEEP_DISABLE
+    sleepCore();
+    esp_sleep_enable_timer_wakeup(sleepfor * 60 * 1000000ULL);
+    esp_deep_sleep_start();
+  #endif
 }
 
 namespace {
@@ -537,8 +559,10 @@ char* Utility::stationByNum(uint16_t num) {
 }
 
 void Utility::doSleepW() {
-  sleepCore();
-  esp_deep_sleep_start();
+  #ifndef DEEP_SLEEP_DISABLE
+    sleepCore();
+    esp_deep_sleep_start();
+  #endif
 }
 
 void Utility::sleepForAfter(uint16_t sleepfor, uint16_t sa) {

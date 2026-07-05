@@ -71,6 +71,7 @@ bool Config::_wwwFilesExist() {
 
 void Config::init() {
   loadPreferences();
+  startup.checkSafeMode();
   bootInfo();
   #if RTCSUPPORTED
     BOOTLOG("RTC begin(SDA=%d,SCL=%d)", RTC_SDA, RTC_SCL);
@@ -606,10 +607,12 @@ void Config::bootInfo() {
   #ifdef AUTOBACKLIGHT
     if (LIGHT_SENSOR!=255) BOOTLOG("Autobacklight Enabled: Light Sensor Pin: %d Max: %d Min: %d", LIGHT_SENSOR, AUTOBACKLIGHT_MAX, AUTOBACKLIGHT_MIN);
   #endif
-  #ifdef VS1053_SPI
-    if (VS1053_CS!=255) BOOTLOG("Audio (VS1053):\tSPI%c, CS: %d, DCS: %d, DREQ: %d, RST: %d, Patch: %s", VS1053_SPI, VS1053_CS, VS1053_DCS, VS1053_DREQ, VS1053_RST, VS_PATCH_ENABLE?"enabled":"disabled");
+  #if VS1053_CS!=255
+    BOOTLOG("Audio (VS1053):\tSPI%c, CS: %d, DCS: %d, DREQ: %d, RST: %d, Patch: %s", VS1053_SPI_BUS, VS1053_CS, VS1053_DCS, VS1053_DREQ, VS1053_RST, VS_PATCH_ENABLE?"enabled":"disabled");
   #endif
-  if (I2S_DOUT!=255) BOOTLOG("Audio (I2S):\tDOUT: %d, BCLK: %d, LRC: %d, DIN: %d, MCLK: %d", I2S_DOUT, I2S_BCLK, I2S_LRC, I2S_DIN, I2S_MCLK);
+  #if I2S_DOUT!=255
+    BOOTLOG("Audio (I2S):\tDOUT: %d, BCLK: %d, LRC: %d, DIN: %d, MCLK: %d", I2S_DOUT, I2S_BCLK, I2S_LRC, I2S_DIN, I2S_MCLK);
+  #endif
   #ifdef USE_ES8311
     BOOTLOGX("Audio (ES8311)\tMAX_I2S: %d");
     #ifdef ES8311_I2C_SCL
@@ -625,31 +628,48 @@ void Config::bootInfo() {
     SERIALLOG("");
   #endif
   #if BTN_DOWN!=255
-    BOOTLOG("Button Down:\tPin: %d, Pullup: %s", BTN_DOWN, BTN_DOWN_PULLUP?"true":"false");
+    BOOTLOG("Button Down:\tPin: %d, Pullup: %s%s", BTN_DOWN, BTN_DOWN_PULLUP?"true":"false", _WBTN_DOWN ? ", Wake" : "");
   #endif
   #if BTN_PLAY!=255
-    BOOTLOG("Button Play:\tPin: %d, Pullup: %s", BTN_PLAY, BTN_PLAY_PULLUP?"true":"false");
+    BOOTLOG("Button Play:\tPin: %d, Pullup: %s%s", BTN_PLAY, BTN_PLAY_PULLUP?"true":"false", _WBTN_PLAY ? ", Wake" : "");
   #endif
   #if BTN_UP!=255
-    BOOTLOG("Button Up:\tPin: %d, Pullup: %s", BTN_UP, BTN_UP_PULLUP?"true":"false");
+    BOOTLOG("Button Up:\tPin: %d, Pullup: %s%s", BTN_UP, BTN_UP_PULLUP?"true":"false", _WBTN_UP ? ", Wake" : "");
   #endif
   #if BTN_PREV!=255
-    BOOTLOG("Button Prev:\tPin: %d, Pullup: %s", BTN_PREV, BTN_PREV_PULLUP?"true":"false");
+    BOOTLOG("Button Prev:\tPin: %d, Pullup: %s%s", BTN_PREV, BTN_PREV_PULLUP?"true":"false", _WBTN_PREV ? ", Wake" : "");
   #endif
   #if BTN_NEXT!=255
-    BOOTLOG("Button Next:\tPin: %d, Pullup: %s", BTN_NEXT, BTN_NEXT_PULLUP?"true":"false");
+    BOOTLOG("Button Next:\tPin: %d, Pullup: %s%s", BTN_NEXT, BTN_NEXT_PULLUP?"true":"false", _WBTN_NEXT ? ", Wake" : "");
   #endif
   #if BTN_MODE!=255
-    BOOTLOG("Button Mode:\tPin: %d, Pullup: %s", BTN_MODE, BTN_MODE_PULLUP?"true":"false");
-  #endif
-  #if WAKE_PIN!=255
-    BOOTLOG("Wake:\t\tPin: %d, State: %s", WAKE_PIN, WAKE_PIN_STATE?"high":"low");
+    BOOTLOG("Button Mode:\tPin: %d, Pullup: %s%s", BTN_MODE, BTN_MODE_PULLUP?"true":"false", _WBTN_MODE ? ", Wake" : "");
   #endif
   #if ENC_DT!=255
-    BOOTLOG("Encoder 1:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC_DT, ENC_CLK, ENC_PULLUP?"true":"false", ENC_SW, ENC_SW_PULLUP?"true":"false", ENC_STEPS);
+    BOOTLOG("Encoder 1:\tDT: %d%s, CLK: %d%s, Pullup: %s, SW: %d%s (Pullup: %s), STEPS: %d",
+      ENC_DT, _WENC_DT ? " (wake)" : "",
+      ENC_CLK, _WENC_CLK ? " (wake)" : "",
+      ENC_PULLUP?"true":"false",
+      ENC_SW, _WENC_SW ? " (wake)" : "",
+      ENC_SW_PULLUP?"true":"false",
+      ENC_STEPS);
   #endif
   #if ENC2_DT!=255
-    BOOTLOG("Encoder 2:\tDT: %d, CLK: %d, Pullup: %s, SW: %d (Pullup: %s), STEPS: %d", ENC2_DT, ENC2_CLK, ENC2_PULLUP?"true":"false", ENC2_SW, ENC2_SW_PULLUP?"true":"false", ENC2_STEPS);
+    BOOTLOG("Encoder 2:\tDT: %d%s, CLK: %d%s, Pullup: %s, SW: %d%s (Pullup: %s), STEPS: %d",
+      ENC2_DT, _WENC2_DT ? " (wake)" : "",
+      ENC2_CLK, _WENC2_CLK ? " (wake)" : "",
+      ENC2_PULLUP?"true":"false",
+      ENC2_SW, _WENC2_SW ? " (wake)" : "",
+      ENC2_SW_PULLUP?"true":"false",
+      ENC2_STEPS);
+  #endif
+  #if TS_INT!=255
+    BOOTLOG("Touch INT:\tPin: %d%s", TS_INT, _WTS_INT ? ", Wake" : "");
+  #endif
+  #ifndef DEEP_SLEEP_DISABLE
+    BOOTLOG("Wake GPIOs:\t%llu (mask)", WAKE_GPIO_MASK);
+  #else
+    BOOTLOG("Wake GPIOs:\tnone (deep sleep disabled)");
   #endif
   #if IR_PIN!=255
     BOOTLOG("IR:\t\tPin: %d", IR_PIN);
@@ -715,7 +735,6 @@ void Config::bootInfo() {
 // Macro expands to 3 fields (offset_of_config_t_store_variable, "key_max_15_char", size_of_store_variable)
 const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(config_set, "cfgset"),
-  CONFIG_KEY_ENTRY(lastStation, "laststa"),
   CONFIG_KEY_ENTRY(lastStationUrl, "lasturl"),
   CONFIG_KEY_ENTRY(countStation, "countsta"),
   CONFIG_KEY_ENTRY(lastSSID, "lastssid"),

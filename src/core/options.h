@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.07.01"
+#define RADIOVERSION "2026.07.05"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -408,11 +408,14 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define VS1053_SCK  SPIA_SCK
     #define VS1053_MISO SPIA_MISO
     #define VS1053_MOSI SPIA_MOSI
+    #define VS1053_SPI_BUS 'A'
   #elif VS1053_SPI == 'B' && defined(SPIB_SCK)
     #define VS1053_SCK  SPIB_SCK
     #define VS1053_MISO SPIB_MISO
     #define VS1053_MOSI SPIB_MOSI
+    #define VS1053_SPI_BUS 'B'
   #endif
+  #undef VS1053_SPI // audioVS1053Ex.h declares 'SPISettings VS1053_SPI' so now we need to undefine it (saving it first for bootlog in VS1053_SPI_BUS)
 #endif
 /* Do not set VS1053_SPIBUS in myoptions.h */
 #if VS1053_CS != 255
@@ -424,8 +427,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
     #define VS1053_SPIBUS SPIA // VS1053 on Bus A
   #endif
 #endif
-// audioVS1053Ex.h declares 'SPISettings VS1053_SPI' so now we need to undefine it
-#undef VS1053_SPI
 /* Enables flac decoding on true VS1053B boards - will be disabled unless explicitly set true in myoptions.h */
 #ifndef VS_PATCH_ENABLE
   #define VS_PATCH_ENABLE false /* Enables FLAC playback on VS1053B boards but should be false (the default) for VS1003 and VS1053 (non-B) boards. Some boards sold as VS1053 but actually VS1003 will have 2.5V voltage regulator instead of 1.8V. */
@@ -686,19 +687,6 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #if BTN_PRESS_TICKS <= BTN_CLICK_TICKS
   #error define error in myoptions.h: BTN_PRESS_TICKS must be greater than BTN_CLICK_TICKS
 #endif
-/* Use this button to wake from deep sleep (other buttons can be reused) */
-#ifndef WAKE_PIN
-  #define WAKE_PIN 255 // Wake Pin (manual wakeup from deep sleep. can match with BTN_XXXX, ENC_SW, ENC2_SW)
-                // ESP32: RTC-capable GPIOs only: 0,2,4,12-15,25-27,32-39
-                // ESP32-S3: RTC-capable GPIOs only: 0-21
-                // ESP32-C3: RTC-capable GPIOs only: 0-5
-#endif
-// WAKE_PIN polarity default: LOW = active-low button (pin held HIGH by pull-up; wakes when button pulls to GND)
-// #define WAKE_PIN_STATE HIGH for active-high circuits (pin held LOW by pull-down; wakes when button pulls to VCC)
-#ifndef WAKE_PIN_STATE
-  #define WAKE_PIN_STATE LOW
-#endif
-
 /* --- TOUCH SCREEN --- */
 #define TS_MODEL_UNDEFINED 0
 #define TS_MODEL_XPT2046 1
@@ -741,6 +729,12 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef IR_TIMEOUT
   #define IR_TIMEOUT 80 // kTimeout, see IRremoteESP8266 documentation
 #endif
+
+/* --- Deep Sleep --- */
+// Wake is only possible on RTC-capable pins. ESP32 RTC GPIOs: 0, 2, 4, 12-15, 25-27, 32-39 / ESP32-S3/C3 RTC GPIOs: 0-21.
+// Inputs assigned to these pins will automatically be used for Wake. This includes TS_INT, ENC_CLK, ENC_DT, ENC_SW, and all BTN_.
+// Use this to disable Deep Sleep entirely:
+// #define DEEP_SLEEP_DISABLE
 
 
 /* ============================== RTC ============================== */

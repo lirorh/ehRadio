@@ -227,7 +227,7 @@ void AudioHandlers::handleShowStation(const char* info) {
 }
 
 void AudioHandlers::handleShowStreamTitle(const char* info) {
-  handleAccountError(info);
+  if (handleAccountError(info)) return;  // error handled, don't display raw HTTP response as title
   bool printable = isPrintable(info) && (strlen(info) > 0);
   #ifdef DEBUG_TITLES
     config.setTitle(DEBUG_TITLES);

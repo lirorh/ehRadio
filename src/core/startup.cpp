@@ -29,6 +29,7 @@ void Startup::checkSafeMode() {
 }
 
 void Startup::bootInSafeMode() {
+  delay(1000);  // Allow serial monitor to connect before logging safe mode
   FUNCTIONLOG("SAFE MODE", "Smartstart and Autoupdate disabled for this session");
   config.store.smartstart = false;
   config.store.autoupdate = false;

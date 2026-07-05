@@ -98,36 +98,41 @@ There are many considerations to make when building a radio.
 
 ### ESP Board
 
-I personally build with ESP32-S3 boards.  I recommend using an S3 board with at least 2MB of PSRAM and 8MB of flash.
+I recommend using an S3 board with at least 2MB of PSRAM and 8MB of flash. I personally build with ESP32-S3 N16R8 boards.
 
-This code may still run on an ESP32 but without at least 1MB of PSRAM will have serious issues.
+It may be possible to use a board with 4MB of flash but will require special partitioning.
 
-I recommend choosing a board which has the option of an external antenna.
+This code may still run on an ESP32 but without PSRAM will have serious issues that may be unfixable.
+
+It is also possible to build with an ESP32-C3 but since that is not a dual-core CPU, it would be prudent to avoid larger and/or SPI displays.
+
+I strongly recommend choosing a board which has the option of an external antenna.
+
+I also recommend using a minimum of 470µF 10V capacitor somewhere in your circuit across the `5V` and `GND` (attach negative to `GND`).
+It helps to stablize the system during boot and smooth out the sudden power draw during operations like initializing the decoder, screen, wi-fi, etc.
+It doesn't really matter where as long as the `5V` is in common with the power-input of the ESP.
+I put mine on the SD Card Reader.  Putting it directly on the ESP pins is also an option.
+You may size up either number.  I usually use a 1000 µF 16V or 25V capacitor.
 
 ### Display
 
 ILI9488 is big but uses a 24-bit bus so can be slow to update (so choose the ST7796 if you want a display that updates faster).
 
-SPI color TFT displays all look pretty good.
+SPI color TFT displays all look pretty good (IPS versions will always look better even if they don't photograph well).
 
-OLEDs are cheap, beautiful and just as functional (SPI or I2C doesn't matter).
+OLEDs are cheap, beautiful (in a retro way) and just as functional (SPI or I2C doesn't matter).
+
+LCD displays like the 1602, 2004, and Nokia 5110 may work but will not be as good-looking as the others.
 
 ### Audio Decoder
 
-VS1053b can be a tricky decoder to buy - some are sold as VS1003/1053 which are almost certainly a VS1003.
-Genuine VS1053 is usually $10 minimum. Shop carefully and don't buy the cheapest one.
-
-The VS1053's advantage is that it takes pressure off the CPU and decodes streams on-board.
-It also has an amplifer. For the VU Meter to function, the patch MUST be enabled.
-Even with the patch, though, it cannot decode FLAC streams and some other "unusal" stream types.
-
-A VS1003 will still be functional for MP3 stations but not much else. It cannot use the patch.
+#### I2S
 
 I2S Decoders use the CPU to decode data so it can be used with many types of streams.
 It does put pressure on the CPU so it does have trouble running with large SPI displays.
 I have done my best to mitigate that but it is what is.
 
-I2S decoders are cheap and plentiful and I don't think anyone has ever worrried about buying a fake..
+I2S decoders are cheap and plentiful and I don't think anyone has ever worrried about buying a fake.
 
 A good I2S Decoder is the PCM5102. The UDA1334 should work and there are likely others.
 
@@ -136,11 +141,51 @@ PAM IC amps are generally easy to work with but... your mileage will vary.
 
 The ES8311 is a mono I2S decoder included on some dev board / display combos.  It's not terrible.
 
+#### VS1053
+
+I love the idea of the VS1053.  It decodes streams directly and relieves pressure from the CPU.
+Whereas I2S decodes streams using the CPU, the VS1053 can decode most popular codecs directly on the board,
+relieving the CPU to handle other functions...
+
+But the technology behind the VS1053 (2009) pre-dates the ESP8266 (2013) and the libraries have not
+received the same attention from developers as the I2S decoding routines.
+
+There are additional issues as well so it is probably best to reserve building using the VS1053
+when using very slow displays like the ILI9488.
+
+It also has an amplifer. For the VU Meter to function, the patch MUST be enabled.
+Even with the patch, though, it struggles to decode FLAC streams and some other "unusual" stream types.
+
+VS1053b can be a tricky decoder to buy - some are sold as VS1003/1053 which are almost certainly a VS1003.
+Genuine VS1053 is usually $10 minimum. Shop carefully and don't buy the cheapest one.
+
+If you end up with a VS1003, it will still be functional for MP3 stations but not much else.
+It cannot use the patch and there will be no audio if you use `#define VS_PATCH_ENABLE true` in `myoptions.h`.
+
+It is recommended to remove the resistor marked `R2` to prevent the VS1053 from accidentally entering "MIDI mode"
+on boot (which would also prevent the patch from being applied - again resulting in no audio).
+
+ESP32-S3 GPIO pins have an incredibly fast transition time (slew rate), which is around 1-2ns.
+Even with short wires around 10-15 cm, these sharp edges cause severe signal reflections ("ringing").
+A 33Ω resistor placed right next to the ESP32 pin before wiring to the VS1053 boared provides source impedance matching
+and damps the reflected wave, preventing data micro-glitches.
+Acceptable alternatives to 33Ω are in the range of 22Ω to 47Ω.  No higher or lower.
+
+Importantly, this is critical not only for the clock and data lines (SCK and MOSI) but also for the chip select lines (XCS and XDCS).
+If a sharp edge causes ringing or cross-talk from the adjacent SCK wire on these strobe lines, the noise amplitude can falsely cross the logic threshold.
+As a result, the decoder might assume the communication session was interrupted right in the middle of a data frame transfer.
+This may manifest in the logs with excessive `slow stream, dropouts are possible` messages as well as with audio artifacts like pops and clicks.
+
 ### Controls
 
 ehRadio can be built with various control methods, including rotary encoders, buttons, an IR receiver, touchscreen, WebUI, Home Assistant, MQTT, Telnet, and HTTP.
 
 The most basic physical control is a rotary encoder.  All functions can be accomplished with just one encoder.
+
+Buttons may also be used. Touch is swipe and tap motions only.
+
+Regarding Deep Sleep: Wake is only possible on RTC-capable pins. On the ESP32, these are RTC GPIOs: `0`, `2`, `4`, `12-15`, `25-27`, `32-39`.
+ESP32-S3/C3 RTC GPIOs are: `0-21`. Inputs assigned to these pins will automatically be used for Wake.
 
 Information on how the controls function detailed are [here](Controls.md).
 
@@ -149,12 +194,13 @@ Information on how the controls function detailed are [here](Controls.md).
 ## Documentation
 
 The best starting point (after reading this page) is the [myoptions Generator](https://trip5.github.io/ehRadio/myoptions/generator.html).
-This can assist in making a very good `myoptions.h` file, which should be placed in the root of the build folder next to `platformio.ini` (which the generator also makes). 
-It contains almost all supported hardware and peripherals which can be used when building an ehRadio.
+This can assist in making a very good `myoptions.h` file, which should be placed in the root of the build folder next to `platformio.ini` (which the generator also makes).
+
+The generator contains almost all supported hardware and peripherals which can be used when building an ehRadio, as well as many notes.
 It can generate a shareable link (json is encoded in the URL) and can even contain advanced options and notes.
 
-If you need to get more advanced options, a lot of build options and comments and notes are actually in `options.h`.
-Contained within are numerous notes on how to further customize your `myoptions.h`.
+If you need to get more advanced options, there are more build options and comments and notes in `options.h`.
+You can use these notes to further customize your `myoptions.h`.
 Some hardware questions may also be answered within this file.
 
 Want to get even more advanced? There are bunches of notes and tools in the codebase including font editors & builders, localization scripts, and more.
@@ -175,10 +221,20 @@ For that and other major needed changes to the codebase, there is a `code-issues
 ### Languages
 
 If using a display other than English (either on the display or in the WebUI), there be errors in the translation.
-
-They are really there as proof-of-concept.  They were translated by machines.  Fixes or additions are absolutely welcome.
-
+They are really there as proof-of-concept.  They were translated by machines.  Fixes or additions are always welcome.
 There are tools in the codebase to assist with translation work.
+
+### Serial Output
+
+When in doubt or having issues, check the serial output.  Serial output logs show a lot of useful information.
+Add `#define ALL_DEBUG_LOGS` to your `myoptions.h` to view extended diagnostic information.
+Connecting via telnet will also show serial logs.
+
+### Safe Mode
+
+After booting, the device waits 30 seconds after network connection to mark (in NVS) the boot as stable.
+If powering off before this time has elapsed, the next boot will enter "safe mode" - which merely disables smart start and auto update.
+The settings will appear as off but there is no need to change them as they will resume their saved setting on next boot (if the safe mode boot was marked as stable).
 
 ---
 
@@ -295,6 +351,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
+| 2026.07.05 | More fixes to VS1053, Wake from Deep Sleep now works on all RTC-capable pins |
 | 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |
 | 2026.06.18 | WebUI files now served from PSRAM cache (if available) which eliminates audio stuttering for I2S decoders, adjustments to PSRAM-related code, rotary encoders fix |
@@ -326,7 +383,7 @@ A full history of ёRadio from v0.4.177 to v0.9.533 can be seen in the [old Read
 ### Credit
 
 Thanks to:
-  - [kle7rx](https://github.com/kle7rx) - `ru_RU` translation and debugging
+  - [kle7rx](https://github.com/kle7rx) - `ru_RU` translation, debugging, VS1053 hardware tips
   - [Kasperaitis](https://github.com/kasperaitis) - `lt_LT` translation, initiating locales (WebUI and display language) and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
   - [e2002](https://github.com/e2002) - for [ёRadio](https://github.com/e2002/yoradio/) without which ehRadio would not be possible
 

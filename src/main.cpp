@@ -48,7 +48,6 @@ void setup() {
   // Initialize battery monitoring
   battery.init();
   config.init();
-  startup.checkSafeMode();
   backlightControls.init();
   display.init();
   player.init();

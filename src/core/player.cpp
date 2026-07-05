@@ -165,7 +165,11 @@ void Player::loop() {
         config.setVolume(requestP.payload);
         config.saveValueButWait(&config.store.volume, (uint8_t)requestP.payload, 3000);
         uint8_t i2sVol = volToI2S(requestP.payload);
-        Audio::setVolume(i2sVol);
+        #if VS1053_CS != 255
+          Audio::setVolume(map(i2sVol, 0, VOLUME_SCALE, 0, 255));  // VS1053 expects full 0-255 range
+        #else
+          Audio::setVolume(i2sVol);
+        #endif
         #ifdef USE_ES8311
           es.setVolume((uint8_t)map(i2sVol, 0, VOLUME_SCALE, 0, 100)); /* Map I2S volume (already adjusted for station ovol) 0..VOLUME_SCALE -> codec 0..100 */
         #endif
@@ -436,7 +440,11 @@ uint8_t Player::volToI2S(uint8_t volume) {
 }
 
 void Player::_loadVol(uint8_t volume) {
-  setVolume(volToI2S(volume));
+  #if VS1053_CS != 255
+    setVolume(map(volToI2S(volume), 0, VOLUME_SCALE, 0, 255));  // VS1053 expects full 0-255 range
+  #else
+    setVolume(volToI2S(volume));
+  #endif
 }
 
 void Player::setVol(uint8_t volume) {

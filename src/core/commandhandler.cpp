@@ -79,17 +79,25 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "shuffle"))         { config.saveValue(&config.store.sdshuffle, static_cast<bool>(atoi(value))); if (config.store.sdshuffle) player.next(); return true; }
   if (cmdIs(command, "start"))           { if (config.getMode() == PM_WEB) return player.resumeLastWebSource(); player.sendCommand({PR_PLAY, config.lastStation()}); return true; }
   if (cmdIs(command, "stop"))            { cancelStreamRetry(); player.sendCommand({PR_STOP, 0}); return true; }
-  if (cmdIs(command, "sleep")) {
-    int sfor = 0;
-    int safter = 0;
-    if (sscanf(value, "%d,%d", &sfor, &safter) != 2 && sscanf(value, "%d %d", &sfor, &safter) != 2) {
-      if (sscanf(value, "%d", &sfor) != 1) return false;
-      safter = 0;
+  #ifndef DEEP_SLEEP_DISABLE
+    if (cmdIs(command, "sleep")) {
+      if (value[0] == '\0') {
+        cancelStreamRetry();
+        utility.doSleepW();
+        return true;
+      }
+      int sfor = 0;
+      int safter = 0;
+      if (sscanf(value, "%d,%d", &sfor, &safter) != 2 && sscanf(value, "%d %d", &sfor, &safter) != 2) {
+        if (sscanf(value, "%d", &sfor) != 1) return false;
+        safter = 0;
+      }
+      if (sfor <= 0 || safter < 0) return false;
+      cancelStreamRetry();
+      utility.sleepForAfter(static_cast<uint16_t>(sfor), static_cast<uint16_t>(safter));
+      return true;
     }
-    if (sfor <= 0 || safter < 0) return false;
-    utility.sleepForAfter(static_cast<uint16_t>(sfor), static_cast<uint16_t>(safter));
-    return true;
-  }
+  #endif // DEEP_SLEEP_DISABLE
   if (cmdIs(command, "mode"))            { cancelStreamRetry(); config.changeMode(atoi(value)); return true; }
   if (cmdIs(command, "submitplaylist"))  { cancelStreamRetry(); player.sendCommand({PR_STOP, 0}); return true; }
   if (cmdIs(command, "submitplaylistdone")) {

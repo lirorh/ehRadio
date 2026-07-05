@@ -456,7 +456,9 @@ void Telnet::on_input(const char* str, uint8_t clientId) {
       printf(clientId, "  volup | voldown        Step volume\r\n");
       printf(clientId, "  play <index>           Play station number\r\n");
       printf(clientId, "  start | stop           Start/Stop playback\r\n");
-      printf(clientId, "  sleep <for>[,<after>]  Sleep timer\r\n");
+      #ifndef DEEP_SLEEP_DISABLE
+        printf(clientId, "  sleep <for>[,<after>]  Sleep timer\r\n");
+      #endif
       printf(clientId, "  mode <0|1|2>           0=Radio(Web), 1=SD Card, 2=Cycle\r\n");
       printf(clientId, "\r\n");
       printf(clientId, "For a full list, consult the documentation.\r\n");

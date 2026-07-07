@@ -11,6 +11,7 @@
 #include "sdmanager.h"
 #include "display.h"
 #include "player.h"
+#include "utility.h"
 
 // SPIB is declared and initialized in config.cpp (Config::init) — do not re-declare here.
 // SD uses Bus B if assigned via SD_SPI 'B', otherwise Bus A.
@@ -139,8 +140,23 @@ void SDManager::indexSDPlaylist() {
   }
   File index = open(INDEX_SD_PATH, "w", true);
   listSD(playlist, index, "/", SD_MAX_LEVELS);
-  index.flush();
+
+  // Append footer: [magic:4][fileCount:4][freeSpace:8] = 16 bytes
+  // - magic     = 0x65685249 ("ehRI") validates this is our format
+  // - fileCount = number of audio files found
+  // - freeSpace = free bytes on SD card (staleness: detects add/remove/resize/re-encode)
+  if (index) {
+    index.flush();  // ensure size() is accurate before appending footer
+    uint32_t magic = 0x65685249;  // "ehRI"
+    uint32_t fcount = _sdFCount;
+    uint64_t freeSpace = (uint64_t)(totalBytes() - usedBytes());
+    index.seek(index.size());
+    index.write((uint8_t*)&magic, 4);
+    index.write((uint8_t*)&fcount, 4);
+    index.write((uint8_t*)&freeSpace, 8);
+  }
   index.close();
+
   playlist.flush();
   playlist.close();
   SERIALLOG("");

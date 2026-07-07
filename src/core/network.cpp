@@ -107,7 +107,7 @@ void ticks() {
       display.putRequest(CLOCK);
     }
   #else
-    if (network.timeinfo.tm_year>100 || network.status == SDREADY) {
+    if (network.timeinfo.tm_year>100 || network.status == SDOFFLINE) {
       network.timeinfo.tm_sec++;
       mktime(&network.timeinfo);
       display.putRequest(CLOCK);
@@ -194,7 +194,6 @@ void MyNetwork::WiFiLostConnection(WiFiEvent_t event, WiFiEventInfo_t info) {
   if (!network.beginReconnect) {
     SERIALLOG("WiFiLost: %lu ms, event=%d, SSID=%s, RSSI=%d", millis(), (int)event, config.ssids[config.store.lastSSID-1].ssid, WiFi.RSSI());
     if (config.getMode()==PM_SDCARD) {
-      network.status=SDREADY;
       display.putRequest(NEWIP, 0);
     } else {
       network.lostPlaying = player.isRunning();
@@ -216,19 +215,19 @@ bool MyNetwork::wifiBegin(bool silent) {
   uint8_t startedls = ls;
   uint8_t errcnt = 0;
   WiFi.mode(WIFI_STA);
-  struct MatchedNetwork {
-    uint8_t configIndex;
-    int scanIndex;
-    int32_t rssi;
-    uint8_t channel;
-    uint8_t bssid[6];
-  };
-  MatchedNetwork matches[20];  // Max 20 matches (reasonable limit)
-  int matchCount = 0;
-  if (config.store.wifiscanbest && !silent) BOOTLOG("Scanning for best available network...");
-  int n = WiFi.scanNetworks();
 
   if (config.store.wifiscanbest) {
+    struct MatchedNetwork {
+      uint8_t configIndex;
+      int scanIndex;
+      int32_t rssi;
+      uint8_t channel;
+      uint8_t bssid[6];
+    };
+    MatchedNetwork matches[20];
+    int matchCount = 0;
+    if (!silent) BOOTLOG("Scanning for best available network...");
+    int n = WiFi.scanNetworks();
     if (!silent) BOOTLOG("Scan complete: %d networks found", n);
     if (n > 0) {
       // Find all matching networks and build sorted list
@@ -294,50 +293,55 @@ bool MyNetwork::wifiBegin(bool silent) {
         if (LED_PIN!=255 && !silent) digitalWrite(LED_PIN, !digitalRead(LED_PIN));
         errcnt++;
         if (errcnt > WIFI_ATTEMPTS) {
+          SERIALLOG("");
           break;  // Failed, try next match
         }
       }
       if (WiFi.status() == WL_CONNECTED) {
+        SERIALLOG("");
         WiFi.scanDelete();
         config.setLastSSID(configIdx + 1);
         return true;
       }
     }
 
-    // All scanned matches failed, clean up
+    // All scanned matches failed
     WiFi.scanDelete();
-    if (!silent) BOOTLOG("All scanned networks failed, falling back to sequential try");
-    ls = startedls;
-  }
-  
-  // Fallback: try all configured SSIDs sequentially (original behavior)
-  while (true) {
-    if (!silent) {
-      BOOTLOG("Attempt to connect to %s", config.ssids[ls].ssid);
-      BOOTLOGX("\t");
-      display.putRequest(BOOTSTRING, ls);
-    }
-    WiFi.begin(config.ssids[ls].ssid, config.ssids[ls].password);
-    
-    while (WiFi.status() != WL_CONNECTED) {
-      if (!silent) SERIALLOGDOT();
-      delay(500);
-      network.loopImprov();
-      if (LED_PIN!=255 && !silent) digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-      errcnt++;
-      if (errcnt > WIFI_ATTEMPTS) {
-        errcnt = 0;
-        ls++;
-        if (ls > config.ssidsCount - 1) ls = 0;
+    if (!silent) BOOTLOG("All scanned networks failed.");
+    return false;
+  } else {
+    // Try all configured SSIDs sequentially (original behavior)
+    while (true) {
+      if (!silent) {
+        BOOTLOG("Attempt to connect to %s", config.ssids[ls].ssid);
+        BOOTLOGX("\t");
+        display.putRequest(BOOTSTRING, ls);
+      }
+      WiFi.begin(config.ssids[ls].ssid, config.ssids[ls].password);
+      while (WiFi.status() != WL_CONNECTED) {
+        if (!silent) SERIALLOGDOT();
+        delay(500);
+        network.loopImprov();
+        if (LED_PIN!=255 && !silent) digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+        errcnt++;
+        if (errcnt > WIFI_ATTEMPTS) {
+          errcnt = 0;
+          ls++;
+          if (ls > config.ssidsCount - 1) ls = 0;
+          break;
+        }
+      }
+      if (WiFi.status() != WL_CONNECTED && ls == startedls) {
+        SERIALLOG("");
+        return false;
         break;
       }
-    }
-    if (WiFi.status() != WL_CONNECTED && ls == startedls) {
-      return false; break;
-    }
-    if (WiFi.status() == WL_CONNECTED) {
-      config.setLastSSID(ls + 1);
-      return true; break;
+      if (WiFi.status() == WL_CONNECTED) {
+        SERIALLOG("");
+        config.setLastSSID(ls + 1);
+        return true;
+        break;
+      }
     }
   }
   return false;
@@ -373,20 +377,6 @@ void MyNetwork::ehDPinit() {
   } else {
     BOOTLOG("ehDP failed to start");
   }
-}
-
-void searchWiFi(void * pvParameters) {
-  if (!network.wifiBegin(true)) {
-    delay(10000);
-    xTaskCreatePinnedToCore(searchWiFi, "searchWiFi", NETWORK_TASK_STACK_BYTES, NULL, NET_TASK_PRIORITY, NULL, NETWORK_CORE);
-  } else {
-    network.status = CONNECTED;
-    netserver.begin(true);
-    telnet.begin(true);
-    network.setWifiParams();
-    display.putRequest(NEWIP, 0);
-  }
-  vTaskDelete(NULL);
 }
 
 void wifiReconnectionTask(void * pvParameters) {
@@ -441,23 +431,36 @@ void MyNetwork::begin() {
     raiseSoftAP();
     return;
   }
-  if (config.getMode()!=PM_SDCARD) {
+  if (config.getMode()==PM_SDCARD && (offlineMode || config.store.offlineSD)) {
+    // Offline SD mode (button hold or AP→SD restart) — skip Wi-Fi entirely
+    status = SDOFFLINE;
+    if (config.store.offlineSD) {
+      config.saveValue(&config.store.offlineSD, false);  // clear one-shot flag
+    }
+  } else if (config.getMode()==PM_SDCARD) {
+    // Regular SD mode (from NVS) — Wi-Fi as normal; if fails, go to AP
     if (!wifiBegin()) {
       raiseSoftAP();
       SERIALLOG("");
       BOOTLOG("Raise SoftAP done");
       return;
     }
-    SERIALLOGDOT();
     status = CONNECTED;
     setWifiParams();
   } else {
-    status = SDREADY;
-    xTaskCreatePinnedToCore(searchWiFi, "searchWiFi", NETWORK_TASK_STACK_BYTES, NULL, NET_TASK_PRIORITY, NULL, NETWORK_CORE);
+    // Web mode — Wi-Fi as normal
+    if (!wifiBegin()) {
+      raiseSoftAP();
+      SERIALLOG("");
+      BOOTLOG("Raise SoftAP done");
+      return;
+    }
+    status = CONNECTED;
+    setWifiParams();
   }
   SERIALLOG("");
   BOOTLOG("Wifi done");
-  ehDPinit();
+  if (status != SDOFFLINE) ehDPinit();  // skip mDNS/ehDP in offline SD mode
   if (LED_PIN!=255) digitalWrite(LED_PIN, LOW);
   
   #if RTCSUPPORTED

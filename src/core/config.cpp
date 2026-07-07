@@ -148,8 +148,11 @@ void Config::changeMode(int newmode) {
       sdResumePos = player.getFilePos();
     }
     if (network.status==SOFT_AP || display.mode()==LOST) {
+      saveValue(&store.lastBootGood, true);  // intentional restart, not a crash
+      saveValue(&store.offlineSD, true);
       saveValue(&store.play_mode, static_cast<uint8_t>(PM_SDCARD));
-      delay(50);
+      display.putRequest(NEWMODE, CLEAR);
+      delay(100);
       ESP.restart();
     }
     if (!sdman.ready && newmode!=PM_WEB) {
@@ -185,7 +188,12 @@ void Config::changeMode(int newmode) {
       delay(50);
     }
     if (getMode()==PM_WEB) {
-      if (network.status==SDREADY) ESP.restart();
+      if (network.status==SDOFFLINE) {
+        saveValue(&store.lastBootGood, true);  // intentional restart, not a crash
+        display.putRequest(NEWMODE, CLEAR);
+        delay(100);
+        ESP.restart();
+      }
       sdman.stop();
     }
     if (!_bootDone) return;
@@ -204,18 +212,37 @@ void Config::changeMode(int newmode) {
 
 void Config::initSDPlaylist() {
   #ifdef USE_SD
-    //store.countStation = 0;
     bool doIndex = !sdman.exists(INDEX_SD_PATH);
-    if (doIndex) sdman.indexSDPlaylist();
-    if (SDPLFS()->exists(INDEX_SD_PATH)) {
+    if (!doIndex) {
       File index = SDPLFS()->open(INDEX_SD_PATH, "r");
-      //store.countStation = index.size() / 4;
-      if (doIndex) {
-        lastStation(_randomStation());
-        sdResumePos = 0;
+      // Footer: [magic:4][fileCount:4][freeSpace:8] = 16 bytes
+      if (index && index.size() >= 20) {  // min: 1 entry (4) + footer (16)
+        uint32_t magic, storedCount;
+        uint64_t storedFreeSpace;
+        index.seek(index.size() - 16);
+        index.readBytes((char*)&magic, 4);
+        index.readBytes((char*)&storedCount, 4);
+        index.readBytes((char*)&storedFreeSpace, 8);
+        if (magic != 0x65685249) {  // "ehRI"
+          FUNCTIONLOG("SD", "Index format mismatch (old format) — re-indexing");
+          doIndex = true;
+        } else {
+          uint64_t currentFreeSpace = (uint64_t)(sdman.totalBytes() - sdman.usedBytes());
+          if (storedFreeSpace != currentFreeSpace) {
+            FUNCTIONLOG("SD", "Free space changed — re-indexing");
+            doIndex = true;
+          }
+        }
+      } else {
+        doIndex = true;
       }
-      index.close();
-      //saveValue(&store.countStation, store.countStation);
+      if (index) index.close();
+    }
+    if (doIndex) {
+      sdman.indexSDPlaylist();
+      store.countStation = utility.playlistLength();
+      lastStation(_randomStation());
+      sdResumePos = 0;
     }
   #endif //#ifdef USE_SD
 }
@@ -807,6 +834,8 @@ const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(mqttuser, "mqttuser"),
   CONFIG_KEY_ENTRY(mqttpass, "mqttpass"),
   CONFIG_KEY_ENTRY(mqtttopic, "mqtttopic"),
+  CONFIG_KEY_ENTRY(lastBootGood, "lastbootgood"),
+  CONFIG_KEY_ENTRY(offlineSD, "offlinesd"),
   {0, nullptr, 0} // Yup, 3 fields - don't delete the last line!
 };
 

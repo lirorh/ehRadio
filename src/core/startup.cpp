@@ -15,31 +15,20 @@
 Startup startup;
 
 void Startup::checkSafeMode() {
-  Preferences prefs;
-  prefs.begin("ehradio", false);
-  bool lastBootGood = prefs.getBool("lastbootgood", false);
-  if (!lastBootGood) {
-    bootInSafeMode();
+  if (!config.store.lastBootGood) {
+    delay(1000);  // Allow serial monitor to connect before logging safe mode
+    FUNCTIONLOG("SAFE MODE", "Smartstart and Autoupdate disabled for this session; SD Mode reset to Web and saved to NVS");
+    config.store.smartstart = false;
+    config.store.autoupdate = false;
+    config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
   }
   // Mark this boot as in-progress (not yet proven stable)
-  prefs.putBool("lastbootgood", false);
-  prefs.end();
+  config.saveValue(&config.store.lastBootGood, false);
   _bootStablePending = true;
-  // _bootStartMs set lazily on first loop() call, after setup() completes
-}
-
-void Startup::bootInSafeMode() {
-  delay(1000);  // Allow serial monitor to connect before logging safe mode
-  FUNCTIONLOG("SAFE MODE", "Smartstart and Autoupdate disabled for this session");
-  config.store.smartstart = false;
-  config.store.autoupdate = false;
 }
 
 void Startup::markBootStable() {
-  Preferences prefs;
-  prefs.begin("ehradio", false);
-  prefs.putBool("lastbootgood", true);
-  prefs.end();
+  config.saveValue(&config.store.lastBootGood, true);
   BOOTLOG("Boot stable after %lu ms", millis() - _bootStartMs);
 }
 

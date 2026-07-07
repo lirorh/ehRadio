@@ -3,7 +3,7 @@
 
 #include "options.h"
 
-#if defined(USE_AUDIO_I2S) || defined(USE_AUDIO_ESP32_DAC)
+#if defined(USE_AUDIO_I2S)
  #include "../libraries/I2S_Audio/Audio.h"
 #else
   #include "../libraries/VS1053_Audio/audioVS1053Ex.h"

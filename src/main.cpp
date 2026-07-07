@@ -48,12 +48,13 @@ void setup() {
   // Initialize battery monitoring
   battery.init();
   config.init();
+  controls.checkButtonsHeldOnBoot();  // check for hold-to-SD before network decision
   backlightControls.init();
   display.init();
   player.init();
   battery.bootStatus();
   network.begin();
-  if (network.status != CONNECTED && network.status!=SDREADY) {
+  if (network.status != CONNECTED && network.status != SDOFFLINE) {
     netserver.begin();
     netserver.startLoopTask();
     controls.init();
@@ -68,13 +69,15 @@ void setup() {
   }
   config.initPlaylistMode();
   netserver.begin();
-  netserver.startLoopTask();
-  telnet.begin();
+  if (network.status != SDOFFLINE) {
+    netserver.startLoopTask();
+    telnet.begin();
+  }
   controls.init();
   display.putRequest(DSP_START);
   while(!display.ready()) delay(10);
   #ifdef MQTT_ENABLE
-    if (config.store.mqttenable) mqtt.init();
+    if (config.store.mqttenable && network.status != SDOFFLINE) mqtt.init();
   #endif
   #if LED_INVERT
     if (LED_PIN!=255) digitalWrite(LED_PIN, true);
@@ -92,7 +95,7 @@ void setup() {
       }
     }
   }
-  startup.startupServices();
+  if (network.status != SDOFFLINE) startup.startupServices();  // needs WiFi — skip in offline SD mode
   netserver.setBootReady(true);
 }
 
@@ -112,7 +115,7 @@ void loop() {
   battery.applyPowerPolicy();
 
   controls.loop();
-  if (network.status == CONNECTED || network.status==SDREADY) {
+  if (network.status == CONNECTED || network.status == SDOFFLINE) {
     player.loop();
     config.processDeferredSaves();
   }

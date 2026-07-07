@@ -296,7 +296,7 @@ void Display::_apScreen() {
 
 void Display::_start() {
   if (_boot) _pager->removePage(_boot);
-  if (network.status != CONNECTED && network.status != SDREADY) {
+  if (network.status != CONNECTED && network.status != SDOFFLINE) {
     _apScreen();
       _bootStep = 2;
     return;
@@ -308,13 +308,13 @@ void Display::_start() {
   if (_bufferbar)  _bufferbar->lock(!config.store.bufferbar);
   
   if (_weather)  _weather->lock(!config.store.showweather);
-  if (_weather && config.store.showweather) network.buildWeatherString();
+  if (_weather && config.store.showweather && network.status != SDOFFLINE) network.buildWeatherString();
 
   if (_vuwidget) _vuwidget->lock();
-  if (_rssi)     _setRSSI(WiFi.RSSI());
+  if (_rssi && network.status != SDOFFLINE) _setRSSI(WiFi.RSSI());
   #ifndef HIDE_IP
-    if (_volip) {
-      #if IP_WEATHER_SHARED // weather and IP share the same bottom row; hide IP when weather is active
+    if (_volip && network.status != SDOFFLINE) {
+      #if IP_WEATHER_SHARED
         if (config.store.showweather) _volip->setText("");
         else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
       #else
@@ -348,7 +348,8 @@ void Display::_setReturnTicker(uint8_t time_s) {
 }
 
 void Display::_swichMode(displayMode_e newmode) {
-  if (newmode == _mode || (network.status != CONNECTED && network.status != SDREADY)) return;
+  if (newmode == CLEAR) { dsp.fillScreen(config.theme.background); return; }
+  if (newmode == _mode || (network.status != CONNECTED && network.status != SDOFFLINE)) return;
   _mode = newmode;
   dsp.setScrollId(NULL);
   if (newmode == PLAYER) {
@@ -387,6 +388,7 @@ void Display::_swichMode(displayMode_e newmode) {
       }
     #endif
     config.setDspOn(config.store.dspon, false);
+    display.putRequest(DBITRATE);  // refresh bitrate badge when returning to player (may have been cleared while on playlist page)
   }
   if (newmode == SCREENSAVER || newmode == SCREENBLANK) {
     config.isScreensaver = true;
@@ -569,6 +571,7 @@ void Display::loop() {
         case DRAWPLAYLIST: _drawPlaylist(); break;
         case DRAWVOL: _volume(); break;
         case DBITRATE: {
+            if (_mode != PLAYER) break;  // skip draws when player page isn't visible (e.g., SD file list)
             char buf[20];
             snprintf(buf, 20, bitrateFmt, config.station.bitrate);
             if (_bitrate) { _bitrate->setText(config.station.bitrate==0?"":buf); }

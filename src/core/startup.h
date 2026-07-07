@@ -14,7 +14,6 @@ public:
   void loop();
 
 private:
-  void bootInSafeMode();
   void markBootStable();
   void cleanStaleSearchResults();
   void getRequiredFiles();

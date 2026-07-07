@@ -131,6 +131,7 @@
   {
     "name": "NOKIA5110 (SPI 84x48 LCD)",
     "type": "SPI",
+    "info": "Uses SPI Bus A Pins: SPIA_SCK & SPIA_MOSI",
     "define": "DSP_MODEL DSP_NOKIA5110",
     "pins": [ "TFT_DC" ],
     "defines": [

@@ -158,6 +158,8 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   char      mqttuser[30] = MQTT_USER;
   char      mqttpass[40] = MQTT_PASS;
   char      mqtttopic[60] = MQTT_TOPIC;
+  bool      lastBootGood = false;  // safe mode: set true when boot proves stable
+  bool      offlineSD = false;  // one-shot: set by AP→SD switch, cleared on next boot
 
   // if adding a variable, you can do it anywhere, just be sure to add it to configKeyMap() in config.cpp
   // if removing a variable and key, add to deleteOldKeys()

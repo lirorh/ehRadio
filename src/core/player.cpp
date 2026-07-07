@@ -32,11 +32,7 @@ QueueHandle_t playerQueue;
     delay(100);
   }
 #else
-  #ifndef USE_AUDIO_ESP32_DAC
-    Player::Player() {}
-  #else
-    Player::Player(): Audio(true, I2S_DAC_CHANNEL_BOTH_EN)  {}
-  #endif
+  Player::Player() {}
 #endif
 
 void Player::init() {
@@ -49,10 +45,8 @@ void Player::init() {
   memset(_plError, 0, PLERR_LN);
   memset(burl, 0, sizeof(burl));
   if (MUTE_PIN!=255) pinMode(MUTE_PIN, OUTPUT);
-  #if defined(USE_AUDIO_I2S) || defined(USE_AUDIO_ESP32_DAC)
-    #ifndef USE_AUDIO_ESP32_DAC
-      setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_DIN, I2S_MCLK);
-    #endif
+  #if defined(USE_AUDIO_I2S)
+    setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_DIN, I2S_MCLK);
   #else
     // SPI.begin(); // started in config.init()
     if (VS1053_RST>0) ResetChip();
@@ -130,7 +124,7 @@ void Player::_stop(bool alreadyStopped) {
 }
 
 void Player::initHeaders(const char *file) {
-  if (strlen(file)==0 || true) return; //TODO Read TAGs
+  if (strlen(file)==0 || true) return; //TODO Read TAGs (SD Mode) (may never be implemented because I2S already handles metadata correctly, the issue only exists on VS1053 non-MP3)
   connecttoFS(sdman,file);
   eofHeader = false;
   while(!eofHeader) Audio::loop();
@@ -165,11 +159,7 @@ void Player::loop() {
         config.setVolume(requestP.payload);
         config.saveValueButWait(&config.store.volume, (uint8_t)requestP.payload, 3000);
         uint8_t i2sVol = volToI2S(requestP.payload);
-        #if VS1053_CS != 255
-          Audio::setVolume(map(i2sVol, 0, VOLUME_SCALE, 0, 255));  // VS1053 expects full 0-255 range
-        #else
-          Audio::setVolume(i2sVol);
-        #endif
+        Audio::setVolume(i2sVol);
         #ifdef USE_ES8311
           es.setVolume((uint8_t)map(i2sVol, 0, VOLUME_SCALE, 0, 100)); /* Map I2S volume (already adjusted for station ovol) 0..VOLUME_SCALE -> codec 0..100 */
         #endif
@@ -440,11 +430,7 @@ uint8_t Player::volToI2S(uint8_t volume) {
 }
 
 void Player::_loadVol(uint8_t volume) {
-  #if VS1053_CS != 255
-    setVolume(map(volToI2S(volume), 0, VOLUME_SCALE, 0, 255));  // VS1053 expects full 0-255 range
-  #else
-    setVolume(volToI2S(volume));
-  #endif
+  setVolume(volToI2S(volume));
 }
 
 void Player::setVol(uint8_t volume) {

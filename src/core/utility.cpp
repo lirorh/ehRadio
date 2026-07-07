@@ -440,7 +440,13 @@ uint16_t Utility::playlistLength() {
   uint16_t out = 0;
   if (config.SDPLFS()->exists(REAL_INDEX)) {
     File index = config.SDPLFS()->open(REAL_INDEX, "r");
-    out = index.size() / 4;
+    size_t sz = index.size();
+    // SD index has a 16-byte footer: [magic:4][count:4][freeSpace:8]
+    if (config.getMode() == PM_SDCARD) {
+      out = (sz >= 16) ? ((sz - 16) / 4) : 0;
+    } else {
+      out = sz / 4;
+    }
     index.close();
   }
   return out;
@@ -719,6 +725,31 @@ bool Utility::updateLocaleFileAsync(const char* localeCode, uint8_t clientId) {
     websocket.text(clientId, msg);
     return true;
   #endif
+}
+
+// Software CRC32 (portable fallback; ESP32 has hardware crc32_le in ROM)
+static uint32_t crc32_update(uint32_t crc, const uint8_t* data, size_t len) {
+  for (size_t i = 0; i < len; i++) {
+    crc ^= data[i];
+    for (int j = 0; j < 8; j++) {
+      crc = (crc >> 1) ^ ((crc & 1) ? 0xEDB88320 : 0);
+    }
+  }
+  return crc;
+}
+
+// Compute CRC32 of an open file's content (from current position, for 'len' bytes)
+uint32_t fileCRC32(File& f, size_t len) {
+  uint32_t crc = 0;
+  uint8_t buf[64];
+  while (len > 0) {
+    size_t chunk = (len < sizeof(buf)) ? len : sizeof(buf);
+    size_t read = f.readBytes((char*)buf, chunk);
+    if (read == 0) break;
+    crc = crc32_update(crc, buf, read);
+    len -= read;
+  }
+  return crc;
 }
 
 Utility utility;

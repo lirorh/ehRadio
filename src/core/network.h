@@ -5,11 +5,12 @@
 #include <DNSServer.h>
 #include <ImprovWiFiLibrary.h>
 
-enum n_Status_e { CONNECTED, SOFT_AP, FAILED, SDREADY };
+enum n_Status_e { CONNECTED, SOFT_AP, FAILED, SDOFFLINE };
 
 class MyNetwork {
   public:
     n_Status_e status = FAILED;
+    bool offlineMode = false;  // set by checkButtonsHeldOnBoot(); never persisted
 // Ensure DNSServer full definition is available
     struct tm timeinfo = {0};
     bool firstRun = true, forceTimeSync = true, forceWeather = true;
@@ -38,7 +39,6 @@ class MyNetwork {
 
 void ticks();
 void retryStreamConnection(void * pvParameters);
-void searchWiFi(void * pvParameters);
 void wifiReconnectionTask(void * pvParameters);
 void rebootTime();
 void doSync(void * pvParameters);

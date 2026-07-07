@@ -273,6 +273,26 @@ Two reliability issues found during hardware testing with `VS_PATCH_ENABLE=true`
 1. **SPI speed too high for patch loading**: Patch was applied at 6.7 MHz, but VS1053B SCI max is CLKI/4 ≈ 3 MHz at 12.288 MHz CLKI. This marginal overclocking could corrupt patch data on some chips.
 2. **Chip ID query ran AFTER patch**: `read_register(SCI_STATUS)` at `player.cpp:60` ran after `loadUserCode()` — if the patch corrupted chip state, the register read could hang or return garbage.
 
+### Volume Curve Fix (2026-07-06)
+
+**Problem**: The PR226 library's `VS1053VOL` macro used a log10 curve: `log10(v+1) × 50.5457 + 128`. With `VOLUME_SCALE=42`, the maximum VS1053VOL output only reached 210 out of 254 — the SCI_VOL register never got close to 0x00 (maximum volume). Max volume was significantly quieter than the old library which used 0..255 input range.
+
+**Fix**: Replaced the log10 curve with user-selectable VOLUME_SCALE-aware cubic polynomials. Three options controlled by compile-time defines in `myoptions.h`:
+
+| Define | Formula | Starts at (t=0) | Use case |
+|--------|---------|-----------------|----------|
+| `VS1053_VOL_LOG` | `log10(scaled+1) × 50.5457 + 128` | N/A (register units) | Gentlest low-end, slowest rise |
+| `VS1053_VOL_CURVE` | `−112t³ + 172t² − 60` | −60 dB | Amplified VS1053 (matches I2S) |
+| _(default, no define)_ | `−65t³ + 100t² − 35` | −35 dB | Unamplified VS1053 |
+
+All curves use `t = v / VOLUME_SCALE` to normalize to 0..1, ensuring the full SCI_VOL register range (0x00 loudest) is reachable regardless of VOLUME_SCALE value.
+
+**Tuning the default curve**: Change `c` (the last coefficient, −35). Then `b = −c / 0.35`, `a = −(b + c)`. Lower |c| = louder at low volumes. Found by testing that c=−70 was inaudible below ~12/42, c=−35 makes quarter volume clearly audible.
+
+**File changed**: `src/libraries/VS1053_Audio/audioVS1053Ex.h` — `VS1053VOL` macro (lines 12-64).
+
+---
+
 ### Fixes Applied
 | # | File | Change |
 |---|------|--------|

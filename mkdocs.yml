@@ -14,6 +14,7 @@ theme:
     - search.highlight
     - search.share
     - content.code.copy
+    - content.tabs.link
     - toc.follow
   palette:
     # Light mode
@@ -53,6 +54,7 @@ markdown_extensions:
 
 nav:
   - Readme: index.md
+  - Hardware: Hardware.md
   - Controls: Controls.md
   - Commands: Commands.md
   - Trip 5's Notebook: images/notebook/notebook.md

@@ -121,7 +121,7 @@ void ticks() {
       display.putRequest(DSPRSSI, netserver.getRSSI());
     }
     #ifdef USE_SD
-      if (display.mode()!=SDCHANGE) player.sendCommand({PR_CHECKSD, 0});
+      if (config.getMode()==PM_SDCARD && display.mode()!=SDCHANGE) player.sendCommand({PR_CHECKSD, 0});
       #if SD_AUTOPLAY && SD_CARD_DETECT_PIN!=255
         if (config.getMode()!=PM_SDCARD && digitalRead(SD_CARD_DETECT_PIN)==LOW)
           config.changeMode(PM_SDCARD);
@@ -407,10 +407,9 @@ void wifiReconnectionTask(void * pvParameters) {
 #define DBGAP false
 
 void MyNetwork::begin() {
-  BOOTLOG("network.begin");
-  
   // Initialize Improv early if not already done, so it's always available via Serial
   if (!improv) {
+    BOOTLOG("improv.begin");
     improv = new ImprovWiFi(&Serial);
     #if defined(CONFIG_IDF_TARGET_ESP32S3)
       ImprovTypes::ChipFamily chip = ImprovTypes::ChipFamily::CF_ESP32_S3;
@@ -424,6 +423,7 @@ void MyNetwork::begin() {
     improv->setDeviceInfo(chip, "ehRadio", RADIOVERSION, "ehRadio", deviceUrl);
     improv->setCustomConnectWiFi(onImprovCustomConnect);
   }
+  BOOTLOG("network.begin");
 
   startup.initNetwork();
   ctimer.detach();
@@ -431,24 +431,10 @@ void MyNetwork::begin() {
     raiseSoftAP();
     return;
   }
-  if (config.getMode()==PM_SDCARD && (offlineMode || config.store.offlineSD)) {
-    // Offline SD mode (button hold or AP→SD restart) — skip Wi-Fi entirely
-    status = SDOFFLINE;
-    if (config.store.offlineSD) {
-      config.saveValue(&config.store.offlineSD, false);  // clear one-shot flag
-    }
-  } else if (config.getMode()==PM_SDCARD) {
-    // Regular SD mode (from NVS) — Wi-Fi as normal; if fails, go to AP
-    if (!wifiBegin()) {
-      raiseSoftAP();
-      SERIALLOG("");
-      BOOTLOG("Raise SoftAP done");
-      return;
-    }
-    status = CONNECTED;
-    setWifiParams();
+  if (false) {
+    // unreachable — placeholder for structure
   } else {
-    // Web mode — Wi-Fi as normal
+    // Regular SD (from NVS) or Web mode — Wi-Fi as normal; if fails, go to AP
     if (!wifiBegin()) {
       raiseSoftAP();
       SERIALLOG("");
@@ -458,9 +444,8 @@ void MyNetwork::begin() {
     status = CONNECTED;
     setWifiParams();
   }
-  SERIALLOG("");
   BOOTLOG("Wifi done");
-  if (status != SDOFFLINE) ehDPinit();  // skip mDNS/ehDP in offline SD mode
+  ehDPinit();
   if (LED_PIN!=255) digitalWrite(LED_PIN, LOW);
   
   #if RTCSUPPORTED

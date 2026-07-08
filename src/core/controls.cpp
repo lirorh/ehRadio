@@ -620,7 +620,8 @@ void Controls::checkButtonsHeldOnBoot() {
   if (held) {
     network.offlineMode = true;  // signals network.begin() to skip Wi-Fi
     config.store.play_mode = PM_SDCARD;
-    BOOTLOG("Boot override: SD mode via button hold");
+    config.syncSDFS();  // update _SDplaylistFS so SDPLFS() returns &sdman not &SPIFFS
+    BOOTLOG("SD Offline Mode triggered by button hold");
   }
 }
 

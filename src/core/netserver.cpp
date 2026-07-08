@@ -507,7 +507,6 @@ void NetServer::processQueue() {
       case PLAYLISTSAVED:   {
         #ifdef USE_SD
           if (config.getMode()==PM_SDCARD) {
-          //  config.indexSDPlaylist();
             config.initSDPlaylist();
           }
         #endif

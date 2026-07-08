@@ -310,6 +310,11 @@ void Display::_start() {
   if (_weather)  _weather->lock(!config.store.showweather);
   if (_weather && config.store.showweather && network.status != SDOFFLINE) network.buildWeatherString();
 
+  if (_clock && network.status == SDOFFLINE && !config.isRTCFound()) {
+    _clock->lock(true);   // prevent redraws from CLOCK → _time()
+    _clock->clear();       // erase current display
+  }
+
   if (_vuwidget) _vuwidget->lock();
   if (_rssi && network.status != SDOFFLINE) _setRSSI(WiFi.RSSI());
   #ifndef HIDE_IP
@@ -328,7 +333,7 @@ void Display::_start() {
   _pager->setPage(pages[PG_PLAYER]);
   _volume();
   _station();
-  _time(false);
+  if (!(network.status == SDOFFLINE && !config.isRTCFound())) _time(false);
   _bootStep = 2;
 }
 
@@ -370,7 +375,7 @@ void Display::_swichMode(displayMode_e newmode) {
     config.isScreensaver = false;
     _pager->setPage(pages[PG_PLAYER]);
     #ifndef HIDE_IP
-      if (_volip) {
+      if (_volip && network.status != SDOFFLINE) {
         #if IP_WEATHER_SHARED // weather and IP share the same bottom row; hide IP when weather is active
           if (config.store.showweather) _volip->setText("");
           else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
@@ -415,7 +420,7 @@ void Display::_swichMode(displayMode_e newmode) {
       _showDialog(l10n(L10N_LBL_VOLUME));
     }
     #ifndef HIDE_IP
-      if (_volip) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+      if (_volip && network.status != SDOFFLINE) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
     #endif
     _nums->setText(config.store.volume, numtxtFmt);
   }
@@ -563,7 +568,8 @@ void Display::loop() {
         case NEWMODE: _swichMode((displayMode_e)request.payload); break;
         case CLOSEPLAYLIST: player.sendCommand({PR_PLAY, request.payload});
         case CLOCK:
-          if (_mode==PLAYER || _mode==SCREENSAVER) _time(request.payload);
+          if ((_mode==PLAYER || _mode==SCREENSAVER) && !(network.status == SDOFFLINE && !config.isRTCFound()))
+            _time(request.payload);
           break;
         case NEWTITLE: _title(); break;
         case NEWSTATION: _station(); break;

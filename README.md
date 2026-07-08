@@ -103,7 +103,7 @@ More screenshots from the WebUI are [here](WebUI.md).
 The best starting point (after reading this page) is the [myoptions Generator](https://trip5.github.io/ehRadio/myoptions/generator.html).
 This can assist in making a very good `myoptions.h` file, which should be placed in the root of the build folder next to `platformio.ini` (which the generator also makes).
 
-The generator contains almost all supported hardware and peripherals which can be used when building an ehRadio, as well as many notes.
+The generator contains almost all supported hardware peripherals and build options which can be used when building an ehRadio, as well as many notes.
 It can generate a shareable link (json is encoded in the URL) and can even contain advanced options and notes.
 
 If you need to get more advanced options, there are more build options and comments and notes in `options.h`.
@@ -133,13 +133,12 @@ The settings for smart start and auto update will appear as off but they will re
 ### SD Offline Mode
 
 To enter a special SD-card only mode, hold down an encoder button or the mode button when powering on (until something appears on-screen).
-You can also enter this mode by pressing the mode button or double-clicking the rotary encoder button in AP/Improv Mode.
+You can also enter this mode by pressing the mode button or double-clicking the rotary encoder button in AP/Improv Mode or when you see `* LOST *`.
 
 The radio will reboot and fast boot into a bare SD-card playing mode (network functionality disabled).
-If no RTC is connected, the clock will display the wrong time.
-The IP address may display `0.0.0.0` as well.
+If no RTC is connected, the clock will not display.
 
-Exit this mode (reboot with network functionality) by pressing the mode button or double-clicking the rotary encoder button.
+Exit this mode (reboot with network functionality) by powering off and powering on again.
 
 ---
 
@@ -147,7 +146,7 @@ Exit this mode (reboot with network functionality) by pressing the mode button o
 
 There are many considerations to make when building a radio.
 
-For a rundown of available peripherals, read [here](Hardware.md).
+For a rundown of supported hardware and peripherals, read [here](Hardware.md).
 
 ---
 
@@ -264,6 +263,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
+| 2026.07.08 | Fixes to Deep Sleep, SD index, SD Offline Mode, VS1053 volume curve, |
 | 2026.07.05 | More fixes to VS1053, Wake from Deep Sleep now works on all RTC-capable pins |
 | 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |

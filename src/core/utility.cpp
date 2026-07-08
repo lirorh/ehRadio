@@ -441,9 +441,9 @@ uint16_t Utility::playlistLength() {
   if (config.SDPLFS()->exists(REAL_INDEX)) {
     File index = config.SDPLFS()->open(REAL_INDEX, "r");
     size_t sz = index.size();
-    // SD index has a 16-byte footer: [magic:4][count:4][freeSpace:8]
+    // SD index has an 8-byte footer: [magic:4][count:4]
     if (config.getMode() == PM_SDCARD) {
-      out = (sz >= 16) ? ((sz - 16) / 4) : 0;
+      out = (sz >= 8) ? ((sz - 8) / 4) : 0;
     } else {
       out = sz / 4;
     }

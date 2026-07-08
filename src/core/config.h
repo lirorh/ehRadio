@@ -84,7 +84,7 @@ struct theme_t {
 };
 struct config_t // specify defaults here (and macros in options.h) (defaults are NOT saved to Prefs)
 {
-  uint16_t  config_set = 4262;
+  uint16_t  config_set_magic = 1867;
   uint16_t  lastStation = 0;
   char      lastStationUrl[STATION_FIELD_LENGTH] = "";
   uint16_t  countStation = 0;
@@ -258,6 +258,7 @@ class Config {
     }
     uint8_t getMode() { return store.play_mode; }
     FS* SDPLFS() { return _SDplaylistFS; }
+    void syncSDFS();  // update _SDplaylistFS after external play_mode changes (e.g. button hold)
     bool isRTCFound() { return _rtcFound; };
     Preferences prefs; // For Preferences, we use a look-up table to maintain compatibility...
     static const configKeyMap keyMap[];

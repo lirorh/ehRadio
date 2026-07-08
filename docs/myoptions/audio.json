@@ -7,7 +7,8 @@
     "defines": [
       { "define": "VS1053_SPI", "type": "spi", "comment": "assign VS1053 to SPI bus" },
       { "define": "VS1053_RST", "type": "pin", "default": -1, "optional": true, "comment": "pin RST is attached to (-1 for EN pin)"},
-      { "define": "VS_PATCH_ENABLE", "type": "boolean", "default": false, "comment": "Enables VU Meter with VS1053b boards - disabled by default" }
+      { "define": "VS_PATCH_ENABLE", "type": "boolean", "default": false, "comment": "Enables VU Meter with VS1053b boards - disabled by default" },
+      { "define": "VS1053_VOL_CURVE", "type": "boolean", "default": false, "comment": "Uses a slightly different volume curve that may be better when paired with an amplifier" }
     ],
     "lib_deps": "",
     "build_src_filter": "+<libraries/VS1053_Audio/*>"

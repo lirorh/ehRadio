@@ -11,6 +11,7 @@ public:
   void initNetwork();
   void startupServices();
   void checkSafeMode();
+  void sdOfflineMode();
   void loop();
 
 private:

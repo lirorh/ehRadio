@@ -13,8 +13,10 @@ class SDManager : public SDFS {
     bool cardPresent();
     void listSD(File &plSDfile, File &plSDindex, const char * dirname, uint8_t levels);
     void indexSDPlaylist();
+    uint32_t countAudioFiles();
   private:
     uint32_t _sdFCount = 0;
+    uint32_t _countAudioFilesRecursive(const char* dirname, uint8_t levels);
     bool _checkNoMedia(const char* path);
     bool _endsWith (const char* base, const char* str);
 };

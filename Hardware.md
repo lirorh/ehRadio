@@ -18,11 +18,29 @@ It is also possible to build with an ESP32-C3 but since that is not a dual-core 
 
 I strongly recommend choosing a board which has the option of an external antenna.
 
+---
+
+## Important Notes (Power & Wires)
+
 I also recommend using a minimum of 470µF 10V capacitor somewhere in your circuit across the `5V` and `GND` (attach negative to `GND`).
 It helps to stablize the system during boot and smooth out the sudden power draw during operations like initializing the decoder, screen, wi-fi, etc.
-It doesn't really matter where as long as the `5V` is in common with the power-input of the ESP.
+It doesn't really matter where as long as the `5V` rail is common with the power-input of the ESP.
 I put mine on the SD Card Reader.  Putting it directly on the ESP pins is also an option.
 You may size up either number.  I usually use a 1000 µF 16V or 25V capacitor.
+
+This capacitor can help mitigate power-supply problems but if you do encounter issues, you may find that using a better supply
+(preferably one that provides 2A or more) will solve all kinds of problems that can occur due to a weak power-supply.
+
+An additional note here about wires.  Although you may experience some success with thin wires,
+AWG24-22 is the "sweet spot" which you can generally use for all wires, provided the length does not exceed 30-50cm.
+
+If you really wish to use different gauges of wire, signal wires should be thinner.
+AWG 28-30 is ideal for signal wires and will function at extreme lengths.
+Power lines should be thicker AWG20-22 but the longer they are, the more voltage can drop (but too thick also adds resistance).
+
+***Breadboards*** may be fun but take note of wire gauges.
+duPont jumper wires are typically AWG28-26 and AWG28 is not suitable for the voltage current needed in ESP32 projects.
+If you must prototype with breadboards, be sure that your power wires at least are AWG26 or better.
 
 ---
 
@@ -112,9 +130,17 @@ I have done my best to mitigate that but it is what is.
 
 I2S decoders are cheap and plentiful and I don't think anyone has ever worrried about buying a fake.
 
-A good I2S Decoder is the PCM5102 but be sure to set the jumpers as in this picture.
+A good I2S Decoder is the PCM5102A but be sure to set the jumpers as in this picture, including the 4 on the bottom
+and SCK=GND jumper on the other side.
 
-![image](images/pcm5102.jpg)
+- `H1L / FLT`: low latency (instead of high latency)
+- `H2L / DEMP`: de-emphasize control for 44.1KHz sample rate off (instead of on)
+- `H3L / XMST`: soft un-mute control (instead of soft mute control)
+- `H4L / FMT`: Audio format I2S (instead of Left justified)
+
+![image](images/pcm5102a.png)
+
+Picture and info from [here](https://macsbug.wordpress.com/2021/02/19/web-radio-of-m5stack-pcm5102a-i2s-dac/).
 
 The UDA1334 should work and there are likely others.
 
@@ -148,22 +174,36 @@ Genuine VS1053 is usually $10 minimum. Shop carefully and don't buy the cheapest
 If you end up with a VS1003, it will still be functional for MP3 stations but not much else.
 It cannot use the patch and there will be no audio if you use `#define VS_PATCH_ENABLE true` in `myoptions.h`.
 
-It is recommended to remove the resistor marked `R2` to prevent the VS1053 from accidentally entering "MIDI mode"
-on boot (which would also prevent the patch from being applied - again resulting in no audio).
-I'm not sure if this resistor is a problem on other VS1053 boards.
+There are some "fixes" that should be applied to the green board to ensure it functions as expected.
 
 ![image](images/vs1053.jpg)
 
+First, easiest, and most essential, it is recommended to remove the resistor marked `R2`
+to prevent the VS1053 from accidentally entering "MIDI mode"
+on boot (which would prevent the patch from being applied and result in no audio).
+
+Second, a bit more difficult but can improve actual audio is to place 33Ω damping resistors placed right next to the ESP32 pins
+used for `SCK`, `MOSI`, `XCS`, and `XDCS` before wiring to the VS1053 board.
 ESP32-S3 GPIO pins have an incredibly fast transition time (slew rate), which is around 1-2ns.
 Even with short wires around 10-15 cm, these sharp edges cause severe signal reflections ("ringing").
-A 33Ω resistor placed right next to the ESP32 pin before wiring to the VS1053 boared provides source impedance matching
-and damps the reflected wave, preventing data micro-glitches.
+Damping resistors provide source impedance matching and damps the reflected wave, preventing data micro-glitches.
 Acceptable alternatives to 33Ω are in the range of 22Ω to 47Ω.  No higher or lower.
-
-Importantly, this is critical not only for the clock and data lines (SCK and MOSI) but also for the chip select lines (XCS and XDCS).
 If a sharp edge causes ringing or cross-talk from the adjacent SCK wire on these strobe lines, the noise amplitude can falsely cross the logic threshold.
 As a result, the decoder might assume the communication session was interrupted right in the middle of a data frame transfer.
 This may manifest in the logs with excessive `slow stream, dropouts are possible` messages as well as with audio artifacts like pops and clicks.
+
+Finally, add 100Ω resistors on the DREQ and XRST lines for passive filtering of pulse noise and port protection during initialization.
+
+Additionally, I have also received at least one board that identified as `VS0` during boot.
+Attaching 10KΩ resistors from the 3.3V LDO to XCS and XDCS seemed to fix this.
+I got that information from the [VS1053 Datasheet (page 15)](https://www.vlsi.fi/fileadmin/datasheets/vs1053.pdf).
+
+---
+
+## Audio Amplification & Filtering
+
+Perhaps obvious to some...
+
 
 ---
 
@@ -198,8 +238,9 @@ While in "AP/Improv Mode" (automatically entered when wi-fi connection cannot be
 the user may use the physical controls (double-click of a rotary or the mode button) to enter a special SD Offline mode.
 Actually the radio reboots without initializing network functionality.
 
-It is recommended to encode files on SD card using MP3 256kbps or less to avoid system stress.
-Metadata information cannot be displayed on a VS1053 build using non-MP3 formats.
+It is recommended to encode files on SD card using MP3 at a constant bit rate of 256kbps or less
+to avoid system stress and get maximum compatibility with the decoders.
+Errors/bugs could happen if you use other codecs or too-high bitrates or other codecs.
 
 ---
 

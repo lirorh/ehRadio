@@ -2,11 +2,13 @@
 #include "startup.h"
 
 #include <ESPFileUpdater.h>
+#include <WiFi.h>
 #include <time.h>
 
 #include "config.h"
 #include "display.h"
 #include "logging.h"
+#include "network.h"
 #include "netserver.h"
 #include "player.h"
 #include "utility.h"
@@ -16,7 +18,6 @@ Startup startup;
 
 void Startup::checkSafeMode() {
   if (!config.store.lastBootGood) {
-    delay(1000);  // Allow serial monitor to connect before logging safe mode
     FUNCTIONLOG("SAFE MODE", "Smartstart and Autoupdate disabled for this session; SD Mode reset to Web and saved to NVS");
     config.store.smartstart = false;
     config.store.autoupdate = false;
@@ -25,6 +26,12 @@ void Startup::checkSafeMode() {
   // Mark this boot as in-progress (not yet proven stable)
   config.saveValue(&config.store.lastBootGood, false);
   _bootStablePending = true;
+}
+
+void Startup::sdOfflineMode() {
+  network.status = SDOFFLINE;
+  WiFi.mode(WIFI_OFF);
+  if (config.store.offlineSD) config.saveValue(&config.store.offlineSD, false); // set the flag to do normal boot
 }
 
 void Startup::markBootStable() {

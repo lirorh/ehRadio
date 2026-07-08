@@ -45,7 +45,6 @@ void setup() {
   startup.deassertCsPins();
   if (LED_PIN!=255) pinMode(LED_PIN, OUTPUT);
   rgbled.init();
-  // Initialize battery monitoring
   battery.init();
   config.init();
   controls.checkButtonsHeldOnBoot();  // check for hold-to-SD before network decision
@@ -53,7 +52,12 @@ void setup() {
   display.init();
   player.init();
   battery.bootStatus();
-  network.begin();
+  if (config.getMode()==PM_SDCARD && (network.offlineMode || config.store.offlineSD)) {
+    startup.sdOfflineMode();
+  } else {
+    startup.checkSafeMode();
+    network.begin();
+  }
   if (network.status != CONNECTED && network.status != SDOFFLINE) {
     netserver.begin();
     netserver.startLoopTask();

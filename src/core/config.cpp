@@ -88,7 +88,7 @@ void Config::init() {
   #if defined(SPIB_SCK) && (SPIB_SCK != 255)
     SPIB.begin(SPIB_SCK, SPIB_MISO, SPIB_MOSI);
   #endif
-  if (store.config_set_magic != 4262 || store.config_set_magic != 1867) {
+  if (store.config_set_magic != 4262 && store.config_set_magic != 1867) {
     if (store.config_set_magic != 4262) saveValue(&store.config_set_magic, static_cast<uint16_t>(1867)); // convert the previous magic number
     setDefaults();
   }
@@ -218,9 +218,9 @@ void Config::syncSDFS() {
   _SDplaylistFS = (getMode()==PM_SDCARD) ? (FS*)&sdman : (FS*)&SPIFFS;
 }
 
-void Config::initSDPlaylist() {
+void Config::initSDPlaylist(bool force) {
   #ifdef USE_SD
-    bool doIndex = !sdman.exists(INDEX_SD_PATH);
+    bool doIndex = force || !sdman.exists(INDEX_SD_PATH);
     if (!doIndex) {
       File index = sdman.open(INDEX_SD_PATH, "r");  // use sdman directly — SDPLFS() may be SPIFFS after safe mode
       // Footer: [magic:4][count:4] = 8 bytes
@@ -233,20 +233,20 @@ void Config::initSDPlaylist() {
         FUNCTIONLOG("SD", "Index found:\tcount: %d magic: 0x%04X\tcurrent count: %d",
                     storedCount, magic, currentCount);
         if (magic != 0x1867) {
-          FUNCTIONLOG("SD", "Magic mismatch — re-indexing");
+          FUNCTIONLOG("SD", "Magic mismatch. Re-indexing.");
           doIndex = true;
         } else if (storedCount != currentCount) {
-          FUNCTIONLOG("SD", "File count mismatch — re-indexing");
+          FUNCTIONLOG("SD", "File count mismatch. Re-indexing.");
           doIndex = true;
         }
       } else {
-        FUNCTIONLOG("SD", "Index open failed or too small — re-indexing");
+        FUNCTIONLOG("SD", "Index open failed or too small. Re-indexing.");
         doIndex = true;
       }
       if (index) index.close();
     }
     if (doIndex) {
-      FUNCTIONLOG("SD", "Waiting for SD card indexing...");
+      FUNCTIONLOG("SD", "Waiting for SD card indexing.");
       sdman.indexSDPlaylist();
       store.countStation = utility.playlistLength();
       lastStation(_randomStation());
@@ -493,7 +493,7 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
 }
 
 void Config::setDefaults() {
-  SERIALLOG("setDefaults called");
+  FUNCTIONLOG("setDefaults", "Resetting all settings to user defaults!");
   nvs_flash_erase();
   nvs_flash_init();
   // defaults set by struct, except one

@@ -302,6 +302,15 @@ void Player::_play(uint16_t stationId) {
     rgbled.playing();
     backlightControls.restart();
   } else {
+    // Self-healing: if SD file vanished, force re-index so next/prev uses fresh index
+    if (config.getMode()==PM_SDCARD && !sdman.exists(config.station.url)) {
+      FUNCTIONLOG("SD", "File not found. Re-indexing.");
+      display.putRequest(PSTOP);                   // clear playback screen
+      display.putRequest(NEWMODE, SDCHANGE);       // show on-screen counter
+      config.initSDPlaylist(true);
+      display.putRequest(NEWMODE, PLAYER);         // restore player mode
+      display.putRequest(NEWSTATION);
+    }
     ERRORLOG("Error connecting to %s", config.station.url);
     char errbuf[STATION_FIELD_LENGTH];
     snprintf_P(errbuf, sizeof(errbuf), l10n(L10N_MSG_CONNECT_ERROR), config.station.url);

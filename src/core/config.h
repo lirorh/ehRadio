@@ -230,7 +230,7 @@ class Config {
     void init();
     void loadPreferences();
     void changeMode(int newmode=-1);
-    void initSDPlaylist();
+    void initSDPlaylist(bool force = false);
     void initPlaylistMode();
     void loadTheme();
     void saveIR();

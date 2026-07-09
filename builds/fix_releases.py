@@ -100,7 +100,7 @@ def generate_firmware_txt(firmwares, output_path):
     with open(output_path, 'w', encoding='utf-8') as f:
         for board_env, chip_family, fw_env, friendly_name, _ in firmwares:
             f.write(f'{board_env}|{chip_family}|{fw_env}|{friendly_name}\n')
-    print(f'✍  Generated {output_path} with {len(firmwares)} firmware entries')
+    print(f'[*] Generated {output_path} with {len(firmwares)} firmware entries')
 
 
 def generate_releases_md(firmwares, url_map, output_path):
@@ -121,7 +121,7 @@ def generate_releases_md(firmwares, url_map, output_path):
         display_name[key] = contributor
 
     if not output_path.exists():
-        print(f'⚠️  {output_path} not found, skipping releases.md update')
+        print(f'[!] {output_path} not found, skipping releases.md update')
         return
 
     lines = output_path.read_text(encoding='utf-8').splitlines(keepends=True)
@@ -145,7 +145,7 @@ def generate_releases_md(firmwares, url_map, output_path):
                         else:
                             new_lines.append(f'  - `{filename}`\n')
                     seen_contributors.add(key)
-                    print(f'✅ Added new section: {disp} Firmware ({len(by_contributor[key])} entries)')
+                    print(f'[OK] Added new section: {disp} Firmware ({len(by_contributor[key])} entries)')
             new_lines.append(line)
             i += 1
             continue
@@ -168,16 +168,16 @@ def generate_releases_md(firmwares, url_map, output_path):
                         new_lines.append(f'  - [`{filename}`]({url_map[fw_env]})\n')
                     else:
                         new_lines.append(f'  - `{filename}`\n')
-                print(f'📌 Updated {disp} Firmware section ({len(by_contributor[key])} entries)')
+                print(f'[OK] Updated {disp} Firmware section ({len(by_contributor[key])} entries)')
             else:
-                print(f'⚠️  No firmware for {m.group(1)} — section removed')
+                print(f'[!] No firmware for {m.group(1)} -- section removed')
             continue
 
         new_lines.append(line)
         i += 1
 
     output_path.write_text(''.join(new_lines), encoding='utf-8')
-    print(f'🔧 Patched {output_path}')
+    print(f'[*] Patched {output_path}')
 
 
 def generate_esp_web_tools_manifests(firmwares, output_dir, version=''):
@@ -217,11 +217,11 @@ def generate_esp_web_tools_manifests(firmwares, output_dir, version=''):
             ],
         }
         manifest_file = manifests_dir / f'{fw_env}-manifest.json'
-        with open(manifest_file, 'w', encoding='utf-8', newline='\n') as f:
+        with open(manifest_file, 'w', encoding='utf-8') as f:
             json.dump(manifest, f, indent=2)
             f.write('\n')
 
-    print(f'✍  Generated {len(firmwares)} ESP Web Tools manifests in {manifests_dir}')
+    print(f'[*] Generated {len(firmwares)} ESP Web Tools manifests in {manifests_dir}')
 
 
 def generate_firmware_info_json(firmwares, output_path, version=''):
@@ -247,11 +247,11 @@ def generate_firmware_info_json(firmwares, output_path, version=''):
     }
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
+    with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(firmware_info, f, indent=2)
         f.write('\n')
 
-    print(f'🪳  Generated {output_path} with {len(variants)} firmware variants')
+    print(f'[*] Generated {output_path} with {len(variants)} firmware variants')
 
 
 def main():
@@ -282,7 +282,7 @@ def main():
 
         print(f'{subfolder.name}/')
         for fw_env in missing_name_envs:
-            print(f'  ⚠️   Missing FIRMWARE_NAME for {fw_env} in {myoptions_path}')
+            print(f'  [!] Missing FIRMWARE_NAME for {fw_env} in {myoptions_path}')
         skipped_defs += len(missing_name_envs)
 
         for entry in firmwares:
@@ -298,11 +298,11 @@ def main():
             print(f'  {fw_env} - OK')
 
     if not all_firmwares:
-        print('\n⚠️  No firmware definitions found in any subfolder')
+        print('\n[!] No firmware definitions found in any subfolder')
         return 1
 
-    print(f'\n❌ Skipped: {skipped_defs} firmware definitions')
-    print(f'✅ Total: {len(all_firmwares)} firmware definitions')
+    print(f'\n[X] Skipped: {skipped_defs} firmware definitions')
+    print(f'[OK] Total: {len(all_firmwares)} firmware definitions')
 
     releases_dir.mkdir(parents=True, exist_ok=True)
 

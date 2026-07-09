@@ -55,7 +55,7 @@
   "msg_upd_firmware": "Обновление прошивки",
   "msg_upd_files": "Обновление файлов",
   "msg_upd_failed": "Обновление не удалось",
-  "msg_offline": "В автономном режиме",
+  "msg_offline_15char": "В автономном режиме",
   "msg_no_sd_card": "SD-карта отсутствует",
   "lbl_w_feelslike": "ощущается:",
   "lbl_w_pressure": "давление:",

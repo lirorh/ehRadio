@@ -89,7 +89,7 @@ enum L10nKey : uint8_t {
   L10N_MSG_CONNECT_ERROR,
   L10N_MSG_CONNECT_OPEN,
   L10N_MSG_NO_SD_CARD,
-  L10N_MSG_OFFLINE,
+  L10N_MSG_OFFLINE_15CHAR,
   L10N_MSG_READY,
   L10N_MSG_STOPPED,
   L10N_MSG_UPD_FAILED,
@@ -281,7 +281,7 @@ const char l10n_be_BY_msg_connect[] PROGMEM = "[злучэнне]";
 const char l10n_be_BY_msg_connect_error[] PROGMEM = "Памылка падключэння да %s";
 const char l10n_be_BY_msg_connect_open[] PROGMEM = "ПАДКЛЮЧЫЦЕСЯ І АДКРЫЙЦЕ HTTP://%s/";
 const char l10n_be_BY_msg_no_sd_card[] PROGMEM = "Карткі SD няма";
-const char l10n_be_BY_msg_offline[] PROGMEM = "Афлайн";
+const char l10n_be_BY_msg_offline_15char[] PROGMEM = "Афлайн";
 const char l10n_be_BY_msg_ready[] PROGMEM = "[гатова]";
 const char l10n_be_BY_msg_stopped[] PROGMEM = "[прыпынена]";
 const char l10n_be_BY_msg_upd_failed[] PROGMEM = "Update failed";
@@ -354,7 +354,7 @@ const char l10n_bg_BG_msg_connect[] PROGMEM = "[свързване]";
 const char l10n_bg_BG_msg_connect_error[] PROGMEM = "Грешка при свързването с %s";
 const char l10n_bg_BG_msg_connect_open[] PROGMEM = "СВЪРЖЕТЕ СЕ & ОТВОРЕТЕ HTTP://%s/";
 const char l10n_bg_BG_msg_no_sd_card[] PROGMEM = "Няма SD карта";
-const char l10n_bg_BG_msg_offline[] PROGMEM = "Офлайн";
+const char l10n_bg_BG_msg_offline_15char[] PROGMEM = "Офлайн";
 const char l10n_bg_BG_msg_ready[] PROGMEM = "[готово]";
 const char l10n_bg_BG_msg_stopped[] PROGMEM = "[спряно]";
 const char l10n_bg_BG_msg_upd_failed[] PROGMEM = "Актуализиране неуспешно";
@@ -427,7 +427,7 @@ const char l10n_bs_BA_msg_connect[] PROGMEM = "[povezuje]";
 const char l10n_bs_BA_msg_connect_error[] PROGMEM = "Greška pri povezivanju na %s";
 const char l10n_bs_BA_msg_connect_open[] PROGMEM = "POVEŽITE SE I OTVORITE HTTP://%s/";
 const char l10n_bs_BA_msg_no_sd_card[] PROGMEM = "Nema SD kartice";
-const char l10n_bs_BA_msg_offline[] PROGMEM = "Van mreže";
+const char l10n_bs_BA_msg_offline_15char[] PROGMEM = "Van mreže";
 const char l10n_bs_BA_msg_ready[] PROGMEM = "[spreman]";
 const char l10n_bs_BA_msg_stopped[] PROGMEM = "[zaustavljen]";
 const char l10n_bs_BA_msg_upd_failed[] PROGMEM = "Ažuriranje neuspješno";
@@ -500,7 +500,7 @@ const char l10n_bs_ME_msg_connect[] PROGMEM = "[connecting]";
 const char l10n_bs_ME_msg_connect_error[] PROGMEM = "Greška pri povezivanju na %s";
 const char l10n_bs_ME_msg_connect_open[] PROGMEM = "POVEŽI I OTVORI HTTP://%s/";
 const char l10n_bs_ME_msg_no_sd_card[] PROGMEM = "Nema SD kartice";
-const char l10n_bs_ME_msg_offline[] PROGMEM = "Van mreže";
+const char l10n_bs_ME_msg_offline_15char[] PROGMEM = "Van mreže";
 const char l10n_bs_ME_msg_ready[] PROGMEM = "[ready]";
 const char l10n_bs_ME_msg_stopped[] PROGMEM = "[stopped]";
 const char l10n_bs_ME_msg_upd_failed[] PROGMEM = "Ažuriranje nije uspjelo";
@@ -573,7 +573,7 @@ const char l10n_cs_CZ_msg_connect[] PROGMEM = "[připojuji]";
 const char l10n_cs_CZ_msg_connect_error[] PROGMEM = "Došlo k chybě při připojování k %s";
 const char l10n_cs_CZ_msg_connect_open[] PROGMEM = "PŘIPOJTE SE A OTEVŘETE HTTP://%s/";
 const char l10n_cs_CZ_msg_no_sd_card[] PROGMEM = "Žádná SD karta";
-const char l10n_cs_CZ_msg_offline[] PROGMEM = "Offline";
+const char l10n_cs_CZ_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_cs_CZ_msg_ready[] PROGMEM = "[připraveno]";
 const char l10n_cs_CZ_msg_stopped[] PROGMEM = "[zastaveno]";
 const char l10n_cs_CZ_msg_upd_failed[] PROGMEM = "Aktualizace neúspěšná";
@@ -646,7 +646,7 @@ const char l10n_da_DK_msg_connect[] PROGMEM = "[tilslutter]";
 const char l10n_da_DK_msg_connect_error[] PROGMEM = "Der opstod en fejl ved oprettelse af forbindelse til %s";
 const char l10n_da_DK_msg_connect_open[] PROGMEM = "TILSLUT & ÅBN HTTP://%s/";
 const char l10n_da_DK_msg_no_sd_card[] PROGMEM = "Intet SD-kort";
-const char l10n_da_DK_msg_offline[] PROGMEM = "Offline";
+const char l10n_da_DK_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_da_DK_msg_ready[] PROGMEM = "[klar]";
 const char l10n_da_DK_msg_stopped[] PROGMEM = "[standset]";
 const char l10n_da_DK_msg_upd_failed[] PROGMEM = "Opdatering mislykkedes";
@@ -719,7 +719,7 @@ const char l10n_de_DE_msg_connect[] PROGMEM = "[verbinde]";
 const char l10n_de_DE_msg_connect_error[] PROGMEM = "Fehler beim Herstellen einer Verbindung zu %s";
 const char l10n_de_DE_msg_connect_open[] PROGMEM = "CONNECT & OPEN HTTP://%s/";
 const char l10n_de_DE_msg_no_sd_card[] PROGMEM = "Keine SD-Karte";
-const char l10n_de_DE_msg_offline[] PROGMEM = "Offline";
+const char l10n_de_DE_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_de_DE_msg_ready[] PROGMEM = "[bereit]";
 const char l10n_de_DE_msg_stopped[] PROGMEM = "[gestoppt]";
 const char l10n_de_DE_msg_upd_failed[] PROGMEM = "Aktualisierung fehlgeschlagen";
@@ -792,7 +792,7 @@ const char l10n_el_GR_msg_connect[] PROGMEM = "[σύνδεση]";
 const char l10n_el_GR_msg_connect_error[] PROGMEM = "Σφάλμα κατά τη σύνδεση με το %s";
 const char l10n_el_GR_msg_connect_open[] PROGMEM = "ΣΥΝΔΕΘΕΙΤΕ & ΑΝΟΙΞΤΕ HTTP://%s/";
 const char l10n_el_GR_msg_no_sd_card[] PROGMEM = "Δεν υπάρχει κάρτα SD";
-const char l10n_el_GR_msg_offline[] PROGMEM = "Εκτός σύνδεσης";
+const char l10n_el_GR_msg_offline_15char[] PROGMEM = "Εκτός σύνδεσης";
 const char l10n_el_GR_msg_ready[] PROGMEM = "[έτοιμο]";
 const char l10n_el_GR_msg_stopped[] PROGMEM = "[σταματημένο]";
 const char l10n_el_GR_msg_upd_failed[] PROGMEM = "Αποτυχία ενημέρωσης";
@@ -865,7 +865,7 @@ const char l10n_en_US_msg_connect[] PROGMEM = "[connecting]";
 const char l10n_en_US_msg_connect_error[] PROGMEM = "Error connecting to %s";
 const char l10n_en_US_msg_connect_open[] PROGMEM = "Connect & Open HTTP://%s/";
 const char l10n_en_US_msg_no_sd_card[] PROGMEM = "No SD Card";
-const char l10n_en_US_msg_offline[] PROGMEM = "Offline";
+const char l10n_en_US_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_en_US_msg_ready[] PROGMEM = "[ready]";
 const char l10n_en_US_msg_stopped[] PROGMEM = "[stopped]";
 const char l10n_en_US_msg_upd_failed[] PROGMEM = "Update Failed";
@@ -938,7 +938,7 @@ const char l10n_es_ES_msg_connect[] PROGMEM = "[conectando]";
 const char l10n_es_ES_msg_connect_error[] PROGMEM = "Error al conectarse a %s";
 const char l10n_es_ES_msg_connect_open[] PROGMEM = "CONECTA Y ABRE HTTP://%s/";
 const char l10n_es_ES_msg_no_sd_card[] PROGMEM = "No hay tarjeta SD";
-const char l10n_es_ES_msg_offline[] PROGMEM = "Sin conexión";
+const char l10n_es_ES_msg_offline_15char[] PROGMEM = "Sin conexión";
 const char l10n_es_ES_msg_ready[] PROGMEM = "[listo]";
 const char l10n_es_ES_msg_stopped[] PROGMEM = "[detenido]";
 const char l10n_es_ES_msg_upd_failed[] PROGMEM = "Actualización fallida";
@@ -1011,7 +1011,7 @@ const char l10n_et_EE_msg_connect[] PROGMEM = "[ühendamine]";
 const char l10n_et_EE_msg_connect_error[] PROGMEM = "Viga ühenduse loomisel %s-ga";
 const char l10n_et_EE_msg_connect_open[] PROGMEM = "ÜHENDAGE JA AVAGE HTTP://%s/";
 const char l10n_et_EE_msg_no_sd_card[] PROGMEM = "SD-kaarti pole";
-const char l10n_et_EE_msg_offline[] PROGMEM = "Offline";
+const char l10n_et_EE_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_et_EE_msg_ready[] PROGMEM = "[valmis]";
 const char l10n_et_EE_msg_stopped[] PROGMEM = "[peatatud]";
 const char l10n_et_EE_msg_upd_failed[] PROGMEM = "Värskendamine ebaõnnestus";
@@ -1084,7 +1084,7 @@ const char l10n_fi_FI_msg_connect[] PROGMEM = "[yhdistetään]";
 const char l10n_fi_FI_msg_connect_error[] PROGMEM = "Virhe yhteyden muodostamisessa %s:ään";
 const char l10n_fi_FI_msg_connect_open[] PROGMEM = "YHDISTÄ JA Avaa HTTP://%s/";
 const char l10n_fi_FI_msg_no_sd_card[] PROGMEM = "Ei SD-korttia";
-const char l10n_fi_FI_msg_offline[] PROGMEM = "Offline-tilassa";
+const char l10n_fi_FI_msg_offline_15char[] PROGMEM = "Offline-tilassa";
 const char l10n_fi_FI_msg_ready[] PROGMEM = "[valmis]";
 const char l10n_fi_FI_msg_stopped[] PROGMEM = "[pysäytetty]";
 const char l10n_fi_FI_msg_upd_failed[] PROGMEM = "Päivitys epäonnistui";
@@ -1157,7 +1157,7 @@ const char l10n_fr_FR_msg_connect[] PROGMEM = "[connexion]";
 const char l10n_fr_FR_msg_connect_error[] PROGMEM = "Erreur lors de la connexion à %s";
 const char l10n_fr_FR_msg_connect_open[] PROGMEM = "CONNECTEZ-VOUS & OUVREZ HTTP://%s/";
 const char l10n_fr_FR_msg_no_sd_card[] PROGMEM = "Pas de carte SD";
-const char l10n_fr_FR_msg_offline[] PROGMEM = "Hors ligne";
+const char l10n_fr_FR_msg_offline_15char[] PROGMEM = "Hors ligne";
 const char l10n_fr_FR_msg_ready[] PROGMEM = "[prêt]";
 const char l10n_fr_FR_msg_stopped[] PROGMEM = "[arrêt]";
 const char l10n_fr_FR_msg_upd_failed[] PROGMEM = "Échec de la mise à jour";
@@ -1230,7 +1230,7 @@ const char l10n_hr_HR_msg_connect[] PROGMEM = "[povezivanje]";
 const char l10n_hr_HR_msg_connect_error[] PROGMEM = "Greška pri povezivanju na %s";
 const char l10n_hr_HR_msg_connect_open[] PROGMEM = "POVEŽI SE I OTVORI HTTP://%s/";
 const char l10n_hr_HR_msg_no_sd_card[] PROGMEM = "Nema SD kartice";
-const char l10n_hr_HR_msg_offline[] PROGMEM = "Izvan mreže";
+const char l10n_hr_HR_msg_offline_15char[] PROGMEM = "Izvan mreže";
 const char l10n_hr_HR_msg_ready[] PROGMEM = "[spreman]";
 const char l10n_hr_HR_msg_stopped[] PROGMEM = "[zaustavljeno]";
 const char l10n_hr_HR_msg_upd_failed[] PROGMEM = "Neuspjelo ažuriranje";
@@ -1303,7 +1303,7 @@ const char l10n_hu_HU_msg_connect[] PROGMEM = "[csatlakozás]";
 const char l10n_hu_HU_msg_connect_error[] PROGMEM = "Hiba történt a %s-hez való csatlakozáskor";
 const char l10n_hu_HU_msg_connect_open[] PROGMEM = "CSATLAKOZZ ÉS NYISD MEG HTTP://%s/";
 const char l10n_hu_HU_msg_no_sd_card[] PROGMEM = "Nincs SD-kártya";
-const char l10n_hu_HU_msg_offline[] PROGMEM = "Offline";
+const char l10n_hu_HU_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_hu_HU_msg_ready[] PROGMEM = "[kész]";
 const char l10n_hu_HU_msg_stopped[] PROGMEM = "[leállítva]";
 const char l10n_hu_HU_msg_upd_failed[] PROGMEM = "Frissítés sikertelen";
@@ -1376,7 +1376,7 @@ const char l10n_is_IS_msg_connect[] PROGMEM = "[tengist]";
 const char l10n_is_IS_msg_connect_error[] PROGMEM = "Villa við tengingu við %s";
 const char l10n_is_IS_msg_connect_open[] PROGMEM = "TENGIÐ & OPIÐ HTTP://%s/";
 const char l10n_is_IS_msg_no_sd_card[] PROGMEM = "Engin SD-kort";
-const char l10n_is_IS_msg_offline[] PROGMEM = "Ekki tengdur";
+const char l10n_is_IS_msg_offline_15char[] PROGMEM = "Ekki tengdur";
 const char l10n_is_IS_msg_ready[] PROGMEM = "[tilbúinn]";
 const char l10n_is_IS_msg_stopped[] PROGMEM = "[stöðvaður]";
 const char l10n_is_IS_msg_upd_failed[] PROGMEM = "Uppfærsla mistókst";
@@ -1449,7 +1449,7 @@ const char l10n_kk_KZ_msg_connect[] PROGMEM = "[қосылуда]";
 const char l10n_kk_KZ_msg_connect_error[] PROGMEM = "%s-ке қосылу қатесі";
 const char l10n_kk_KZ_msg_connect_open[] PROGMEM = "ҚОСЫЛЫҢЫЗ ЖӘНЕ HTTP://%s/ ашыңыз";
 const char l10n_kk_KZ_msg_no_sd_card[] PROGMEM = "SD картасы жоқ";
-const char l10n_kk_KZ_msg_offline[] PROGMEM = "Офлайн";
+const char l10n_kk_KZ_msg_offline_15char[] PROGMEM = "Офлайн";
 const char l10n_kk_KZ_msg_ready[] PROGMEM = "[дайын]";
 const char l10n_kk_KZ_msg_stopped[] PROGMEM = "[тоқтатылды]";
 const char l10n_kk_KZ_msg_upd_failed[] PROGMEM = "Жаңарту сәтсіз аяқталды";
@@ -1522,7 +1522,7 @@ const char l10n_ky_KG_msg_connect[] PROGMEM = "[туташтырылууда]";
 const char l10n_ky_KG_msg_connect_error[] PROGMEM = "%sге туташууда ката";
 const char l10n_ky_KG_msg_connect_open[] PROGMEM = "ТУТАШЫҢЫЗ ЖАНА HTTP://%s/ АЧЫҢЫЗ";
 const char l10n_ky_KG_msg_no_sd_card[] PROGMEM = "SD картасы жок";
-const char l10n_ky_KG_msg_offline[] PROGMEM = "Офлайн";
+const char l10n_ky_KG_msg_offline_15char[] PROGMEM = "Офлайн";
 const char l10n_ky_KG_msg_ready[] PROGMEM = "[дайын]";
 const char l10n_ky_KG_msg_stopped[] PROGMEM = "[токтотулган]";
 const char l10n_ky_KG_msg_upd_failed[] PROGMEM = "Жаңылоо ийгиликсиз аяктады";
@@ -1595,7 +1595,7 @@ const char l10n_lt_LT_msg_connect[] PROGMEM = "[jungiamasi]";
 const char l10n_lt_LT_msg_connect_error[] PROGMEM = "Klaida prisijungiant prie %s";
 const char l10n_lt_LT_msg_connect_open[] PROGMEM = "PRISIJUNKITE IR ATIDARYKITE HTTP://%s/";
 const char l10n_lt_LT_msg_no_sd_card[] PROGMEM = "Nėra SD kortelės";
-const char l10n_lt_LT_msg_offline[] PROGMEM = "Neprisijungęs";
+const char l10n_lt_LT_msg_offline_15char[] PROGMEM = "Neprisijungęs";
 const char l10n_lt_LT_msg_ready[] PROGMEM = "[paruošta]";
 const char l10n_lt_LT_msg_stopped[] PROGMEM = "[sustabdyta]";
 const char l10n_lt_LT_msg_upd_failed[] PROGMEM = "Atnaujinimas nepavyko";
@@ -1668,7 +1668,7 @@ const char l10n_lv_LV_msg_connect[] PROGMEM = "[savienojas]";
 const char l10n_lv_LV_msg_connect_error[] PROGMEM = "Kļūda, izveidojot savienojumu ar %s";
 const char l10n_lv_LV_msg_connect_open[] PROGMEM = "PIESLĒDZIES UN ATVERI HTTP://%s/";
 const char l10n_lv_LV_msg_no_sd_card[] PROGMEM = "Nav SD kartes";
-const char l10n_lv_LV_msg_offline[] PROGMEM = "Bezsaistē";
+const char l10n_lv_LV_msg_offline_15char[] PROGMEM = "Bezsaistē";
 const char l10n_lv_LV_msg_ready[] PROGMEM = "[gatavs]";
 const char l10n_lv_LV_msg_stopped[] PROGMEM = "[apturēts]";
 const char l10n_lv_LV_msg_upd_failed[] PROGMEM = "Atjaunināšana neizdevās";
@@ -1741,7 +1741,7 @@ const char l10n_mk_MK_msg_connect[] PROGMEM = "[се поврзува]";
 const char l10n_mk_MK_msg_connect_error[] PROGMEM = "Грешка при поврзување со %s";
 const char l10n_mk_MK_msg_connect_open[] PROGMEM = "ПОВРЗЕТЕ СЕ И ОТВОРЕТЕ HTTP://%s/";
 const char l10n_mk_MK_msg_no_sd_card[] PROGMEM = "Нема SD картичка";
-const char l10n_mk_MK_msg_offline[] PROGMEM = "Офлајн";
+const char l10n_mk_MK_msg_offline_15char[] PROGMEM = "Офлајн";
 const char l10n_mk_MK_msg_ready[] PROGMEM = "[спремно]";
 const char l10n_mk_MK_msg_stopped[] PROGMEM = "[запрено]";
 const char l10n_mk_MK_msg_upd_failed[] PROGMEM = "Ажурирање не успеа";
@@ -1814,7 +1814,7 @@ const char l10n_mn_MN_msg_connect[] PROGMEM = "[холбож байна]";
 const char l10n_mn_MN_msg_connect_error[] PROGMEM = "%s-д холдох үед алдаа гарлаа";
 const char l10n_mn_MN_msg_connect_open[] PROGMEM = "ХОЛБОГДОЖ HTTP://%s/ -г НЭЭ";
 const char l10n_mn_MN_msg_no_sd_card[] PROGMEM = "SD карт байхгүй";
-const char l10n_mn_MN_msg_offline[] PROGMEM = "Онлайн биш";
+const char l10n_mn_MN_msg_offline_15char[] PROGMEM = "Онлайн биш";
 const char l10n_mn_MN_msg_ready[] PROGMEM = "[бэлэн]";
 const char l10n_mn_MN_msg_stopped[] PROGMEM = "[зогссон]";
 const char l10n_mn_MN_msg_upd_failed[] PROGMEM = "Шинэчлэлт амжилтгүй боллоо";
@@ -1887,7 +1887,7 @@ const char l10n_nl_NL_msg_connect[] PROGMEM = "[verbinden]";
 const char l10n_nl_NL_msg_connect_error[] PROGMEM = "Fout bij het verbinden met %s";
 const char l10n_nl_NL_msg_connect_open[] PROGMEM = "VERBIND & OPEN HTTP://%s/";
 const char l10n_nl_NL_msg_no_sd_card[] PROGMEM = "Geen SD-kaart";
-const char l10n_nl_NL_msg_offline[] PROGMEM = "Offline";
+const char l10n_nl_NL_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_nl_NL_msg_ready[] PROGMEM = "[klaar]";
 const char l10n_nl_NL_msg_stopped[] PROGMEM = "[gestopt]";
 const char l10n_nl_NL_msg_upd_failed[] PROGMEM = "Bijwerken mislukt";
@@ -1960,7 +1960,7 @@ const char l10n_no_NO_msg_connect[] PROGMEM = "[kobler]";
 const char l10n_no_NO_msg_connect_error[] PROGMEM = "Feil ved tilkobling til %s";
 const char l10n_no_NO_msg_connect_open[] PROGMEM = "KOBLE TIL & ÅPNE HTTP://%s/";
 const char l10n_no_NO_msg_no_sd_card[] PROGMEM = "Ingen SD-kort";
-const char l10n_no_NO_msg_offline[] PROGMEM = "Offline";
+const char l10n_no_NO_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_no_NO_msg_ready[] PROGMEM = "[klar]";
 const char l10n_no_NO_msg_stopped[] PROGMEM = "[stoppet]";
 const char l10n_no_NO_msg_upd_failed[] PROGMEM = "Oppdatering mislyktes";
@@ -2033,7 +2033,7 @@ const char l10n_pl_PL_msg_connect[] PROGMEM = "[łączenie]";
 const char l10n_pl_PL_msg_connect_error[] PROGMEM = "Wystąpił błąd podczas łączenia się z %s";
 const char l10n_pl_PL_msg_connect_open[] PROGMEM = "POŁĄCZ I OTWÓRZ HTTP://%s/";
 const char l10n_pl_PL_msg_no_sd_card[] PROGMEM = "Brak karty SD";
-const char l10n_pl_PL_msg_offline[] PROGMEM = "W trybie offline";
+const char l10n_pl_PL_msg_offline_15char[] PROGMEM = "W trybie offline";
 const char l10n_pl_PL_msg_ready[] PROGMEM = "[gotowy]";
 const char l10n_pl_PL_msg_stopped[] PROGMEM = "[zatrzymany]";
 const char l10n_pl_PL_msg_upd_failed[] PROGMEM = "Aktualizacja nie powiodła się";
@@ -2106,7 +2106,7 @@ const char l10n_pt_PT_msg_connect[] PROGMEM = "[conectando]";
 const char l10n_pt_PT_msg_connect_error[] PROGMEM = "Erro ao estabelecer ligação com %s";
 const char l10n_pt_PT_msg_connect_open[] PROGMEM = "CONECTE E ABRA HTTP://%s/";
 const char l10n_pt_PT_msg_no_sd_card[] PROGMEM = "Sem cartão SD";
-const char l10n_pt_PT_msg_offline[] PROGMEM = "Offline";
+const char l10n_pt_PT_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_pt_PT_msg_ready[] PROGMEM = "[pronto]";
 const char l10n_pt_PT_msg_stopped[] PROGMEM = "[parado]";
 const char l10n_pt_PT_msg_upd_failed[] PROGMEM = "Atualização falhou";
@@ -2179,7 +2179,7 @@ const char l10n_ro_RO_msg_connect[] PROGMEM = "[conectare]";
 const char l10n_ro_RO_msg_connect_error[] PROGMEM = "Eroare la conectarea la %s";
 const char l10n_ro_RO_msg_connect_open[] PROGMEM = "CONECTAȚI-VĂ ȘI DESCHIDEȚI HTTP://%s/";
 const char l10n_ro_RO_msg_no_sd_card[] PROGMEM = "Fără card SD";
-const char l10n_ro_RO_msg_offline[] PROGMEM = "Offline";
+const char l10n_ro_RO_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_ro_RO_msg_ready[] PROGMEM = "[gata]";
 const char l10n_ro_RO_msg_stopped[] PROGMEM = "[oprit]";
 const char l10n_ro_RO_msg_upd_failed[] PROGMEM = "Actualizare eșuată";
@@ -2252,7 +2252,7 @@ const char l10n_ru_RU_msg_connect[] PROGMEM = "[соединение]";
 const char l10n_ru_RU_msg_connect_error[] PROGMEM = "Ошибка подключения к %s";
 const char l10n_ru_RU_msg_connect_open[] PROGMEM = "ПОДКЛЮЧИТЕСЬ И ОТКРОЙТЕ HTTP://%s/";
 const char l10n_ru_RU_msg_no_sd_card[] PROGMEM = "SD-карта отсутствует";
-const char l10n_ru_RU_msg_offline[] PROGMEM = "В автономном режиме";
+const char l10n_ru_RU_msg_offline_15char[] PROGMEM = "В автономном режиме";
 const char l10n_ru_RU_msg_ready[] PROGMEM = "[готов]";
 const char l10n_ru_RU_msg_stopped[] PROGMEM = "[остановлено]";
 const char l10n_ru_RU_msg_upd_failed[] PROGMEM = "Обновление не удалось";
@@ -2325,7 +2325,7 @@ const char l10n_sk_SK_msg_connect[] PROGMEM = "[pripájanie]";
 const char l10n_sk_SK_msg_connect_error[] PROGMEM = "Chyba pri pripájaní k %s";
 const char l10n_sk_SK_msg_connect_open[] PROGMEM = "PRIPOJTE SA A OTVORTE HTTP://%s/";
 const char l10n_sk_SK_msg_no_sd_card[] PROGMEM = "Chýba SD karta";
-const char l10n_sk_SK_msg_offline[] PROGMEM = "Offline";
+const char l10n_sk_SK_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_sk_SK_msg_ready[] PROGMEM = "[pripravený]";
 const char l10n_sk_SK_msg_stopped[] PROGMEM = "[zastavené]";
 const char l10n_sk_SK_msg_upd_failed[] PROGMEM = "Aktualizácia zlyhala";
@@ -2398,7 +2398,7 @@ const char l10n_sl_SI_msg_connect[] PROGMEM = "[povezovanje]";
 const char l10n_sl_SI_msg_connect_error[] PROGMEM = "Napaka pri povezovanju z %s";
 const char l10n_sl_SI_msg_connect_open[] PROGMEM = "POVEŽITE SE IN ODPRITE HTTP://%s/";
 const char l10n_sl_SI_msg_no_sd_card[] PROGMEM = "Ni SD-kartice";
-const char l10n_sl_SI_msg_offline[] PROGMEM = "Brez povezave";
+const char l10n_sl_SI_msg_offline_15char[] PROGMEM = "Brez povezave";
 const char l10n_sl_SI_msg_ready[] PROGMEM = "[pripravljen]";
 const char l10n_sl_SI_msg_stopped[] PROGMEM = "[ustavljen]";
 const char l10n_sl_SI_msg_upd_failed[] PROGMEM = "Posodobitev ni uspela";
@@ -2471,7 +2471,7 @@ const char l10n_sr_RS_msg_connect[] PROGMEM = "[повезивање]";
 const char l10n_sr_RS_msg_connect_error[] PROGMEM = "Грешка при повезивању са %s";
 const char l10n_sr_RS_msg_connect_open[] PROGMEM = "ПОВЕЖИТЕ СЕ И ОТВОРИТЕ HTTP://%s/";
 const char l10n_sr_RS_msg_no_sd_card[] PROGMEM = "Нема СД картице";
-const char l10n_sr_RS_msg_offline[] PROGMEM = "Офлајн";
+const char l10n_sr_RS_msg_offline_15char[] PROGMEM = "Офлајн";
 const char l10n_sr_RS_msg_ready[] PROGMEM = "[спремно]";
 const char l10n_sr_RS_msg_stopped[] PROGMEM = "[заустављено]";
 const char l10n_sr_RS_msg_upd_failed[] PROGMEM = "Ажурирање није успело";
@@ -2544,7 +2544,7 @@ const char l10n_sv_SE_msg_connect[] PROGMEM = "[ansluter]";
 const char l10n_sv_SE_msg_connect_error[] PROGMEM = "Fel vid anslutning till %s";
 const char l10n_sv_SE_msg_connect_open[] PROGMEM = "ANSLUT OCH ÖPPNA HTTP://%s/";
 const char l10n_sv_SE_msg_no_sd_card[] PROGMEM = "Inget SD-kort";
-const char l10n_sv_SE_msg_offline[] PROGMEM = "Offline";
+const char l10n_sv_SE_msg_offline_15char[] PROGMEM = "Offline";
 const char l10n_sv_SE_msg_ready[] PROGMEM = "[redo]";
 const char l10n_sv_SE_msg_stopped[] PROGMEM = "[stoppad]";
 const char l10n_sv_SE_msg_upd_failed[] PROGMEM = "Uppdatering misslyckades";
@@ -2617,7 +2617,7 @@ const char l10n_tg_TJ_msg_connect[] PROGMEM = "[пайвастшавӣ]";
 const char l10n_tg_TJ_msg_connect_error[] PROGMEM = "Хато ҳангоми пайвастшавӣ ба %s";
 const char l10n_tg_TJ_msg_connect_open[] PROGMEM = "ПАЙВАСТ ШАВД ВА HTTP://%s/-ро БИВОЗЕД";
 const char l10n_tg_TJ_msg_no_sd_card[] PROGMEM = "Корти SD нест";
-const char l10n_tg_TJ_msg_offline[] PROGMEM = "Бе интернет";
+const char l10n_tg_TJ_msg_offline_15char[] PROGMEM = "Бе интернет";
 const char l10n_tg_TJ_msg_ready[] PROGMEM = "[омодаги]";
 const char l10n_tg_TJ_msg_stopped[] PROGMEM = "[хомӯш]";
 const char l10n_tg_TJ_msg_upd_failed[] PROGMEM = "Навсозӣ ноком шуд";
@@ -2690,7 +2690,7 @@ const char l10n_tr_TR_msg_connect[] PROGMEM = "[bağlanıyor]";
 const char l10n_tr_TR_msg_connect_error[] PROGMEM = "%s ile bağlantı kurulurken hata oluştu";
 const char l10n_tr_TR_msg_connect_open[] PROGMEM = "BAĞLAN & AÇ HTTP://%s/";
 const char l10n_tr_TR_msg_no_sd_card[] PROGMEM = "SD Kart Yok";
-const char l10n_tr_TR_msg_offline[] PROGMEM = "Çevrimdışı";
+const char l10n_tr_TR_msg_offline_15char[] PROGMEM = "Çevrimdışı";
 const char l10n_tr_TR_msg_ready[] PROGMEM = "[hazır]";
 const char l10n_tr_TR_msg_stopped[] PROGMEM = "[durduruldu]";
 const char l10n_tr_TR_msg_upd_failed[] PROGMEM = "Güncelleme başarısız oldu";
@@ -2763,7 +2763,7 @@ const char l10n_uk_UA_msg_connect[] PROGMEM = "[підключення]";
 const char l10n_uk_UA_msg_connect_error[] PROGMEM = "Помилка підключення до %s";
 const char l10n_uk_UA_msg_connect_open[] PROGMEM = "ПІДКЛЮЧІТЬСЯ ТА ВІДКРИЙТЕ HTTP://%s/";
 const char l10n_uk_UA_msg_no_sd_card[] PROGMEM = "SD-картка відсутня";
-const char l10n_uk_UA_msg_offline[] PROGMEM = "Офлайн";
+const char l10n_uk_UA_msg_offline_15char[] PROGMEM = "Офлайн";
 const char l10n_uk_UA_msg_ready[] PROGMEM = "[готово]";
 const char l10n_uk_UA_msg_stopped[] PROGMEM = "[зупинено]";
 const char l10n_uk_UA_msg_upd_failed[] PROGMEM = "Оновлення не вдалося";
@@ -2836,7 +2836,7 @@ const char l10n_uz_UZ_msg_connect[] PROGMEM = "[ulanish]";
 const char l10n_uz_UZ_msg_connect_error[] PROGMEM = "%s ga ulanishda xato";
 const char l10n_uz_UZ_msg_connect_open[] PROGMEM = "ULANING & OCHING HTTP://%s/";
 const char l10n_uz_UZ_msg_no_sd_card[] PROGMEM = "SD karta yo'q";
-const char l10n_uz_UZ_msg_offline[] PROGMEM = "Oflayn";
+const char l10n_uz_UZ_msg_offline_15char[] PROGMEM = "Oflayn";
 const char l10n_uz_UZ_msg_ready[] PROGMEM = "[tayyor]";
 const char l10n_uz_UZ_msg_stopped[] PROGMEM = "[to'xtatilgan]";
 const char l10n_uz_UZ_msg_upd_failed[] PROGMEM = "Yangilanish muvaffaqiyatsiz tugadi";
@@ -2912,7 +2912,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_be_BY_msg_connect_error,
     l10n_be_BY_msg_connect_open,
     l10n_be_BY_msg_no_sd_card,
-    l10n_be_BY_msg_offline,
+    l10n_be_BY_msg_offline_15char,
     l10n_be_BY_msg_ready,
     l10n_be_BY_msg_stopped,
     l10n_be_BY_msg_upd_failed,
@@ -2987,7 +2987,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_bg_BG_msg_connect_error,
     l10n_bg_BG_msg_connect_open,
     l10n_bg_BG_msg_no_sd_card,
-    l10n_bg_BG_msg_offline,
+    l10n_bg_BG_msg_offline_15char,
     l10n_bg_BG_msg_ready,
     l10n_bg_BG_msg_stopped,
     l10n_bg_BG_msg_upd_failed,
@@ -3062,7 +3062,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_bs_BA_msg_connect_error,
     l10n_bs_BA_msg_connect_open,
     l10n_bs_BA_msg_no_sd_card,
-    l10n_bs_BA_msg_offline,
+    l10n_bs_BA_msg_offline_15char,
     l10n_bs_BA_msg_ready,
     l10n_bs_BA_msg_stopped,
     l10n_bs_BA_msg_upd_failed,
@@ -3137,7 +3137,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_bs_ME_msg_connect_error,
     l10n_bs_ME_msg_connect_open,
     l10n_bs_ME_msg_no_sd_card,
-    l10n_bs_ME_msg_offline,
+    l10n_bs_ME_msg_offline_15char,
     l10n_bs_ME_msg_ready,
     l10n_bs_ME_msg_stopped,
     l10n_bs_ME_msg_upd_failed,
@@ -3212,7 +3212,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_cs_CZ_msg_connect_error,
     l10n_cs_CZ_msg_connect_open,
     l10n_cs_CZ_msg_no_sd_card,
-    l10n_cs_CZ_msg_offline,
+    l10n_cs_CZ_msg_offline_15char,
     l10n_cs_CZ_msg_ready,
     l10n_cs_CZ_msg_stopped,
     l10n_cs_CZ_msg_upd_failed,
@@ -3287,7 +3287,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_da_DK_msg_connect_error,
     l10n_da_DK_msg_connect_open,
     l10n_da_DK_msg_no_sd_card,
-    l10n_da_DK_msg_offline,
+    l10n_da_DK_msg_offline_15char,
     l10n_da_DK_msg_ready,
     l10n_da_DK_msg_stopped,
     l10n_da_DK_msg_upd_failed,
@@ -3362,7 +3362,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_de_DE_msg_connect_error,
     l10n_de_DE_msg_connect_open,
     l10n_de_DE_msg_no_sd_card,
-    l10n_de_DE_msg_offline,
+    l10n_de_DE_msg_offline_15char,
     l10n_de_DE_msg_ready,
     l10n_de_DE_msg_stopped,
     l10n_de_DE_msg_upd_failed,
@@ -3437,7 +3437,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_el_GR_msg_connect_error,
     l10n_el_GR_msg_connect_open,
     l10n_el_GR_msg_no_sd_card,
-    l10n_el_GR_msg_offline,
+    l10n_el_GR_msg_offline_15char,
     l10n_el_GR_msg_ready,
     l10n_el_GR_msg_stopped,
     l10n_el_GR_msg_upd_failed,
@@ -3512,7 +3512,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_en_US_msg_connect_error,
     l10n_en_US_msg_connect_open,
     l10n_en_US_msg_no_sd_card,
-    l10n_en_US_msg_offline,
+    l10n_en_US_msg_offline_15char,
     l10n_en_US_msg_ready,
     l10n_en_US_msg_stopped,
     l10n_en_US_msg_upd_failed,
@@ -3587,7 +3587,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_es_ES_msg_connect_error,
     l10n_es_ES_msg_connect_open,
     l10n_es_ES_msg_no_sd_card,
-    l10n_es_ES_msg_offline,
+    l10n_es_ES_msg_offline_15char,
     l10n_es_ES_msg_ready,
     l10n_es_ES_msg_stopped,
     l10n_es_ES_msg_upd_failed,
@@ -3662,7 +3662,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_et_EE_msg_connect_error,
     l10n_et_EE_msg_connect_open,
     l10n_et_EE_msg_no_sd_card,
-    l10n_et_EE_msg_offline,
+    l10n_et_EE_msg_offline_15char,
     l10n_et_EE_msg_ready,
     l10n_et_EE_msg_stopped,
     l10n_et_EE_msg_upd_failed,
@@ -3737,7 +3737,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_fi_FI_msg_connect_error,
     l10n_fi_FI_msg_connect_open,
     l10n_fi_FI_msg_no_sd_card,
-    l10n_fi_FI_msg_offline,
+    l10n_fi_FI_msg_offline_15char,
     l10n_fi_FI_msg_ready,
     l10n_fi_FI_msg_stopped,
     l10n_fi_FI_msg_upd_failed,
@@ -3812,7 +3812,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_fr_FR_msg_connect_error,
     l10n_fr_FR_msg_connect_open,
     l10n_fr_FR_msg_no_sd_card,
-    l10n_fr_FR_msg_offline,
+    l10n_fr_FR_msg_offline_15char,
     l10n_fr_FR_msg_ready,
     l10n_fr_FR_msg_stopped,
     l10n_fr_FR_msg_upd_failed,
@@ -3887,7 +3887,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_hr_HR_msg_connect_error,
     l10n_hr_HR_msg_connect_open,
     l10n_hr_HR_msg_no_sd_card,
-    l10n_hr_HR_msg_offline,
+    l10n_hr_HR_msg_offline_15char,
     l10n_hr_HR_msg_ready,
     l10n_hr_HR_msg_stopped,
     l10n_hr_HR_msg_upd_failed,
@@ -3962,7 +3962,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_hu_HU_msg_connect_error,
     l10n_hu_HU_msg_connect_open,
     l10n_hu_HU_msg_no_sd_card,
-    l10n_hu_HU_msg_offline,
+    l10n_hu_HU_msg_offline_15char,
     l10n_hu_HU_msg_ready,
     l10n_hu_HU_msg_stopped,
     l10n_hu_HU_msg_upd_failed,
@@ -4037,7 +4037,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_is_IS_msg_connect_error,
     l10n_is_IS_msg_connect_open,
     l10n_is_IS_msg_no_sd_card,
-    l10n_is_IS_msg_offline,
+    l10n_is_IS_msg_offline_15char,
     l10n_is_IS_msg_ready,
     l10n_is_IS_msg_stopped,
     l10n_is_IS_msg_upd_failed,
@@ -4112,7 +4112,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_kk_KZ_msg_connect_error,
     l10n_kk_KZ_msg_connect_open,
     l10n_kk_KZ_msg_no_sd_card,
-    l10n_kk_KZ_msg_offline,
+    l10n_kk_KZ_msg_offline_15char,
     l10n_kk_KZ_msg_ready,
     l10n_kk_KZ_msg_stopped,
     l10n_kk_KZ_msg_upd_failed,
@@ -4187,7 +4187,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_ky_KG_msg_connect_error,
     l10n_ky_KG_msg_connect_open,
     l10n_ky_KG_msg_no_sd_card,
-    l10n_ky_KG_msg_offline,
+    l10n_ky_KG_msg_offline_15char,
     l10n_ky_KG_msg_ready,
     l10n_ky_KG_msg_stopped,
     l10n_ky_KG_msg_upd_failed,
@@ -4262,7 +4262,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_lt_LT_msg_connect_error,
     l10n_lt_LT_msg_connect_open,
     l10n_lt_LT_msg_no_sd_card,
-    l10n_lt_LT_msg_offline,
+    l10n_lt_LT_msg_offline_15char,
     l10n_lt_LT_msg_ready,
     l10n_lt_LT_msg_stopped,
     l10n_lt_LT_msg_upd_failed,
@@ -4337,7 +4337,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_lv_LV_msg_connect_error,
     l10n_lv_LV_msg_connect_open,
     l10n_lv_LV_msg_no_sd_card,
-    l10n_lv_LV_msg_offline,
+    l10n_lv_LV_msg_offline_15char,
     l10n_lv_LV_msg_ready,
     l10n_lv_LV_msg_stopped,
     l10n_lv_LV_msg_upd_failed,
@@ -4412,7 +4412,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_mk_MK_msg_connect_error,
     l10n_mk_MK_msg_connect_open,
     l10n_mk_MK_msg_no_sd_card,
-    l10n_mk_MK_msg_offline,
+    l10n_mk_MK_msg_offline_15char,
     l10n_mk_MK_msg_ready,
     l10n_mk_MK_msg_stopped,
     l10n_mk_MK_msg_upd_failed,
@@ -4487,7 +4487,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_mn_MN_msg_connect_error,
     l10n_mn_MN_msg_connect_open,
     l10n_mn_MN_msg_no_sd_card,
-    l10n_mn_MN_msg_offline,
+    l10n_mn_MN_msg_offline_15char,
     l10n_mn_MN_msg_ready,
     l10n_mn_MN_msg_stopped,
     l10n_mn_MN_msg_upd_failed,
@@ -4562,7 +4562,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_nl_NL_msg_connect_error,
     l10n_nl_NL_msg_connect_open,
     l10n_nl_NL_msg_no_sd_card,
-    l10n_nl_NL_msg_offline,
+    l10n_nl_NL_msg_offline_15char,
     l10n_nl_NL_msg_ready,
     l10n_nl_NL_msg_stopped,
     l10n_nl_NL_msg_upd_failed,
@@ -4637,7 +4637,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_no_NO_msg_connect_error,
     l10n_no_NO_msg_connect_open,
     l10n_no_NO_msg_no_sd_card,
-    l10n_no_NO_msg_offline,
+    l10n_no_NO_msg_offline_15char,
     l10n_no_NO_msg_ready,
     l10n_no_NO_msg_stopped,
     l10n_no_NO_msg_upd_failed,
@@ -4712,7 +4712,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_pl_PL_msg_connect_error,
     l10n_pl_PL_msg_connect_open,
     l10n_pl_PL_msg_no_sd_card,
-    l10n_pl_PL_msg_offline,
+    l10n_pl_PL_msg_offline_15char,
     l10n_pl_PL_msg_ready,
     l10n_pl_PL_msg_stopped,
     l10n_pl_PL_msg_upd_failed,
@@ -4787,7 +4787,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_pt_PT_msg_connect_error,
     l10n_pt_PT_msg_connect_open,
     l10n_pt_PT_msg_no_sd_card,
-    l10n_pt_PT_msg_offline,
+    l10n_pt_PT_msg_offline_15char,
     l10n_pt_PT_msg_ready,
     l10n_pt_PT_msg_stopped,
     l10n_pt_PT_msg_upd_failed,
@@ -4862,7 +4862,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_ro_RO_msg_connect_error,
     l10n_ro_RO_msg_connect_open,
     l10n_ro_RO_msg_no_sd_card,
-    l10n_ro_RO_msg_offline,
+    l10n_ro_RO_msg_offline_15char,
     l10n_ro_RO_msg_ready,
     l10n_ro_RO_msg_stopped,
     l10n_ro_RO_msg_upd_failed,
@@ -4937,7 +4937,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_ru_RU_msg_connect_error,
     l10n_ru_RU_msg_connect_open,
     l10n_ru_RU_msg_no_sd_card,
-    l10n_ru_RU_msg_offline,
+    l10n_ru_RU_msg_offline_15char,
     l10n_ru_RU_msg_ready,
     l10n_ru_RU_msg_stopped,
     l10n_ru_RU_msg_upd_failed,
@@ -5012,7 +5012,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_sk_SK_msg_connect_error,
     l10n_sk_SK_msg_connect_open,
     l10n_sk_SK_msg_no_sd_card,
-    l10n_sk_SK_msg_offline,
+    l10n_sk_SK_msg_offline_15char,
     l10n_sk_SK_msg_ready,
     l10n_sk_SK_msg_stopped,
     l10n_sk_SK_msg_upd_failed,
@@ -5087,7 +5087,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_sl_SI_msg_connect_error,
     l10n_sl_SI_msg_connect_open,
     l10n_sl_SI_msg_no_sd_card,
-    l10n_sl_SI_msg_offline,
+    l10n_sl_SI_msg_offline_15char,
     l10n_sl_SI_msg_ready,
     l10n_sl_SI_msg_stopped,
     l10n_sl_SI_msg_upd_failed,
@@ -5162,7 +5162,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_sr_RS_msg_connect_error,
     l10n_sr_RS_msg_connect_open,
     l10n_sr_RS_msg_no_sd_card,
-    l10n_sr_RS_msg_offline,
+    l10n_sr_RS_msg_offline_15char,
     l10n_sr_RS_msg_ready,
     l10n_sr_RS_msg_stopped,
     l10n_sr_RS_msg_upd_failed,
@@ -5237,7 +5237,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_sv_SE_msg_connect_error,
     l10n_sv_SE_msg_connect_open,
     l10n_sv_SE_msg_no_sd_card,
-    l10n_sv_SE_msg_offline,
+    l10n_sv_SE_msg_offline_15char,
     l10n_sv_SE_msg_ready,
     l10n_sv_SE_msg_stopped,
     l10n_sv_SE_msg_upd_failed,
@@ -5312,7 +5312,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_tg_TJ_msg_connect_error,
     l10n_tg_TJ_msg_connect_open,
     l10n_tg_TJ_msg_no_sd_card,
-    l10n_tg_TJ_msg_offline,
+    l10n_tg_TJ_msg_offline_15char,
     l10n_tg_TJ_msg_ready,
     l10n_tg_TJ_msg_stopped,
     l10n_tg_TJ_msg_upd_failed,
@@ -5387,7 +5387,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_tr_TR_msg_connect_error,
     l10n_tr_TR_msg_connect_open,
     l10n_tr_TR_msg_no_sd_card,
-    l10n_tr_TR_msg_offline,
+    l10n_tr_TR_msg_offline_15char,
     l10n_tr_TR_msg_ready,
     l10n_tr_TR_msg_stopped,
     l10n_tr_TR_msg_upd_failed,
@@ -5462,7 +5462,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_uk_UA_msg_connect_error,
     l10n_uk_UA_msg_connect_open,
     l10n_uk_UA_msg_no_sd_card,
-    l10n_uk_UA_msg_offline,
+    l10n_uk_UA_msg_offline_15char,
     l10n_uk_UA_msg_ready,
     l10n_uk_UA_msg_stopped,
     l10n_uk_UA_msg_upd_failed,
@@ -5537,7 +5537,7 @@ const char* const l10n_strings[36][73] PROGMEM = {
     l10n_uz_UZ_msg_connect_error,
     l10n_uz_UZ_msg_connect_open,
     l10n_uz_UZ_msg_no_sd_card,
-    l10n_uz_UZ_msg_offline,
+    l10n_uz_UZ_msg_offline_15char,
     l10n_uz_UZ_msg_ready,
     l10n_uz_UZ_msg_stopped,
     l10n_uz_UZ_msg_upd_failed,

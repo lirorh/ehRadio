@@ -210,6 +210,7 @@ The subject of audio amplifiers is a huge topic.  This is just a summary of what
 ### Amplifiers
 
 It is generally recommended to use Class-AB amplifiers because:
+
   - no switching noise which is especially noticeable at high frequencies and with sensitive speakers
   - reasonable power efficiency (but use power even when idle)
   - no complicated output filters needed
@@ -336,7 +337,7 @@ SD reader modules like this are cheap and work well. Some come with a power regu
 
 ![image](images/hardware/sdreader.jpg) ![image](images/hardware/sdreader2.jpg)
 
-The [SD Offline mode](../#sd-offline-mode) should be considered as a "fallback because wi-fi is not available" mode, not a primary playback mode.
+The [SD Offline mode](README.md#sd-offline-mode) should be considered as a "fallback because wi-fi is not available" mode, not a primary playback mode.
 
 It is recommended to encode files on SD card using MP3 at a constant bit rate of 256kbps or less
 to avoid system stress and get maximum compatibility with the decoders.

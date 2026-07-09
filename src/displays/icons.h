@@ -108,30 +108,6 @@ static const uint8_t ICON_IP[] PROGMEM = {
     0b000000,  // ......
 };
 
-// \011 (dec 9) — Shuffle icon A (used in display.cpp for SD Offline Mode in place of SSID)
-static const uint8_t SDSHUFFLE_A[] PROGMEM = {
-    0b001100,  // ..@@..
-    0b011100,  // .@@@..
-    0b111111,  // @@@@@@
-    0b000000,  // ......
-    0b111111,  // @@@@@@
-    0b000000,  // ......
-    0b000000,  // ......
-    0b000000,  // ......
-};
-
-// \012 (dec 10) — Shuffle icon B (used in display.cpp for SD Offline Mode in place of SSID)
-static const uint8_t SDSHUFFLE_B[] PROGMEM = {
-    0b000000,  // ......
-    0b000000,  // ......
-    0b111110,  // @@@@@.
-    0b000000,  // ......
-    0b111110,  // @@@@@.
-    0b011100,  // .@@@..
-    0b011000,  // .@@...
-    0b000000,  // ......
-};
-
 // \013 (dec 11) — Battery LOW (0-25%) (used in conf files: batteryRangeFmt[0])
 static const uint8_t ICON_BATTERY_LOW[] PROGMEM = {
     0b011100,  // .@@@..
@@ -266,10 +242,10 @@ static const uint8_t ICON_VOL_100[] PROGMEM = {
 
 // \030 (dec 24) — Charging icon (referenced in display.cpp, indirectly)
 static const uint8_t ICON_CHARGING[] PROGMEM = {
-    0b000000,  // ......
     0b001000,  // ..@...
     0b011100,  // .@@@..
     0b101010,  // @.@.@.
+    0b001000,  // ..@...
     0b001000,  // ..@...
     0b001000,  // ..@...
     0b001000,  // ..@...
@@ -278,7 +254,7 @@ static const uint8_t ICON_CHARGING[] PROGMEM = {
 
 // \031 (dec 25) — Discharging icon (referenced in display.cpp, indirectly)
 static const uint8_t ICON_DISCHARGING[] PROGMEM = {
-    0b000000,  // ......
+    0b001000,  // ..@...
     0b001000,  // ..@...
     0b001000,  // ..@...
     0b001000,  // ..@...
@@ -287,6 +263,30 @@ static const uint8_t ICON_DISCHARGING[] PROGMEM = {
     0b001000,  // ..@...
     0b000000,  // ......
 };
+// \036 (dec 30) — Shuffle icon A (used in display.cpp for SD Offline Mode in place of SSID)
+static const uint8_t SDSHUFFLE_A[] PROGMEM = {
+    0b000000,  // ......
+    0b111000,  // @@@...
+    0b000100,  // ...@..
+    0b000011,  // ....@@
+    0b000100,  // ...@..
+    0b111000,  // @@@`..
+    0b000000,  // ......
+    0b000000,  // ......
+};
+
+// \037 (dec 31) — Shuffle icon B (used in display.cpp for SD Offline Mode in place of SSID)
+static const uint8_t SDSHUFFLE_B[] PROGMEM = {
+    0b000100,  // ...@..
+    0b011110,  // .@@@@.
+    0b100100,  // @..@..
+    0b000000,  // ......
+    0b100100,  // @..@..
+    0b011110,  // .@@@@.
+    0b000100,  // ...@..
+    0b000000,  // ......
+};
+
 
 // \034 (dec 28) — Pause icon (unused)
 static const uint8_t ICON_PAUSE[] PROGMEM = {
@@ -337,8 +337,8 @@ static const uint8_t* const ICON_TABLE[] PROGMEM = {
     ICON_RSSI__11,       //  6: \006
     ICON_WEATHER_DIV,    //  7: \007
     ICON_IP,             //  8: \010
-    SDSHUFFLE_A,         //  9: \011
-    SDSHUFFLE_B,         // 10: \012
+    NULL,                //  9: \011 (DO NOT USE: TAB control char conflicts with TFT print())
+    NULL,                // 10: \012 (DO NOT USE: LF control char conflicts with TFT print())
     ICON_BATTERY_LOW,    // 11: \013
     ICON_BATTERY_MID,    // 12: \014
     ICON_BATTERY_HIGH,   // 13: \015
@@ -346,16 +346,18 @@ static const uint8_t* const ICON_TABLE[] PROGMEM = {
     ICON_SD_B,           // 15: \017
     ICON_PLAY,           // 16: \020
     ICON_PREV,           // 17: \021
-    NULL,                // 18: \022 (unused)
+    NULL,                // 18: \022
     ICON_SPEAKER,        // 19: \023
     ICON_VOL_25,         // 20: \024
     ICON_VOL_50,         // 21: \025
     ICON_VOL_100,        // 22: \026
-    NULL,                // 23: (unused)
+    NULL,                // 23: \027
     ICON_CHARGING,       // 24: \030
     ICON_DISCHARGING,    // 25: \031
-    NULL, NULL, NULL,    // 26-27: (unused)
+    SDSHUFFLE_A,         // 26: \032
+    SDSHUFFLE_B,         // 27: \033
     ICON_PAUSE,          // 28: \034
     ICON_LIST,           // 29: \035
-    NULL, NULL           // 30-31: (unused)
+    NULL,                // 30: \036 (DO NOT USE: 0x1E is the spacer character in TextWidget: it gets consumed as a 2px gap before reaching the icon renderer)
+    NULL                 // 31: \037
 };

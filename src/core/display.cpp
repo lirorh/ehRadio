@@ -318,7 +318,7 @@ void Display::_start() {
   }
 
   if (_vuwidget) _vuwidget->lock();
-  if (_rssi && network.status != SDOFFLINE) _setRSSI(WiFi.RSSI());
+  if (_rssi) { if (network.status == SDOFFLINE) _setRSSI(0); else _setRSSI(WiFi.RSSI()); }
   #ifndef HIDE_IP
     if (_volip) {
       if (network.status == SDOFFLINE) {
@@ -709,6 +709,12 @@ void Display::loop() {
 }
 
 void Display::_setRSSI(int rssi) {
+  #if SD_CS!=255
+    if (network.status == SDOFFLINE) {
+      _rssi->setText(config.store.sdshuffle ? "\032\033" : "  ");
+      return;
+    }
+  #endif
   if (!_rssi) return;
   #if RSSI_DIGIT
     _rssi->setText(rssi, rssiFmt);

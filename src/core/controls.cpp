@@ -553,7 +553,15 @@ void Controls::onBtnClick(int id) {
       }
     case EVT_BTN_MODE: {
         #ifdef USE_SD
-          if (network.status == SDOFFLINE) { sdman.trySdRemount(); break; }
+          if (network.status == SDOFFLINE) {
+            if (sdman.ready) {
+              config.store.sdshuffle = !config.store.sdshuffle;
+              display.putRequest(DSPRSSI, 0);
+            } else {
+              sdman.trySdRemount();
+            }
+            break;
+          }
           config.changeMode();
           break;
         #endif

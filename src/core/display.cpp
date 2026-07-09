@@ -169,7 +169,7 @@ void Display::_buildPager() {
     _voltxt = new TextWidget(voltxtConf, 10, false, config.theme.vol, config.theme.background);
   #endif
   #ifndef HIDE_IP
-    _volip = new TextWidget(iptxtConf, 30, false, config.theme.ip, config.theme.background);
+    _volip = new TextWidget(iptxtConf, 48, false, config.theme.ip, config.theme.background);  // 48 bytes = 15 code points × 3 bytes (CJK) + 2 icons + null
   #endif
   #ifndef HIDE_RSSI
     _rssi = new TextWidget(rssiConf, 20, false, config.theme.rssi, config.theme.background);
@@ -322,7 +322,7 @@ void Display::_start() {
   #ifndef HIDE_IP
     if (_volip) {
       if (network.status == SDOFFLINE) {
-        _volip->setText(l10n(L10N_MSG_OFFLINE), "\016\017%s");
+        _volip->setText(utf8_trim15(l10n(L10N_MSG_OFFLINE_15CHAR)), "\016\017%s");
       } else {
         #if IP_WEATHER_SHARED
           if (config.store.showweather) _volip->setText("");
@@ -383,7 +383,7 @@ void Display::_swichMode(displayMode_e newmode) {
     #ifndef HIDE_IP
       if (_volip) {
         if (network.status == SDOFFLINE) {
-          _volip->setText(l10n(L10N_MSG_OFFLINE), "\016\017%s");
+          _volip->setText(utf8_trim15(l10n(L10N_MSG_OFFLINE_15CHAR)), "\016\017%s");
         } else {
           #if IP_WEATHER_SHARED // weather and IP share the same bottom row; hide IP when weather is active
             if (config.store.showweather) _volip->setText("");
@@ -431,7 +431,7 @@ void Display::_swichMode(displayMode_e newmode) {
     }
     #ifndef HIDE_IP
       if (_volip) {
-        if (network.status == SDOFFLINE) _volip->setText(l10n(L10N_MSG_OFFLINE), "\016\017%s");
+        if (network.status == SDOFFLINE) _volip->setText(utf8_trim15(l10n(L10N_MSG_OFFLINE_15CHAR)), "\016\017%s");
         else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
       }
     #endif
@@ -678,7 +678,7 @@ void Display::loop() {
           #ifndef HIDE_IP
             if (_volip) {
               if (network.status == SDOFFLINE) {
-                _volip->setText(l10n(L10N_MSG_OFFLINE), "\016\017%s");
+                _volip->setText(utf8_trim15(l10n(L10N_MSG_OFFLINE_15CHAR)), "\016\017%s");
               } else {
                 #if IP_WEATHER_SHARED // skip IP repaint in PLAYER when weather owns the shared row
                   if (!(_mode == PLAYER && config.store.showweather))

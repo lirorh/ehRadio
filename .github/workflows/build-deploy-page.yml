@@ -49,6 +49,12 @@ jobs:
           # Replace only the first occurrence of 'easier to read' with 'easier to explore'
           sed -i '0,/easier to read/s|easier to read|easier to explore|' docs/index.md
 
+      - name: Fix MkDocs cross-references (README.md → index.md)
+        run: |
+          for f in docs/*.md; do
+            sed -i 's|](README.md|](index.md|g' "$f"
+          done
+
       - name: Copy web assets (manifests and firmware-info.json)
         run: |
           LOCAL_ASSETS="builds/${{ github.repository_owner }}/web_assets"

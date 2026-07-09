@@ -14,6 +14,7 @@
 #include "config.h"
 #include "display.h"
 #include "netserver.h"
+#include "../displays/tools/pretext.h"
 
 namespace {
 
@@ -754,6 +755,21 @@ uint32_t fileCRC32(File& f, size_t len) {
     len -= read;
   }
   return crc;
+}
+
+// Special function to trim L10N_MSG_OFFLINE_15CHAR (msg_offline_15char in the display locale json files)
+// to the 15 characters that fit in the IP widget space
+const char* utf8_trim15(const char* src) {
+  static constexpr uint16_t maxChars = 15;
+  static char buf[64];
+  uint16_t len = utf8_strlen(src);
+  if (len <= maxChars) return src;
+  const char* cut = utf8_offset(src, maxChars);
+  size_t bytes = cut - src;
+  if (bytes >= sizeof(buf)) bytes = sizeof(buf) - 1;
+  memcpy(buf, src, bytes);
+  buf[bytes] = '\0';
+  return buf;
 }
 
 Utility utility;

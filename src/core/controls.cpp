@@ -488,7 +488,6 @@ void Controls::onBtnClick(int id) {
     case EVT_BTN_PLAY:
     case EVT_ENC_SW:
     case EVT_ENC2_SW: {
-        if (network.status == SDOFFLINE) { sdman.trySdRemount(); break; }
         if (display.mode() == NUMBERS) {
           display.numOfNextStation = 0;
           display.putRequest(NEWMODE, PLAYER);
@@ -506,6 +505,11 @@ void Controls::onBtnClick(int id) {
           #endif
           display.putRequest(CLOSEPLAYLIST, display.currentPlItem);
           //player.sendCommand({PR_PLAY, display.currentPlItem});
+        }
+        if (network.status == SDOFFLINE) {
+          #ifdef USE_SD
+            sdman.trySdRemount(); break;
+          #endif
         }
         if (network.status==SOFT_AP || display.mode()==LOST) {
           #ifdef USE_SD
@@ -547,13 +551,14 @@ void Controls::onBtnClick(int id) {
         }
         break;
       }
-    #ifdef USE_SD
     case EVT_BTN_MODE: {
-      if (network.status == SDOFFLINE) { sdman.trySdRemount(); break; }
-      config.changeMode();
-      break;
-    }
-    #endif
+        #ifdef USE_SD
+          if (network.status == SDOFFLINE) { sdman.trySdRemount(); break; }
+          config.changeMode();
+          break;
+        #endif
+        }
+
     default: break;
   }
 }
@@ -613,25 +618,27 @@ void Controls::flipTS() {
 // Instant read (no blocking): if user is holding a button at boot time, force SD.
 // Runs after safe mode check, so it can override play_mode=PM_WEB if desired.
 void Controls::checkButtonsHeldOnBoot() {
-  bool held = false;
-  #if BTN_MODE != 255
-    pinMode(BTN_MODE, BTN_MODE_PULLUP ? INPUT_PULLUP : INPUT);
-    if (digitalRead(BTN_MODE) == LOW) held = true;
+  #ifdef USE_SD
+    bool held = false;
+    #if BTN_MODE != 255
+      pinMode(BTN_MODE, BTN_MODE_PULLUP ? INPUT_PULLUP : INPUT);
+      if (digitalRead(BTN_MODE) == LOW) held = true;
+    #endif
+    #if ENC_SW != 255
+      pinMode(ENC_SW, ENC_SW_PULLUP ? INPUT_PULLUP : INPUT);
+      if (digitalRead(ENC_SW) == LOW) held = true;
+    #endif
+    #if ENC2_SW != 255
+      pinMode(ENC2_SW, ENC2_SW_PULLUP ? INPUT_PULLUP : INPUT);
+      if (digitalRead(ENC2_SW) == LOW) held = true;
+    #endif
+    if (held) {
+      network.offlineMode = true;  // signals network.begin() to skip Wi-Fi
+      config.store.play_mode = PM_SDCARD;
+      config.syncSDFS();  // update _SDplaylistFS so SDPLFS() returns &sdman not &SPIFFS
+      BOOTLOG("SD Offline Mode triggered by button hold");
+    }
   #endif
-  #if ENC_SW != 255
-    pinMode(ENC_SW, ENC_SW_PULLUP ? INPUT_PULLUP : INPUT);
-    if (digitalRead(ENC_SW) == LOW) held = true;
-  #endif
-  #if ENC2_SW != 255
-    pinMode(ENC2_SW, ENC2_SW_PULLUP ? INPUT_PULLUP : INPUT);
-    if (digitalRead(ENC2_SW) == LOW) held = true;
-  #endif
-  if (held) {
-    network.offlineMode = true;  // signals network.begin() to skip Wi-Fi
-    config.store.play_mode = PM_SDCARD;
-    config.syncSDFS();  // update _SDplaylistFS so SDPLFS() returns &sdman not &SPIFFS
-    BOOTLOG("SD Offline Mode triggered by button hold");
-  }
 }
 
 Controls controls;

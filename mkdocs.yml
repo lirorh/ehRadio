@@ -53,7 +53,7 @@ markdown_extensions:
       toc_depth: 3
 
 nav:
-  - Readme: index.md
+  - Readme: README.md
   - Hardware: Hardware.md
   - Controls: Controls.md
   - Commands: Commands.md

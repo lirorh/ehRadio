@@ -71,7 +71,7 @@ bool Config::_wwwFilesExist() {
 
 void Config::init() {
   loadPreferences();
-  startup.checkSafeMode();
+  if (!config.store.lastBootGood) delay(1000);  // Allow serial monitor to connect before logging safe mode
   bootInfo();
   #if RTCSUPPORTED
     BOOTLOG("RTC begin(SDA=%d,SCL=%d)", RTC_SDA, RTC_SCL);
@@ -88,7 +88,8 @@ void Config::init() {
   #if defined(SPIB_SCK) && (SPIB_SCK != 255)
     SPIB.begin(SPIB_SCK, SPIB_MISO, SPIB_MOSI);
   #endif
-  if (store.config_set != 4262) {
+  if (store.config_set_magic != 4262 && store.config_set_magic != 1867) {
+    if (store.config_set_magic != 4262) saveValue(&store.config_set_magic, static_cast<uint16_t>(1867)); // convert the previous magic number
     setDefaults();
   }
   store.play_mode = store.play_mode & 0b11;
@@ -110,14 +111,14 @@ void Config::init() {
 
 void Config::loadPreferences() {
   prefs.begin("ehradio", false);
-  // Check config_set first
+  // Check config_set_magic first
   uint16_t configSetValue = 0;
   size_t configSetRead = prefs.getBytes("cfgset", &configSetValue, sizeof(configSetValue));
   if (configSetRead != sizeof(configSetValue) || configSetValue != 4262) {
     if (configSetRead != sizeof(configSetValue)) {
       FUNCTIONLOG("Prefs", "NVS Sentinel absent (NVS uninitialized or corrupt), resetting to defaults...");
     } else {
-      FUNCTIONLOG("Prefs", "Invalid config_set (%u), resetting config...", configSetValue);
+      FUNCTIONLOG("Prefs", "Invalid config_set_magic (%u), resetting config...", configSetValue);
     }
     prefs.end();
     setDefaults();
@@ -144,12 +145,17 @@ void Config::changeMode(int newmode) {
   #ifdef USE_SD
     bool pir = player.isRunning();
     if (SD_CS==255) return;
+    if (network.status==SDOFFLINE) return;  // no mode switching in offline SD mode
     if (getMode()==PM_SDCARD) {
       sdResumePos = player.getFilePos();
     }
     if (network.status==SOFT_AP || display.mode()==LOST) {
+      FUNCTIONLOG("REBOOT", "Marking NVS Pref keys for intentional reboot to SD Offline mode. Rebooting.");
+      saveValue(&store.lastBootGood, true);
+      saveValue(&store.offlineSD, true);
       saveValue(&store.play_mode, static_cast<uint8_t>(PM_SDCARD));
-      delay(50);
+      display.putRequest(NEWMODE, CLEAR);
+      delay(100);
       ESP.restart();
     }
     if (!sdman.ready && newmode!=PM_WEB) {
@@ -175,6 +181,7 @@ void Config::changeMode(int newmode) {
       store.play_mode=(playMode_e)newmode;
     }
     saveValue(&store.play_mode, store.play_mode);
+    player.resetQueue();  // clear stale ticks commands before mode transition
     _SDplaylistFS = getMode()==PM_SDCARD?&sdman:(true?&SPIFFS:_SDplaylistFS);
     if (getMode()==PM_SDCARD) {
       if (pir) player.sendCommand({PR_STOP, 0});
@@ -185,7 +192,14 @@ void Config::changeMode(int newmode) {
       delay(50);
     }
     if (getMode()==PM_WEB) {
-      if (network.status==SDREADY) ESP.restart();
+      if (network.status==SDOFFLINE) {
+        FUNCTIONLOG("REBOOT", "Marking NVS Pref key for intentional reboot. Rebooting.");
+        saveValue(&store.lastBootGood, true);
+        display.putRequest(NEWMODE, CLEAR);
+        delay(100);
+        ESP.restart();
+      }
+      if (pir) player.sendCommand({PR_STOP, 0});  // stop SD playback before unmounting
       sdman.stop();
     }
     if (!_bootDone) return;
@@ -202,20 +216,45 @@ void Config::changeMode(int newmode) {
   #endif //#ifdef USE_SD
 }
 
-void Config::initSDPlaylist() {
+void Config::syncSDFS() {
+  _SDplaylistFS = (getMode()==PM_SDCARD) ? (FS*)&sdman : (FS*)&SPIFFS;
+}
+
+void Config::initSDPlaylist(bool force) {
   #ifdef USE_SD
-    //store.countStation = 0;
-    bool doIndex = !sdman.exists(INDEX_SD_PATH);
-    if (doIndex) sdman.indexSDPlaylist();
-    if (SDPLFS()->exists(INDEX_SD_PATH)) {
-      File index = SDPLFS()->open(INDEX_SD_PATH, "r");
-      //store.countStation = index.size() / 4;
-      if (doIndex) {
-        lastStation(_randomStation());
-        sdResumePos = 0;
+    bool doIndex = force || !sdman.exists(INDEX_SD_PATH);
+    if (!doIndex) {
+      File index = sdman.open(INDEX_SD_PATH, "r");  // use sdman directly — SDPLFS() may be SPIFFS after safe mode
+      // Footer: [magic:4][count:4] = 8 bytes
+      if (index && index.size() >= 12) {  // min: 1 entry (4) + footer (8)
+        uint32_t magic, storedCount;
+        index.seek(index.size() - 8);
+        index.readBytes((char*)&magic, 4);
+        index.readBytes((char*)&storedCount, 4);
+        uint32_t currentCount = sdman.countAudioFiles();
+        FUNCTIONLOG("SD", "Index found:\tcount: %d magic: %04X\tcurrent count: %d magic",
+                    storedCount, magic, currentCount);
+        if (magic != 0x1867) {
+          FUNCTIONLOG("SD", "Magic mismatch (should be 1867). Re-indexing.");
+          doIndex = true;
+        } else if (storedCount != currentCount) {
+          FUNCTIONLOG("SD", "File count mismatch. Re-indexing.");
+          doIndex = true;
+        }
+      } else {
+        FUNCTIONLOG("SD", "Index open failed or too small. Re-indexing.");
+        doIndex = true;
       }
-      index.close();
-      //saveValue(&store.countStation, store.countStation);
+      if (index) index.close();
+    }
+    if (doIndex) {
+      FUNCTIONLOG("SD", "Waiting for SD card indexing.");
+      sdman.indexSDPlaylist();
+      store.countStation = utility.playlistLength();
+      lastStation(_randomStation());
+      sdResumePos = 0;
+    } else {
+      store.countStation = utility.playlistLength();
     }
   #endif //#ifdef USE_SD
 }
@@ -227,33 +266,41 @@ void Config::initPlaylistMode() {
     if (getMode()==PM_SDCARD) {
       #if SD_CARD_DETECT_PIN!=255
         if (digitalRead(SD_CARD_DETECT_PIN)==HIGH) {
-          store.play_mode=PM_WEB;
-          ERRORLOG("SD card not inserted");
-          changeMode(PM_WEB);
-          _lastStation = store.lastStation;
+          if (network.status == SDOFFLINE) {
+            FUNCTIONLOG("SD", "No SD card. Staying in offline mode.");
+            strncpy(config.station.name, "ehRadio", STATION_FIELD_LENGTH);
+            return;  // no SD — nothing more to init
+          } else {
+            store.play_mode=PM_WEB;
+            ERRORLOG("SD card not inserted.");
+            changeMode(PM_WEB);
+            _lastStation = store.lastStation;
+          }
         } else
       #endif
       if (!sdman.start()) {
-        store.play_mode=PM_WEB;
-        ERRORLOG("SD mount failed");
-        changeMode(PM_WEB);
-        _lastStation = store.lastStation;
+        if (network.status == SDOFFLINE) {
+          FUNCTIONLOG("SD", "SD mount failed. Staying in offline mode.");
+          strncpy(config.station.name, "ehRadio", STATION_FIELD_LENGTH);
+          return;  // no SD — nothing more to init
+        } else {
+          store.play_mode=PM_WEB;
+          ERRORLOG("SD mount failed");
+          changeMode(PM_WEB);
+          _lastStation = store.lastStation;
+        }
       } else {
-        if (_bootDone) FUNCTIONLOG("SD", "SD card mounted"); else BOOTLOG("SD card mounted");
-          if (_bootDone) FUNCTIONLOG("SD", "Waiting for SD card indexing..."); else BOOTLOGX("Waiting for SD card indexing...\t");
-          initSDPlaylist();
-          if (_bootDone) FUNCTIONLOG("SD", "done"); else SERIALLOG("done");
-          _lastStation = store.lastSdStation;
-          
-          if (_lastStation>cs && cs>0) {
-            _lastStation=1;
-          }
-          if (_lastStation==0) {
-            _lastStation = _randomStation();
-          }
+        FUNCTIONLOG("SD", "SD card mounted.");
+        initSDPlaylist();
+        cs = utility.playlistLength();  // refresh after potential re-index
+        FUNCTIONLOG("SD", "SD card ready");
+        _lastStation = store.lastSdStation;
+        if (_lastStation > cs || _lastStation == 0) {
+          _lastStation = (cs > 0) ? 1 : 0;
+        }
       }
     } else {
-      if (_bootDone) FUNCTIONLOG("SD", "done"); else BOOTLOG("SD card done");
+      FUNCTIONLOG("SD", "done");
       _lastStation = store.lastStation;
     }
   #else
@@ -271,12 +318,29 @@ void Config::initPlaylistMode() {
   } else if (_lastStation > cs) {
     _lastStation = 1;  // Station out of range, reset to first
   } else if (_lastStation == 0) {
-    _lastStation = getMode()==PM_WEB?1:_randomStation();  // No station selected, pick first
+    if (getMode() == PM_WEB) {
+      uint16_t found = utility.findStationByUrl(store.lastStationUrl);
+      if (found > 0) {
+        _lastStation = found;  // Resolved from persisted URL
+      }
+      // else: stays 0 — will fall through to "ehRadio" below
+    } else {
+      _lastStation = _randomStation();  // SD mode: pick a random track
+    }
   }
   lastStation(_lastStation);
   saveValue(&store.play_mode, store.play_mode);
   _bootDone = true;
-  utility.loadStation(_lastStation);
+  if (_lastStation == 0 && cs > 0) {
+    // Playlist exists but we couldn't determine the last station:
+    // show "ehRadio" instead of misleading first-station name
+    memset(config.station.url, 0, STATION_FIELD_LENGTH);
+    memset(config.station.name, 0, STATION_FIELD_LENGTH);
+    strncpy(config.station.name, "ehRadio", STATION_FIELD_LENGTH);
+    config.station.ovol = 0;
+  } else {
+    utility.loadStation(_lastStation);
+  }
 }
 
 void Config::_initHW() {
@@ -459,7 +523,7 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
 }
 
 void Config::setDefaults() {
-  SERIALLOG("setDefaults called");
+  FUNCTIONLOG("setDefaults", "Resetting all settings to user defaults!");
   nvs_flash_erase();
   nvs_flash_init();
   // defaults set by struct, except one
@@ -467,7 +531,7 @@ void Config::setDefaults() {
   // Write the sentinel immediately after erase so the next boot finds a valid cfgset
   // and does not loop back into reset() again
   prefs.begin("ehradio", false);
-  prefs.putBytes("cfgset", &store.config_set, sizeof(store.config_set));
+  prefs.putBytes("cfgset", &store.config_set_magic, sizeof(store.config_set_magic));
   prefs.end();
 }
 
@@ -734,7 +798,7 @@ void Config::bootInfo() {
 // Preferences Look-up Table (store_variable, "key_max_15_char")
 // Macro expands to 3 fields (offset_of_config_t_store_variable, "key_max_15_char", size_of_store_variable)
 const configKeyMap Config::keyMap[] = {
-  CONFIG_KEY_ENTRY(config_set, "cfgset"),
+  CONFIG_KEY_ENTRY(config_set_magic, "cfgset"),
   CONFIG_KEY_ENTRY(lastStationUrl, "lasturl"),
   CONFIG_KEY_ENTRY(countStation, "countsta"),
   CONFIG_KEY_ENTRY(lastSSID, "lastssid"),
@@ -807,6 +871,8 @@ const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(mqttuser, "mqttuser"),
   CONFIG_KEY_ENTRY(mqttpass, "mqttpass"),
   CONFIG_KEY_ENTRY(mqtttopic, "mqtttopic"),
+  CONFIG_KEY_ENTRY(lastBootGood, "lastbootgood"),
+  CONFIG_KEY_ENTRY(offlineSD, "offlinesd"),
   {0, nullptr, 0} // Yup, 3 fields - don't delete the last line!
 };
 
@@ -817,3 +883,4 @@ void Config::deleteOldKeys() {
   prefs.remove("smartstart"); // previous smartstart was numeric 0, 1, 2
   prefs.remove("vsteps"); // volume steps was needed when volume was 0 to 254
 }
+

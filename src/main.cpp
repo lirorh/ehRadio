@@ -13,6 +13,7 @@
 #include "core/network.h"
 #include "core/player.h"
 #include "core/rgbled.h"
+#include "core/sdmanager.h"
 #include "core/startup.h"
 #include "core/telnet.h"
 #include "displays/tools/psframebuffer.h"
@@ -45,15 +46,20 @@ void setup() {
   startup.deassertCsPins();
   if (LED_PIN!=255) pinMode(LED_PIN, OUTPUT);
   rgbled.init();
-  // Initialize battery monitoring
   battery.init();
   config.init();
+  controls.checkButtonsHeldOnBoot();  // check for hold-to-SD before network decision
   backlightControls.init();
   display.init();
   player.init();
   battery.bootStatus();
-  network.begin();
-  if (network.status != CONNECTED && network.status!=SDREADY) {
+  if (config.getMode()==PM_SDCARD && (network.offlineMode || config.store.offlineSD)) {
+    startup.sdOfflineMode();
+  } else {
+    startup.checkSafeMode();
+    network.begin();
+  }
+  if (network.status != CONNECTED && network.status != SDOFFLINE) {
     netserver.begin();
     netserver.startLoopTask();
     controls.init();
@@ -68,13 +74,15 @@ void setup() {
   }
   config.initPlaylistMode();
   netserver.begin();
-  netserver.startLoopTask();
-  telnet.begin();
+  if (network.status != SDOFFLINE) {
+    netserver.startLoopTask();
+    telnet.begin();
+  }
   controls.init();
   display.putRequest(DSP_START);
   while(!display.ready()) delay(10);
   #ifdef MQTT_ENABLE
-    if (config.store.mqttenable) mqtt.init();
+    if (config.store.mqttenable && network.status != SDOFFLINE) mqtt.init();
   #endif
   #if LED_INVERT
     if (LED_PIN!=255) digitalWrite(LED_PIN, true);
@@ -92,7 +100,7 @@ void setup() {
       }
     }
   }
-  startup.startupServices();
+  if (network.status != SDOFFLINE) startup.startupServices();  // needs WiFi — skip in offline SD mode
   netserver.setBootReady(true);
 }
 
@@ -112,7 +120,7 @@ void loop() {
   battery.applyPowerPolicy();
 
   controls.loop();
-  if (network.status == CONNECTED || network.status==SDREADY) {
+  if (network.status == CONNECTED || network.status == SDOFFLINE) {
     player.loop();
     config.processDeferredSaves();
   }

@@ -2,11 +2,13 @@
 #include "startup.h"
 
 #include <ESPFileUpdater.h>
+#include <WiFi.h>
 #include <time.h>
 
 #include "config.h"
 #include "display.h"
 #include "logging.h"
+#include "network.h"
 #include "netserver.h"
 #include "player.h"
 #include "utility.h"
@@ -15,31 +17,25 @@
 Startup startup;
 
 void Startup::checkSafeMode() {
-  Preferences prefs;
-  prefs.begin("ehradio", false);
-  bool lastBootGood = prefs.getBool("lastbootgood", false);
-  if (!lastBootGood) {
-    bootInSafeMode();
+  if (!config.store.lastBootGood) {
+    FUNCTIONLOG("SAFE MODE", "Smartstart and Autoupdate disabled for this session; Web mode saved to NVS.");
+    config.store.smartstart = false;
+    config.store.autoupdate = false;
+    config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
   }
   // Mark this boot as in-progress (not yet proven stable)
-  prefs.putBool("lastbootgood", false);
-  prefs.end();
+  config.saveValue(&config.store.lastBootGood, false);
   _bootStablePending = true;
-  // _bootStartMs set lazily on first loop() call, after setup() completes
 }
 
-void Startup::bootInSafeMode() {
-  delay(1000);  // Allow serial monitor to connect before logging safe mode
-  FUNCTIONLOG("SAFE MODE", "Smartstart and Autoupdate disabled for this session");
-  config.store.smartstart = false;
-  config.store.autoupdate = false;
+void Startup::sdOfflineMode() {
+  network.status = SDOFFLINE;
+  WiFi.mode(WIFI_OFF);
+  if (config.store.offlineSD) config.saveValue(&config.store.offlineSD, false); // set the flag to do normal boot
 }
 
 void Startup::markBootStable() {
-  Preferences prefs;
-  prefs.begin("ehradio", false);
-  prefs.putBool("lastbootgood", true);
-  prefs.end();
+  config.saveValue(&config.store.lastBootGood, true);
   BOOTLOG("Boot stable after %lu ms", millis() - _bootStartMs);
 }
 
@@ -231,6 +227,7 @@ void Startup::getRequiredFiles() {
     }
     delete updater;
     utility.cleanupSpiffs();
+    FUNCTIONLOG("REBOOT", "Required Files done. Reboot.");
     delay(200);
     ESP.restart();
   #endif

@@ -84,7 +84,7 @@ struct theme_t {
 };
 struct config_t // specify defaults here (and macros in options.h) (defaults are NOT saved to Prefs)
 {
-  uint16_t  config_set = 4262;
+  uint16_t  config_set_magic = 1867;
   uint16_t  lastStation = 0;
   char      lastStationUrl[STATION_FIELD_LENGTH] = "";
   uint16_t  countStation = 0;
@@ -158,6 +158,8 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   char      mqttuser[30] = MQTT_USER;
   char      mqttpass[40] = MQTT_PASS;
   char      mqtttopic[60] = MQTT_TOPIC;
+  bool      lastBootGood = false;  // safe mode: set true when boot proves stable
+  bool      offlineSD = false;  // one-shot: set by AP→SD switch, cleared on next boot
 
   // if adding a variable, you can do it anywhere, just be sure to add it to configKeyMap() in config.cpp
   // if removing a variable and key, add to deleteOldKeys()
@@ -228,7 +230,7 @@ class Config {
     void init();
     void loadPreferences();
     void changeMode(int newmode=-1);
-    void initSDPlaylist();
+    void initSDPlaylist(bool force = false);
     void initPlaylistMode();
     void loadTheme();
     void saveIR();
@@ -256,6 +258,7 @@ class Config {
     }
     uint8_t getMode() { return store.play_mode; }
     FS* SDPLFS() { return _SDplaylistFS; }
+    void syncSDFS();  // update _SDplaylistFS after external play_mode changes (e.g. button hold)
     bool isRTCFound() { return _rtcFound; };
     Preferences prefs; // For Preferences, we use a look-up table to maintain compatibility...
     static const configKeyMap keyMap[];

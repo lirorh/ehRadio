@@ -200,7 +200,7 @@ bool Telnet::begin(bool quiet) {
     resetInputBuffer(clientInputBuffer[i], clientInputLength[i]);
   }
 
-  if (network.status==SDREADY) {
+  if (network.status==SDOFFLINE) {
     BOOTLOG("Ready in SD Mode!");
     BOOTLOG("------------------------------------------------");
     BOOTLOG("");
@@ -255,7 +255,7 @@ void Telnet::handleSerial() {
 }
 
 void Telnet::loop() {
-  if (network.status==SDREADY || network.status!=CONNECTED) {
+  if (network.status==SDOFFLINE || network.status!=CONNECTED) {
     handleSerial();
     return;
   }

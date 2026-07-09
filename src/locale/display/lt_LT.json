@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Atnaujinama programinė įranga",
   "msg_upd_files": "Atnaujinami failai",
   "msg_upd_failed": "Atnaujinimas nepavyko",
+  "msg_offline": "Neprisijungęs",
+  "msg_no_sd_card": "Nėra SD kortelės",
   "lbl_w_feelslike": "jaučiasi:",
   "lbl_w_pressure": "slėgis:",
   "lbl_w_humidity": "drėgmė:",

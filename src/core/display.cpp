@@ -9,6 +9,8 @@
 #include "netserver.h"
 #include "network.h"
 #include "player.h"
+#include <SD.h>
+#include "sdmanager.h"
 #include "utility.h"
 #include "backlightcontrols.h"
 #include "rgbled.h"
@@ -96,7 +98,7 @@ void Display::init() {
   dsp.setFont((GFXfont *)&DisplayFont);
   displayQueue=NULL;
   displayQueue = xQueueCreate(5, sizeof(requestParams_t));
-  if (displayQueue==NULL) { log_e("[display] displayQueue alloc failed — rebooting"); ESP.restart(); }
+  if (displayQueue==NULL) { ERRORLOG("DISPLAY: displayQueue alloc failed. Rebooting."); delay(10); ESP.restart(); }
   _pager = new Pager();
   _createDspTask();
   while(_bootStep==0) { delay(10); }
@@ -296,30 +298,39 @@ void Display::_apScreen() {
 
 void Display::_start() {
   if (_boot) _pager->removePage(_boot);
-  if (network.status != CONNECTED && network.status != SDREADY) {
+  if (network.status != CONNECTED && network.status != SDOFFLINE) {
     _apScreen();
       _bootStep = 2;
     return;
   }
   _buildPager();
   _mode = PLAYER;
-  config.setTitle(l10n(L10N_MSG_READY));
+  config.setTitle(network.status == SDOFFLINE && !sdman.ready ? l10n(L10N_MSG_NO_SD_CARD) : l10n(L10N_MSG_READY));
   
   if (_bufferbar)  _bufferbar->lock(!config.store.bufferbar);
   
   if (_weather)  _weather->lock(!config.store.showweather);
-  if (_weather && config.store.showweather) network.buildWeatherString();
+  if (_weather && config.store.showweather && network.status != SDOFFLINE) network.buildWeatherString();
+
+  if (_clock && network.status == SDOFFLINE && !config.isRTCFound()) {
+    _clock->lock(true);   // prevent redraws from CLOCK → _time()
+    _clock->clear();       // erase current display
+  }
 
   if (_vuwidget) _vuwidget->lock();
-  if (_rssi)     _setRSSI(WiFi.RSSI());
+  if (_rssi && network.status != SDOFFLINE) _setRSSI(WiFi.RSSI());
   #ifndef HIDE_IP
     if (_volip) {
-      #if IP_WEATHER_SHARED // weather and IP share the same bottom row; hide IP when weather is active
-        if (config.store.showweather) _volip->setText("");
-        else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
-      #else
-        _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
-      #endif
+      if (network.status == SDOFFLINE) {
+        _volip->setText(l10n(L10N_MSG_OFFLINE), "\016\017%s");
+      } else {
+        #if IP_WEATHER_SHARED
+          if (config.store.showweather) _volip->setText("");
+          else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+        #else
+          _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+        #endif
+      }
     }
   #endif
   #if defined(BATTERY_PIN) && (BATTERY_PIN!=255) && !defined(HIDE_BATTERY)
@@ -328,7 +339,7 @@ void Display::_start() {
   _pager->setPage(pages[PG_PLAYER]);
   _volume();
   _station();
-  _time(false);
+  if (!(network.status == SDOFFLINE && !config.isRTCFound())) _time(false);
   _bootStep = 2;
 }
 
@@ -348,7 +359,8 @@ void Display::_setReturnTicker(uint8_t time_s) {
 }
 
 void Display::_swichMode(displayMode_e newmode) {
-  if (newmode == _mode || (network.status != CONNECTED && network.status != SDREADY)) return;
+  if (newmode == CLEAR) { dsp.fillScreen(config.theme.background); return; }
+  if (newmode == _mode || (network.status != CONNECTED && network.status != SDOFFLINE)) return;
   _mode = newmode;
   dsp.setScrollId(NULL);
   if (newmode == PLAYER) {
@@ -370,12 +382,16 @@ void Display::_swichMode(displayMode_e newmode) {
     _pager->setPage(pages[PG_PLAYER]);
     #ifndef HIDE_IP
       if (_volip) {
-        #if IP_WEATHER_SHARED // weather and IP share the same bottom row; hide IP when weather is active
-          if (config.store.showweather) _volip->setText("");
-          else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
-        #else
-          _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
-        #endif
+        if (network.status == SDOFFLINE) {
+          _volip->setText(l10n(L10N_MSG_OFFLINE), "\016\017%s");
+        } else {
+          #if IP_WEATHER_SHARED // weather and IP share the same bottom row; hide IP when weather is active
+            if (config.store.showweather) _volip->setText("");
+            else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+          #else
+            _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+          #endif
+        }
       }
     #endif
     #if IP_WEATHER_SHARED // force weather repaint on return to PLAYER; larger displays repaint naturally
@@ -387,6 +403,7 @@ void Display::_swichMode(displayMode_e newmode) {
       }
     #endif
     config.setDspOn(config.store.dspon, false);
+    display.putRequest(DBITRATE);  // refresh bitrate badge when returning to player (may have been cleared while on playlist page)
   }
   if (newmode == SCREENSAVER || newmode == SCREENBLANK) {
     config.isScreensaver = true;
@@ -413,7 +430,10 @@ void Display::_swichMode(displayMode_e newmode) {
       _showDialog(l10n(L10N_LBL_VOLUME));
     }
     #ifndef HIDE_IP
-      if (_volip) _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+      if (_volip) {
+        if (network.status == SDOFFLINE) _volip->setText(l10n(L10N_MSG_OFFLINE), "\016\017%s");
+        else _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+      }
     #endif
     _nums->setText(config.store.volume, numtxtFmt);
   }
@@ -561,7 +581,8 @@ void Display::loop() {
         case NEWMODE: _swichMode((displayMode_e)request.payload); break;
         case CLOSEPLAYLIST: player.sendCommand({PR_PLAY, request.payload});
         case CLOCK:
-          if (_mode==PLAYER || _mode==SCREENSAVER) _time(request.payload);
+          if ((_mode==PLAYER || _mode==SCREENSAVER) && !(network.status == SDOFFLINE && !config.isRTCFound()))
+            _time(request.payload);
           break;
         case NEWTITLE: _title(); break;
         case NEWSTATION: _station(); break;
@@ -569,6 +590,7 @@ void Display::loop() {
         case DRAWPLAYLIST: _drawPlaylist(); break;
         case DRAWVOL: _volume(); break;
         case DBITRATE: {
+            if (_mode != PLAYER) break;  // skip draws when player page isn't visible (e.g., SD file list)
             char buf[20];
             snprintf(buf, 20, bitrateFmt, config.station.bitrate);
             if (_bitrate) { _bitrate->setText(config.station.bitrate==0?"":buf); }
@@ -654,12 +676,17 @@ void Display::loop() {
         case DSP_START: _start();  break;
         case NEWIP: {
           #ifndef HIDE_IP
-            #if IP_WEATHER_SHARED // skip IP repaint in PLAYER when weather owns the shared row
-              if (_volip && !(_mode == PLAYER && config.store.showweather)) {
-            #else
-              if (_volip) {
-            #endif
-              _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+            if (_volip) {
+              if (network.status == SDOFFLINE) {
+                _volip->setText(l10n(L10N_MSG_OFFLINE), "\016\017%s");
+              } else {
+                #if IP_WEATHER_SHARED // skip IP repaint in PLAYER when weather owns the shared row
+                  if (!(_mode == PLAYER && config.store.showweather))
+                #endif
+                _volip->setText(utility.ipToStr(WiFi.localIP()), iptxtFmt);
+                #if IP_WEATHER_SHARED
+                #endif
+              }
             }
           #endif
           break;
@@ -863,7 +890,7 @@ void Display::init() {
   _createDspTask();
 }
 void Display::_start() {
-  config.setTitle(l10n(L10N_MSG_READY));
+  config.setTitle(network.status == SDOFFLINE && !sdman.ready ? l10n(L10N_MSG_NO_SD_CARD) : l10n(L10N_MSG_READY));
 }
 
 void Display::putRequest(displayRequestType_e type, int payload) {

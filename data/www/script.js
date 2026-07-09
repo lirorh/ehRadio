@@ -130,8 +130,10 @@ function onMessage(event) {
     if(typeof data.playermode !== 'undefined') { //Web, SD
       modesd = data.playermode=='modesd';
       classEach('modeitem', function(el){ el.classList.add('hidden') });
-      if(modesd) { getId('toggleplaylist').classList.add('sd-mode'); showById(['modesd', 'sdsvg'],['plsvg']); } else { getId('toggleplaylist').classList.remove('sd-mode'); showById(['modeweb','plsvg','bitinfo'],['sdsvg','shuffle']); }
-      showById(['volslider'],['sdslider']);
+      if(modesd) { getId('toggleplaylist').classList.add('sd-mode'); showById(['modesd', 'sdsvg', 'shuffle'],['plsvg']); } else { getId('toggleplaylist').classList.remove('sd-mode'); showById(['modeweb','plsvg','bitinfo'],['sdsvg','shuffle']); }
+      /* if sdslider is ever fixed, it will be hidden without the next line to unhide it */
+      // if(modesd) { showById(['volslider', 'sdslider'],[]); } else { showById(['volslider'],['sdslider']); }
+      showById(['volslider'],[]);
       getId('toggleplaylist').classList.remove('active');
       generatePlaylist(`http://${hostname}/data/playlist.csv`+"?"+new Date().getTime());
       return;
@@ -1135,7 +1137,7 @@ function changeMode(el){
 function toggleShuffle(){
   let el = getId('shuffle');
   el.classList.toggle('active');
-  websocket.send("shuffle="+el.classList.contains('active'));
+  websocket.send("shuffle="+(el.classList.contains('active')?1:0));
 }
 function playPreview(root) {
   const streamUrl = root.getElementsByClassName('pleurl')[0].value;

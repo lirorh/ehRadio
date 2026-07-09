@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Päivitetään laiteohjelmistoa",
   "msg_upd_files": "Päivitetään tiedostot",
   "msg_upd_failed": "Päivitys epäonnistui",
+  "msg_offline": "Offline-tilassa",
+  "msg_no_sd_card": "Ei SD-korttia",
   "lbl_w_feelslike": "tuntuu kuin:",
   "lbl_w_pressure": "paine:",
   "lbl_w_humidity": "kosteus:",

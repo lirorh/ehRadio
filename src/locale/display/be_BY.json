@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Абнаўленне прашыўкі",
   "msg_upd_files": "Абнаўленне файлаў",
   "msg_upd_failed": "Update failed",
+  "msg_offline": "Афлайн",
+  "msg_no_sd_card": "Карткі SD няма",
   "lbl_w_feelslike": "адчуваецца:",
   "lbl_w_pressure": "ціск:",
   "lbl_w_humidity": "вільготнасць:",

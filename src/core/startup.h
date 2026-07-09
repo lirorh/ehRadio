@@ -11,10 +11,10 @@ public:
   void initNetwork();
   void startupServices();
   void checkSafeMode();
+  void sdOfflineMode();
   void loop();
 
 private:
-  void bootInSafeMode();
   void markBootStable();
   void cleanStaleSearchResults();
   void getRequiredFiles();

@@ -19,6 +19,7 @@ public:
   void flipTS();
   void controlsEvent(bool toRight, int8_t volDelta = 0);
   void onBtnClick(int id);
+  void checkButtonsHeldOnBoot();  // bare GPIO check before controls.init() — hold MODE/ENC_SW to force SD mode
 private:
   int lpId = -1;
   unsigned long lpDelay = 0;

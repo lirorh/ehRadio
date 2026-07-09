@@ -56,7 +56,7 @@ const char numtxtFmt[]            PROGMEM = "%d";
 const char rssiFmt[]              PROGMEM = "%d";
 const char iptxtFmt[]             PROGMEM = "\010 %s";
 const char voltxtFmt[]            PROGMEM = "%d";
-const char batteryRangeFmt[][8]   PROGMEM = { "\013 %d%%", "\014 %d%%", "\017 %d%%" };
+const char batteryRangeFmt[][8]   PROGMEM = { "\013 %d%%", "\014 %d%%", "\015 %d%%" };
 const char bitrateFmt[]           PROGMEM = "%d";
 
 /* MOVES  */                             /* { left, top, width (0 - auto, -1 - lock } */

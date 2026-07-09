@@ -6,21 +6,23 @@
 
 A rotary encoder is the recommended first choice of input.  One encoder is enough to control the device.
 
-| Encoder Action             | Player Mode             | Playlist Mode |
-| -------------------------- | ----------------------- | ------------- |
-| Rotate clockwise           | volume up               | next station/track |
-| Rotate counter-clockwise   | volume down             | previous station/track |
-| Click (Same as `BTN_PLAY`) | start/stop playing      | play selected station/track |
-| Double-click               | toggle stations/SD mode | - |
-| Long-press                 | enter playlist mode     | exit playlist mode to player mode |
+| Encoder Action             | Player Mode                  | Playlist Mode |
+| -------------------------- | ---------------------------- | ------------- |
+| Rotate clockwise           | volume up                    | next station/track |
+| Rotate counter-clockwise   | volume down                  | previous station/track |
+| Click (Same as `BTN_PLAY`) | start/stop playing           | play selected station/track |
+| Double-click               | toggle stations/SD mode      | - |
+| Long-press                 | enter/exit playlist mode     | exit playlist mode to player mode |
 
 Rotary Encoder 2
 
-| Encoder Action           | Not pressed                                      | While Pressing |
-| ------------------------ | ------------------------------------------------ | -------------- |
-| Rotate clockwise         | switch to playlist mode & next station/track     | volume up |
-| Rotate counter-clockwise | switch to playlist mode & previous station/track | volume down |
-| Click and double-click   | switch between player and volume mode | - |
+| Encoder Action             | Not pressed                                      | While Pressing |
+| -------------------------- | ------------------------------------------------ | -------------- |
+| Rotate clockwise           | switch to playlist mode & next station/track     | volume up |
+| Rotate counter-clockwise   | switch to playlist mode & previous station/track | volume down |
+| Click (Same as `BTN_PLAY`) | start/stop playing         | - |
+| Double-click               | toggle stations/SD mode    | - |
+| Long-press                 | enter/exit playlist mode   | - |
 
 ### Buttons
 
@@ -38,9 +40,9 @@ Button Actions
 | BTN_MODE | toggle stations/SD mode | -                       | enter sleep (wake up may be another button)
 
 Turning on `One-click Station Switching` in the WebUI makes `BTN_NEXT` and `BTN_PREV` act instantly instead of switching to Playlist Mode first.
-It also essentially disables Long-press.
+It also essentially disables Long-press of buttons.
 
-### IR receiver
+### IR Receiver
 
 IR receivers can be configured from the WebUI. Up to 3 remotes can be used.
 
@@ -61,12 +63,6 @@ Repeat for other buttons.
 | &#9660; | volume down            | quick volume down
 | #       | toggle between player/playlist mode | - |
 | 0-9     | Start entering the station number. To finish input and start playback, press the play button. To cancel, press hash. | - |
-
-### Joystick
-
-You can use a joystick [like this](https://aliexpress.com/item/4000681560472.html) instead of connecting five buttons.
-
-![image](images/joystick.jpg)
 
 ### Touchscreen
 

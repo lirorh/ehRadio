@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.07.05"
+#define RADIOVERSION "2026.07.09"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -63,7 +63,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #define DSP_SSD1305     12 // 128x64 (default): SPI or I2C (auto-detected from pins)
 #define DSP_SSD1306     13 // 128x64 (default): SPI or I2C (auto-detected from pins)
 #define DSP_SSD1322     14 // 256x64 (default): SPI
-#define DSP_SSD1327     15 // 128x128 (default): SPI or I2C (auto-detected from pins)
+#define DSP_SSD1327     15 // 128x64 (default): SPI or I2C (auto-detected from pins)
 #define DSP_ST7735      16 // 160x128 / 128x128 / 160x80 (dimensions derived from DTYPE in displayST7735.h)
 #define DSP_ST7789      17 // 320x240 (default)
 #define DSP_ST7796      18 // 480x320 (default)
@@ -138,7 +138,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 // INITR_BLACKTAB // 1.8" https://aliexpress.ru/item/1005002822797745.html
 //     See this note If INITR_BLACKTAB have a noisy line on one side of the screen https://github.com/e2002/yoradio#note-if-initr_blacktab-dsp-have-a-noisy-line-on-one-side-of-the-screen-then-in-adafruit_st7735cpp
 // INITR_144GREENTAB // 1.44" https://aliexpress.ru/item/1005002822797745.html
-// INITR_MINI160x80 // 0.96" 160x80 ST7735S   https://????
+// INITR_MINI160x80 // 0.96" 160x80
 // INITR_GREENTAB
 // INITR_REDTAB
 #ifndef DTYPE
@@ -435,18 +435,12 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #undef SHOW_VU_METER
   #define SHOW_VU_METER false
 #endif
-
-/* --- ESP32 INTERNAL DAC --- */
-/* The ESP32 has an internal DAC - these are the pins needed to use it */
-/* It is NOT recommended to use and not officially supported */
-#ifdef USE_AUDIO_ESP32_DAC
-  #ifndef I2S_BCLK
-    #define I2S_BCLK 26
-  #endif
-  #ifndef I2S_LRC
-    #define I2S_LRC 25
-  #endif
-#endif
+/* Three volume curves are available on the VS1053 */
+// the original is a perceptual log scale... it's kind of a steep volume on low numbers:
+//#define VS1053_VOL_LOG
+// this one follows the I2S polynomial curve exactly (starting at -60dB) but an unamplified VS1053 may be mute for the first 25% of the volume scale:
+//#define VS1053_VOL_CURVE
+// Add one of those to your myoptions.h to override the default which is the same polynomial curve but starts at -35dB
 
 /* --- I2S PCM DAC --- */
 #ifndef I2S_DOUT
@@ -525,19 +519,10 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #if I2S_DOUT != 255 && I2S_BCLK!=255 && I2S_LRC!=255
   #define USE_AUDIO_I2S
 #endif
-#if defined(USE_AUDIO_ESP32_DAC) && !defined(ARDUINO_ESP32_DEV)
-  #error Only the ESP32 (not S3 or C4) can use the internal DAC. Do not define USE_AUDIO_ESP32_DAC.
+#if defined(USE_AUDIO_VS1053) && defined(USE_AUDIO_I2S)
+  #error Both VS1053 audio and I2S audio are active. Check your pin definitions.
 #endif
-#if defined(USE_AUDIO_ESP32_DAC)
-  #if defined(USE_AUDIO_VS1053) || defined(USE_AUDIO_I2S)
-    #error Both ESP32 Internal DAC and either VS1053 audio or I2S audio are active.  Do not define USE_AUDIO_ESP32_DAC.
-  #endif
-#else
-  #if defined(USE_AUDIO_VS1053) && defined(USE_AUDIO_I2S)
-    #error Both VS1053 audio and I2S audio are active. Check your pin definitions.
-  #endif
-#endif
-#if !defined(USE_AUDIO_VS1053) && !defined(USE_AUDIO_I2S) && !defined(USE_AUDIO_ESP32_DAC)
+#if !defined(USE_AUDIO_VS1053) && !defined(USE_AUDIO_I2S)
   #error No audio decoder active. Define VS1053 SPI pins or I2S pins in myoptions.h.
 #endif
 
@@ -792,9 +777,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef STARTUP_ASYNC_SERVICES_DELAY
   #define STARTUP_ASYNC_SERVICES_DELAY 20
 #endif
- // How many seconds to wait after boot completed (including smart start) to consider successful, if rebooted during that time, will enter safe mode (disables smart start, autoupdate)
- // Make it about a minute?  It may mark boot as stable even if the Startup Services haven't finished yet
-#ifndef BOOT_STABLE_TIME
+ // How many seconds to wait after boot completed (including smart start) to consider successful, if rebooted during that time, will enter safe mode (disables smart start, autoupdate, boots to web not SD)
+ #ifndef BOOT_STABLE_TIME
   #define BOOT_STABLE_TIME 30
 #endif
 #ifndef SEARCHRESULTS_BUFFER

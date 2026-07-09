@@ -850,12 +850,12 @@ void ClockWidget::_getTimeBounds() {
   }
 
   void ClockWidget::draw(){
-    if(!_active) return;
+    if(!_active || _locked) return;
     _printClock(_getTime());
   }
 
   void ClockWidget::_draw(){
-    if(!_active) return;
+    if(!_active || _locked) return;
     _printClock(true);
   }
 
@@ -888,11 +888,11 @@ void ClockWidget::_getTimeBounds() {
   void ClockWidget::_clearClock(){}
 
   void ClockWidget::draw(){
-    if(!_active) return;
+    if(!_active || _locked) return;
     _printClock(true);
   }
   void ClockWidget::_draw(){
-    if(!_active) return;
+    if(!_active || _locked) return;
     _printClock(true);
   }
   void ClockWidget::_reset(){}

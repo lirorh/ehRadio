@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Mise à jour du firmware",
   "msg_upd_files": "Mise à jour des fichiers",
   "msg_upd_failed": "Échec de la mise à jour",
+  "msg_offline": "Hors ligne",
+  "msg_no_sd_card": "Pas de carte SD",
   "lbl_w_feelslike": "ressenti:",
   "lbl_w_pressure": "pression:",
   "lbl_w_humidity": "humidité:",

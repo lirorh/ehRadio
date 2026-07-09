@@ -71,7 +71,7 @@ void StaticFileCache::loadOne(const char* filename, int idx) {
 
     char fullPath[64];
 
-    // Try .gz variant first — production builds use gzipped files on SPIFFS
+    // Try .gz variant first ??production builds use gzipped files on SPIFFS
     snprintf(fullPath, sizeof(fullPath), "/www/%s.gz", filename);
     if (SPIFFS.exists(fullPath)) {
         File f = SPIFFS.open(fullPath, "r");
@@ -192,7 +192,7 @@ char* updateError() {
 void handleDynamicLocale(AsyncWebServerRequest *request) {
   // Serve locale.json (gzip-compressed) from PROGMEM based on config.store.locale_webui
   if (strcmp(config.store.locale_webui, HARDCODED_WEBUI_LOCALE) == 0) {
-    request->send(404); // No locale needed — hardcoded text matches target language
+    request->send(404); // No locale needed ??hardcoded text matches target language
     return;
   }
   for (uint8_t i = 0; i < WWW_LOCALE_COUNT; i++) {
@@ -254,7 +254,7 @@ void handleReady(AsyncWebServerRequest *request) {
 
   const bool networkReady =
     (network.status == CONNECTED && WiFi.status() == WL_CONNECTED) ||
-    (network.status == SDREADY);
+    (network.status == SDOFFLINE);
   const bool ready = netserver.isBootReady() && config.wwwFilesExist && networkReady;
   AsyncWebServerResponse *response = request->beginResponse(
     200,
@@ -312,7 +312,7 @@ void handleSearchPost(AsyncWebServerRequest *request) {
     } else { // add it and play it
       File playlistfile = SPIFFS.open(PLAYLIST_PATH, "a");
       if (playlistfile) {
-        // can't use printf — Arduino's Print::printf has a 64-byte stack buffer that overflows on long URLs
+        // can't use printf ??Arduino's Print::printf has a 64-byte stack buffer that overflows on long URLs
         playlistfile.print(sName);
         playlistfile.print('\t');
         playlistfile.print(sUrl);
@@ -337,7 +337,9 @@ void handleSearchPost(AsyncWebServerRequest *request) {
 
 static void netserverLoopTask(void* pvParameters) {
   for(;;) {
-    netserver.loop();
+    if (network.status != SDOFFLINE) {
+      netserver.loop();
+    }
     vTaskDelay(pdMS_TO_TICKS(NETSERVER_TASK_DELAY));
   }
 }
@@ -356,10 +358,10 @@ void NetServer::restartMdns() {
 }
 
 bool NetServer::begin(bool quiet) {
-  if (network.status==SDREADY) return true;
+  if (network.status==SDOFFLINE) return true;
   if (!quiet) BOOTLOGX("netserver.begin\t");
   nsQueue = xQueueCreate(64, sizeof(nsRequestParams_t));
-  if (nsQueue==NULL) { log_e("[netserver] nsQueue alloc failed — rebooting"); ESP.restart(); }
+  if (nsQueue==NULL) { ERRORLOG("NETSERVER: nsQueue alloc failed? Rebooting."); delay(10); ESP.restart(); }
 
   webserver.on("/", HTTP_ANY, handleIndex);
   webserver.on("/ready", HTTP_GET, handleReady);
@@ -371,7 +373,7 @@ bool NetServer::begin(bool quiet) {
   webserver.on("/search", HTTP_GET, handleSearch);
   webserver.on("/search", HTTP_POST, handleSearchPost);
 
-  // Captive portal detection — redirect probes from iOS, Android, Windows to the web UI
+  // Captive portal detection ??redirect probes from iOS, Android, Windows to the web UI
   auto captiveRedirect = [](AsyncWebServerRequest *request) { request->redirect("/"); };
   webserver.on("/hotspot-detect.html", HTTP_GET, captiveRedirect);          // iOS / macOS
   webserver.on("/library/test/success.html", HTTP_GET, captiveRedirect);    // iOS / macOS (older)
@@ -505,7 +507,6 @@ void NetServer::processQueue() {
       case PLAYLISTSAVED:   {
         #ifdef USE_SD
           if (config.getMode()==PM_SDCARD) {
-          //  config.indexSDPlaylist();
             config.initSDPlaylist();
           }
         #endif
@@ -715,7 +716,7 @@ void NetServer::processQueue() {
 }
 
 void NetServer::loop() {
-  if (network.status==SDREADY) return;
+  if (network.status==SDOFFLINE) return;
   if (shouldReboot) {
     FUNCTIONLOG("Netserver.reboot", "Rebooting...");
     delay(100);
@@ -755,7 +756,7 @@ void NetServer::onWsMessage(void *arg, uint8_t *data, size_t len, uint8_t client
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
     /*
-     * Do NOT write to data[len] — AsyncWebServer does not guarantee an extra
+     * Do NOT write to data[len] ??AsyncWebServer does not guarantee an extra
      * NUL byte in the provided buffer. Copy into a local, NUL-terminated
      * stack buffer and parse that instead to avoid heap corruption.
      */
@@ -1495,7 +1496,7 @@ void startOnlineUpdate() {
             }
           }
           if (Update.end(true)) { // end(true) will finish and commit the update
-            FUNCTIONLOG("Online Update", "Update successful, rebooting...");
+            FUNCTIONLOG("Online Update", "Update successful! Rebooting.");
             utility.deleteMainwwwFile();
             websocket.textAll("{\"onlineupdatestatus\": \"Update successful, rebooting...\"}");
             delay(1000);
@@ -1503,15 +1504,19 @@ void startOnlineUpdate() {
           } else {
             char msgBuf[96];
             snprintf(msgBuf, sizeof(msgBuf), "{\"onlineupdateerror\": \"Update failed on end(): %s\"}", Update.errorString());
+            FUNCTIONLOG("Online Update", "Update failed on end(): %s\"}", msgBuf);
             websocket.textAll(msgBuf);
           }
         } else {
-         websocket.textAll("{\"onlineupdateerror\": \"Cannot begin update (reboot then try again)\"}");
+          FUNCTIONLOG("Online Update", "Cannot begin update. Reboot then try again.");
+          websocket.textAll("{\"onlineupdateerror\": \"Cannot begin update (reboot then try again)\"}");
         }
       } else {
+        FUNCTIONLOG("Online Update", "Update failed. Invalid firmware size.");
         websocket.textAll("{\"onlineupdateerror\": \"Invalid firmware size\"}");
       }
     } else {
+      FUNCTIONLOG("Online Update", "Failed to download firmware.");
       websocket.textAll("{\"onlineupdateerror\": \"Failed to download firmware\"}");
     }
     http.end();
@@ -1689,7 +1694,7 @@ void handleNotFound(AsyncWebServerRequest * request) {
     request->send(200, "text/html", emptyfs_html);
     return;
   }
-  // Fallback: try SPIFFS for files not in PSRAM cache — check .gz variant first
+  // Fallback: try SPIFFS for files not in PSRAM cache ??check .gz variant first
   if (request->method() == HTTP_GET) {
     char spiffsPath[64];
     snprintf(spiffsPath, sizeof(spiffsPath), "/www%s", request->url().c_str());
@@ -1776,7 +1781,7 @@ void handleIndex(AsyncWebServerRequest * request) {
     if (handledAny) {
       if (shouldRedirect) {
         request->redirect("/");
-        if (shouldRestart) { delay(100); ESP.restart(); }
+        if (shouldRestart) { FUNCTIONLOG("REBOOT", "Reboot."); delay(100); ESP.restart(); }
         return;
       }
       request->send(200, "text/plain", "");

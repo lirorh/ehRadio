@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Ažuriranje firmvera",
   "msg_upd_files": "Ažuriranje datoteka",
   "msg_upd_failed": "Neuspjelo ažuriranje",
+  "msg_offline": "Izvan mreže",
+  "msg_no_sd_card": "Nema SD kartice",
   "lbl_w_feelslike": "osjeća se:",
   "lbl_w_pressure": "tlak:",
   "lbl_w_humidity": "vlažnost:",

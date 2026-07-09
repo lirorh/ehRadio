@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <SD.h>
+#include <vector>
+#include <algorithm>
 #include "vfs_api.h"
 #include "sd_diskio.h"
 //#define USE_SD
@@ -11,6 +13,8 @@
 #include "sdmanager.h"
 #include "display.h"
 #include "player.h"
+#include "utility.h"
+#include "../locale/dsplocale.h"
 
 // SPIB is declared and initialized in config.cpp (Config::init) — do not re-declare here.
 // SD uses Bus B if assigned via SD_SPI 'B', otherwise Bus A.
@@ -88,23 +92,43 @@ void SDManager::listSD(File &plSDfile, File &plSDindex, const char* dirname, uin
     return;
   }
 
-  uint32_t pos = 0;
-  char* filePath;
+  // Collect all entries for sorting (dirs first, then alphanumeric by basename)
+  struct DirEntry { String path; bool isDir; };
+  std::vector<DirEntry> entries;
   while (true) {
     vTaskDelay(2);
     player.loop();
     bool isDir;
     String fileName = root.getNextFileName(&isDir);
     if (fileName.isEmpty()) break;
-    filePath = (char*)malloc(fileName.length() + 1);
+    entries.push_back({fileName, isDir});
+  }
+  root.close();
+
+  // Sort: directories before files, both case-insensitive alphanumeric by basename
+  std::sort(entries.begin(), entries.end(), [](const DirEntry& a, const DirEntry& b) {
+    if (a.isDir != b.isDir) return a.isDir;  // true (dir) > false (file)
+    const char* an = strrchr(a.path.c_str(), '/');
+    const char* bn = strrchr(b.path.c_str(), '/');
+    an = an ? an + 1 : a.path.c_str();
+    bn = bn ? bn + 1 : b.path.c_str();
+    return strcasecmp(an, bn) < 0;
+  });
+
+  // Process sorted entries
+  uint32_t pos = 0;
+  for (const auto& entry : entries) {
+    vTaskDelay(2);
+    player.loop();
+    char* filePath = (char*)malloc(entry.path.length() + 1);
     if (filePath == NULL) {
       ERRORLOG("Memory allocation failed");
       break;
     }
-    strcpy(filePath, fileName.c_str());
+    strcpy(filePath, entry.path.c_str());
     const char* fnSlash = strrchr(filePath, '/');
     const char* fn = fnSlash ? fnSlash + 1 : filePath;
-    if (isDir) {
+    if (entry.isDir) {
       if (levels && !_checkNoMedia(filePath)) {
         listSD(plSDfile, plSDindex, filePath, levels - 1);
       }
@@ -112,7 +136,6 @@ void SDManager::listSD(File &plSDfile, File &plSDindex, const char* dirname, uin
       if (_endsWith(strlwr((char*)fn), ".mp3") || _endsWith(fn, ".m4a") || _endsWith(fn, ".aac") ||
           _endsWith(fn, ".wav") || _endsWith(fn, ".flac")) {
         pos = plSDfile.position();
-        // can't use printf — Arduino's Print::printf has a 64-byte stack buffer that overflows on long URLs
         plSDfile.print(fn);
         plSDfile.print('\t');
         plSDfile.print(filePath);
@@ -126,7 +149,6 @@ void SDManager::listSD(File &plSDfile, File &plSDindex, const char* dirname, uin
     }
     free(filePath);
   }
-  root.close();
 }
 
 void SDManager::indexSDPlaylist() {
@@ -139,12 +161,80 @@ void SDManager::indexSDPlaylist() {
   }
   File index = open(INDEX_SD_PATH, "w", true);
   listSD(playlist, index, "/", SD_MAX_LEVELS);
-  index.flush();
+
+  // Append footer: [magic:4][count:4] = 8 bytes
+  // - magic = 0x1867 validates this is our format
+  // - count = number of audio files found (staleness check)
+  if (index) {
+    index.flush();  // ensure size() is accurate before appending footer
+    uint32_t magic = 0x1867;
+    uint32_t fcount = _sdFCount;
+    index.seek(index.size());
+    index.write((uint8_t*)&magic, 4);
+    index.write((uint8_t*)&fcount, 4);
+  }
   index.close();
+
   playlist.flush();
   playlist.close();
   SERIALLOG("");
   delay(50);
+}
+
+uint32_t SDManager::countAudioFiles() {
+  _sdFCount = 0;
+  _countAudioFilesRecursive("/", SD_MAX_LEVELS);
+  return _sdFCount;
+}
+
+uint32_t SDManager::_countAudioFilesRecursive(const char* dirname, uint8_t levels) {
+  File root = sdman.open(dirname);
+  if (!root || !root.isDirectory()) {
+    if (root) root.close();
+    return 0;
+  }
+
+  while (true) {
+    vTaskDelay(2);
+    bool isDir;
+    String fileName = root.getNextFileName(&isDir);
+    if (fileName.isEmpty()) break;
+
+    char* filePath = (char*)malloc(fileName.length() + 1);
+    if (!filePath) break;
+    strcpy(filePath, fileName.c_str());
+    const char* fnSlash = strrchr(filePath, '/');
+    const char* fn = fnSlash ? fnSlash + 1 : filePath;
+
+    if (isDir) {
+      if (levels && !_checkNoMedia(filePath)) {
+        _countAudioFilesRecursive(filePath, levels - 1);
+      }
+    } else {
+      if (_endsWith(strlwr((char*)fn), ".mp3") || _endsWith(fn, ".m4a") || _endsWith(fn, ".aac") ||
+          _endsWith(fn, ".wav") || _endsWith(fn, ".flac")) {
+        _sdFCount++;
+      }
+    }
+    free(filePath);
+  }
+  root.close();
+  return 0;
+}
+
+void SDManager::trySdRemount() {
+  if (ready) return;  // already mounted
+  FUNCTIONLOG("SD", "Remount attempt...");
+  display.putRequest(NEWMODE, SDCHANGE);
+  if (start()) {
+    config.initSDPlaylist();
+    config.setTitle(l10n(L10N_MSG_READY));
+    display.putRequest(NEWMODE, PLAYER);
+    display.putRequest(NEWSTATION);
+  } else {
+    display.putRequest(NEWMODE, PLAYER);  // restore from SDCHANGE
+    config.setTitle(l10n(L10N_MSG_NO_SD_CARD));
+  }
 }
 #endif
 

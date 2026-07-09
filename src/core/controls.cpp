@@ -7,6 +7,8 @@
 #include "logging.h"
 #include "netserver.h"
 #include "network.h"
+#include <SD.h>
+#include "sdmanager.h"
 
 #if IR_PIN!=255
   #include <assert.h>
@@ -68,7 +70,7 @@ void Controls::btnDoubleClickCb(void* p)     { controls.onBtnDoubleClick((int)p)
 void Controls::btnLongPressStartCb(void* p)  { controls.onBtnLongPressStart((int)p); }
 void Controls::btnLongPressStopCb(void* p)   { controls.onBtnLongPressStop((int)p); }
 
-// Lookup table: user-facing 0-7 scale → raw encoder acceleration 0-700
+// Lookup table: user-facing 0-7 scale ??raw encoder acceleration 0-700
 static const uint16_t encAccelLUT[8] = {0, 5, 11, 26, 59, 135, 307, 700};
 
 void Controls::init() {
@@ -135,13 +137,13 @@ void Controls::loop() {
     irLoop();
   #endif
   #if (TS_MODEL!=TS_MODEL_UNDEFINED) && (DSP_MODEL!=DSP_DUMMY)
-    if (network.status == CONNECTED || network.status==SDREADY) touchscreen.loop();
+    if (network.status == CONNECTED || network.status == SDOFFLINE) touchscreen.loop();
   #endif
 }
 
 #if (ENC_DT!=255 && ENC_CLK!=255) || (ENC2_DT!=255 && ENC2_CLK!=255)
   void Controls::encodersLoop(AiEsp32RotaryEncoder *enc, bool first) {
-    if (network.status != CONNECTED && network.status!=SDREADY) return;
+    if (network.status != CONNECTED && network.status!=SDOFFLINE) return;
     if (display.mode()==LOST) return;
     int8_t encoderDelta = enc->encoderChanged();
     if (encoderDelta!=0) {
@@ -241,7 +243,7 @@ void Controls::irLoop() {
       for(int target=0; target<17; target++) {
         for(int j=0; j<3; j++) {
           if (config.ircodes.irVals[target][j]==irResults.value) {
-            if (network.status != CONNECTED && network.status!=SDREADY && target!=IR_AST) return;
+            if (network.status != CONNECTED && network.status!=SDOFFLINE && target!=IR_AST) return;
             if (target!=IR_AST && display.mode()==LOST) return;
             if (screenSaverExit()) return;
             switch (target) {
@@ -348,23 +350,19 @@ void Controls::onBtnLongPressStart(int id) {
         break;
       }
     case EVT_BTN_PLAY:
-    case EVT_ENC_SW: {
+    case EVT_ENC_SW:
+    case EVT_ENC2_SW: {
         #if defined(DUMMYDISPLAY)
           break;
         #endif
         display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
         break;
       }
-    case EVT_ENC2_SW: {
-        #if defined(DUMMYDISPLAY)
-          break;
-        #endif
-        display.putRequest(NEWMODE, display.mode() == PLAYER ? VOL : PLAYER);
-        break;
-      }
     case EVT_BTN_MODE: {
-        //utility.doSleepW();
-        display.putRequest(NEWMODE, SLEEPING);
+        if (network.status == SDOFFLINE) break;  // no sleep in SD Offline mode
+        #ifndef DEEP_SLEEP_DISABLE
+          display.putRequest(NEWMODE, SLEEPING);
+        #endif
         break;
       }
     default: break;
@@ -381,7 +379,10 @@ void Controls::onBtnLongPressStop(int id) {
         break;
       }
     case EVT_BTN_MODE: {
-        utility.doSleepW();
+        if (network.status == SDOFFLINE) break;  // no sleep in SD Offline mode
+        #ifndef DEEP_SLEEP_DISABLE
+          utility.doSleepW();
+        #endif
         break;
       }
     default:
@@ -413,7 +414,7 @@ bool Controls::screenSaverExit() {
 }
 
 void Controls::onBtnDuringLongPress(int id) {
-  if (network.status != CONNECTED && network.status!=SDREADY) return;
+  if (network.status != CONNECTED && network.status!=SDOFFLINE) return;
   if (checklpdelay(BTN_LONGPRESS_LOOP_DELAY, lpDelay)) {
     switch ((controlEvt_e)id) {
       case EVT_BTN_DOWN: {
@@ -478,7 +479,7 @@ void Controls::onBtnClick(int id) {
   if (screenSaverExit()) return;
   bool passBnCenter = (controlEvt_e)id==EVT_BTN_PLAY || (controlEvt_e)id==EVT_ENC_SW || (controlEvt_e)id==EVT_ENC2_SW;
   controlEvt_e btnid = static_cast<controlEvt_e>(id);
-  if (network.status != CONNECTED && network.status!=SDREADY && (controlEvt_e)id!=EVT_BTN_MODE && !passBnCenter) return;
+  if (network.status != CONNECTED && network.status!=SDOFFLINE && (controlEvt_e)id!=EVT_BTN_MODE && !passBnCenter) return;
   switch (btnid) {
     case EVT_BTN_DOWN: {
         controlsEvent(false);
@@ -487,6 +488,7 @@ void Controls::onBtnClick(int id) {
     case EVT_BTN_PLAY:
     case EVT_ENC_SW:
     case EVT_ENC2_SW: {
+        if (network.status == SDOFFLINE) { sdman.trySdRemount(); break; }
         if (display.mode() == NUMBERS) {
           display.numOfNextStation = 0;
           display.putRequest(NEWMODE, PLAYER);
@@ -507,7 +509,10 @@ void Controls::onBtnClick(int id) {
         }
         if (network.status==SOFT_AP || display.mode()==LOST) {
           #ifdef USE_SD
-            config.changeMode();
+            config.saveValue(&config.store.lastBootGood, true);
+            config.saveValue(&config.store.offlineSD, true);
+            config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_SDCARD));
+            ESP.restart();
           #endif
         }
         break;
@@ -544,6 +549,7 @@ void Controls::onBtnClick(int id) {
       }
     #ifdef USE_SD
     case EVT_BTN_MODE: {
+      if (network.status == SDOFFLINE) { sdman.trySdRemount(); break; }
       config.changeMode();
       break;
     }
@@ -557,7 +563,7 @@ void Controls::onBtnDoubleClick(int id) {
   switch ((controlEvt_e)id) {
     case EVT_BTN_DOWN: {
         if (display.mode() != PLAYER) return;
-        if (network.status != CONNECTED && network.status!=SDREADY) return;
+        if (network.status != CONNECTED && network.status!=SDOFFLINE) return;
         player.prev();
         break;
       }
@@ -570,7 +576,7 @@ void Controls::onBtnDoubleClick(int id) {
       }
     case EVT_BTN_UP: {
         if (display.mode() != PLAYER) return;
-        if (network.status != CONNECTED && network.status!=SDREADY) return;
+        if (network.status != CONNECTED && network.status!=SDOFFLINE) return;
         player.next();
         break;
       }
@@ -601,6 +607,31 @@ void Controls::flipTS() {
   #if (TS_MODEL!=TS_MODEL_UNDEFINED) && (DSP_MODEL!=DSP_DUMMY)
     touchscreen.flip();
   #endif
+}
+
+// Bare GPIO check run before controls.init() ??detects if MODE button or encoder
+// Instant read (no blocking): if user is holding a button at boot time, force SD.
+// Runs after safe mode check, so it can override play_mode=PM_WEB if desired.
+void Controls::checkButtonsHeldOnBoot() {
+  bool held = false;
+  #if BTN_MODE != 255
+    pinMode(BTN_MODE, BTN_MODE_PULLUP ? INPUT_PULLUP : INPUT);
+    if (digitalRead(BTN_MODE) == LOW) held = true;
+  #endif
+  #if ENC_SW != 255
+    pinMode(ENC_SW, ENC_SW_PULLUP ? INPUT_PULLUP : INPUT);
+    if (digitalRead(ENC_SW) == LOW) held = true;
+  #endif
+  #if ENC2_SW != 255
+    pinMode(ENC2_SW, ENC2_SW_PULLUP ? INPUT_PULLUP : INPUT);
+    if (digitalRead(ENC2_SW) == LOW) held = true;
+  #endif
+  if (held) {
+    network.offlineMode = true;  // signals network.begin() to skip Wi-Fi
+    config.store.play_mode = PM_SDCARD;
+    config.syncSDFS();  // update _SDplaylistFS so SDPLFS() returns &sdman not &SPIFFS
+    BOOTLOG("SD Offline Mode triggered by button hold");
+  }
 }
 
 Controls controls;

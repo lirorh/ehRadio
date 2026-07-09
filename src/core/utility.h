@@ -4,6 +4,7 @@
 
 #include "options.h"
 #include <Arduino.h>
+#include <FS.h>
 #include <Ticker.h>
 
 /* ===== Deep Sleep Wake GPIO Mask =====
@@ -135,5 +136,8 @@ private:
 };
 
 extern Utility utility;
+
+// CRC32 helper for index validation (see initSDPlaylist / indexSDPlaylist)
+uint32_t fileCRC32(File& f, size_t len);
 
 #endif // utility_h

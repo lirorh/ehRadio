@@ -86,7 +86,7 @@ input[type=text],input[type=password]{width:170px;background:#272727;color:#eecc
 </div>
 </section>
 <p><a href="/emergency">emergency firmware uploader</a></p>
-<div id="copy">powered by <a target="_blank" href="https://github.com/trip5/ehRadio/">ehRadio</a> | <span id="version"></span></div>
+<div id="copy">powered by <a target="_blank" href="https://trip5.github.io/ehRadio/">ehRadio</a> | <span id="version"></span></div>
 </body>
 <script>
 document.wifiform.action = `/${formAction}`;

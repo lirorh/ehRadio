@@ -8,7 +8,7 @@ which also contains tips about the hardware.
 
 ## ESP Board
 
-I recommend using an S3 board with at least 2MB of PSRAM and 8MB of flash. I personally build with ESP32-S3 N16R8 boards.
+It is strongly recommended to use an ESP32-S3 board with at least 2MB of PSRAM and 8MB of flash.
 
 It may be possible to use a board with 4MB of flash but will require special partitioning.
 
@@ -16,17 +16,27 @@ This code may still run on an ESP32 but without PSRAM will have serious issues t
 
 It is also possible to build with an ESP32-C3 but since that is not a dual-core CPU, it would be prudent to avoid larger and/or SPI displays.
 
-I strongly recommend choosing a board which has the option of an external antenna.
+### External Antenna
+
+Depending on your wi-fi and purpose, you may choose a board which has the option of an external antenna.
+Don't forget to set the jumper correctly.
+
+![image](images/hardware/ext_antenna.jpg)
+
+Picture from and more info [here](https://randomnerdtutorials.com/esp32-cam-connect-external-antenna/).
 
 ---
 
 ## Important Notes (Power & Wires)
 
-I also recommend using a minimum of 470µF 10V capacitor somewhere in your circuit across the `5V` and `GND` (attach negative to `GND`).
+Although some modules can be powered by 3V3, use the 5V pin or direct USB power wherever possible to avoid overloading the ESP's weak 3V3 power regulator.
+Most modules have onboard regulators anyway.
+
+It is recommended to use a minimum of 470µF 10V capacitor somewhere in your circuit across the `5V` and `GND` (attach negative to `GND`).
 It helps to stablize the system during boot and smooth out the sudden power draw during operations like initializing the decoder, screen, wi-fi, etc.
-It doesn't really matter where as long as the `5V` rail is common with the power-input of the ESP.
-I put mine on the SD Card Reader.  Putting it directly on the ESP pins is also an option.
-You may size up either number.  I usually use a 1000 µF 16V or 25V capacitor.
+It doesn't really matter where the capacitor is placed, as long as the `5V` rail is common with the power-input of the ESP.
+The SD Card Reader and display's 5V pins may be used.  Putting it directly on the ESP pins is also an option.
+You may size up either number.  To be extra safe, use a 1000 µF 16V or 25V capacitor.
 
 This capacitor can help mitigate power-supply problems but if you do encounter issues, you may find that using a better supply
 (preferably one that provides 2A or more) will solve all kinds of problems that can occur due to a weak power-supply.
@@ -47,6 +57,8 @@ If you must prototype with breadboards, be sure that your power wires at least a
 ## Display
 
 Building with a display is not strictly necessary.
+
+Too many displays are supported to show pictures of them all here.
 
 ### TFT / IPS Color Displays
 
@@ -111,24 +123,13 @@ LCD displays like the 1602, 2004, and Nokia 5110 may work but will not be as goo
 
 ## Audio Decoder
 
-ehRadio currently uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.434m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
-likely mostly from schreibfaul1's library [3.1.0 January 7, 2025](https://github.com/schreibfaul1/ESP32-audioI2S/releases/tag/3.1.0).
+### I2S / PCM Decoder
 
-For VS1053 decoding, ehRadio uses the `ESP32-vs1053_ext` library from `nsteplanets` [PR226](https://github.com/e2002/yoradio/pull/226) to yoRadio.
-
-Both libraries have been further optimized to get the best playback possible.
-
-There are notes in the `libraries` folder regarding some of the "Frankenstein" operations I have performed (since I know very little about decoding libraries).
-
-For that and other major needed changes to the codebase, there is a `code-issues.md` file which may be a messy file to look at, depending on how these efforts are going.
-
-### I2S
-
-I2S Decoders use the CPU to decode data so it can be used with many types of streams.
+I2S uses the CPU to decode data so it can be used with many types of streams.
+The data is then sent to a PCM decoder which turns the data into sound.
 It does put pressure on the CPU so it does have trouble running with large SPI displays.
-I have done my best to mitigate that but it is what is.
 
-I2S decoders are cheap and plentiful and I don't think anyone has ever worrried about buying a fake.
+I2S decoders are cheap and plentiful and rarely have counterfeit issues.
 
 A good I2S Decoder is the PCM5102A but be sure to set the jumpers as in this picture, including the 4 on the bottom
 and SCK=GND jumper on the other side.
@@ -138,22 +139,21 @@ and SCK=GND jumper on the other side.
 - `H3L / XMST`: soft un-mute control (instead of soft mute control)
 - `H4L / FMT`: Audio format I2S (instead of Left justified)
 
-![image](images/pcm5102a.png)
+![image](images/hardware/pcm5102a.png)
 
 Picture and info from [here](https://macsbug.wordpress.com/2021/02/19/web-radio-of-m5stack-pcm5102a-i2s-dac/).
 
 The UDA1334 should work and there are likely others.
 
-You will need an amplifer when building with a DAC like these. I have used the PAM8406.
-PAM IC amps are generally easy to work with but... your mileage will vary.
+You will need an amplifer when building with a DAC like these.  Read more below.
 
-The ES8311 is a mono I2S decoder included on some dev board / display combos.  It's not terrible.
+The ES8311 is a mono I2S decoder/amp included on some dev + display boards like the [es3c28p](https://www.lcdwiki.com/2.8inch_ESP32-S3_Display).  It's not terrible.
 
 ### VS1053
 
-*The VS1053 is supported but not recommended.*
+***The VS1053 is supported but not recommended.***
 
-I love the idea of the VS1053.  It decodes streams directly and relieves pressure from the CPU.
+The idea of the VS1053 is fantastic.  It decodes streams directly and relieves pressure from the CPU.
 Whereas I2S decodes streams using the CPU, the VS1053 can decode most popular codecs directly on the board,
 relieving the CPU to handle other functions...
 
@@ -161,7 +161,7 @@ But the technology behind the VS1053 (2009) pre-dates the ESP8266 (2013) and the
 received the same attention from developers as the I2S decoding routines.
 
 There are many additional issues as well so it is probably best to reserve building using the VS1053 when using very slow displays like the ILI9488.
-It also has a weak built-in amplifer which can simplify builds.
+On the positive side, it also has a weak built-in amplifer which can simplify builds.
 
 For the VU Meter to function, the patch MUST be enabled.
 Even with the patch, though, it struggles to decode FLAC streams and some other "unusual" stream types.
@@ -175,35 +175,121 @@ If you end up with a VS1003, it will still be functional for MP3 stations but no
 It cannot use the patch and there will be no audio if you use `#define VS_PATCH_ENABLE true` in `myoptions.h`.
 
 There are some "fixes" that should be applied to the green board to ensure it functions as expected.
+Your board may function without modification but the mods will improv performance.
 
-![image](images/vs1053.jpg)
+![image](images/hardware/vs1053.jpg)
 
-First, easiest, and most essential, it is recommended to remove the resistor marked `R2`
+- First, easiest, and most essential, it is recommended to remove the resistor marked `R2`
 to prevent the VS1053 from accidentally entering "MIDI mode"
 on boot (which would prevent the patch from being applied and result in no audio).
 
-Second, a bit more difficult but can improve actual audio is to place 33Ω damping resistors placed right next to the ESP32 pins
+- Second, a bit more difficult but can improve actual audio is to place 33Ω damping resistors placed right next to the ESP32 pins
 used for `SCK`, `MOSI`, `XCS`, and `XDCS` before wiring to the VS1053 board.
 ESP32-S3 GPIO pins have an incredibly fast transition time (slew rate), which is around 1-2ns.
 Even with short wires around 10-15 cm, these sharp edges cause severe signal reflections ("ringing").
 Damping resistors provide source impedance matching and damps the reflected wave, preventing data micro-glitches.
 Acceptable alternatives to 33Ω are in the range of 22Ω to 47Ω.  No higher or lower.
-If a sharp edge causes ringing or cross-talk from the adjacent SCK wire on these strobe lines, the noise amplitude can falsely cross the logic threshold.
+If a sharp edge causes ringing or cross-talk from the adjacent `SCK` wire on these strobe lines, the noise amplitude can falsely cross the logic threshold.
 As a result, the decoder might assume the communication session was interrupted right in the middle of a data frame transfer.
 This may manifest in the logs with excessive `slow stream, dropouts are possible` messages as well as with audio artifacts like pops and clicks.
 
-Finally, add 100Ω resistors on the DREQ and XRST lines for passive filtering of pulse noise and port protection during initialization.
+- Finally, add 100Ω resistors on the DREQ and XRST lines for passive filtering of pulse noise and port protection during initialization.
 
-Additionally, I have also received at least one board that identified as `VS0` during boot.
-Attaching 10KΩ resistors from the 3.3V LDO to XCS and XDCS seemed to fix this.
-I got that information from the [VS1053 Datasheet (page 15)](https://www.vlsi.fi/fileadmin/datasheets/vs1053.pdf).
+- Additionally, a board that identified as `VS0` during boot may be fixable.
+Attach 10KΩ resistors from the 3.3V LDO to `XCS` and `XDCS`.
+This information is from the [VS1053 Datasheet (page 15)](https://www.vlsi.fi/fileadmin/datasheets/vs1053.pdf).
 
 ---
 
-## Audio Amplification & Filtering
+## Audio Amplification
 
-Perhaps obvious to some...
+When using a PCM decoder, it is absolutely essential to add an amplifier. Most VS1053 boards includes a usable but weak amplifier.
 
+The subject of audio amplifiers is a huge topic.  This is just a summary of what is known to work. You may do further research if you like.
+
+### Amplifiers
+
+It is generally recommended to use Class-AB amplifiers because:
+  - no switching noise which is especially noticeable at high frequencies and with sensitive speakers
+  - reasonable power efficiency (but use power even when idle)
+  - no complicated output filters needed
+  - may introduce low-frequency humming
+
+Class-D amplifiers may be used as well.  They run cooler due to higher power-efficiency (due to switching) but may have a buzz or whine and the switching may introduce noise.
+
+#### PAM8406
+
+The PAM8406 is a stereo Class-D/Class-AB hybrid amplifier that offers flexibility in output mode and wide community support.
+
+One variation has trim pots onboard, useful for balancing stereo speakers, setting a maximum volume limit, attenuate line volume to prevent clipping and distortion,
+and reduce gain to minimize amplification of background hiss or noise.
+
+![image](images/hardware/PAM8406_a.jpg)
+
+![image](images/hardware/PAM8406_b.jpg)
+
+To verify the PAM8406 board's Class mode, check pin 9.  If it is tied to Ground, it's in Class-AB mode.  If it is tied to VCC, it is in Class-D mode.
+
+![image](images/hardware/PAM8406_pin9.jpg)
+
+#### LTK5128
+
+The LTK5128 is a mono Class-D/Class-AB hybrid amplifier and is also a good choioce.
+
+When looking for LTK5128, get the red PCBs which are factory-configured for Class AB. The blue ones are Class D, which may or may not include jumpers to set to class AB.
+
+![image](images/hardware/LTK5128.jpg)
+
+To verify the LTK5128 board's Class mode, check pin 3.  If it is tied to Ground, it's in Class-AB mode.  If it is tied to VCC, it is in Class-D mode.
+
+![image](images/hardware/LTK5128_pin3.jpg)
+
+### Trip5's Lazy PCM/Amp Combo
+
+If you don't care about audio or power isolation, you can solder the PCM5102A to a PAM8406 stereo amp.
+The PCM5102 output pins line up pretty nicely to the PAM8406's input pins.
+Use the trim pots on the amplifier to minimize noise.
+
+![image](images/hardware/pcm_amp.jpg)
+
+---
+
+## Audio Isolation
+
+Audio isolation transformers EI14 600:600Ω use galvanic isolation to physically separate the input and output circuits using magnetic induction.
+This breaks the conductive path for DC voltage and ground loop currents, effectively stopping the 50/60Hz hum caused by potential differences between devices.
+
+While the EI14 transformer breaks the ground loop and removes hum from the source, the amplifier itself can reintroduce noise
+if it generates high-frequency switching interference (common in Class-D amps) or if its power supply is noisy.
+For the cleanest result, pair the isolation transformer with a Class-AB amplifier or a well-filtered Class-D module.
+
+### Audio Isolation Schematics
+
+Here are some simple schematics by [Kle7rx](https://github.com/kle7rx) on how to wire up decoders, transformers, and amplifiers.
+
+![image](images/hardware/pcm_amp_schematic.jpg)
+
+If you connect the VS1053's audio jack directly to an LTK5128 amplifier (where the audio (-) input is tied to the power supply ground), you will short the GBUF (+1.23V) directly to GND (0V). This will cause:
+- Immediate overheating of the VS1053B output stage
+- Severe distortion, screeching, or the chip shutting down due to protection
+- Permanent damage to the VS1053B
+
+![image](images/hardware/vs1053_amp_kle7rx.jpg.jpg)
+
+![image](images/hardware/vs1053_amp_schematic.jpg)
+
+### Audio/Power Isolation
+
+If you find that your amplifier is buzzing, there are a few things to blame for this.
+
+One suspect is usually backlight control. Typically these use PWM (Pulse Width Management) to achieve dimming.
+That adds interference. The easy fix is to disable dimming and tie the BL pin to 3V3.
+
+To create true power isolation, the amplifier needs to have a completely different source of power.
+Simply running another power cable into the amp results in the two circuits sharing Ground which isn't enough.
+
+Some people report that adding a battery and cutting off power to the charging of the battery using a relay works extremely well.
+As you might imagine, this kind of circuit is extremely complex.  More information may be added here later.
 
 ---
 
@@ -221,22 +307,36 @@ ESP32-S3/C3 RTC GPIOs are: `0-21`. Inputs assigned to these pins will automatica
 
 Information on how the controls function detailed are [here](Controls.md).
 
+### Rotary Encoders
+
+The KY-040 module is very easy to setup.  It includes the correct resistors onboard.
+
+Other rotary encoders like the EC11 may also be used but may require 10KΩ resistors to tie `CLK` and `DT` to Ground.
+
+### Buttons
+
+Momentary switches should not require any special resistors but may require attention in `myoptions.h` since they are usually pulled-up by default.
+
+You can also use a joystick instead of connecting five buttons.
+
+![image](images/hardware/joystick.jpg)
+
+### IR Receiver
+
+IR receivers like the VS1838 are cheap and work well.  You may need a pullup resistor.  The KY-022 module or TSOP38238 may work as well.
+
 ---
 
 ## SD Card Reader
 
-An SD card reader may be added to the build.
-It is recommended to be wary of SD readers built onto displays, although some may work.
-SD reader modules like this are cheap.
+An SD card reader may be added to the build. It is recommended to be wary of SD readers built onto displays.
+Although some may work, it is well-known that some may be lacking proper resistors or will interfere with display because it is forced onto the same SPI bus.
 
-![image](images/sdreader.jpg)
+SD reader modules like this are cheap and work well. Some come with a power regulator but this may not be necessary.
 
+![image](images/hardware/sdreader.jpg) ![image](images/hardware/sdreader2.jpg)
 
-The SD mode should be considered as a "fallback because wi-fi is not available" mode, not a primary playback mode.
-
-While in "AP/Improv Mode" (automatically entered when wi-fi connection cannot be established),
-the user may use the physical controls (double-click of a rotary or the mode button) to enter a special SD Offline mode.
-Actually the radio reboots without initializing network functionality.
+The [SD Offline mode](README.md#sd-offline-mode) should be considered as a "fallback because wi-fi is not available" mode, not a primary playback mode.
 
 It is recommended to encode files on SD card using MP3 at a constant bit rate of 256kbps or less
 to avoid system stress and get maximum compatibility with the decoders.

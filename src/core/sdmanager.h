@@ -14,6 +14,7 @@ class SDManager : public SDFS {
     void listSD(File &plSDfile, File &plSDindex, const char * dirname, uint8_t levels);
     void indexSDPlaylist();
     uint32_t countAudioFiles();
+    void trySdRemount();  // attempt SD mount + re-index (called from controls in SDOFFLINE mode)
   private:
     uint32_t _sdFCount = 0;
     uint32_t _countAudioFilesRecursive(const char* dirname, uint8_t levels);

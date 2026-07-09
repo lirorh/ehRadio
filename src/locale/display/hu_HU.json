@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Firmware frissítése",
   "msg_upd_files": "Fájlok frissítése",
   "msg_upd_failed": "Frissítés sikertelen",
+  "msg_offline": "Offline",
+  "msg_no_sd_card": "Nincs SD-kártya",
   "lbl_w_feelslike": "hőérzet:",
   "lbl_w_pressure": "légnyomás:",
   "lbl_w_humidity": "páratartalom:",

@@ -150,7 +150,8 @@ void Config::changeMode(int newmode) {
       sdResumePos = player.getFilePos();
     }
     if (network.status==SOFT_AP || display.mode()==LOST) {
-      saveValue(&store.lastBootGood, true);  // intentional restart, not a crash
+      FUNCTIONLOG("REBOOT", "Marking NVS Pref keys for intentional reboot to SD Offline mode. Rebooting.");
+      saveValue(&store.lastBootGood, true);
       saveValue(&store.offlineSD, true);
       saveValue(&store.play_mode, static_cast<uint8_t>(PM_SDCARD));
       display.putRequest(NEWMODE, CLEAR);
@@ -192,7 +193,8 @@ void Config::changeMode(int newmode) {
     }
     if (getMode()==PM_WEB) {
       if (network.status==SDOFFLINE) {
-        saveValue(&store.lastBootGood, true);  // intentional restart, not a crash
+        FUNCTIONLOG("REBOOT", "Marking NVS Pref key for intentional reboot. Rebooting.");
+        saveValue(&store.lastBootGood, true);
         display.putRequest(NEWMODE, CLEAR);
         delay(100);
         ESP.restart();
@@ -230,10 +232,10 @@ void Config::initSDPlaylist(bool force) {
         index.readBytes((char*)&magic, 4);
         index.readBytes((char*)&storedCount, 4);
         uint32_t currentCount = sdman.countAudioFiles();
-        FUNCTIONLOG("SD", "Index found:\tcount: %d magic: 0x%04X\tcurrent count: %d",
+        FUNCTIONLOG("SD", "Index found:\tcount: %d magic: %04X\tcurrent count: %d magic",
                     storedCount, magic, currentCount);
         if (magic != 0x1867) {
-          FUNCTIONLOG("SD", "Magic mismatch. Re-indexing.");
+          FUNCTIONLOG("SD", "Magic mismatch (should be 1867). Re-indexing.");
           doIndex = true;
         } else if (storedCount != currentCount) {
           FUNCTIONLOG("SD", "File count mismatch. Re-indexing.");
@@ -264,30 +266,41 @@ void Config::initPlaylistMode() {
     if (getMode()==PM_SDCARD) {
       #if SD_CARD_DETECT_PIN!=255
         if (digitalRead(SD_CARD_DETECT_PIN)==HIGH) {
-          store.play_mode=PM_WEB;
-          ERRORLOG("SD card not inserted");
-          changeMode(PM_WEB);
-          _lastStation = store.lastStation;
+          if (network.status == SDOFFLINE) {
+            FUNCTIONLOG("SD", "No SD card. Staying in offline mode.");
+            strncpy(config.station.name, "ehRadio", STATION_FIELD_LENGTH);
+            return;  // no SD — nothing more to init
+          } else {
+            store.play_mode=PM_WEB;
+            ERRORLOG("SD card not inserted.");
+            changeMode(PM_WEB);
+            _lastStation = store.lastStation;
+          }
         } else
       #endif
       if (!sdman.start()) {
-        store.play_mode=PM_WEB;
-        ERRORLOG("SD mount failed");
-        changeMode(PM_WEB);
-        _lastStation = store.lastStation;
+        if (network.status == SDOFFLINE) {
+          FUNCTIONLOG("SD", "SD mount failed. Staying in offline mode.");
+          strncpy(config.station.name, "ehRadio", STATION_FIELD_LENGTH);
+          return;  // no SD — nothing more to init
+        } else {
+          store.play_mode=PM_WEB;
+          ERRORLOG("SD mount failed");
+          changeMode(PM_WEB);
+          _lastStation = store.lastStation;
+        }
       } else {
-        if (_bootDone) FUNCTIONLOG("SD", "SD card mounted"); else BOOTLOG("SD card mounted");
-          initSDPlaylist();
-          cs = utility.playlistLength();  // refresh after potential re-index
-          if (_bootDone) FUNCTIONLOG("SD", "SD card ready"); else BOOTLOG("SD card ready");          
-          _lastStation = store.lastSdStation;
-          
-          if (_lastStation > cs || _lastStation == 0) {
-            _lastStation = (cs > 0) ? 1 : 0;
-          }
+        FUNCTIONLOG("SD", "SD card mounted.");
+        initSDPlaylist();
+        cs = utility.playlistLength();  // refresh after potential re-index
+        FUNCTIONLOG("SD", "SD card ready");
+        _lastStation = store.lastSdStation;
+        if (_lastStation > cs || _lastStation == 0) {
+          _lastStation = (cs > 0) ? 1 : 0;
+        }
       }
     } else {
-      if (_bootDone) FUNCTIONLOG("SD", "done"); else BOOTLOG("SD card done");
+      FUNCTIONLOG("SD", "done");
       _lastStation = store.lastStation;
     }
   #else
@@ -305,12 +318,29 @@ void Config::initPlaylistMode() {
   } else if (_lastStation > cs) {
     _lastStation = 1;  // Station out of range, reset to first
   } else if (_lastStation == 0) {
-    _lastStation = getMode()==PM_WEB?1:_randomStation();  // No station selected, pick first
+    if (getMode() == PM_WEB) {
+      uint16_t found = utility.findStationByUrl(store.lastStationUrl);
+      if (found > 0) {
+        _lastStation = found;  // Resolved from persisted URL
+      }
+      // else: stays 0 — will fall through to "ehRadio" below
+    } else {
+      _lastStation = _randomStation();  // SD mode: pick a random track
+    }
   }
   lastStation(_lastStation);
   saveValue(&store.play_mode, store.play_mode);
   _bootDone = true;
-  utility.loadStation(_lastStation);
+  if (_lastStation == 0 && cs > 0) {
+    // Playlist exists but we couldn't determine the last station:
+    // show "ehRadio" instead of misleading first-station name
+    memset(config.station.url, 0, STATION_FIELD_LENGTH);
+    memset(config.station.name, 0, STATION_FIELD_LENGTH);
+    strncpy(config.station.name, "ehRadio", STATION_FIELD_LENGTH);
+    config.station.ovol = 0;
+  } else {
+    utility.loadStation(_lastStation);
+  }
 }
 
 void Config::_initHW() {

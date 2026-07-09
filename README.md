@@ -132,11 +132,15 @@ The settings for smart start and auto update will appear as off but they will re
 
 ### SD Offline Mode
 
-To enter a special SD-card only mode, hold down an encoder button or the mode button when powering on (until something appears on-screen).
-You can also enter this mode by pressing the mode button or double-clicking the rotary encoder button in AP/Improv Mode or when you see `* LOST *`.
+To enter a special SD-card only mode (with network functionality disabled), hold down an encoder button or the mode button when powering on (until the display shows something).
+You can also enter this mode by pressing the mode button or double-clicking a rotary encoder button in AP/Improv Mode or when you see `* LOST *`.
 
-The radio will reboot and fast boot into a bare SD-card playing mode (network functionality disabled).
+The radio will reboot and fast boot into a bare SD-card playing mode with network functionality disabled.
 If no RTC is connected, the clock will not display.
+
+Certain settings, as set in the WebUI, are preserved but unchangeable in this mode: SD Shuffle (which makes the "previous" button do nothing), Smart Start.
+
+Some other features are completely disabled in this mode: Safe mode, Deep Sleep, Mode switch.
 
 Exit this mode (reboot with network functionality) by powering off and powering on again.
 
@@ -146,7 +150,7 @@ Exit this mode (reboot with network functionality) by powering off and powering 
 
 There are many considerations to make when building a radio.
 
-For a rundown of supported hardware and peripherals, read [here](Hardware.md).
+For a detailed guide to supported hardware and peripherals, read [here](Hardware.md).
 
 ---
 
@@ -255,6 +259,19 @@ I will add a note here that although I do use AI-assisted coding, I am not a "vi
 I welcome all pull requests but please follow the rules as laid out in `copilot-instructions.md` and `code-summary.md`,
 the former of which is a set of hard rules for AI-assisted coding, the latter of which is an AI-generated `Bible` of the codebase to help an LLM maintain codebase consistancy.
 
+#### Audio Libraries
+
+ehRadio currently uses the `ESP32-audioI2S` library from [Maleksm's ёRadio mod v0.9.434m](https://4pda.to/forum/index.php?showtopic=1010378&st=11240#entry125839228),
+likely mostly from schreibfaul1's library [3.1.0 January 7, 2025](https://github.com/schreibfaul1/ESP32-audioI2S/releases/tag/3.1.0).
+
+For VS1053 decoding, ehRadio uses the `ESP32-vs1053_ext` library from `nsteplanets` [PR226](https://github.com/e2002/yoradio/pull/226) to yoRadio.
+
+Both libraries have been further optimized to get the best playback possible.
+
+There are notes in the `libraries` folder regarding some of the "Frankenstein" operations performed (since I know very little about decoding libraries).
+
+For that and other major needed changes to the codebase, there is a `code-issues.md` file which may be a messy file to look at, depending on how these efforts are going.
+
 ---
 
 ## Update History
@@ -263,7 +280,7 @@ the former of which is a set of hard rules for AI-assisted coding, the latter of
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.07.08 | Fixes to Deep Sleep, SD index, SD Offline Mode, VS1053 volume curve, |
+| 2026.07.08 | Fixes to Deep Sleep, smart start, SD index, SD Offline Mode, VS1053 volume curve, `Hardware.md` documentation |
 | 2026.07.05 | More fixes to VS1053, Wake from Deep Sleep now works on all RTC-capable pins |
 | 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |
@@ -296,7 +313,7 @@ A full history of ёRadio from v0.4.177 to v0.9.533 can be seen in the [old Read
 ### Credit
 
 Thanks to:
-  - [kle7rx](https://github.com/kle7rx) - `ru_RU` translation, debugging, VS1053 hardware tips
+  - [kle7rx](https://github.com/kle7rx) - `ru_RU` translation, debugging, VS1053, and amplifier schematics
   - [Kasperaitis](https://github.com/kasperaitis) - `lt_LT` translation, initiating locales (WebUI and display language) and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
   - [e2002](https://github.com/e2002) - for [ёRadio](https://github.com/e2002/yoradio/) without which ehRadio would not be possible
 

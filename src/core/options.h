@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.07.05"
+#define RADIOVERSION "2026.07.09"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -777,9 +777,8 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #ifndef STARTUP_ASYNC_SERVICES_DELAY
   #define STARTUP_ASYNC_SERVICES_DELAY 20
 #endif
- // How many seconds to wait after boot completed (including smart start) to consider successful, if rebooted during that time, will enter safe mode (disables smart start, autoupdate)
- // Make it about a minute?  It may mark boot as stable even if the Startup Services haven't finished yet
-#ifndef BOOT_STABLE_TIME
+ // How many seconds to wait after boot completed (including smart start) to consider successful, if rebooted during that time, will enter safe mode (disables smart start, autoupdate, boots to web not SD)
+ #ifndef BOOT_STABLE_TIME
   #define BOOT_STABLE_TIME 30
 #endif
 #ifndef SEARCHRESULTS_BUFFER

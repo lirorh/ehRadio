@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Ажурирање на фирмвер",
   "msg_upd_files": "Ажурирање на датотеки",
   "msg_upd_failed": "Ажурирање не успеа",
+  "msg_offline": "Офлајн",
+  "msg_no_sd_card": "Нема SD картичка",
   "lbl_w_feelslike": "чувствува:",
   "lbl_w_pressure": "притисок:",
   "lbl_w_humidity": "влажност:",

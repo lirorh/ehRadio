@@ -361,7 +361,7 @@ bool NetServer::begin(bool quiet) {
   if (network.status==SDOFFLINE) return true;
   if (!quiet) BOOTLOGX("netserver.begin\t");
   nsQueue = xQueueCreate(64, sizeof(nsRequestParams_t));
-  if (nsQueue==NULL) { log_e("[netserver] nsQueue alloc failed ??rebooting"); ESP.restart(); }
+  if (nsQueue==NULL) { ERRORLOG("NETSERVER: nsQueue alloc failed? Rebooting."); delay(10); ESP.restart(); }
 
   webserver.on("/", HTTP_ANY, handleIndex);
   webserver.on("/ready", HTTP_GET, handleReady);
@@ -1496,7 +1496,7 @@ void startOnlineUpdate() {
             }
           }
           if (Update.end(true)) { // end(true) will finish and commit the update
-            FUNCTIONLOG("Online Update", "Update successful, rebooting...");
+            FUNCTIONLOG("Online Update", "Update successful! Rebooting.");
             utility.deleteMainwwwFile();
             websocket.textAll("{\"onlineupdatestatus\": \"Update successful, rebooting...\"}");
             delay(1000);
@@ -1504,15 +1504,19 @@ void startOnlineUpdate() {
           } else {
             char msgBuf[96];
             snprintf(msgBuf, sizeof(msgBuf), "{\"onlineupdateerror\": \"Update failed on end(): %s\"}", Update.errorString());
+            FUNCTIONLOG("Online Update", "Update failed on end(): %s\"}", msgBuf);
             websocket.textAll(msgBuf);
           }
         } else {
-         websocket.textAll("{\"onlineupdateerror\": \"Cannot begin update (reboot then try again)\"}");
+          FUNCTIONLOG("Online Update", "Cannot begin update. Reboot then try again.");
+          websocket.textAll("{\"onlineupdateerror\": \"Cannot begin update (reboot then try again)\"}");
         }
       } else {
+        FUNCTIONLOG("Online Update", "Update failed. Invalid firmware size.");
         websocket.textAll("{\"onlineupdateerror\": \"Invalid firmware size\"}");
       }
     } else {
+      FUNCTIONLOG("Online Update", "Failed to download firmware.");
       websocket.textAll("{\"onlineupdateerror\": \"Failed to download firmware\"}");
     }
     http.end();
@@ -1777,7 +1781,7 @@ void handleIndex(AsyncWebServerRequest * request) {
     if (handledAny) {
       if (shouldRedirect) {
         request->redirect("/");
-        if (shouldRestart) { delay(100); ESP.restart(); }
+        if (shouldRestart) { FUNCTIONLOG("REBOOT", "Reboot."); delay(100); ESP.restart(); }
         return;
       }
       request->send(200, "text/plain", "");

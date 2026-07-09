@@ -13,6 +13,7 @@
 #include "core/network.h"
 #include "core/player.h"
 #include "core/rgbled.h"
+#include "core/sdmanager.h"
 #include "core/startup.h"
 #include "core/telnet.h"
 #include "displays/tools/psframebuffer.h"

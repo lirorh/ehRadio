@@ -339,7 +339,7 @@
 
 /* --- Debug? --- */
 //#define CORE_MONITOR
-//#define ALL_DEBUG_LOGS
+#define ALL_DEBUG_LOGS
 
 /* --- Fonts --- */
 // Display Text:

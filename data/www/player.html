@@ -109,6 +109,11 @@
     <div id="volslider">
       <input type="range" id="volume" data-slaveid="volinfo" data-command="volume" min="0" max="255" value="0">
     </div>
+<!-- SD position slider disabled: VBR MP3 time calculations bounce, seek takes 5-10s,
+     produces unrecoverable errors on both I2S and VS1053 backends...
+     The code is still functional on the backend and may be fixed by future library updates?
+     Also, check script.js for commented-out unhider for 'sdslider' -->
+<!--
     <div id="sdslider" class="hidden">
       <div id="sdposvals">
         <div id="sdposvalscurrent">0:00</div>
@@ -116,6 +121,7 @@
       </div>
       <input type="range" id="sdpos" class="slider" data-command="sdpos" min="0" max="100" value="0">
     </div>
+-->
     <div id="info">
       <div class="infoitem"><span data-i18n="lbl_volume">Volume</span>: <span id="volinfo">0</span></div>
       <div class="infoitem" id="bitinfo"></div>
@@ -129,7 +135,7 @@
     </div>
     <ul id="playlist"></ul>
   </div><!--equalizerwrap-->
-  <div id="copy">powered by <a target="_blank" href="https://github.com/trip5/ehRadio/">ehRadio</a> |
+  <div id="copy">powered by <a target="_blank" href="https://trip5.github.io/ehRadio/">ehRadio</a> |
     <span id="version"></span>
     <span id="update_available" class="hidden">| <a href="/update.html" data-i18n="msg_update_available">Update Available</a></span>
   </div>

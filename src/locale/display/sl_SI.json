@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Posodablja se firmware",
   "msg_upd_files": "Posodabljajo se datoteke",
   "msg_upd_failed": "Posodobitev ni uspela",
+  "msg_offline": "Brez povezave",
+  "msg_no_sd_card": "Ni SD-kartice",
   "lbl_w_feelslike": "občutek:",
   "lbl_w_pressure": "pritisk:",
   "lbl_w_humidity": "vlažnost:",

@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Aktualizuje sa firmware",
   "msg_upd_files": "Aktualizujú sa súbory",
   "msg_upd_failed": "Aktualizácia zlyhala",
+  "msg_offline": "Offline",
+  "msg_no_sd_card": "Chýba SD karta",
   "lbl_w_feelslike": "pocit:",
   "lbl_w_pressure": "tlak:",
   "lbl_w_humidity": "vlhkosť:",

@@ -55,6 +55,8 @@
   "msg_upd_firmware": "Firmware bijwerken",
   "msg_upd_files": "Bestanden bijwerken",
   "msg_upd_failed": "Bijwerken mislukt",
+  "msg_offline": "Offline",
+  "msg_no_sd_card": "Geen SD-kaart",
   "lbl_w_feelslike": "gevoelstemperatuur:",
   "lbl_w_pressure": "druk:",
   "lbl_w_humidity": "vochtigheid:",

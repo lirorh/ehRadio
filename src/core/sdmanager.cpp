@@ -14,6 +14,7 @@
 #include "display.h"
 #include "player.h"
 #include "utility.h"
+#include "../locale/dsplocale.h"
 
 // SPIB is declared and initialized in config.cpp (Config::init) — do not re-declare here.
 // SD uses Bus B if assigned via SD_SPI 'B', otherwise Bus A.
@@ -219,6 +220,21 @@ uint32_t SDManager::_countAudioFilesRecursive(const char* dirname, uint8_t level
   }
   root.close();
   return 0;
+}
+
+void SDManager::trySdRemount() {
+  if (ready) return;  // already mounted
+  FUNCTIONLOG("SD", "Remount attempt...");
+  display.putRequest(NEWMODE, SDCHANGE);
+  if (start()) {
+    config.initSDPlaylist();
+    config.setTitle(l10n(L10N_MSG_READY));
+    display.putRequest(NEWMODE, PLAYER);
+    display.putRequest(NEWSTATION);
+  } else {
+    display.putRequest(NEWMODE, PLAYER);  // restore from SDCHANGE
+    config.setTitle(l10n(L10N_MSG_NO_SD_CARD));
+  }
 }
 #endif
 

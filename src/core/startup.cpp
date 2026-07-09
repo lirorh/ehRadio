@@ -18,7 +18,7 @@ Startup startup;
 
 void Startup::checkSafeMode() {
   if (!config.store.lastBootGood) {
-    FUNCTIONLOG("SAFE MODE", "Smartstart and Autoupdate disabled for this session; SD Mode reset to Web and saved to NVS");
+    FUNCTIONLOG("SAFE MODE", "Smartstart and Autoupdate disabled for this session; Web mode saved to NVS.");
     config.store.smartstart = false;
     config.store.autoupdate = false;
     config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_WEB));
@@ -227,6 +227,7 @@ void Startup::getRequiredFiles() {
     }
     delete updater;
     utility.cleanupSpiffs();
+    FUNCTIONLOG("REBOOT", "Required Files done. Reboot.");
     delay(200);
     ESP.restart();
   #endif

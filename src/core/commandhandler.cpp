@@ -253,9 +253,9 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   #endif
 
   /* Options: Danger Zone */
-  if (cmdIs(command, "reboot", "boot"))  { ESP.restart(); return true; }
-  if (cmdIs(command, "format"))  { player.sendCommand({PR_STOP, 0}); SPIFFS.format(); ESP.restart(); return true; }
-  if (cmdIs(command, "reset"))   { config.defaultSettings(value, cid); return true; } // also used by Section resets
+  if (cmdIs(command, "reboot", "boot"))  { FUNCTIONLOG("REBOOT", "Reboot triggered by command."); delay(10); ESP.restart(); return true; }
+  if (cmdIs(command, "format"))  { player.sendCommand({PR_STOP, 0}); FUNCTIONLOG("FORMAT", "Formatting SPIFFS."); delay(10); SPIFFS.format(); FUNCTIONLOG("REBOOT", "Rebooting."); delay(10); ESP.restart(); return true; }
+  if (cmdIs(command, "reset"))   { FUNCTIONLOG("RESET", "Reset all settings requested."); config.defaultSettings(value, cid); return true; } // also used by Section resets
 
   /* IR Recorder */
   #if IR_PIN!=255

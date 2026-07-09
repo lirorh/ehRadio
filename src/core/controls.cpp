@@ -7,6 +7,8 @@
 #include "logging.h"
 #include "netserver.h"
 #include "network.h"
+#include <SD.h>
+#include "sdmanager.h"
 
 #if IR_PIN!=255
   #include <assert.h>
@@ -357,6 +359,7 @@ void Controls::onBtnLongPressStart(int id) {
         break;
       }
     case EVT_BTN_MODE: {
+        if (network.status == SDOFFLINE) break;  // no sleep in SD Offline mode
         #ifndef DEEP_SLEEP_DISABLE
           display.putRequest(NEWMODE, SLEEPING);
         #endif
@@ -376,6 +379,7 @@ void Controls::onBtnLongPressStop(int id) {
         break;
       }
     case EVT_BTN_MODE: {
+        if (network.status == SDOFFLINE) break;  // no sleep in SD Offline mode
         #ifndef DEEP_SLEEP_DISABLE
           utility.doSleepW();
         #endif
@@ -484,6 +488,7 @@ void Controls::onBtnClick(int id) {
     case EVT_BTN_PLAY:
     case EVT_ENC_SW:
     case EVT_ENC2_SW: {
+        if (network.status == SDOFFLINE) { sdman.trySdRemount(); break; }
         if (display.mode() == NUMBERS) {
           display.numOfNextStation = 0;
           display.putRequest(NEWMODE, PLAYER);
@@ -504,7 +509,10 @@ void Controls::onBtnClick(int id) {
         }
         if (network.status==SOFT_AP || display.mode()==LOST) {
           #ifdef USE_SD
-            config.changeMode();
+            config.saveValue(&config.store.lastBootGood, true);
+            config.saveValue(&config.store.offlineSD, true);
+            config.saveValue(&config.store.play_mode, static_cast<uint8_t>(PM_SDCARD));
+            ESP.restart();
           #endif
         }
         break;
@@ -541,6 +549,7 @@ void Controls::onBtnClick(int id) {
       }
     #ifdef USE_SD
     case EVT_BTN_MODE: {
+      if (network.status == SDOFFLINE) { sdman.trySdRemount(); break; }
       config.changeMode();
       break;
     }

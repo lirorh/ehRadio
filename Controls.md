@@ -42,7 +42,7 @@ Button Actions
 Turning on `One-click Station Switching` in the WebUI makes `BTN_NEXT` and `BTN_PREV` act instantly instead of switching to Playlist Mode first.
 It also essentially disables Long-press of buttons.
 
-### IR receiver
+### IR Receiver
 
 IR receivers can be configured from the WebUI. Up to 3 remotes can be used.
 
@@ -63,12 +63,6 @@ Repeat for other buttons.
 | &#9660; | volume down            | quick volume down
 | #       | toggle between player/playlist mode | - |
 | 0-9     | Start entering the station number. To finish input and start playback, press the play button. To cancel, press hash. | - |
-
-### Joystick
-
-You can use a joystick [like this](https://aliexpress.com/item/4000681560472.html) instead of connecting five buttons.
-
-![image](images/joystick.jpg)
 
 ### Touchscreen
 

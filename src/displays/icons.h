@@ -132,19 +132,7 @@ static const uint8_t ICON_BATTERY_MID[] PROGMEM = {
     0b000000,  // ......
 };
 
-// \016 (dec 14) — Note icon  (unused in current code)
-static const uint8_t ICON_NOTE[] PROGMEM = {
-    0b011110,  // .@@@@.
-    0b010010,  // .@..@.
-    0b011110,  // .@@@@.
-    0b010010,  // .@..@.
-    0b010110,  // .@.@@.
-    0b110110,  // @@.@@.
-    0b110000,  // @@....
-    0b000000,  // ......
-};
-
-// \017 (dec 15) — Battery HIGH (75-100%)  (used in conf files: batteryRangeFmt[2])
+// \015 (dec 13) — Battery HIGH (75-100%)  (used in conf files: batteryRangeFmt[2])
 static const uint8_t ICON_BATTERY_HIGH[] PROGMEM = {
     0b011100,  // .@@@..
     0b111110,  // @@@@@.
@@ -153,6 +141,30 @@ static const uint8_t ICON_BATTERY_HIGH[] PROGMEM = {
     0b111110,  // @@@@@.
     0b111110,  // @@@@@.
     0b111110,  // @@@@@.
+    0b000000,  // ......
+};
+
+// \016 (dec 14) — SD Card A (used in display.cpp for SD Offline Mode)
+static const uint8_t ICON_SD_A[] PROGMEM = {
+    0b011111,  // .@@@@@
+    0b011010,  // @@@.@.
+    0b101010,  // @.@.@.
+    0b101111,  // @.@@@@
+    0b111111,  // @@@@@@
+    0b111111,  // @@@@@@
+    0b111111,  // @@@@@@
+    0b000000,  // ......
+};
+
+// \017 (dec 15) — SD Card B (used in display.cpp for SD Offline Mode)
+static const uint8_t ICON_SD_B[] PROGMEM = {
+    0b100000,  // @.....
+    0b100000,  // @.....
+    0b100000,  // @.....
+    0b100000,  // @.....
+    0b100000,  // @.....
+    0b100000,  // @.....
+    0b100000,  // @.....
     0b000000,  // ......
 };
 
@@ -276,6 +288,17 @@ static const uint8_t ICON_LIST[] PROGMEM = {
     0b000000,  // ......
 };
 
+static const uint8_t BLANK[] PROGMEM = {
+    0b000000,  // ......
+    0b000000,  // ......
+    0b000000,  // ......
+    0b000000,  // ......
+    0b000000,  // ......
+    0b000000,  // ......
+    0b000000,  // ......
+    0b000000,  // ......
+};
+
 // ==========================================================================
 // Icon lookup table: map byte value (1-31) to icon bitmap pointer.
 // Used by TextWidget::_draw() to decode icon markers in format strings.
@@ -290,13 +313,13 @@ static const uint8_t* const ICON_TABLE[] PROGMEM = {
     ICON_RSSI__11,       //  6: \006
     ICON_WEATHER_DIV,    //  7: \007
     ICON_IP,             //  8: \010
-    NULL,                //  9: \011 degree (now Unicode)
-    NULL,                // 10: (unused)
+    NULL,                //  9: \011
+    NULL,                // 10: \012
     ICON_BATTERY_LOW,    // 11: \013
     ICON_BATTERY_MID,    // 12: \014
-    NULL,                // 13: (unused)
-    ICON_NOTE,           // 14: \016
-    ICON_BATTERY_HIGH,   // 15: \017
+    ICON_BATTERY_HIGH,   // 13: \015
+    ICON_SD_A,           // 14: \016
+    ICON_SD_B,           // 15: \017
     ICON_PLAY,           // 16: \020
     ICON_PREV,           // 17: \021
     NULL,                // 18: \022 (unused)

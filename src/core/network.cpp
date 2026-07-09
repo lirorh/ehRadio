@@ -466,6 +466,7 @@ void MyNetwork::loopImprov() {
 static Ticker improvRebootTicker;
 
 static void triggerImprovReboot() {
+  FUNCTIONLOG("REBOOT", "Improv Reboot.");
   ESP.restart();
 }
 
@@ -537,6 +538,7 @@ void MyNetwork::requestTimeSync(bool withTelnetOutput, uint8_t clientId) {
 }
 
 void rebootTime() {
+  FUNCTIONLOG("REBOOT", "Reboot time!");
   ESP.restart();
 }
 

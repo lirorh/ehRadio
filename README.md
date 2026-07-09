@@ -138,9 +138,9 @@ You can also enter this mode by pressing the mode button or double-clicking a ro
 The radio will reboot and fast boot into a bare SD-card playing mode with network functionality disabled.
 If no RTC is connected, the clock will not display.
 
-Certain settings, as set in the WebUI, are preserved but unchangeable in this mode: Smart Start.
+Some features are completely disabled in this mode: Safe mode, Deep Sleep, Mode switch.
 
-Some other features are completely disabled in this mode: Safe mode, Deep Sleep, Mode switch.
+Smart Start, as set in the WebUI, is preserved in this mode.
 
 SD Shuffle (which makes the "previous" button do nothing) will be read from preferences and changeable using Mode switch (the button or double-click of a rotary encoder).
 It is not saved to preferences in this mode.

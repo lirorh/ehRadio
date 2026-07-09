@@ -274,7 +274,7 @@ If you connect the VS1053's audio jack directly to an LTK5128 amplifier (where t
 - Severe distortion, screeching, or the chip shutting down due to protection
 - Permanent damage to the VS1053B
 
-![image](images/hardware/vs1053_amp_kle7rx.jpg.jpg)
+![image](images/hardware/vs1053_amp_kle7rx.jpg)
 
 ![image](images/hardware/vs1053_amp_schematic.jpg)
 
@@ -336,7 +336,7 @@ SD reader modules like this are cheap and work well. Some come with a power regu
 
 ![image](images/hardware/sdreader.jpg) ![image](images/hardware/sdreader2.jpg)
 
-The [SD Offline mode](README.md#sd-offline-mode) should be considered as a "fallback because wi-fi is not available" mode, not a primary playback mode.
+The [SD Offline mode](/#sd-offline-mode) should be considered as a "fallback because wi-fi is not available" mode, not a primary playback mode.
 
 It is recommended to encode files on SD card using MP3 at a constant bit rate of 256kbps or less
 to avoid system stress and get maximum compatibility with the decoders.

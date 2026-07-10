@@ -113,7 +113,10 @@ void ticks() {
       display.putRequest(CLOCK);
     }
   #endif //#if RTCSUPPORTED
-  if (player.isRunning() && config.getMode()==PM_SDCARD) netserver.requestOnChange(SDPOS, 0);
+  if (player.isRunning() && config.getMode()==PM_SDCARD) {
+    if (network.status == SDOFFLINE) player.getAudioCurrentTime();  // bypass netserver (not running in offline mode)
+    else netserver.requestOnChange(SDPOS, 0);
+  }
   if (divrssi) {
     if (network.status == CONNECTED) {
       netserver.setRSSI(WiFi.RSSI());

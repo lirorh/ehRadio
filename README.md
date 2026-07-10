@@ -138,9 +138,10 @@ You can also enter this mode by pressing the mode button or double-clicking a ro
 The radio will reboot and fast boot into a bare SD-card playing mode with network functionality disabled.
 If no RTC is connected, the clock will not display.
 
-Certain settings, as set in the WebUI, are preserved but unchangeable in this mode: SD Shuffle (which makes the "previous" button do nothing), Smart Start.
+Most settings, as set in the WebUI, are preserved in this mode. These are disabled: Safe mode, Deep Sleep, Mode switch.
 
-Some other features are completely disabled in this mode: Safe mode, Deep Sleep, Mode switch.
+SD Shuffle (which by the way, makes the "previous" button do nothing) will be read from preferences and changeable using Mode switch (the mode button or double-click of a rotary encoder).
+It is not saved to preferences in this mode.  All other buttons will do expected behaviour.
 
 Exit this mode (reboot with network functionality) by powering off and powering on again.
 
@@ -191,7 +192,9 @@ And painter's tape keeps the components from making contact with each other when
 
 Of course, switches will still require some soldering.
 
-For more notes about this build, check out [my Notebook](images/notebook/notebook.md), which contains notes about various components.
+For more notes about this build, check out [my Notebook](docs/notebooks/notebook.md), which contains notes about various components.
+
+A fair warning: These are pretty basic, with no expectation of even audio isolation.
 
 At some point, I will make a more beautiful radio, perhaps taking inspiration from:
 
@@ -280,7 +283,7 @@ For that and other major needed changes to the codebase, there is a `code-issues
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.07.09 | SD Offline Mode, Fixes to Deep Sleep, smart start, SD index, VS1053 volume curve, Documentatio updated (especially`Hardware.md`) |
+| 2026.07.10 | SD Offline Mode added, `Hardware.md` added, Fixes to Deep Sleep, smart start, SD index, VS1053 volume curve |
 | 2026.07.05 | More fixes to VS1053, Wake from Deep Sleep now works on all RTC-capable pins |
 | 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |

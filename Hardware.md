@@ -289,8 +289,62 @@ That adds interference. The easy fix is to disable dimming and tie the BL pin to
 To create true power isolation, the amplifier needs to have a completely different source of power.
 Simply running another power cable into the amp results in the two circuits sharing Ground which isn't enough.
 
-Some people report that adding a battery and cutting off power to the charging of the battery using a relay works extremely well.
-As you might imagine, this kind of circuit is extremely complex.  More information may be added here later.
+### Full Schematics for Full Audio/Power Isolation by Kle7rx
+
+Complete wiring diagrams with parts lists are available as PDFs:
+
+- [PCM5102 Build Schematic](docs/notebooks/kle7rx/ehRadio_PCM5102.pdf): I2S DAC + LTK5128 amplifiers
+- [VS1053 Build Schematic](docs/notebooks/kle7rx/ehRadio_VS1053.pdf): VS1053 decoder + LTK5128 amplifiers
+
+Both builds share a common power architecture: a **MORNSUN F0505S-3WR2** isolated DC-DC converter separates
+the digital side (ESP32, DAC, display) from the analog/amplifier side, eliminating ground-loop noise.
+Each functional block (POWER, AUDIO, DIGITAL, DISPLAY) uses a **PLY17BN9612R0B2B** common-mode choke
+for additional noise filtering.
+
+#### Common Parts (Both Builds)
+
+| Part                           | Qty | Purpose                                              | Alternatives |
+| ------------------------------ | --- | ---------------------------------------------------- | ------------ |
+| ESP32-S3-DevKitC-1 N16R8       | 1   | Main microcontroller with PSRAM                      | Any ESP32-S3 with 2MB+ PSRAM |
+| RS-15-5 (MEAN WELL)            | 1   | 5V 15W AC-DC power supply                            | USB-C PD trigger board (5V), any regulated 5V 3A+ supply |
+| F0505S-3WR2 (MORNSUN)          | 1   | Isolated 5V→5V DC-DC converter for digital isolation | B0505S-1WR2 (1W, lighter loads), CRE1S0505SC |
+| PLY17BN9612R0B2B               | 5   | KEMET PLY17 CM choke; EMI filter, one per power domain | ? |
+| LTK5128                        | 2   | Class AB 3W audio amplifier (Left + Right)           | PAM8406 (Class D, 5W), PAM8403 (3W), MAX98357A (I2S, 3W) |
+| LD06AJSA                       | 1   | LED constant-current driver / power indicator        | 220Ω resistor + LED (simpler), any 20mA LED driver |
+| RCH664NP-100M                  | 1   | 100μH shielded power inductor for DC-DC filtering    | Any 100μH 1A+ shielded inductor |
+| EI14 600:600Ω                  | 1   | 1:1 audio isolation transformer (line-level)         | Any 600:600Ω audio transformer, 10μF DC blocking caps |
+| EC11                           | 1   | Rotary encoder (15 pulse/30 detent) with push switch | KY-040, PEC11, any quadrature encoder with switch |
+| VS1838B                        | 1   | 38kHz IR receiver                                    | TSOP38238, TSOP4838, TSOP31238 |
+| SD Card module                 | 1   | SPI microSD card reader for offline playback         | Built-in display SD slot (check for proper resistors!) |
+| XRR6H-6*10-3T                  | 5+  | 6-pin 2.54mm locking header connectors               | Standard 2.54mm Dupont headers, JST XH2.54 6-pin |
+
+#### Capacitors & Resistors
+
+| Component                 | PCM5102 | VS1053 | Where Used                          | Notes |
+| ------------------------- | :-----: | :----: | ----------------------------------- | ----- |
+| 2200 μF 25V electrolytic  |    1    |   1    | Audio rail bulk decoupling          | Low ESR recommended |
+| 1000 μF 16V electrolytic  |    2    |   2    | Amp L+R power, PSU input            | Low ESR recommended |
+| 470 μF 16V electrolytic   |    3    |   3    | Digital rail, Display, LED power    |       |
+| 100 μF 16V electrolytic   |    2    |   2    | LED driver, SD card                 |       |
+| 47 μF 10V electrolytic    |    2    |   2    | Digital rail, IR receiver           |       |
+| 10 μF 10V electrolytic    |    1    |   1    | DC-DC output filtering              |       |
+| 4.7 μF 10V electrolytic   |    1    |   1    | DC-DC output filtering              |       |
+| 0.1 μF ceramic (MLCC)     |   ~12   |  ~12   | Decoupling on all ICs and rails     | X7R dielectric |
+| 33 Ω resistor (1/4W)      |    6    |   6    | SPI bus damping resistors           | On MOSI, SCLK, MISO, CS, DC lines |
+| 100 Ω resistor (1/4W)     |    2    |   5    | IR receiver, VS1053 control lines   |       |
+
+#### PCM5102 Build — Additional Parts
+
+| Part        | Qty | Purpose                        | Alternatives |
+| ----------- | --- | ------------------------------ | ------------ |
+| GY-PCM5102  | 1   | I2S DAC module (PCM5102A chip) | PCM5102A breakout, MAX98357A (amp+DAC combo) |
+
+#### VS1053 Build — Additional Parts
+
+| Part            | Qty | Purpose                               | Alternatives |
+| --------------- | --- | ------------------------------------- | ------------ |
+| VS1053B module  | 1   | SPI MP3/AAC/FLAC/OGG decoder + DAC    | VS1003 (MP3 only), WM8960 (I2S codec) |
+| 10 kΩ resistor  | 1   | Pull-up on XDCS line                  | Any 10kΩ 1/4W |
 
 ---
 

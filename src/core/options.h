@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.07.09"
+#define RADIOVERSION "2026.07.10"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -672,6 +672,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #if BTN_PRESS_TICKS <= BTN_CLICK_TICKS
   #error define error in myoptions.h: BTN_PRESS_TICKS must be greater than BTN_CLICK_TICKS
 #endif
+
 /* --- TOUCH SCREEN --- */
 #define TS_MODEL_UNDEFINED 0
 #define TS_MODEL_XPT2046 1
@@ -705,6 +706,24 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 // #define TS_SPI 'B' // Touchscreen on Bus B
 #if TS_CS!=255 && !defined(TS_SPI)
   #error TS_SPI not defined in myoptions.h
+#endif
+
+/* --- SD OFFLINE MODE BUTTON --- */
+// SD Offline Mode is activated by holding the Mode Switch Button or a Rotary Encoder Switch at boot.
+// Use this if your build does not include these or if using all 3 interferes with boot:
+// #define SDOFFLINE_BTN BTN_MODE
+// Use this to deactivate this method of booting to SD Offline Mode:
+// #define SDOFFLINE_BTN 255
+// If this is defined, the other button methods will be deactivated.
+
+// You can also use a GPIO directly with this
+// #define SDOFFLINE_PIN 2
+// ...and you can manually override how the pin is treated (defaults below)
+#ifndef SDOFFLINE_PIN_ACTIVE_LOW
+  #define SDOFFLINE_PIN_ACTIVE_LOW true
+#endif
+#ifndef SDOFFLINE_PIN_PULLUP
+  #define SDOFFLINE_PIN_PULLUP true
 #endif
 
 /* --- IR --- */

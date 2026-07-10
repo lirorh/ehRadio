@@ -49,10 +49,11 @@ jobs:
           # Replace only the first occurrence of 'easier to read' with 'easier to explore'
           sed -i '0,/easier to read/s|easier to read|easier to explore|' docs/index.md
 
-      - name: Fix MkDocs cross-references (README.md → index.md)
+      - name: Fix MkDocs cross-references
         run: |
           for f in docs/*.md; do
             sed -i 's|](README.md|](index.md|g' "$f"
+            sed -i 's|](docs/|](|g' "$f"
           done
 
       - name: Copy web assets (manifests and firmware-info.json)

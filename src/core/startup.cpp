@@ -31,6 +31,7 @@ void Startup::checkSafeMode() {
 void Startup::sdOfflineMode() {
   network.status = SDOFFLINE;
   WiFi.mode(WIFI_OFF);
+  network.ctimer.attach(1, ticks);  // 1ms heartbeat for player audio callbacks (bitrate, etc.)
   if (config.store.offlineSD) config.saveValue(&config.store.offlineSD, false); // set the flag to do normal boot
 }
 

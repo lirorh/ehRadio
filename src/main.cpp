@@ -152,16 +152,13 @@ void loop() {
         if (psramFound()) {
           size_t psramTotal = ESP.getPsramSize();
           size_t psramUsed  = psramTotal - ESP.getFreePsram();
-          size_t known      = (1024 * PSRAM_BUFSIZE) + netserver.getFileCache().totalBytes() + psramFrameBufferBytes;
           size_t audioFill  = player.inBufferFilled();
-          FUNCTIONLOG("PSRAM", "Allocated: %uKB / %uKB total: Framebuffer: %uKB, WebUI Cache: %uKB, Other: %uKB, Audio: buffered %uKB / %uKB allocated",
+          FUNCTIONLOG("PSRAM", "Allocated: %uKB / %uKB total: Framebuffer: %uKB, WebUI Cache: %uKB, Audio buffered: %uKB",
               psramUsed / 1024,
               psramTotal / 1024,
               psramFrameBufferBytes / 1024,
               netserver.getFileCache().totalBytes() / 1024,
-              (psramUsed > known ? (psramUsed - known) / 1024 : 0),
-              audioFill / 1024,
-              PSRAM_BUFSIZE);
+              audioFill / 1024);
         }
       }
       cmLastPrint = millis();

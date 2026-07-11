@@ -134,7 +134,7 @@ public:
     bool     havePSRAM() { return m_f_psram; };
 
 protected:
-    size_t            m_buffSizePSRAM    = 1024 * PSRAM_BUFSIZE;
+    size_t            m_buffSizePSRAM    = UINT16_MAX * 10;   // most webstreams limit (65535 * 10)
     size_t            m_buffSizeRAM      = 1600 * AUDIOBUFFER_MULTIPLIER2;
     size_t            m_buffSize         = 0;
     size_t            m_freeSpace        = 0;

@@ -153,7 +153,7 @@ public:
 
 protected:
 //    size_t m_buffSizePSRAM    = 327675;   // most webstreams limit the advance to 100...300Kbytes
-    size_t m_buffSizePSRAM    = 1024 * PSRAM_BUFSIZE;
+    size_t m_buffSizePSRAM    = 300000;   // most webstreams limit the advance to 100...300Kbytes
     size_t m_buffSizeRAM      = 1600 * AUDIOBUFFER_MULTIPLIER2;
     size_t       m_buffSize         = 0;
     size_t       m_freeSpace        = 0;

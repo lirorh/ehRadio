@@ -103,8 +103,6 @@ void Audio::performAudioTask() {
 - No fallback to SRAM in v0.9.720m
 - `psram_unique_ptr.hpp` provides the allocation framework
 - `audiolib_structs.hpp` depends on it
-- **options.h adjustment needed**: PSRAM_BUFSIZE may need reduction to fit within 2MB (user's note)
-- Around `options.h` line 862: check PSRAM Audio Buffer section
 
 ### 5. Task / Core Assignment
 - `m_audioTaskCoreId = 1` (default)
@@ -160,7 +158,7 @@ Additionally, v0.9.720 I2S is a prerequisite for the v0.9.720 VS1053 library —
    - Add `#include "../../core/config.h"` if needed
    - Wire `m_audioTaskCoreId` to `AUDIO_CORE` from options.h
    - Add "Some adjustments by Trip5 for ehRadio" to header
-3. **Verify PSRAM macros**: Check `PSRAM_BUFSIZE`/`PSRAM_RES_BUFSIZE` work with `psram_unique_ptr.hpp`
+3. **Verify PSRAM allocation**: Ensure `psram_unique_ptr.hpp` allocates correctly
 4. **Build and test**: All I2S environments. Verify audio playback, VU meter, volume control.
 5. **If Stage 1 works**: PSRAM framework confirmed. Proceed to Stage 2.
 6. **If Stage 1 fails**: Problem is in PSRAM or decoder file changes. Fix before proceeding.

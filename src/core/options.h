@@ -300,6 +300,21 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 /* If using PRETEXT_ALLCAPS, why not do the same to your WebUI? */
 // #define WWW_CASETRANSFORM
 
+/* Other Transforms */
+// Frankly speaking, most of these go beyond regular display transforms.
+// They may hide the option in the WebUI completely.
+// It is not recommended to build without these options but here they are anyways.
+//#define HIDE_TITLE2
+//#define DSP_INVERT_TITLE
+//#define HIDE_VU
+//#define HIDE_VOLBAR
+//#define HIDE_BUFFERBAR
+//#define HIDE_VOL
+//#define HIDE_IP
+//#define HIDE_RSSI
+//#define HIDE_BATTERY
+//#define HIDE_WEATHER
+
 
 /* ============================== SPI BUSES AND PINS ============================== */
 
@@ -854,30 +869,23 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
   #define USE_FBUFFER true // framebuffer: best to leave this on (will use PSRAM if available and SRAM if not)
 #endif
 
-// PSRAM Audio Buffer
-// WebUI files cache: (up to) 300KB + Decoder Output: 52KB + Display framebuffer (480×320): 74KB = 426KB... leaves 598KB free in 1MB or 1598 free in 2MB
-// To be fair, in real-world use, above 300KB may be excessive...
-#ifndef PSRAM_BUFSIZE
-  #if defined(ARDUINO_ESP32_DEV)
-    #define PSRAM_BUFSIZE 550
-  #else
-    #define PSRAM_BUFSIZE 1500
-  #endif
-#endif
+// PSRAM Buffers (highest-case estimates, in allocation order: display.init() → player.init() → netserver.begin())
+//   Display framebuffer (480×320): ~74 KB  (allocated first, display.init())
+//   VS1053 audio buffer:          ~293 KB  (300000 bytes, player.init())
+//   I2S audio buffer:             ~640 KB  (UINT16_MAX * 10, player.init())
+//   WebUI files cache:       up to 300 KB  (actually ~60KB if using .gz files, allocated last, netserver.begin(); dynamic, falls back to SPIFFS)
+// ---------------------------------------
+//   VS1053 total:                 ~667 KB  or ~427KB with .gz WebUI files
+//   I2S total:                   ~1014 KB  or ~774KB with .gz WebUI files
+// Note: WebUI cache is opportunistic so if PSRAM runs low, files stay in SPIFFS instead.
+
 // Since the audio buffer can never technically fill up (most streams prevent reading-ahead excessively),
 // the visual buffer bar should look "full" when the buffer is near to maximum potential (250KB is ~6 seconds at 320kbps)
+// there is no 
 #ifndef BUFFERBAR_VISUAL_FULL_KB
   #define BUFFERBAR_VISUAL_FULL_KB 250
 #endif
-#if BUFFERBAR_VISUAL_FULL_KB < 16 || BUFFERBAR_VISUAL_FULL_KB > 500
-  #warning BUFFERBAR_VISUAL_FULL_KB is outside 16 to 500 range, using default of 250KB
-  #undef BUFFERBAR_VISUAL_FULL_KB
-  #define BUFFERBAR_VISUAL_FULL_KB 250
-#endif
-#if PSRAM_BUFSIZE < BUFFERBAR_VISUAL_FULL_KB
-  #undef BUFFERBAR_VISUAL_FULL_KB
-  #define BUFFERBAR_VISUAL_FULL_KB (PSRAM_BUFSIZE)
-#endif
+
 
 /* --- CPU CORES --- */
 /* ESP32 and ESP32-S3 have 2 cores (Main loop runs on Core 1). ESP32-C3 has 1 core (Main loop runs on Core 0) .*/

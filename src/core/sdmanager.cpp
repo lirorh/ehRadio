@@ -134,7 +134,8 @@ void SDManager::listSD(File &plSDfile, File &plSDindex, const char* dirname, uin
       }
     } else {
       if (_endsWith(strlwr((char*)fn), ".mp3") || _endsWith(fn, ".m4a") || _endsWith(fn, ".aac") ||
-          _endsWith(fn, ".wav") || _endsWith(fn, ".flac")) {
+          _endsWith(fn, ".wav") || _endsWith(fn, ".flac") || _endsWith(fn, ".ogg") ||
+          _endsWith(fn, ".opus")) {
         pos = plSDfile.position();
         plSDfile.print(fn);
         plSDfile.print('\t');
@@ -212,7 +213,8 @@ uint32_t SDManager::_countAudioFilesRecursive(const char* dirname, uint8_t level
       }
     } else {
       if (_endsWith(strlwr((char*)fn), ".mp3") || _endsWith(fn, ".m4a") || _endsWith(fn, ".aac") ||
-          _endsWith(fn, ".wav") || _endsWith(fn, ".flac")) {
+          _endsWith(fn, ".wav") || _endsWith(fn, ".flac") || _endsWith(fn, ".ogg") ||
+          _endsWith(fn, ".opus")) {
         _sdFCount++;
       }
     }

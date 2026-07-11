@@ -305,26 +305,26 @@ for additional noise filtering.
 
 | Part                           | Qty | Purpose                                              | Alternatives |
 | ------------------------------ | --- | ---------------------------------------------------- | ------------ |
-| ESP32-S3-DevKitC-1 N16R8       | 1   | Main microcontroller with PSRAM                      | Any ESP32-S3 with 2MB+ PSRAM |
+| ESP32-S3-DevKitC-1 N16R8       | 1   | Main microcontroller with 16MB flash and 8MB PSRAM   | Any ESP32-S3 with minimum 8MB flash and 2MB PSRAM |
 | RS-15-5 (MEAN WELL)            | 1   | 5V 15W AC-DC power supply                            | USB-C PD trigger board (5V), any regulated 5V 3A+ supply |
-| F0505S-3WR2 (MORNSUN)          | 1   | Isolated 5V→5V DC-DC converter for digital isolation | B0505S-1WR2 (1W, lighter loads), CRE1S0505SC |
-| PLY17BN9612R0B2B               | 5   | KEMET PLY17 CM choke; EMI filter, one per power domain | ? |
+| F0505S-3WR2 (MORNSUN)          | 1   | Isolated 5V→5V DC-DC (3W, 600mA); ultra-low 20pF isolation capacitance for clean analog/digital separation | Requires ≥3W for ESP32-S3; cheaper converters lack both power and low isolation capacitance |
+| PLY17BN9612R0B2B               | 5   | Murata hybrid CM+DM choke (0.96mH CM, 47μH DM); filters common-mode and differential noise | Standard CM choke ≥2A, 0.5–2mH (e.g., Bourns 8111-RC); or separate CM choke + DM inductor |
 | LTK5128                        | 2   | Class AB 3W audio amplifier (Left + Right)           | PAM8406 (Class D, 5W), PAM8403 (3W), MAX98357A (I2S, 3W) |
-| LD06AJSA                       | 1   | LED constant-current driver / power indicator        | 220Ω resistor + LED (simpler), any 20mA LED driver |
+| LD06AJSA                       | 1   | LED constant-current driver; supports LED filaments for encoder illumination | 220Ω resistor + LED (simpler), any 20mA LED driver |
 | RCH664NP-100M                  | 1   | 100μH shielded power inductor for DC-DC filtering    | Any 100μH 1A+ shielded inductor |
 | EI14 600:600Ω                  | 1   | 1:1 audio isolation transformer (line-level)         | Any 600:600Ω audio transformer, 10μF DC blocking caps |
 | EC11                           | 1   | Rotary encoder (15 pulse/30 detent) with push switch | KY-040, PEC11, any quadrature encoder with switch |
 | VS1838B                        | 1   | 38kHz IR receiver                                    | TSOP38238, TSOP4838, TSOP31238 |
 | SD Card module                 | 1   | SPI microSD card reader for offline playback         | Built-in display SD slot (check for proper resistors!) |
-| XRR6H-6*10-3T                  | 5+  | 6-pin 2.54mm locking header connectors               | Standard 2.54mm Dupont headers, JST XH2.54 6-pin |
+| XRR6H-6*10-3T                  | 7   | 6-hole ferrite bead (6×10mm, 3-turn); EMI suppression on signal/power lines | Any 6-hole ferrite bead (6×10mm), clip-on ferrite choke, toroidal ferrite core |
 
 #### Capacitors & Resistors
 
 | Component                 | PCM5102 | VS1053 | Where Used                          | Notes |
 | ------------------------- | :-----: | :----: | ----------------------------------- | ----- |
-| 2200 μF 25V electrolytic  |    1    |   1    | Audio rail bulk decoupling          | Low ESR recommended |
-| 1000 μF 16V electrolytic  |    2    |   2    | Amp L+R power, PSU input            | Low ESR recommended |
-| 470 μF 16V electrolytic   |    3    |   3    | Digital rail, Display, LED power    |       |
+| 2200 μF 25V electrolytic  |    1    |   1    | Audio rail bulk decoupling          | Must use Low ESR |
+| 1000 μF 16V electrolytic  |    2    |   2    | Amp L+R power, PSU input            | Must use Low ESR |
+| 470 μF 16V electrolytic   |    3    |   3    | Digital rail, Display, LED power    | Should use Low ESR |
 | 100 μF 16V electrolytic   |    2    |   2    | LED driver, SD card                 |       |
 | 47 μF 10V electrolytic    |    2    |   2    | Digital rail, IR receiver           |       |
 | 10 μF 10V electrolytic    |    1    |   1    | DC-DC output filtering              |       |
@@ -332,6 +332,9 @@ for additional noise filtering.
 | 0.1 μF ceramic (MLCC)     |   ~12   |  ~12   | Decoupling on all ICs and rails     | X7R dielectric |
 | 33 Ω resistor (1/4W)      |    6    |   6    | SPI bus damping resistors           | On MOSI, SCLK, MISO, CS, DC lines |
 | 100 Ω resistor (1/4W)     |    2    |   5    | IR receiver, VS1053 control lines   |       |
+
+Kle7rx recommends using Low ESR for all electrolytic capacitors.
+It is also recommended to use metal film resistors but carbon film resistors are acceptable.
 
 #### PCM5102 Build — Additional Parts
 

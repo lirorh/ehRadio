@@ -71,7 +71,7 @@ bool Config::_wwwFilesExist() {
 
 void Config::init() {
   loadPreferences();
-  if (!config.store.lastBootGood) delay(1000);  // Allow serial monitor to connect before logging safe mode
+  if (!config.store.lastBootGood) delay(1000);  // Allow serial monitor to connect before logging in Safe mode
   bootInfo();
   #if RTCSUPPORTED
     BOOTLOG("RTC begin(SDA=%d,SCL=%d)", RTC_SDA, RTC_SCL);

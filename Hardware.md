@@ -179,11 +179,12 @@ Your board may function without modification but the mods will improv performanc
 
 ![image](images/hardware/vs1053.jpg)
 
-- First, easiest, and most essential, it is recommended to remove the resistor marked `R2`
-to prevent the VS1053 from accidentally entering "MIDI mode"
-on boot (which would prevent the patch from being applied and result in no audio).
+- First, easiest, and most essential, it is recommended to remove the resistor marked `R2`.
+This resistor actually pulls down `GPIO0` of the VS1053B chip into MIDI mode at boot.
+Usually the internal pull-up resistor succeeds in pulling it up in time for the patch to be applied.
+Removing it leaves it floating so the internal pull-up always succeeds.
 
-- Second, a bit more difficult but can improve actual audio is to place 33Ω damping resistors placed right next to the ESP32 pins
+- Second, a bit more difficult but can improve actual audio is to place 33Ω damping resistors placed ***right next to*** the ESP32 pins
 used for `SCK`, `MOSI`, `XCS`, and `XDCS` before wiring to the VS1053 board.
 ESP32-S3 GPIO pins have an incredibly fast transition time (slew rate), which is around 1-2ns.
 Even with short wires around 10-15 cm, these sharp edges cause severe signal reflections ("ringing").
@@ -193,11 +194,18 @@ If a sharp edge causes ringing or cross-talk from the adjacent `SCK` wire on the
 As a result, the decoder might assume the communication session was interrupted right in the middle of a data frame transfer.
 This may manifest in the logs with excessive `slow stream, dropouts are possible` messages as well as with audio artifacts like pops and clicks.
 
-- Finally, add 100Ω resistors on the DREQ and XRST lines for passive filtering of pulse noise and port protection during initialization.
+- Finally, add 100Ω resistors on the `DREQ` and `XRST` lines (middle of wire is OK) for passive filtering of pulse noise and port protection during initialization.
 
-- Additionally, a board that identified as `VS0` during boot may be fixable.
-Attach 10KΩ resistors from the 3.3V LDO to `XCS` and `XDCS`.
-This information is from the [VS1053 Datasheet (page 15)](https://www.vlsi.fi/fileadmin/datasheets/vs1053.pdf).
+- Additionally, a board that identifies as `VS0` during boot (check the serial logs) may be fixable.
+Attach 100KΩ resistors from the 3.3V LDO to `XCS` and `XDCS` to pull them up.
+If the error persists, restore R2 with a solder bridge.
+It seems likely there is a parasitic drain on them that interferes with boot...
+You could try 500KΩ or 1MΩ or probe and remove the onboard resistors if 100KΩ isn't enough.
+
+![image](images/hardware/vs1053_vs0_fix.jpg)
+
+For more detailed information on why these fixes are applied, the [VS1053 Datasheet](https://www.vlsi.fi/fileadmin/datasheets/vs1053.pdf)
+may prove useful reading.
 
 ---
 
@@ -286,7 +294,7 @@ Here are some simple schematics by [Kle7rx](https://github.com/kle7rx) on how to
 
 ![image](images/hardware/pcm_amp_schematic.jpg)
 
-If you connect the VS1053's audio jack directly to an LTK5128 amplifier (where the audio (-) input is tied to the power supply ground), you will short the GBUF (+1.23V) directly to GND (0V). This will cause:
+If you connect the VS1053's audio jack directly to an amplifier (where the audio (-) input is tied to the power supply ground), you will short the GBUF (+1.23V) directly to GND (0V). This will cause:
 - Immediate overheating of the VS1053B output stage
 - Severe distortion, screeching, or the chip shutting down due to protection
 - Permanent damage to the VS1053B
@@ -364,6 +372,35 @@ It is also recommended to use metal film resistors but carbon film resistors are
 | --------------- | --- | ------------------------------------- | ------------ |
 | VS1053B module  | 1   | SPI MP3/AAC/FLAC/OGG decoder + DAC    | VS1003 (MP3 only), WM8960 (I2S codec) |
 | 10 kΩ resistor  | 1   | Pull-up on XDCS line                  | Any 10kΩ 1/4W |
+
+### Budget Audio Isolation
+
+A simplified approach that keeps the F0505S-3WR2 isolation core but uses commodity parts
+for the filtering. This costs **~$10–12** instead of the ~$60–90 full Kle7rx build,
+while still providing clean isolated power to the digital side and an LC-filtered rail
+for the amplifier.
+
+```
+USB 5V (PD trigger) ──┬── [100μH toroid] → [2200μF + 0.1μF] → PAM8406  (audio: direct, LC-filtered)
+                       │
+                       └── F0505S-3WR2 → [1000μF] → ESP32 + DAC + display + SD  (digital: isolated)
+```
+
+#### Budget Parts List
+
+| Part | Qty | Purpose | Notes |
+| ---- | --- | ------- | ----- |
+| F0505S-3WR2 | 1 | Isolated 5V→5V DC-DC (3W); traps ESP32 noise on digital side | Same as Kle7rx build |
+| 100μH toroidal inductor (≥1A) | 1 | LC filter inductor for audio rail; replaces PLY17 | Search "100μH toroidal inductor 1A" on AliExpress (~$1) |
+| 2200μF 10V+ electrolytic (Low ESR) | 1 | Audio rail filter capacitor | Green "high frequency low ESR" type from AliExpress (~$1) |
+| 1000μF 10V+ electrolytic | 1 | Digital rail reservoir; handles WiFi/SD current spikes | Standard or Low ESR; user's existing cap is fine |
+| 0.1μF ceramic (MLCC) | 1 | High-frequency decoupling on audio rail | X7R dielectric |
+| EI14 600:600Ω audio transformer | 1 | Galvanic isolation on audio signal lines; breaks ground loops | Any 600:600Ω or 1:1 audio transformer (~$2) |
+| USB-C PD trigger (5V) | 1 | Power supply | Any 5V USB charger ≥2A |
+
+**What's cut vs the full Kle7rx build:** No PLY17 chokes, no XRR6H ferrite beads, no LD06AJSA LED driver,
+no Mean Well PSU. PAM8406 stereo module replaces two LTK5128 mono amps.
+The F0505S-3WR2 isolation is preserved — it's the foundation that makes the approach work.
 
 ---
 

@@ -245,6 +245,22 @@ To verify the LTK5128 board's Class mode, check pin 3.  If it is tied to Ground,
 
 ![image](images/hardware/LTK5128_pin3.jpg)
 
+### Note Regarding Amp-Speaker Pairing
+
+Speaker wattage is a **maximum handling** rating, not a minimum requirement. A 3W amp can drive 300W speakers — they'll just be quiet.
+
+What actually matters for amp compatibility is **impedance (Ω)**:
+
+| Amp | Rated Impedance | Notes |
+| --- | --------------- | ----- |
+| PAM8406 | 4Ω (3W x 2) | Works at 8Ω (~1.5W per channel). Filterless Class-D, no output capacitors needed |
+| PAM8403 | 4Ω (3W x 2) | Similar to PAM8406, lower power |
+| PAM8610 | 4–8Ω (10W x 2) | Requires 7–15V supply (not USB). Overkill for desktop use |
+| LTK5128 | 4–8Ω (3W) | Mono Class-AB. Use two for stereo |
+| MAX98357A | 4–8Ω (3W) | I2S input — no DAC needed. Filterless Class-D |
+
+For a desktop internet radio, efficient 3–10W speakers (4–8Ω) are ideal. They'll produce more volume at low power than massive high-wattage speakers whose heavy cones need serious current to move. Small bookshelf or full-range drivers work best with these amps.
+
 ### Trip5's Lazy PCM/Amp Combo
 
 If you don't care about audio or power isolation, you can solder the PCM5102A to a PAM8406 stereo amp.
@@ -311,7 +327,7 @@ for additional noise filtering.
 | PLY17BN9612R0B2B (discontinued) | 5   | Murata hybrid CM+DM choke (0.96mH CM, 47μH DM); filters common-mode and differential noise | Würth 7446122001 (1mH, 2A, best direct replacement); KEMET SC-02-10GS (1mH, 2A, toroidal); standard CM choke ≥2A, 0.5–2mH |
 | LTK5128                        | 2   | Class AB 3W audio amplifier (Left + Right)           | PAM8406 (Class D, 5W), PAM8403 (3W), MAX98357A (I2S, 3W) |
 | LD06AJSA                       | 1   | LED constant-current driver; supports LED filaments for encoder illumination | 220Ω resistor + LED (simpler), any 20mA LED driver |
-| RCH664NP-100M                  | 1   | 100μH shielded power inductor for DC-DC filtering    | Any 100μH 1A+ shielded inductor |
+| RCH664NP-100M                  | 1   | 100μH shielded power inductor for DC-DC filtering    | Any 100μH 1A+ shielded inductor; toroidal core inductor (100μH, 1A+) |
 | EI14 600:600Ω                  | 1   | 1:1 audio isolation transformer (line-level)         | Any 600:600Ω audio transformer, 10μF DC blocking caps |
 | EC11                           | 1   | Rotary encoder (15 pulse/30 detent) with push switch | KY-040, PEC11, any quadrature encoder with switch |
 | VS1838B                        | 1   | 38kHz IR receiver                                    | TSOP38238, TSOP4838, TSOP31238 |

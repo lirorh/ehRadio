@@ -118,6 +118,8 @@ If using a display other than English (either on the display or in the WebUI), t
 They are really there as proof-of-concept.  They were translated by machines.  Fixes or additions are always welcome.
 There are tools in the codebase to assist with translation work.
 
+<img src="images/kle7rx_ST7796_ru.jpg" width="50%">
+
 ### Serial Output
 
 When in doubt or having issues, check the serial output.  Serial output logs show a lot of useful information.
@@ -283,8 +285,7 @@ For that and other major needed changes to the codebase, there is a `code-issues
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.07.11 | `not a release` minor fixes to PSRAM handling, documentation |
-| 2026.07.10 | SD Offline Mode added, `Hardware.md` added, Fixes to Deep Sleep, smart start, SD index, VS1053 volume curve |
+| 2026.07.12 | SD Offline Mode added, `Hardware.md` added, Fixes to Deep Sleep, smart start, SD index, VS1053 volume curve, PSRAM |
 | 2026.07.05 | More fixes to VS1053, Wake from Deep Sleep now works on all RTC-capable pins |
 | 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |

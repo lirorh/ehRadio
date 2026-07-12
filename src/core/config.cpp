@@ -89,10 +89,6 @@ void Config::init() {
   #if defined(SPIB_SCK) && (SPIB_SCK != 255)
     SPIB.begin(SPIB_SCK, SPIB_MISO, SPIB_MOSI);
   #endif
-  if (store.config_set_magic != 4262 && store.config_set_magic != 1867) {
-    if (store.config_set_magic != 4262) saveValue(&store.config_set_magic, static_cast<uint16_t>(1867)); // convert the previous magic number
-    setDefaults();
-  }
   store.play_mode = store.play_mode & 0b11;
   if (store.play_mode>1) store.play_mode=PM_WEB;
   _initHW();
@@ -115,7 +111,8 @@ void Config::loadPreferences() {
   // Check config_set_magic first
   uint16_t configSetValue = 0;
   size_t configSetRead = prefs.getBytes("cfgset", &configSetValue, sizeof(configSetValue));
-  if (configSetRead != sizeof(configSetValue) || configSetValue != 4262) {
+  if (configSetRead != sizeof(configSetValue) || configSetValue != 1867) {
+    if (!netserver.isBootReady()) delay(1000); // this should only happen on FIRST boot but this delay helps catch it in serial
     if (configSetRead != sizeof(configSetValue)) {
       FUNCTIONLOG("Prefs", "NVS Sentinel absent (NVS uninitialized or corrupt), resetting to defaults...");
     } else {
@@ -460,6 +457,16 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     netserver.requestOnChange(GETSCREEN, clientId);
     return;
   }
+  if (strcmp(val, "controls") == 0) {
+    saveValue(&store.fliptouch, (bool)TOUCH_FLIP);
+    controls.flipTS();
+    saveValue(&store.dbgtouch, (bool)TOUCH_DEBUG);
+    saveValue(&store.skipPlaylistUpDown, (bool)ONE_CLICK_SWITCH);
+    controls.setEncAcceleration(ROTARY_ACCEL);
+    controls.setIRTolerance(IR_TOLERANCE);
+    netserver.requestOnChange(GETCONTROLS, clientId);
+    return;
+  }
   if (strcmp(val, "locale") == 0) {
     saveValue(store.locale_webui, WEBUI_LOCALE);
     saveValue(store.locale_display, DSP_LOCALE);
@@ -507,19 +514,10 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     netserver.requestOnChange(GETMQTT, clientId);
     return;
   }
-  if (strcmp(val, "controls") == 0) {
-    saveValue(&store.fliptouch, (bool)TOUCH_FLIP);
-    controls.flipTS();
-    saveValue(&store.dbgtouch, (bool)TOUCH_DEBUG);
-    saveValue(&store.skipPlaylistUpDown, (bool)ONE_CLICK_SWITCH);
-    controls.setEncAcceleration(ROTARY_ACCEL);
-    controls.setIRTolerance(IR_TOLERANCE);
-    netserver.requestOnChange(GETCONTROLS, clientId);
-    return;
-  }
   if (strcmp(val, "1") == 0 || strcmp(val, "") == 0) {
     setDefaults();
     defaultSettings("system", clientId);
+    defaultSettings("battery", clientId);
     defaultSettings("screen", clientId);
     defaultSettings("controls", clientId);
     defaultSettings("locale", clientId);

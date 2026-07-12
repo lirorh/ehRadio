@@ -245,7 +245,7 @@ void Controls::irLoop() {
           if (config.ircodes.irVals[target][j]==irResults.value) {
             if (network.status != CONNECTED && network.status!=SDOFFLINE && target!=IR_AST) return;
             if (target!=IR_AST && display.mode()==LOST) return;
-            if (screenSaverExit()) return;
+            if (screenSaverExit()) delay(200); // give it time to exit before doing the action
             switch (target) {
               case IR_PLAY: {
                   irBlink();

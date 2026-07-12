@@ -153,7 +153,7 @@ void loop() {
           size_t psramTotal = ESP.getPsramSize();
           size_t psramUsed  = psramTotal - ESP.getFreePsram();
           size_t audioFill  = player.inBufferFilled();
-          FUNCTIONLOG("PSRAM", "Allocated: %uKB / %uKB total: Framebuffer: %uKB, WebUI Cache: %uKB, Audio buffered: %uKB",
+          FUNCTIONLOG("PSRAM", "Used: %uKB / %uKB: Framebuffer: %uKB, WebUI Cache: %uKB, Audio buffered: %uKB",
               psramUsed / 1024,
               psramTotal / 1024,
               psramFrameBufferBytes / 1024,

@@ -308,7 +308,7 @@ for additional noise filtering.
 | ESP32-S3-DevKitC-1 N16R8       | 1   | Main microcontroller with 16MB flash and 8MB PSRAM   | Any ESP32-S3 with minimum 8MB flash and 2MB PSRAM |
 | RS-15-5 (MEAN WELL)            | 1   | 5V 15W AC-DC power supply                            | USB-C PD trigger board (5V), any regulated 5V 3A+ supply |
 | F0505S-3WR2 (MORNSUN)          | 1   | Isolated 5V→5V DC-DC (3W, 600mA); ultra-low 20pF isolation capacitance for clean analog/digital separation | Requires ≥3W for ESP32-S3; cheaper converters lack both power and low isolation capacitance |
-| PLY17BN9612R0B2B               | 5   | Murata hybrid CM+DM choke (0.96mH CM, 47μH DM); filters common-mode and differential noise | Standard CM choke ≥2A, 0.5–2mH (e.g., Bourns 8111-RC); or separate CM choke + DM inductor |
+| PLY17BN9612R0B2B (discontinued) | 5   | Murata hybrid CM+DM choke (0.96mH CM, 47μH DM); filters common-mode and differential noise | Würth 7446122001 (1mH, 2A, best direct replacement); KEMET SC-02-10GS (1mH, 2A, toroidal); standard CM choke ≥2A, 0.5–2mH |
 | LTK5128                        | 2   | Class AB 3W audio amplifier (Left + Right)           | PAM8406 (Class D, 5W), PAM8403 (3W), MAX98357A (I2S, 3W) |
 | LD06AJSA                       | 1   | LED constant-current driver; supports LED filaments for encoder illumination | 220Ω resistor + LED (simpler), any 20mA LED driver |
 | RCH664NP-100M                  | 1   | 100μH shielded power inductor for DC-DC filtering    | Any 100μH 1A+ shielded inductor |

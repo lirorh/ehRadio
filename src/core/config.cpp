@@ -8,6 +8,7 @@
 #endif
 #include "config.h"
 #include "backlightcontrols.h"
+#include "battery.h"
 #include "controls.h"
 #include "display.h"
 #include "logging.h"
@@ -422,6 +423,12 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     char tmp[MDNS_LENGTH]; snprintf(tmp, MDNS_LENGTH, "ehradio-%x", getChipId()); saveValue(store.mdnsname, tmp);
     display.putRequest(NEWMODE, CLEAR); display.putRequest(NEWMODE, PLAYER);
     netserver.requestOnChange(GETSYSTEM, clientId);
+    return;
+  }
+  if (strcmp(val, "battery") == 0) {
+    saveValue(&store.battery_adc_ref_mv, (uint16_t)BATTERY_ADC_REF_MV);
+    battery.recalcNow();
+    netserver.requestOnChange(GETBATTERY, clientId);
     return;
   }
   if (strcmp(val, "screen") == 0) {

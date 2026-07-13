@@ -190,7 +190,7 @@ void Player::loop() {
   Audio::loop();
   if (!isRunning() && _status==PLAYING) {
     // Stream died unexpectedly - trigger reconnection if WiFi is still up
-    if (WiFi.status() == WL_CONNECTED && !network.lostPlaying) {
+    if (config.getMode() == PM_WEB && WiFi.status() == WL_CONNECTED && !network.lostPlaying) {
       FUNCTIONLOG("Player", "Stream stopped unexpectedly. Starting reconnection attempts...");
       network.lostPlaying = true;
       // Launch retry task if not already running

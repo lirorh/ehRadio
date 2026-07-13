@@ -180,29 +180,40 @@ Your board may function without modification but the mods will improv performanc
 ![image](images/hardware/vs1053.jpg)
 
 - First, easiest, and most essential, it is recommended to remove the resistor marked `R2`.
-This resistor actually pulls down `GPIO0` of the VS1053B chip into MIDI mode at boot.
-Usually the internal pull-up resistor succeeds in pulling it up in time for the patch to be applied.
-Removing it leaves it floating so the internal pull-up always succeeds.
+  This resistor actually pulls down `GPIO0` of the VS1053B chip into MIDI mode at boot.
+  Usually the internal pull-up resistor succeeds in pulling it up in time for the patch to be applied.
+  Removing it leaves it floating so the internal pull-up always succeeds.
 
 - Second, a bit more difficult but can improve actual audio is to place 33Ω damping resistors placed ***right next to*** the ESP32 pins
-used for `SCK`, `MOSI`, `XCS`, and `XDCS` before wiring to the VS1053 board.
-ESP32-S3 GPIO pins have an incredibly fast transition time (slew rate), which is around 1-2ns.
-Even with short wires around 10-15 cm, these sharp edges cause severe signal reflections ("ringing").
-Damping resistors provide source impedance matching and damps the reflected wave, preventing data micro-glitches.
-Acceptable alternatives to 33Ω are in the range of 22Ω to 47Ω.  No higher or lower.
-If a sharp edge causes ringing or cross-talk from the adjacent `SCK` wire on these strobe lines, the noise amplitude can falsely cross the logic threshold.
-As a result, the decoder might assume the communication session was interrupted right in the middle of a data frame transfer.
-This may manifest in the logs with excessive `slow stream, dropouts are possible` messages as well as with audio artifacts like pops and clicks.
+  used for `SCK`, `MOSI`, `XCS`, and `XDCS` before wiring to the VS1053 board.
+  ESP32-S3 GPIO pins have an incredibly fast transition time (slew rate), which is around 1-2ns.
+  Even with short wires around 10-15 cm, these sharp edges cause severe signal reflections ("ringing").
+  Damping resistors provide source impedance matching and damps the reflected wave, preventing data micro-glitches.
+  Acceptable alternatives to 33Ω are in the range of 22Ω to 47Ω.  No higher or lower.
+  If a sharp edge causes ringing or cross-talk from the adjacent `SCK` wire on these strobe lines, the noise amplitude can falsely cross the logic threshold.
+  As a result, the decoder might assume the communication session was interrupted right in the middle of a data frame transfer.
+  This may manifest in the logs with excessive `slow stream, dropouts are possible` messages as well as with audio artifacts like pops and clicks.
 
 - Finally, add 100Ω resistors on the `DREQ` and `XRST` lines (middle of wire is OK) for passive filtering of pulse noise and port protection during initialization.
 
 - Additionally, a board that identifies as `VS0` during boot (check the serial logs) may be fixable.
-Attach 100KΩ resistors from the 3.3V LDO to `XCS` and `XDCS` to pull them up.
-If the error persists, restore R2 with a solder bridge.
-It seems likely there is a parasitic drain on them that interferes with boot...
-You could try 500KΩ or 1MΩ or probe and remove the onboard resistors if 100KΩ isn't enough.
+  There are various fixes available and it's up to you to see which one works for you.
 
-![image](images/hardware/vs1053_vs0_fix.jpg)
+  - Some people report that reflowing the connections on the VS1053B chip fix their issues.
+
+  - Here is a fix that worked for Trip5 (I did not attempt the reflow):
+  
+    Attach 100KΩ resistors from the 3.3V LDO to `XCS` and `XDCS` to pull them up.
+    If the error persists, restore R2 with a solder bridge.
+    It seems likely there is a parasitic drain on them that interferes with boot...
+    You could try 500KΩ or 1MΩ or probe and remove the onboard resistors if 100KΩ isn't enough.
+
+    ![image](images/hardware/vs1053_vs0_fix.jpg)
+
+  - Google search for other fixes...
+
+  - And this may be why dealing with VS1053 is problematic.
+    If you've read all of this and decided to use a VS1053 anyways, good luck!
 
 For more detailed information on why these fixes are applied, the [VS1053 Datasheet](https://www.vlsi.fi/fileadmin/datasheets/vs1053.pdf)
 may prove useful reading.
@@ -259,13 +270,13 @@ Speaker wattage is a **maximum handling** rating, not a minimum requirement. A 3
 
 What actually matters for amp compatibility is **impedance (Ω)**:
 
-| Amp | Rated Impedance | Notes |
-| --- | --------------- | ----- |
-| PAM8406 | 4Ω (3W x 2) | Works at 8Ω (~1.5W per channel). Filterless Class-D, no output capacitors needed |
-| PAM8403 | 4Ω (3W x 2) | Similar to PAM8406, lower power |
-| PAM8610 | 4–8Ω (10W x 2) | Requires 7–15V supply (not USB). Overkill for desktop use |
-| LTK5128 | 4–8Ω (3W) | Mono Class-AB. Use two for stereo |
-| MAX98357A | 4–8Ω (3W) | I2S input — no DAC needed. Filterless Class-D |
+| Amp       | Rated Impedance | Notes |
+| --------- | --------------- | ----- |
+| PAM8406   | 4Ω (3W x 2)     | Works at 8Ω (~1.5W per channel). Filterless Class-D, no output capacitors needed |
+| PAM8403   | 4Ω (3W x 2)     | Similar to PAM8406, lower power |
+| PAM8610   | 4–8Ω (10W x 2)  | Requires 7–15V supply (not USB). Overkill for desktop use |
+| LTK5128   | 4–8Ω (3W)       | Mono Class-AB. Use two for stereo |
+| MAX98357A | 4–8Ω (3W)       | I2S input — no DAC needed. Filterless Class-D |
 
 For a desktop internet radio, efficient 3–10W speakers (4–8Ω) are ideal. They'll produce more volume at low power than massive high-wattage speakers whose heavy cones need serious current to move. Small bookshelf or full-range drivers work best with these amps.
 

@@ -29,8 +29,11 @@ public:
 
 private:
   bool isPrintable(const char* info) const;
+  void _tryCombineTitleAlbum();
 
   char artworkUrl[MQTT_URL_SIZE + 1] = {0};
+  char _titleBuf[64] = {0};
+  char _albumBuf[64] = {0};
   char artworkImageUrl[MQTT_URL_SIZE + 1] = {0};
   char artworkFallbackUrl[MQTT_URL_SIZE + 1] = {0};
   char artworkScratchUrl[MQTT_URL_SIZE + 1] = {0};

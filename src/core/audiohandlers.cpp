@@ -255,29 +255,34 @@ void AudioHandlers::handleId3Artist(const char* info) {
 void AudioHandlers::handleId3Album(const char* info) {
   if (player.lockOutput) return;
   if (isPrintable(info)) {
-    if (strlen(config.station.title) == 0) {
-      config.setTitle(info);
-    } else {
-      char tmp[STATION_FIELD_LENGTH];
-      size_t titleLen = strlen(config.station.title);
-      size_t infoLen = strlen(info);
-      if (titleLen + 3 + infoLen + 1 <= STATION_FIELD_LENGTH) {
-        snprintf(tmp, STATION_FIELD_LENGTH, "%s - %s", config.station.title, info);
-        config.setTitle(tmp);
-      } else {
-        config.setTitle(info);
-      }
-    }
+    strlcpy(_albumBuf, info, sizeof(_albumBuf));
+    _tryCombineTitleAlbum();
   }
 }
 
 void AudioHandlers::handleId3Title(const char* info) {
   if (player.lockOutput) return;
-  if (isPrintable(info)) config.setTitle(info);
+  if (isPrintable(info)) {
+    strlcpy(_titleBuf, info, sizeof(_titleBuf));
+    _tryCombineTitleAlbum();
+  }
+}
+
+void AudioHandlers::_tryCombineTitleAlbum() {
+  if (_titleBuf[0] == '\0') return;  // no title yet
+  if (_albumBuf[0] != '\0') {
+    char tmp[STATION_FIELD_LENGTH];
+    snprintf(tmp, sizeof(tmp), "%s - %s", _titleBuf, _albumBuf);
+    config.setTitle(tmp);
+  } else {
+    config.setTitle(_titleBuf);
+  }
 }
 
 void AudioHandlers::handleBeginSdRead() {
   config.setTitle("");
+  _titleBuf[0] = '\0';
+  _albumBuf[0] = '\0';
 }
 
 void AudioHandlers::handleId3Data(const char* info) {

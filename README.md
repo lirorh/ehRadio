@@ -8,10 +8,10 @@
 
 <img src="images/Trip5_ILI9488.jpg" width="50%">
 
-ehRadio runs on an ESP32 to play Internet radio streams. 
+ehRadio runs on an ESP32-S3 to play Internet radio streams.
 
-A radio may be built using an ESP32, an audio decoder, a display, and some inputs.
-I prefer to build with ESP32-S3 boards but ESP32 or ESP32-C3 boards are possible, too.
+A radio may be built using an ESP32-S3, an audio decoder, a display, and some inputs.
+ESP32 or ESP32-C3 boards are possible but may require special work.
 In some cases, like for the ES3C28P, no peripherals are even needed.
 
 To develop, I prefer [VS Code](https://code.visualstudio.com/) but you may try other IDEs.
@@ -51,11 +51,11 @@ ehRadio inherits a lot from ёRadio, but improvements have been made to many fun
   - WebUI easily accessed using [ehDP](https://github.com/trip5/eh-Device-Scanner)
   - playlists can be edited, imported, exported to files
   - playlists can be imported, merged, and shared via [webstations](https://github.com/trip5/webstations) curated lists
-  - playlists can be directly added to using [Radio-browser](https://www.radio-browser.info/) API search
+  - radio station streams can be directly added to using [Radio-browser](https://www.radio-browser.info/) API search
 
 - [Web flasher](https://trip5.github.io/ehRadio/firmware.html) & Internet OTA updates
   - make getting a new version easy-peasy
-  - *caveat:* your build must be shared with this repository
+  - *caveat:* your build must be in the `builds` folder of this repository
 
 - MQTT, Telnet, HTTP
   - almost all WebUI [commands](Commands.md) are available
@@ -92,7 +92,7 @@ ehRadio inherits a lot from ёRadio, but improvements have been made to many fun
 
 The WebUI is optimized for mobile browsers but looks great on PCs, too.
 
-![image](images/Screenshot_Player.jpg)
+<img src="images/Screenshot_Player.jpg" width="33%">
 
 More screenshots from the WebUI are [here](WebUI.md).
 
@@ -114,9 +114,13 @@ Want to get even more advanced? There are bunches of notes and tools in the code
 
 ### Languages
 
-If using a display other than English (either on the display or in the WebUI), there be errors in the translation.
-They are really there as proof-of-concept.  They were translated by machines.  Fixes or additions are always welcome.
-There are tools in the codebase to assist with translation work.
+Language-support is directly hardcoded into the firmware and use the [Matrix-Fonts 8x6-series fonts](https://github.com/trip5/Matrix-Fonts#8x6-series-fonts).
+Language-preference may be set using `myoptions.h` but all languages are available in all firmwares and are easily changeable in the WebUI.
+
+If using a display other than English (either on the display or in the WebUI), there may be errors in the translation.
+Mostly they were added as with machine-translation tools.
+Fixes or additions are always welcome.
+There are tools in the codebase to assist with translation work but hand-editing the `.json` files is not too hard.
 
 <img src="images/kle7rx_ST7796_ru.jpg" width="50%">
 
@@ -129,21 +133,21 @@ Connecting via telnet will also show serial logs.
 ### Safe Mode
 
 After booting, the device waits 30 seconds after network connection to mark (in NVS) the boot as stable.
-If powering off before this time has elapsed, the next boot will enter "safe mode" - which disables smart start, auto update, and SD-only Mode.
+If powering off before this time has elapsed, the next boot will enter "safe mode" - which disables smart start, auto update, and SD Mode.
 The settings for smart start and auto update will appear as off but they will resume their previously-saved setting on next boot (if the safe mode boot was marked as stable).
 
 ### SD Offline Mode
 
 To enter a special SD-card only mode (with network functionality disabled), hold down an encoder button or the mode button when powering on (until the display shows something).
-You can also enter this mode by pressing the mode button or double-clicking a rotary encoder button in AP/Improv Mode or when you see `* LOST *`.
+You can also enter this mode by pressing the mode button or double-clicking a rotary encoder button in AP/Improv Mode or when you see `* LOST *`, which will trigger a reboot.
 
-The radio will reboot and fast boot into a bare SD-card playing mode with network functionality disabled.
+The radio will fast-boot into a bare SD-card playing mode with network functionality completely disabled.
 If no RTC is connected, the clock will not display.
 
 Most settings, as set in the WebUI, are preserved in this mode. These are disabled: Safe mode, Deep Sleep, Mode switch.
 
-SD Shuffle (which by the way, makes the "previous" button do nothing) will be read from preferences and changeable using Mode switch (the mode button or double-click of a rotary encoder).
-It is not saved to preferences in this mode.  All other buttons will do expected behaviour.
+SD Shuffle (which makes the "previous" button do nothing) will be read from preferences and changeable using Mode switch (the mode button or double-click of a rotary encoder).
+It is not saved to preferences in this mode.  All other buttons will have expected behaviour.
 
 Exit this mode (reboot with network functionality) by powering off and powering on again.
 
@@ -153,8 +157,7 @@ Exit this mode (reboot with network functionality) by powering off and powering 
 
 There are many considerations to make when building a radio.
 
-For a detailed guide to supported hardware and peripherals, read [here](Hardware.md).
-There are also notes regarding wiring and audio isolation.
+For a detailed guide to supported hardware and peripherals, wiring, and audio isolation, read [here](Hardware.md).
 
 ---
 
@@ -197,9 +200,9 @@ Of course, switches will still require some soldering.
 
 For more notes about this build, check out [my Notebook](docs/notebooks/notebook.md), which contains notes about various components.
 
-A fair warning: These are pretty basic, with no expectation of even audio isolation.
+A fair warning: These are pretty basic, with no expectation of audio isolation.
 
-At some point, I will make a more beautiful radio, perhaps taking inspiration from:
+At some point, I will make a more beautiful and nice-sounding radio, perhaps taking inspiration from:
 
 - [ThomasH358](https://www.instructables.com/How-to-Build-a-Portable-Bluetooth-Tube-Amplifier/)
 - [WelshWoodWorking](https://www.instructables.com/Vintage-Style-MP3-Radio/)
@@ -209,7 +212,7 @@ At some point, I will make a more beautiful radio, perhaps taking inspiration fr
 
 ### ёRadio Builds
 
-e2002 collected a lot of pictures of ёRadio builds [here](Images.md).
+Want to see more pictures? e2002 collected a lot of pictures of ёRadio builds [here](Images.md).
 
 ---
 
@@ -286,7 +289,7 @@ For that and other major needed changes to the codebase, there is a `code-issues
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.07.12 | SD Offline Mode added, `Hardware.md` added, Fixes to Deep Sleep, smart start, SD index, VS1053 volume curve, PSRAM |
+| 2026.07.15 | SD Offline Mode added, `Hardware.md` added, fixes to Deep Sleep, smart start, SD index, SD tags, VS1053 volume curve, PSRAM |
 | 2026.07.05 | More fixes to VS1053, Wake from Deep Sleep now works on all RTC-capable pins |
 | 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |

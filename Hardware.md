@@ -154,6 +154,7 @@ The ES8311 is a mono I2S decoder/amp included on some dev + display boards like 
 ***The VS1053 is well-supported and may make for an easy first-build (with no amp).***
 
 The idea of the VS1053 is fantastic.  It decodes streams directly and relieves pressure from the CPU.
+On the positive side, it has an acceptable built-in amplifier that has decent audio isolation already built-in.
 Whereas I2S decodes streams using the CPU, the VS1053 can decode most popular codecs directly on the board,
 relieving the CPU to handle other functions...
 
@@ -161,7 +162,6 @@ But the technology behind the VS1053 (2009) pre-dates the ESP8266 (2013) and the
 received the same attention from developers as the I2S decoding routines.
 
 There are many additional issues as well so it is probably best to reserve building using the VS1053 when using very slow displays like the ILI9488.
-On the positive side, it also has a weak built-in amplifer which can simplify builds.
 
 For the VU Meter to function, the patch MUST be enabled.
 Even with the patch, though, it struggles to decode FLAC streams and some other "unusual" stream types.
@@ -171,11 +171,11 @@ Some are sold as "VS1003/1053" which are almost certainly a VS1003.
 This can be verified by checking the LDO power-regulators. If the board has a 2.5V LDO instead of a 1.8V LDO, it's a VS1003.
 Genuine VS1053 is usually $10 minimum. Shop carefully and don't buy the cheapest one.
 
-If you end up with a VS1003, it will still be functional for MP3 stations but not much else.
+If you end up with a VS1003, it will still be functional for MP3 stations (but nothing else).
 It cannot use the patch and there will be no audio if you use `#define VS_PATCH_ENABLE true` in `myoptions.h`.
 
 There are some "fixes" that should be applied to the green board to ensure it functions as expected.
-Your board may function without modification but the mods will improve it greatly.
+Your board may function without modification but the mods are relatively easy and worth doing to improve audio quality.
 
 - First, easiest, and most essential, it is recommended to remove the resistor marked `R2`.
   This resistor actually pulls down `GPIO0` of the VS1053B chip into MIDI mode at boot.

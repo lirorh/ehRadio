@@ -177,12 +177,12 @@ It cannot use the patch and there will be no audio if you use `#define VS_PATCH_
 There are some "fixes" that should be applied to the green board to ensure it functions as expected.
 Your board may function without modification but the mods will improv performance.
 
-![image](images/hardware/vs1053.jpg)
-
 - First, easiest, and most essential, it is recommended to remove the resistor marked `R2`.
   This resistor actually pulls down `GPIO0` of the VS1053B chip into MIDI mode at boot.
   Usually the internal pull-up resistor succeeds in pulling it up in time for the patch to be applied.
   Removing it leaves it floating so the internal pull-up always succeeds.
+
+  ![image](images/hardware/vs1053.jpg)
 
 - Second, a bit more difficult but can improve actual audio is to place 33Ω damping resistors placed ***right next to*** the ESP32 pins
   used for `SCK`, `MOSI`, `XCS`, and `XDCS` before wiring to the VS1053 board.
@@ -217,6 +217,13 @@ Your board may function without modification but the mods will improv performanc
 
 For more detailed information on why these fixes are applied, the [VS1053 Datasheet](https://www.vlsi.fi/fileadmin/datasheets/vs1053.pdf)
 may prove useful reading.
+
+#### Special Warning
+
+If you connect the VS1053's audio jack directly to an amplifier (where the audio (-) input is tied to the power supply ground), you will short the GBUF (+1.23V) directly to GND (0V). This will cause:
+- Immediate overheating of the VS1053B output stage
+- Severe distortion, screeching, or the chip shutting down due to protection
+- Permanent damage to the VS1053B
 
 ---
 
@@ -284,7 +291,7 @@ For a desktop internet radio, efficient 3–10W speakers (4–8Ω) are ideal. Th
 
 If you don't care about audio or power isolation, you can solder the PCM5102A to a PAM8406 stereo amp.
 The PCM5102 output pins line up pretty nicely to the PAM8406's input pins.
-Use the trim pots on the amplifier to minimize noise.
+Use the trim pots on the amplifier to attenuate/reduce input to match the speakers and minimize noise.
 
 ![image](images/hardware/pcm_amp.jpg)
 
@@ -299,32 +306,16 @@ While the EI14 transformer breaks the ground loop and removes hum from the sourc
 if it generates high-frequency switching interference (common in Class-D amps) or if its power supply is noisy.
 For the cleanest result, pair the isolation transformer with a Class-AB amplifier or a well-filtered Class-D module.
 
-### Audio Isolation Schematics
+Or even better, separate the audio and digital sides of your circuit.
 
-Here are some simple schematics by [Kle7rx](https://github.com/kle7rx) on how to wire up decoders, transformers, and amplifiers.
-
-![image](images/hardware/pcm_amp_schematic.jpg)
-
-If you connect the VS1053's audio jack directly to an amplifier (where the audio (-) input is tied to the power supply ground), you will short the GBUF (+1.23V) directly to GND (0V). This will cause:
-- Immediate overheating of the VS1053B output stage
-- Severe distortion, screeching, or the chip shutting down due to protection
-- Permanent damage to the VS1053B
-
-![image](images/hardware/vs1053_amp_kle7rx.jpg)
-
-![image](images/hardware/vs1053_amp_schematic.jpg)
-
-### Audio/Power Isolation
+### Audio/Power Noise
 
 If you find that your amplifier is buzzing, there are a few things to blame for this.
 
 One suspect is usually backlight control. Typically these use PWM (Pulse Width Management) to achieve dimming.
 That adds interference. The easy fix is to disable dimming and tie the BL pin to 3V3.
 
-To create true power isolation, the amplifier needs to have a completely different source of power.
-Simply running another power cable into the amp results in the two circuits sharing Ground which isn't enough.
-
-### Full Schematics for Full Audio/Power Isolation by Kle7rx
+### Full Schematics for Full Audio/Power Isolation by [Kle7rx](https://github.com/kle7rx)
 
 Complete wiring diagrams with parts lists are available as PDFs:
 
@@ -338,20 +329,20 @@ for additional noise filtering.
 
 #### Common Parts (Both Builds)
 
-| Part                           | Qty | Purpose                                              | Alternatives |
-| ------------------------------ | --- | ---------------------------------------------------- | ------------ |
-| ESP32-S3-DevKitC-1 N16R8       | 1   | Main microcontroller with 16MB flash and 8MB PSRAM   | Any ESP32-S3 with minimum 8MB flash and 2MB PSRAM |
-| RS-15-5 (MEAN WELL)            | 1   | 5V 15W AC-DC power supply                            | USB-C PD trigger board (5V), any regulated 5V 3A+ supply |
-| F0505S-3WR2 (MORNSUN)          | 1   | Isolated 5V→5V DC-DC (3W, 600mA); ultra-low 20pF isolation capacitance for clean analog/digital separation | Requires ≥3W for ESP32-S3; cheaper converters lack both power and low isolation capacitance |
-| PLY17BN9612R0B2B (discontinued) | 5   | Murata hybrid CM+DM choke (0.96mH CM, 47μH DM); filters common-mode and differential noise | Würth 7446122001 (1mH, 2A, best direct replacement); KEMET SC-02-10GS (1mH, 2A, toroidal); standard CM choke ≥2A, 0.5–2mH |
-| LTK5128                        | 2   | Class AB 3W audio amplifier (Left + Right)           | PAM8406 (Class D, 5W), PAM8403 (3W), MAX98357A (I2S, 3W) |
-| LD06AJSA                       | 1   | LED constant-current driver; supports LED filaments for encoder illumination | 220Ω resistor + LED (simpler), any 20mA LED driver |
-| RCH664NP-100M                  | 1   | 100μH shielded power inductor for DC-DC filtering    | Any 100μH 1A+ shielded inductor; toroidal core inductor (100μH, 1A+) |
-| EI14 600:600Ω                  | 1   | 1:1 audio isolation transformer (line-level)         | Any 600:600Ω audio transformer, 10μF DC blocking caps |
-| EC11                           | 1   | Rotary encoder (15 pulse/30 detent) with push switch | KY-040, PEC11, any quadrature encoder with switch |
-| VS1838B                        | 1   | 38kHz IR receiver                                    | TSOP38238, TSOP4838, TSOP31238 |
-| SD Card module                 | 1   | SPI microSD card reader for offline playback         | Built-in display SD slot (check for proper resistors!) |
-| XRR6H-6*10-3T                  | 7   | 6-hole ferrite bead (6×10mm, 3-turn); EMI suppression on signal/power lines | Any 6-hole ferrite bead (6×10mm), clip-on ferrite choke, toroidal ferrite core |
+| Part                            | Qty   | Purpose                                              | Alternatives |
+| ------------------------------- | :---: | ---------------------------------------------------- | ------------ |
+| ESP32-S3-DevKitC-1 N16R8        |   1   | Main microcontroller with 16MB flash and 8MB PSRAM   | Any ESP32-S3 with minimum 8MB flash and 2MB PSRAM |
+| RS-15-5 (MEAN WELL)             |   1   | 5V 15W AC-DC power supply                            | USB-C PD trigger board (5V), any regulated 5V 3A+ supply |
+| F0505S-3WR2 (MORNSUN)           |   1   | Isolated 5V→5V DC-DC (3W, 600mA); ultra-low 20pF isolation capacitance for clean analog/digital separation | Requires ≥3W for ESP32-S3; cheaper converters lack both power and low isolation capacitance |
+| PLY17BN9612R0B2B (discontinued) |   5   | Murata hybrid CM+DM choke (0.96mH CM, 47μH DM); filters common-mode and differential noise | Würth 7446122001 (1mH, 2A, best direct replacement); KEMET SC-02-10GS (1mH, 2A, toroidal); standard CM choke ≥2A, 0.5–2mH |
+| LTK5128                         |   2   | Class AB 3W audio amplifier (Left + Right)           | PAM8406 (Class D, 5W), PAM8403 (3W), MAX98357A (I2S, 3W) |
+| LD06AJSA                        |   1   | LED constant-current driver; supports LED filaments for encoder illumination | 220Ω resistor + LED (simpler), any 20mA LED driver |
+| RCH664NP-100M                   |   1   | 100μH shielded power inductor for DC-DC filtering    | Any 100μH 1A+ shielded inductor; toroidal core inductor (100μH, 1A+) |
+| EI14 600:600Ω                   |   1   | 1:1 audio isolation transformer (line-level)         | Any 600:600Ω audio transformer, 10μF DC blocking caps |
+| EC11                            |   1   | Rotary encoder (15 pulse/30 detent) with push switch | KY-040, PEC11, any quadrature encoder with switch |
+| VS1838B                         |   1   | 38kHz IR receiver                                    | TSOP38238, TSOP4838, TSOP31238 |
+| SD Card module                  |   1   | SPI microSD card reader for offline playback         | Built-in display SD slot (check for proper resistors!) |
+| XRR6H-6*10-3T                   |   7   | 6-hole ferrite bead (6×10mm, 3-turn); EMI suppression on signal/power lines | Any 6-hole ferrite bead (6×10mm), clip-on ferrite choke, toroidal ferrite core |
 
 #### Capacitors & Resistors
 
@@ -371,47 +362,47 @@ for additional noise filtering.
 Kle7rx recommends using Low ESR for all electrolytic capacitors.
 It is also recommended to use metal film resistors but carbon film resistors are acceptable.
 
-#### PCM5102 Build — Additional Parts
+#### PCM5102 Build: Additional Parts
 
-| Part        | Qty | Purpose                        | Alternatives |
-| ----------- | --- | ------------------------------ | ------------ |
-| GY-PCM5102  | 1   | I2S DAC module (PCM5102A chip) | PCM5102A breakout, MAX98357A (amp+DAC combo) |
+| Part        | Qty   | Purpose                        | Alternatives |
+| ----------- | :---: | ------------------------------ | ------------ |
+| GY-PCM5102  |   1   | I2S DAC module (PCM5102A chip) | PCM5102A breakout, MAX98357A (amp+DAC combo) |
 
-#### VS1053 Build — Additional Parts
+#### VS1053 Build: Additional Parts
 
-| Part            | Qty | Purpose                               | Alternatives |
-| --------------- | --- | ------------------------------------- | ------------ |
-| VS1053B module  | 1   | SPI MP3/AAC/FLAC/OGG decoder + DAC    | VS1003 (MP3 only), WM8960 (I2S codec) |
-| 10 kΩ resistor  | 1   | Pull-up on XDCS line                  | Any 10kΩ 1/4W |
+| Part            | Qty   | Purpose                               | Alternatives |
+| --------------- | :---: | ------------------------------------- | ------------ |
+| VS1053B module  |   1   | SPI MP3/AAC/FLAC/OGG decoder + DAC    | VS1003 (MP3 only), WM8960 (I2S codec) |
+| 10 kΩ resistor  |   1   | Pull-up on XDCS line                  | Any 10kΩ 1/4W |
 
-### Budget Audio Isolation
+### Audio Isolation on a Budget
 
 A simplified approach that keeps the F0505S-3WR2 isolation core but uses commodity parts
-for the filtering. This costs **~$10–12** instead of the ~$60–90 full Kle7rx build,
+for the filtering. This costs much less than the full Kle7rx "no compromises" build,
 while still providing clean isolated power to the digital side and an LC-filtered rail
 for the amplifier.
 
-```
-USB 5V (PD trigger) ──┬── [100μH toroid] → [2200μF + 0.1μF] → PAM8406  (audio: direct, LC-filtered)
-                       │
-                       └── F0505S-3WR2 → [1000μF] → ESP32 + DAC + display + SD  (digital: isolated)
-```
+You may use any I2S decoder and amplifier you like for this build.
 
-#### Budget Parts List
+- [Budget Isolation Schematic](docs/notebooks/budget_isolation.jpg)
 
-| Part | Qty | Purpose | Notes |
-| ---- | --- | ------- | ----- |
-| F0505S-3WR2 | 1 | Isolated 5V→5V DC-DC (3W); traps ESP32 noise on digital side | Same as Kle7rx build |
-| 100μH toroidal inductor (≥1A) | 1 | LC filter inductor for audio rail; replaces PLY17 | Search "100μH toroidal inductor 1A" on AliExpress (~$1) |
-| 2200μF 10V+ electrolytic (Low ESR) | 1 | Audio rail filter capacitor | Green "high frequency low ESR" type from AliExpress (~$1) |
-| 1000μF 10V+ electrolytic | 1 | Digital rail reservoir; handles WiFi/SD current spikes | Standard or Low ESR; user's existing cap is fine |
-| 0.1μF ceramic (MLCC) | 1 | High-frequency decoupling on audio rail | X7R dielectric |
-| EI14 600:600Ω audio transformer | 1 | Galvanic isolation on audio signal lines; breaks ground loops | Any 600:600Ω or 1:1 audio transformer (~$2) |
-| USB-C PD trigger (5V) | 1 | Power supply | Any 5V USB charger ≥2A |
+#### Parts List
+
+| Part                               | Qty   | Purpose                                                                        | Notes |
+| ---------------------------------- | :---: | ------------------------------------------------------------------------------ | ----- |
+| F0505S-3WR2                        |   1   | Isolated 5V→5V DC-DC (3W, ~20pF isolation); traps ESP32 noise on digital side  | Alt: B0505S-3WR2 (budget, ~50-100pF isolation so try to avoid); same 3W/600mA |
+| 100μF 10V+ electrolytic            |   1   | Input smoothing for F0505S-3WR2; cleans USB charger noise                      | Standard electrolytic is fine |
+| 10μH axial inductor (0.5W)         |   1   | Inrush limiter on F0505S-3WR2 output; protects converter from 1000μF load      | Search "10μH 0.5W color ring inductor" |
+| 100μH toroidal inductor (≥1A)      |   1   | LC filter inductor for audio rail; replaces PLY17                              | Search "100μH toroidal inductor 1A" |
+| 2200μF 10V+ electrolytic (Low ESR) |   1   | Audio rail filter capacitor                                                    | Green "high frequency low ESR" type |
+| 1000μF 10V+ electrolytic           |   1   | Digital rail reservoir; handles WiFi/SD current spikes                         | 470μF at a minimum (but bigger is OK too)  |
+| 0.1μF ceramic (MLCC)               |   3   | High-frequency decoupling: audio rail, F0505S input, F0505S output             | X7R dielectric, marked "104" |
+| EI14 600:600Ω audio transformer    |   1   | Galvanic isolation on audio signal lines; breaks ground loops                  | Any 600:600Ω or 1:1 audio transformer |
+| 5V USB power supply ≥2A            |   1   | Power supply                                                                   |       |
 
 **What's cut vs the full Kle7rx build:** No PLY17 chokes, no XRR6H ferrite beads, no LD06AJSA LED driver,
 no Mean Well PSU. PAM8406 stereo module replaces two LTK5128 mono amps.
-The F0505S-3WR2 isolation is preserved — it's the foundation that makes the approach work.
+The F0505S-3WR2 isolation is preserved. It's the foundation that makes the approach work.
 
 ---
 

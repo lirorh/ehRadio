@@ -154,6 +154,7 @@ Exit this mode (reboot with network functionality) by powering off and powering 
 There are many considerations to make when building a radio.
 
 For a detailed guide to supported hardware and peripherals, read [here](Hardware.md).
+There are also notes regarding wiring and audio isolation.
 
 ---
 

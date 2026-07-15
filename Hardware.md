@@ -154,7 +154,7 @@ The ES8311 is a mono I2S decoder/amp included on some dev + display boards like 
 ***The VS1053 is well-supported and may make for an easy first-build (with no amp).***
 
 The idea of the VS1053 is fantastic.  It decodes streams directly and relieves pressure from the CPU.
-On the positive side, it has an acceptable built-in amplifier that has decent audio isolation already built-in.
+It has an acceptable built-in amplifier that has decent audio isolation already built-in.
 Whereas I2S decodes streams using the CPU, the VS1053 can decode most popular codecs directly on the board,
 relieving the CPU to handle other functions...
 

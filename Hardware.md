@@ -125,11 +125,11 @@ LCD displays like the 1602, 2004, and Nokia 5110 may work but will not be as goo
 
 ### I2S / PCM Decoder
 
+***I2S/PCM decoders are cheap and easy-to-find but must be used with an amplifier.***
+
 I2S uses the CPU to decode data so it can be used with many types of streams.
 The data is then sent to a PCM decoder which turns the data into sound.
 It does put pressure on the CPU so it does have trouble running with large SPI displays.
-
-I2S decoders are cheap and plentiful and rarely have counterfeit issues.
 
 A good I2S Decoder is the PCM5102A but be sure to set the jumpers as in this picture, including the 4 on the bottom
 and SCK=GND jumper on the other side.
@@ -151,9 +151,10 @@ The ES8311 is a mono I2S decoder/amp included on some dev + display boards like 
 
 ### VS1053
 
-***The VS1053 is supported but not recommended.***
+***The VS1053 is well-supported and may make for an easy first-build (with no amp).***
 
 The idea of the VS1053 is fantastic.  It decodes streams directly and relieves pressure from the CPU.
+It has an acceptable built-in amplifier that has decent audio isolation already built-in.
 Whereas I2S decodes streams using the CPU, the VS1053 can decode most popular codecs directly on the board,
 relieving the CPU to handle other functions...
 
@@ -161,7 +162,6 @@ But the technology behind the VS1053 (2009) pre-dates the ESP8266 (2013) and the
 received the same attention from developers as the I2S decoding routines.
 
 There are many additional issues as well so it is probably best to reserve building using the VS1053 when using very slow displays like the ILI9488.
-On the positive side, it also has a weak built-in amplifer which can simplify builds.
 
 For the VU Meter to function, the patch MUST be enabled.
 Even with the patch, though, it struggles to decode FLAC streams and some other "unusual" stream types.
@@ -171,11 +171,11 @@ Some are sold as "VS1003/1053" which are almost certainly a VS1003.
 This can be verified by checking the LDO power-regulators. If the board has a 2.5V LDO instead of a 1.8V LDO, it's a VS1003.
 Genuine VS1053 is usually $10 minimum. Shop carefully and don't buy the cheapest one.
 
-If you end up with a VS1003, it will still be functional for MP3 stations but not much else.
+If you end up with a VS1003, it will still be functional for MP3 stations (but nothing else).
 It cannot use the patch and there will be no audio if you use `#define VS_PATCH_ENABLE true` in `myoptions.h`.
 
 There are some "fixes" that should be applied to the green board to ensure it functions as expected.
-Your board may function without modification but the mods will improv performance.
+Your board may function without modification but the mods are relatively easy and worth doing to improve audio quality.
 
 - First, easiest, and most essential, it is recommended to remove the resistor marked `R2`.
   This resistor actually pulls down `GPIO0` of the VS1053B chip into MIDI mode at boot.
@@ -220,10 +220,15 @@ may prove useful reading.
 
 #### Special Warning
 
+Do not connect an amplifier directly in-circuit to the VS1053.
+
 If you connect the VS1053's audio jack directly to an amplifier (where the audio (-) input is tied to the power supply ground), you will short the GBUF (+1.23V) directly to GND (0V). This will cause:
+
 - Immediate overheating of the VS1053B output stage
 - Severe distortion, screeching, or the chip shutting down due to protection
 - Permanent damage to the VS1053B
+
+So, either do not connect an amplifier directly to the VS1053 or be sure to add isolation using EI14 600:600Ω transformers.
 
 ---
 

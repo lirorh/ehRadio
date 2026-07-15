@@ -182,7 +182,7 @@ Your board may function without modification but the mods will improv performanc
   Usually the internal pull-up resistor succeeds in pulling it up in time for the patch to be applied.
   Removing it leaves it floating so the internal pull-up always succeeds.
 
-  ![image](images/hardware/vs1053.jpg)
+    ![image](images/hardware/vs1053.jpg)
 
 - Second, a bit more difficult but can improve actual audio is to place 33Ω damping resistors placed ***right next to*** the ESP32 pins
   used for `SCK`, `MOSI`, `XCS`, and `XDCS` before wiring to the VS1053 board.

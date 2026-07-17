@@ -53,7 +53,7 @@ void setup() {
   display.init();
   player.init();
   battery.bootStatus();
-  if (config.getMode()==PM_SDCARD && (network.offlineMode || config.store.offlineSD)) {
+  if ((network.offlineMode || config.store.SDoffline)) {
     startup.sdOfflineMode();
   } else {
     startup.checkSafeMode();
@@ -102,6 +102,7 @@ void setup() {
   }
   if (network.status != SDOFFLINE) startup.startupServices();  // needs WiFi — skip in offline SD mode
   netserver.setBootReady(true);
+  config.saveValue(&config.store.SDoffline, false);
 }
 
 void loop() {

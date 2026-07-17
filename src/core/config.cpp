@@ -150,7 +150,7 @@ void Config::changeMode(int newmode) {
     if (network.status==SOFT_AP || display.mode()==LOST) {
       FUNCTIONLOG("REBOOT", "Marking NVS Pref keys for intentional reboot to SD Offline mode. Rebooting.");
       saveValue(&store.lastBootGood, true);
-      saveValue(&store.offlineSD, true);
+      saveValue(&store.SDoffline, true);
       saveValue(&store.play_mode, static_cast<uint8_t>(PM_SDCARD));
       display.putRequest(NEWMODE, CLEAR);
       delay(100);
@@ -877,7 +877,7 @@ const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(mqttpass, "mqttpass"),
   CONFIG_KEY_ENTRY(mqtttopic, "mqtttopic"),
   CONFIG_KEY_ENTRY(lastBootGood, "lastbootgood"),
-  CONFIG_KEY_ENTRY(offlineSD, "offlinesd"),
+  CONFIG_KEY_ENTRY(SDoffline, "sdoffline"),
   {0, nullptr, 0} // Yup, 3 fields - don't delete the last line!
 };
 

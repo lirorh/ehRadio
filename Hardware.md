@@ -406,11 +406,13 @@ You may use any I2S decoder and amplifier you like for this build.
 | 5V USB power supply ≥2A            |   1   | Power supply                                                                   |       |
 
 ***Note about Inrush Limiter:*** The output of the F0505S-3WR2 is 600mA but the 0.5W rating of a single axial inductor may actually only be 500mA.  Problems will manifest as such:
+
   - After 10 min of streaming + display on, touch the inductor. Warm = fine. Too hot to hold = overloaded.
   - Startup failure: F0505S-3WR2 won't start or cycles on/off so the inductor is saturated, cap looks like a short.
   - Brownouts: ESP32 resets under load - inductor's DCR climbed from overheating, voltage sagged too low.
 
 A few solutions to these problems may be possible:
+
   - 1 10μH 1A toroidal inductor (best, but more expensive)
   - 2x 20μH axial inductors in parallel = 10μH / 1A
   - 2x 10μH axial inductors in parallel = 5μH / 1A

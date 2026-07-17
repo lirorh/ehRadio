@@ -32,7 +32,6 @@ void Startup::sdOfflineMode() {
   network.status = SDOFFLINE;
   WiFi.mode(WIFI_OFF);
   network.ctimer.attach(1, ticks);  // 1ms heartbeat for player audio callbacks (bitrate, etc.)
-  if (config.store.offlineSD) config.saveValue(&config.store.offlineSD, false); // set the flag to do normal boot
 }
 
 void Startup::markBootStable() {
@@ -229,7 +228,8 @@ void Startup::getRequiredFiles() {
     delete updater;
     utility.cleanupSpiffs();
     FUNCTIONLOG("REBOOT", "Required Files done. Reboot.");
-    delay(200);
+    config.saveValue(&config.store.lastBootGood, true);
+    delay(250);
     ESP.restart();
   #endif
 }

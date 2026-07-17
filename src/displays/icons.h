@@ -13,7 +13,7 @@
 
 
 // \001 (dec 1) — RSSI bar 00__ (used in display.cpp RSSI rendering)
-static const uint8_t ICON_RSSI_00[] PROGMEM = {
+static const uint8_t RSSI_00[] PROGMEM = {
     0b000000,  // ......
     0b000000,  // ......
     0b000000,  // ......
@@ -25,7 +25,7 @@ static const uint8_t ICON_RSSI_00[] PROGMEM = {
 };
 
 // \002 (dec 2) — RSSI bar __00 (used in display.cpp RSSI rendering)
-static const uint8_t ICON_RSSI__00[] PROGMEM = {
+static const uint8_t RSSI__00[] PROGMEM = {
     0b000000,  // ......
     0b000000,  // ......
     0b000000,  // ......
@@ -37,7 +37,7 @@ static const uint8_t ICON_RSSI__00[] PROGMEM = {
 };
 
 // \003 (dec 3) — RSSI bar 10__ (used in display.cpp RSSI rendering)
-static const uint8_t ICON_RSSI_10[] PROGMEM = {
+static const uint8_t RSSI_10[] PROGMEM = {
     0b000000,  // ......
     0b000000,  // ......
     0b000000,  // ......
@@ -49,7 +49,7 @@ static const uint8_t ICON_RSSI_10[] PROGMEM = {
 };
 
 // \004 (dec 4) — RSSI bar 11__ (used in display.cpp RSSI rendering)
-static const uint8_t ICON_RSSI_11[] PROGMEM = {
+static const uint8_t RSSI_11[] PROGMEM = {
     0b000000,  // ......
     0b000000,  // ......
     0b000000,  // ......
@@ -61,7 +61,7 @@ static const uint8_t ICON_RSSI_11[] PROGMEM = {
 };
 
 // \005 (dec 5) — RSSI bar __10 (used in display.cpp RSSI rendering)
-static const uint8_t ICON_RSSI__10[] PROGMEM = {
+static const uint8_t RSSI__10[] PROGMEM = {
     0b000000,  // ......
     0b000000,  // ......
     0b000000,  // ......
@@ -73,7 +73,7 @@ static const uint8_t ICON_RSSI__10[] PROGMEM = {
 };
 
 // \006 (dec 6) — RSSI bar __11 (used in display.cpp RSSI rendering)
-static const uint8_t ICON_RSSI__11[] PROGMEM = {
+static const uint8_t RSSI__11[] PROGMEM = {
     0b000000,  // ......
     0b000000,  // ......
     0b000110,  // ...@@.
@@ -85,7 +85,7 @@ static const uint8_t ICON_RSSI__11[] PROGMEM = {
 };
 
 // \007 (dec 7) — Weather divider / bullet (used in network.cpp weather strings)
-static const uint8_t ICON_WEATHER_DIV[] PROGMEM = {
+static const uint8_t WEATHER_DIV[] PROGMEM = {
     0b000000,  // ......
     0b000000,  // ......
     0b011100,  // .@@@..
@@ -97,7 +97,7 @@ static const uint8_t ICON_WEATHER_DIV[] PROGMEM = {
 };
 
 // \010 (dec 8) — IP address icon (used in conf files: iptxtFmt)
-static const uint8_t ICON_IP[] PROGMEM = {
+static const uint8_t IP[] PROGMEM = {
     0b110000,  // @@....
     0b111111,  // @@@@@@
     0b110000,  // @@....
@@ -109,7 +109,7 @@ static const uint8_t ICON_IP[] PROGMEM = {
 };
 
 // \013 (dec 11) — Battery LOW (0-25%) (used in conf files: batteryRangeFmt[0])
-static const uint8_t ICON_BATTERY_LOW[] PROGMEM = {
+static const uint8_t BATTERY_LOW[] PROGMEM = {
     0b011100,  // .@@@..
     0b110110,  // @@.@@.
     0b100010,  // @...@.
@@ -121,7 +121,7 @@ static const uint8_t ICON_BATTERY_LOW[] PROGMEM = {
 };
 
 // \014 (dec 12) — Battery MID (25-75%) (used in conf files: batteryRangeFmt[1])
-static const uint8_t ICON_BATTERY_MID[] PROGMEM = {
+static const uint8_t BATTERY_MID[] PROGMEM = {
     0b011100,  // .@@@..
     0b110110,  // @@.@@.
     0b100010,  // @...@.
@@ -133,7 +133,7 @@ static const uint8_t ICON_BATTERY_MID[] PROGMEM = {
 };
 
 // \015 (dec 13) — Battery HIGH (75-100%) (used in conf files: batteryRangeFmt[2])
-static const uint8_t ICON_BATTERY_HIGH[] PROGMEM = {
+static const uint8_t BATTERY_HIGH[] PROGMEM = {
     0b011100,  // .@@@..
     0b111110,  // @@@@@.
     0b111110,  // @@@@@.
@@ -144,8 +144,8 @@ static const uint8_t ICON_BATTERY_HIGH[] PROGMEM = {
     0b000000,  // ......
 };
 
-// \016 (dec 14) — SD Card A (used in display.cpp for SD Offline Mode)
-static const uint8_t ICON_SD_A[] PROGMEM = {
+// \016 (dec 14) — SD Card A (used in display.cpp for SD Offline Mode and to show boot mode)
+static const uint8_t SD_A[] PROGMEM = {
     0b011111,  // .@@@@@
     0b011010,  // @@@.@.
     0b101010,  // @.@.@.
@@ -156,8 +156,8 @@ static const uint8_t ICON_SD_A[] PROGMEM = {
     0b000000,  // ......
 };
 
-// \017 (dec 15) — SD Card B (used in display.cpp for SD Offline Mode)
-static const uint8_t ICON_SD_B[] PROGMEM = {
+// \017 (dec 15) — SD Card B (used in display.cpp for SD Offline Mode and to show boot mode)
+static const uint8_t SD_B[] PROGMEM = {
     0b100000,  // @.....
     0b100000,  // @.....
     0b100000,  // @.....
@@ -168,8 +168,8 @@ static const uint8_t ICON_SD_B[] PROGMEM = {
     0b000000,  // ......
 };
 
-// \020 (dec 16) — Play / Next icon (used in display.cpp as progress bar fill)
-static const uint8_t ICON_PLAY[] PROGMEM = {
+// \020 (dec 16) — Play / Next icon (used in display.cpp as progress bar fill and to show boot mode: smart start)
+static const uint8_t PLAY[] PROGMEM = {
     0b010000,  // .@....
     0b011000,  // .@@...
     0b011100,  // .@@@..
@@ -181,7 +181,7 @@ static const uint8_t ICON_PLAY[] PROGMEM = {
 };
 
 // \021 (dec 17) — Previous icon (unused)
-static const uint8_t ICON_PREV[] PROGMEM = {
+static const uint8_t PREV[] PROGMEM = {
     0b000100,  // ...@..
     0b001100,  // ..@@..
     0b011100,  // .@@@..
@@ -193,10 +193,10 @@ static const uint8_t ICON_PREV[] PROGMEM = {
 };
 
 // \023 (dec 19) — Speaker icon (used in conf files: voltxtFmt)
-static const uint8_t ICON_SPEAKER[] PROGMEM = {
+static const uint8_t SPEAKER[] PROGMEM = {
     0b000010,  // ....@.
     0b000110,  // ...@@.
-    0b111111,  // @@@@@.
+    0b111110,  // @@@@@.
     0b111110,  // @@@@@.
     0b111110,  // @@@@@.
     0b000110,  // ...@@.
@@ -205,7 +205,7 @@ static const uint8_t ICON_SPEAKER[] PROGMEM = {
 };
 
 // \024 (dec 20) — Volume 25% (unused in current code)
-static const uint8_t ICON_VOL_25[] PROGMEM = {
+static const uint8_t VOL_25[] PROGMEM = {
     0b000000,  // ......
     0b000000,  // ......
     0b000000,  // ......
@@ -216,8 +216,8 @@ static const uint8_t ICON_VOL_25[] PROGMEM = {
     0b000000,  // ......
 };
 
-// \025 (dec 21) — Volume 50% (used in conf files: voltxtFmt)
-static const uint8_t ICON_VOL_50[] PROGMEM = {
+// \025 (dec 21) — Volume 50% (used in conf files: voltxtFmt and in display.cpp to show normal boot with no smart start)
+static const uint8_t VOL_50[] PROGMEM = {
     0b010000,  // .@....
     0b001000,  // ..@...
     0b101000,  // @.@...
@@ -229,7 +229,7 @@ static const uint8_t ICON_VOL_50[] PROGMEM = {
 };
 
 // \026 (dec 22) — Volume 100% (unused in current code)
-static const uint8_t ICON_VOL_100[] PROGMEM = {
+static const uint8_t VOL_100[] PROGMEM = {
     0b000000,  // ......
     0b010100,  // .@.@..
     0b001010,  // ..@.@.
@@ -241,7 +241,7 @@ static const uint8_t ICON_VOL_100[] PROGMEM = {
 };
 
 // \030 (dec 24) — Charging icon (referenced in display.cpp, indirectly)
-static const uint8_t ICON_CHARGING[] PROGMEM = {
+static const uint8_t CHARGING[] PROGMEM = {
     0b001000,  // ..@...
     0b011100,  // .@@@..
     0b101010,  // @.@.@.
@@ -253,7 +253,7 @@ static const uint8_t ICON_CHARGING[] PROGMEM = {
 };
 
 // \031 (dec 25) — Discharging icon (referenced in display.cpp, indirectly)
-static const uint8_t ICON_DISCHARGING[] PROGMEM = {
+static const uint8_t DISCHARGING[] PROGMEM = {
     0b001000,  // ..@...
     0b001000,  // ..@...
     0b001000,  // ..@...
@@ -288,8 +288,8 @@ static const uint8_t SDSHUFFLE_B[] PROGMEM = {
 };
 
 
-// \034 (dec 28) — Pause icon (unused)
-static const uint8_t ICON_PAUSE[] PROGMEM = {
+// \034 (dec 28) — Pause icon (used in display.cpp to show boot mode: safe mode)
+static const uint8_t PAUSE[] PROGMEM = {
     0b110110,  // @@.@@.
     0b110110,  // @@.@@.
     0b110110,  // @@.@@.
@@ -301,7 +301,7 @@ static const uint8_t ICON_PAUSE[] PROGMEM = {
 };
 
 // \035 (dec 29) — List icon (unused)
-static const uint8_t ICON_LIST[] PROGMEM = {
+static const uint8_t LIST[] PROGMEM = {
     0b101110,  // @.@@@.
     0b000000,  // ......
     0b101110,  // @.@@@.
@@ -328,36 +328,36 @@ static const uint8_t BLANK[] PROGMEM = {
 // Used by TextWidget::_draw() to decode icon markers in format strings.
 // ==========================================================================
 static const uint8_t* const ICON_TABLE[] PROGMEM = {
-    NULL,                //  0: (unused, should probably stay unused)
-    ICON_RSSI_00,        //  1: \001
-    ICON_RSSI__00,       //  2: \002
-    ICON_RSSI_10,        //  3: \003
-    ICON_RSSI_11,        //  4: \004
-    ICON_RSSI__10,       //  5: \005
-    ICON_RSSI__11,       //  6: \006
-    ICON_WEATHER_DIV,    //  7: \007
-    ICON_IP,             //  8: \010
-    NULL,                //  9: \011 (DO NOT USE: TAB control char conflicts with TFT print())
-    NULL,                // 10: \012 (DO NOT USE: LF control char conflicts with TFT print())
-    ICON_BATTERY_LOW,    // 11: \013
-    ICON_BATTERY_MID,    // 12: \014
-    ICON_BATTERY_HIGH,   // 13: \015
-    ICON_SD_A,           // 14: \016
-    ICON_SD_B,           // 15: \017
-    ICON_PLAY,           // 16: \020
-    ICON_PREV,           // 17: \021
-    NULL,                // 18: \022
-    ICON_SPEAKER,        // 19: \023
-    ICON_VOL_25,         // 20: \024
-    ICON_VOL_50,         // 21: \025
-    ICON_VOL_100,        // 22: \026
-    NULL,                // 23: \027
-    ICON_CHARGING,       // 24: \030
-    ICON_DISCHARGING,    // 25: \031
-    SDSHUFFLE_A,         // 26: \032
-    SDSHUFFLE_B,         // 27: \033
-    ICON_PAUSE,          // 28: \034
-    ICON_LIST,           // 29: \035
-    NULL,                // 30: \036 (DO NOT USE: 0x1E is the spacer character in TextWidget: it gets consumed as a 2px gap before reaching the icon renderer)
-    NULL                 // 31: \037
+    NULL,            //  0: (unused, should probably stay unused)
+    RSSI_00,         //  1: \001
+    RSSI__00,        //  2: \002
+    RSSI_10,         //  3: \003
+    RSSI_11,         //  4: \004
+    RSSI__10,        //  5: \005
+    RSSI__11,        //  6: \006
+    WEATHER_DIV,     //  7: \007
+    IP,              //  8: \010
+    NULL,            //  9: \011 (DO NOT USE: TAB control char conflicts with TFT print())
+    NULL,            // 10: \012 (DO NOT USE: LF control char conflicts with TFT print())
+    BATTERY_LOW,     // 11: \013
+    BATTERY_MID,     // 12: \014
+    BATTERY_HIGH,    // 13: \015
+    SD_A,            // 14: \016
+    SD_B,            // 15: \017
+    PLAY,            // 16: \020
+    PREV,            // 17: \021
+    NULL,            // 18: \022
+    SPEAKER,         // 19: \023
+    VOL_25,          // 20: \024
+    VOL_50,          // 21: \025
+    VOL_100,         // 22: \026
+    NULL,            // 23: \027
+    CHARGING,        // 24: \030
+    DISCHARGING,     // 25: \031
+    SDSHUFFLE_A,     // 26: \032
+    SDSHUFFLE_B,     // 27: \033
+    PAUSE,           // 28: \034
+    LIST,            // 29: \035
+    NULL,            // 30: \036 (DO NOT USE: 0x1E is the spacer character in TextWidget: it gets consumed as a 2px gap before reaching the icon renderer)
+    NULL             // 31: \037
 };

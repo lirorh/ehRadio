@@ -121,6 +121,15 @@ void Display::_bootScreen() {
   _boot = new Page();
   _boot->addWidget(new ProgressWidget(bootWdtConf, bootPrgConf, BOOT_PRG_COLOR, 0));
   _bootstring = (TextWidget*) &_boot->addWidget(new TextWidget(bootstrConf, 50, true, BOOT_TXT_COLOR, 0));
+  const char* icon;
+  if ((network.offlineMode || config.store.SDoffline))
+                                         icon = "\016\017";  // SD_A + SD_B
+  else if (!config.store.lastBootGood)   icon = "\034";      // PAUSE (safe mode)
+  else if (config.store.smartstart)      icon = "\020";      // PLAY (smart start)
+  else                                   icon = "\025";      // VOL_50 (default)
+  char buf[64];
+  snprintf(buf, sizeof(buf), "\023 %s %s", RADIOVERSION, icon);
+  _bootstring->setText(buf);
   _pager->addPage(_boot);
   _pager->setPage(_boot, true);
   dsp.drawLogo(BOOTLOGOTOP);

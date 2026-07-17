@@ -130,13 +130,24 @@ When in doubt or having issues, check the serial output.  Serial output logs sho
 Add `#define ALL_DEBUG_LOGS` to your `myoptions.h` to view extended diagnostic information.
 Connecting via telnet will also show serial logs.
 
-### Safe Mode
+---
+
+## Boot Modes & Icons 
+
+Next to the version on the boot screen (which is very brief when `Scan for Best Wi-Fi on Boot` is disabled),
+an icon will appear to reflect certain boot modes.
+
+### Smart Start <img src="images/Booticon_Play.png">
+
+Selectable in the `Settings` of the WebUI, `Smart Start` will automatically play the station stream or SD file which was playing when last powered-off.
+
+### Safe Mode <img src="images/Booticon_Pause.png">
 
 After booting, the device waits 30 seconds after network connection to mark (in NVS) the boot as stable.
 If powering off before this time has elapsed, the next boot will enter "safe mode" - which disables smart start, auto update, and SD Mode.
 The settings for smart start and auto update will appear as off but they will resume their previously-saved setting on next boot (if the safe mode boot was marked as stable).
 
-### SD Offline Mode
+### SD Offline Mode <img src="images/Booticon_SD.png">
 
 To enter a special SD-card only mode (with network functionality disabled), hold down an encoder button or the mode button when powering on (until the display shows something).
 You can also enter this mode by pressing the mode button or double-clicking a rotary encoder button in AP/Improv Mode or when you see `* LOST *`, which will trigger a reboot.
@@ -289,7 +300,8 @@ For that and other major needed changes to the codebase, there is a `code-issues
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
-| 2026.07.15 | SD Offline Mode added, `Hardware.md` added, fixes to Deep Sleep, smart start, SD index, SD tags, VS1053 volume curve, PSRAM |
+| 2026.07.17 | Various fixes to safe mode, boot screen shows version and mode, `Hardware.md` edit |
+| 2026.07.12 | SD Offline Mode added, `Hardware.md` added, fixes to Deep Sleep, smart start, SD index, SD tags, VS1053 volume curve, PSRAM |
 | 2026.07.05 | More fixes to VS1053, Wake from Deep Sleep now works on all RTC-capable pins |
 | 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |

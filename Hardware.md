@@ -397,13 +397,23 @@ You may use any I2S decoder and amplifier you like for this build.
 | ---------------------------------- | :---: | ------------------------------------------------------------------------------ | ----- |
 | F0505S-3WR2                        |   1   | Isolated 5V→5V DC-DC (3W, ~20pF isolation); traps ESP32 noise on digital side  | Alt: B0505S-3WR2 (budget, ~50-100pF isolation so try to avoid); same 3W/600mA |
 | 100μF 10V+ electrolytic            |   1   | Input smoothing for F0505S-3WR2; cleans USB charger noise                      | Standard electrolytic is fine |
-| 10μH axial inductor (0.5W)         |   1   | Inrush limiter on F0505S-3WR2 output; protects converter from 1000μF load      | Search "10μH 0.5W color ring inductor" |
-| 100μH toroidal inductor (≥1A)      |   1   | LC filter inductor for audio rail; replaces PLY17                              | Search "100μH toroidal inductor 1A" |
+| 10μH axial inductor (0.5W)         |   1   | Inrush limiter on F0505S-3WR2 output; protects converter from 1000μF load      | ***See Below Note***|
+| 100μH toroidal inductor (≥2A)      |   1   | LC filter inductor for audio rail; replaces PLY17                              | PAM8406 draws ~1.3A peak; search "100μH toroidal inductor 3A" |
 | 2200μF 10V+ electrolytic (Low ESR) |   1   | Audio rail filter capacitor                                                    | Green "high frequency low ESR" type |
 | 1000μF 10V+ electrolytic           |   1   | Digital rail reservoir; handles WiFi/SD current spikes                         | 470μF at a minimum (but bigger is OK too)  |
 | 0.1μF ceramic (MLCC)               |   3   | High-frequency decoupling: audio rail, F0505S input, F0505S output             | X7R dielectric, marked "104" |
 | EI14 600:600Ω audio transformer    |   1   | Galvanic isolation on audio signal lines; breaks ground loops                  | Any 600:600Ω or 1:1 audio transformer |
 | 5V USB power supply ≥2A            |   1   | Power supply                                                                   |       |
+
+***Note about Inrush Limiter:*** The output of the F0505S-3WR2 is 600mA but the 0.5W rating of a single axial inductor may actually only be 500mA.  Problems will manifest as such:
+  - After 10 min of streaming + display on, touch the inductor. Warm = fine. Too hot to hold = overloaded.
+  - Startup failure: F0505S-3WR2 won't start or cycles on/off so the inductor is saturated, cap looks like a short.
+  - Brownouts: ESP32 resets under load - inductor's DCR climbed from overheating, voltage sagged too low.
+
+A few solutions to these problems may be possible:
+  - 1 10μH 1A toroidal inductor (best, but more expensive)
+  - 2x 20μH axial inductors in parallel = 10μH / 1A
+  - 2x 10μH axial inductors in parallel = 5μH / 1A
 
 **What's cut vs the full Kle7rx build:** No PLY17 chokes, no XRR6H ferrite beads, no LD06AJSA LED driver,
 no Mean Well PSU. PAM8406 stereo module replaces two LTK5128 mono amps.

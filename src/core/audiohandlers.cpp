@@ -256,7 +256,19 @@ void AudioHandlers::handleId3Album(const char* info) {
   if (player.lockOutput) return;
   if (isPrintable(info)) {
     strlcpy(_albumBuf, info, sizeof(_albumBuf));
-    _tryCombineTitleAlbum();
+    if (strlen(config.station.title) == 0) {
+      config.setTitle(info);
+    } else {
+      char tmp[STATION_FIELD_LENGTH];
+      size_t titleLen = strlen(config.station.title);
+      size_t infoLen = strlen(info);
+      if (titleLen + 3 + infoLen + 1 <= STATION_FIELD_LENGTH) {
+        snprintf(tmp, STATION_FIELD_LENGTH, "%s - %s", config.station.title, info);
+        config.setTitle(tmp);
+      } else {
+        config.setTitle(info);
+      }
+    }
   }
 }
 

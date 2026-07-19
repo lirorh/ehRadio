@@ -350,14 +350,23 @@ void Controls::onBtnLongPressStart(int id) {
         break;
       }
     case EVT_BTN_PLAY:
-    case EVT_ENC_SW:
-    case EVT_ENC2_SW: {
+    case EVT_ENC_SW: {
         #if defined(DUMMYDISPLAY)
           break;
         #endif
         display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
         break;
-      }
+    }
+    case EVT_ENC2_SW: {
+        #if defined(DUMMYDISPLAY)
+          break;
+        #endif
+        if (network.status == SDOFFLINE) break; 
+        #ifndef DEEP_SLEEP_DISABLE
+          display.putRequest(NEWMODE, SLEEPING);
+        #endif
+        break;
+    }
     case EVT_BTN_MODE: {
         if (network.status == SDOFFLINE) break;  // no sleep in SD Offline mode
         #ifndef DEEP_SLEEP_DISABLE
@@ -379,6 +388,19 @@ void Controls::onBtnLongPressStop(int id) {
         break;
       }
     case EVT_BTN_MODE: {
+        if (network.status == SDOFFLINE) break;  // no sleep in SD Offline mode
+        #ifndef DEEP_SLEEP_DISABLE
+          utility.doSleepW();
+        #endif
+        break;
+      }
+    case EVT_ENC_SW: {
+        break;  // do nothing on release
+      }
+    case EVT_ENC2_SW: {
+        #if defined(DUMMYDISPLAY)
+          break;
+        #endif
         if (network.status == SDOFFLINE) break;  // no sleep in SD Offline mode
         #ifndef DEEP_SLEEP_DISABLE
           utility.doSleepW();
@@ -581,10 +603,23 @@ void Controls::onBtnDoubleClick(int id) {
         break;
       }
     case EVT_BTN_PLAY:
-    case EVT_ENC_SW:
-    case EVT_ENC2_SW: {
-        //display.putRequest(NEWMODE, display.mode() == PLAYER ? VOL : PLAYER);
+    case EVT_ENC_SW: {
         onBtnClick(EVT_BTN_MODE);
+        break;
+      }
+    case EVT_BTN_MODE:
+    case EVT_ENC2_SW: {
+        #if defined(DUMMYDISPLAY)
+          break;
+        #endif
+        static uint8_t savedVolume = 30;  // preserve the last active volume level before muting
+        // Dynamic state check based on real-time core volume instead of a blind boolean flag
+        if (player.getVolume() == 0) {
+          player.setVolume(savedVolume);  // Restore audio if currently at absolute zero
+        } else {
+          savedVolume = player.getVolume();  // Capture current volume level before muting
+          player.setVolume(0);  // Trigger software/hardware mute via standard core volume method
+        }
         break;
       }
     case EVT_BTN_UP: {

@@ -21,8 +21,8 @@ Rotary Encoder 2
 | Rotate clockwise           | switch to playlist mode & next station/track     | volume up |
 | Rotate counter-clockwise   | switch to playlist mode & previous station/track | volume down |
 | Click (Same as `BTN_PLAY`) | start/stop playing         | - |
-| Double-click               | toggle stations/SD mode    | - |
-| Long-press                 | enter/exit playlist mode   | - |
+| Double-click               | mute                       | - |
+| Long-press                 | enter deep sleep           | - |
 
 ### Buttons
 
@@ -37,10 +37,14 @@ Button Actions
 | BTN_UP   | volume up               | next station/track      | quick volume up |
 | BTN_NEXT | next station/track      | -                       | quick next * nothing if no display |
 | BTN_PREV | previous station/track  | -                       | quick next * nothing if no display |
-| BTN_MODE | toggle stations/SD mode | -                       | enter sleep (wake up may be another button)
+| BTN_MODE | toggle stations/SD mode | mute                    | enter deep sleep |
 
 Turning on `One-click Station Switching` in the WebUI makes `BTN_NEXT` and `BTN_PREV` act instantly instead of switching to Playlist Mode first.
 It also essentially disables Long-press of buttons.
+
+#### Exit Deep Sleep
+
+Exiting deep sleep requires a button be connected to RTC-capable pins.  Read more [here](Hardware.md#wake-from-deep-sleep).
 
 ### IR Receiver
 
@@ -62,6 +66,7 @@ Repeat for other buttons.
 | &#9650; | volume up              | quick volume up |
 | &#9660; | volume down            | quick volume down
 | #       | toggle between player/playlist mode | - |
+| *       | toggle between stations/SD mode | - |
 | 0-9     | Start entering the station number. To finish input and start playback, press the play button. To cancel, press hash. | - |
 
 ### Touchscreen
@@ -161,4 +166,4 @@ The server responds 200 with empty body on success, 404 on unrecognized commands
 Some commands (like reset or clearspiffs) trigger a redirect to `/`.
 
 For a (hopefully) complete list of commands, check out [Commands](Commands.md).
-In case this list is incomplete, `commandhandler.cpp` will show everything.
+In case this list is incomplete, `commandhandler.cpp` lists all commands.

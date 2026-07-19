@@ -751,7 +751,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 
 /* --- Deep Sleep --- */
 // Wake is only possible on RTC-capable pins. ESP32 RTC GPIOs: 0, 2, 4, 12-15, 25-27, 32-39 / ESP32-S3/C3 RTC GPIOs: 0-21.
-// Inputs assigned to these pins will automatically be used for Wake. This includes TS_INT, ENC_CLK, ENC_DT, ENC_SW, and all BTN_.
+// Inputs assigned to these pins will automatically be used for Wake. This includes TS_INT, and all ENC_*, ENC2_* and all BTN_* inputs.
 // Use this to disable Deep Sleep entirely:
 // #define DEEP_SLEEP_DISABLE
 

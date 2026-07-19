@@ -335,7 +335,7 @@ A full history of ёRadio from v0.4.177 to v0.9.533 can be seen in the [old Read
 
 Thanks to:
 
-  - [kle7rx](https://github.com/kle7rx) - `ru_RU` translation, debugging, VS1053, and amplifier schematics
-  - [Kasperaitis](https://github.com/kasperaitis) - `lt_LT` translation, initiating locales (WebUI and display language) and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
+  - [kle7rx](https://github.com/kle7rx) - `ru_RU` translation, debugging, mute feature, VS1053/I2S fixing, and amplifier schematics
+  - [Kasperaitis](https://github.com/kasperaitis) - `lt_LT` translation, initiating locales and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
   - [e2002](https://github.com/e2002) - for [ёRadio](https://github.com/e2002/yoradio/) without which ehRadio would not be possible
 

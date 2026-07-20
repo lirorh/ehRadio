@@ -6,13 +6,13 @@
 
 A rotary encoder is the recommended first choice of input.  One encoder is enough to control the device.
 
-| Encoder Action             | Player Mode                  | Playlist Mode |
-| -------------------------- | ---------------------------- | ------------- |
-| Rotate clockwise           | volume up                    | next station/track |
-| Rotate counter-clockwise   | volume down                  | previous station/track |
-| Click (Same as `BTN_PLAY`) | start/stop playing           | play selected station/track |
-| Double-click               | toggle stations/SD mode      | - |
-| Long-press                 | enter/exit playlist mode     | exit playlist mode to player mode |
+| Encoder Action                       | Player Mode                  | Playlist Mode |
+| ------------------------------------ | ---------------------------- | ------------- |
+| Rotate clockwise                     | volume up                    | next station/track |
+| Rotate counter-clockwise             | volume down                  | previous station/track |
+| Click (Same as `BTN_PLAY`)           | start/stop playing           | play selected station/track |
+| Double-click                         | toggle stations/SD mode      | - |
+| Long-press * *nothing if no display* | enter/exit playlist mode     | exit playlist mode to player mode |
 
 Rotary Encoder 2
 
@@ -20,27 +20,37 @@ Rotary Encoder 2
 | -------------------------- | ------------------------------------------------ | -------------- |
 | Rotate clockwise           | switch to playlist mode & next station/track     | volume up |
 | Rotate counter-clockwise   | switch to playlist mode & previous station/track | volume down |
-| Click (Same as `BTN_PLAY`) | start/stop playing         | - |
-| Double-click               | toggle stations/SD mode    | - |
-| Long-press                 | enter/exit playlist mode   | - |
+| Click (Same as `BTN_PLAY`) | start/stop playing             | - |
+| Double-click               | mute * *nothing if no display* | - |
+| Long-press                 | enter deep sleep               | - |
 
 ### Buttons
 
-Up to 5 buttons can be connected to the device. Three buttons are enough to control all functions.
+Up to 6 buttons can be connected to the device. Three buttons are enough to control most functions
+(`BTN_PLAY` and `BTN_DOWN` with `BTN_UP` or `BTN_NEXT` with `BTN_PREV`)
+and four will control all (add `BTN_MODE` for mute and deep sleep).
 
 Button Actions
 
-| Button   | Click                   | Double-click            | Long-press |
-| -------- | ----------------------- | ----------------------- | ---------- |
-| BTN_PLAY | start/stop playing      | toggle stations/SD mode | toggle between player and playlist |
-| BTN_DOWN | volume down             | previous station/track  | quick volume down |
-| BTN_UP   | volume up               | next station/track      | quick volume up |
-| BTN_NEXT | next station/track      | -                       | quick next * nothing if no display |
-| BTN_PREV | previous station/track  | -                       | quick next * nothing if no display |
-| BTN_MODE | toggle stations/SD mode | -                       | enter sleep (wake up may be another button)
+| Button   | Click                                                    | Double-click                   | Long-press |
+| -------- | -------------------------------------------------------- | ------------------------------ | ---------- |
+| BTN_PLAY | start/stop playing                                       | toggle stations/SD mode        | toggle between player and playlist |
+| BTN_DOWN | volume down                                              | previous station/track         | quick volume down |
+| BTN_UP   | volume up                                                | quick next station/track       | quick volume up |
+| BTN_NEXT | switch to playlist (if display) / next station/track     | instant next station/track     | quick next |
+| BTN_PREV | switch to playlist (if display) / previous station/track | instant next station/track     | quick next |
+| BTN_MODE | toggle stations/SD mode                                  | mute * *nothing if no display* | enter deep sleep |
 
-Turning on `One-click Station Switching` in the WebUI makes `BTN_NEXT` and `BTN_PREV` act instantly instead of switching to Playlist Mode first.
-It also essentially disables Long-press of buttons.
+Turning on `One-click Station Switching` in the WebUI or having no display modifies the next and previous buttons. Double-click has no effect.
+
+| Button   | Click                          | Long-press |
+| -------- | ------------------------------ | ---------- |
+| BTN_NEXT | instant next station/track     | quick volume up * *nothing if no display* |
+| BTN_PREV | instant previous station/track | quick volume down * *nothing if no display* |
+
+#### Exit Deep Sleep
+
+Exiting deep sleep requires a button be connected to RTC-capable pins.  Read more [here](Hardware.md#wake-from-deep-sleep).
 
 ### IR Receiver
 
@@ -62,6 +72,7 @@ Repeat for other buttons.
 | &#9650; | volume up              | quick volume up |
 | &#9660; | volume down            | quick volume down
 | #       | toggle between player/playlist mode | - |
+| *       | toggle between stations/SD mode | - |
 | 0-9     | Start entering the station number. To finish input and start playback, press the play button. To cancel, press hash. | - |
 
 ### Touchscreen
@@ -161,4 +172,4 @@ The server responds 200 with empty body on success, 404 on unrecognized commands
 Some commands (like reset or clearspiffs) trigger a redirect to `/`.
 
 For a (hopefully) complete list of commands, check out [Commands](Commands.md).
-In case this list is incomplete, `commandhandler.cpp` will show everything.
+In case this list is incomplete, `commandhandler.cpp` lists all commands.

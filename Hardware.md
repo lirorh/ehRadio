@@ -34,12 +34,13 @@ Most modules have onboard regulators anyway.
 
 It is recommended to use a minimum of 470µF 10V capacitor somewhere in your circuit across the `5V` and `GND` (attach negative to `GND`).
 It helps to stablize the system during boot and smooth out the sudden power draw during operations like initializing the decoder, screen, wi-fi, etc.
-It doesn't really matter where the capacitor is placed, as long as the `5V` rail is common with the power-input of the ESP.
-The SD Card Reader and display's 5V pins may be used.  Putting it directly on the ESP pins is also an option.
-You may size up either number.  To be extra safe, use a 1000 µF 16V or 25V capacitor.
+The capacitor should be as near as possible to the ESP's `5V` and `G` pins, so it's easiest to just solder the capaciitor directly to the dev board.
+If that's a problem, it's not catastrophic to put elsewhere on the 5V rail. The SD Card Reader and display's 5V pins may be used.
+You may size up either number, but µF is the only number that matters.  To be extra safe, use a 1000 µF capacitor.
+There is no benefit to using a higher volt rating like 16V or 25V or 250V. So, use what's convenient.
 
 This capacitor can help mitigate power-supply problems but if you do encounter issues, you may find that using a better supply
-(preferably one that provides 2A or more) will solve all kinds of problems that can occur due to a weak power-supply.
+(preferably one that provides 2A or more) will solve many types of problems that can occur due to a weak power-supply.
 
 An additional note here about wires.  Although you may experience some success with thin wires,
 AWG24-22 is the "sweet spot" which you can generally use for all wires, provided the length does not exceed 30-50cm.
@@ -320,7 +321,7 @@ If you find that your amplifier is buzzing, there are a few things to blame for 
 One suspect is usually backlight control. Typically these use PWM (Pulse Width Management) to achieve dimming.
 That adds interference. The easy fix is to disable dimming and tie the BL pin to 3V3.
 
-### Full Schematics for Full Audio/Power Isolation by [Kle7rx](https://github.com/kle7rx)
+### Full Schematics for Full Audio/Power Isolation by [Kle7rx](https://github.com/kle7rx) (This design has not been real-world tested yet)
 
 Complete wiring diagrams with parts lists are available as PDFs:
 
@@ -380,7 +381,7 @@ It is also recommended to use metal film resistors but carbon film resistors are
 | VS1053B module  |   1   | SPI MP3/AAC/FLAC/OGG decoder + DAC    | VS1003 (MP3 only), WM8960 (I2S codec) |
 | 10 kΩ resistor  |   1   | Pull-up on XDCS line                  | Any 10kΩ 1/4W |
 
-### Audio Isolation on a Budget
+### Audio Isolation on a Budget (This design has not been real-world tested yet)
 
 A simplified approach that keeps the F0505S-3WR2 isolation core but uses commodity parts
 for the filtering. This costs much less than the full Kle7rx "no compromises" build,
@@ -431,11 +432,16 @@ The most basic physical control is a rotary encoder.  All functions can be accom
 
 Buttons may also be used. Touch is swipe and tap motions only.
 
-Regarding Deep Sleep: Wake is only possible on RTC-capable pins. On the ESP32, these are RTC GPIOs: `0`, `2`, `4`, `12-15`, `25-27`, `32-39`.
-ESP32-S3/C3 RTC GPIOs are: `0-21`. Inputs assigned to these pins will automatically be used for Wake
-(unless Sleep is explicitly disabled with `#define DEEP_SLEEP_DISABLE` in `myoptions.h`).
-
 Information on how the controls function detailed are [here](Controls.md).
+
+### Wake from Deep Sleep
+
+Wake from deep sleep is only possible on RTC-capable pins. On the ESP32, these are RTC GPIOs: `0`, `2`, `4`, `12-15`, `25-27`, `32-39`.
+ESP32-S3/C3 RTC GPIOs are: `0-21`.
+
+All inputs assigned to these pins will automatically be used for wake.
+If no inputs are available on these pins, deep sleep will be disabled.
+Deep sleep may be explicitly disabled with `#define DEEP_SLEEP_DISABLE` in `myoptions.h`.
 
 ### Rotary Encoders
 

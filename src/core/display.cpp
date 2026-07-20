@@ -902,6 +902,7 @@ void Display::wakeup() {
 #else // ============================== DUMMYDISPLAY Begins ==============================
 
 void Display::init() {
+  _activeLocale = l10n_findLocale(config.store.locale_display);
   _createDspTask();
 }
 void Display::_start() {

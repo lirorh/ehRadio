@@ -2,7 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.07.17"
+#define RADIOVERSION "2026.07.20"
 
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
@@ -70,13 +70,16 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 #define DSP_ST7920      19 // 128x64 (fixed in displayST7920.h)
 
 /* Define your display as #define DSP_MODEL DSP_ILI9488 */
+
 #ifndef DSP_MODEL
   #define DSP_MODEL DSP_DUMMY
 #endif
 #if DSP_MODEL==DSP_DUMMY
-  #define DUMMYDISPLAY
+  #define DUMMYDISPLAY // do not use directly in myoptions.h!
   #define DSP_WIDTH  0
   #define DSP_HEIGHT 0
+  #undef ONE_CLICK_SWITCH
+  #define ONE_CLICK_SWITCH true // need to force this on with no display
 #endif
 
 /* --- DISPLAY RESOLUTION --- */
@@ -751,7 +754,7 @@ https://trip5.github.io/ehRadio/myoptions/generator.html
 
 /* --- Deep Sleep --- */
 // Wake is only possible on RTC-capable pins. ESP32 RTC GPIOs: 0, 2, 4, 12-15, 25-27, 32-39 / ESP32-S3/C3 RTC GPIOs: 0-21.
-// Inputs assigned to these pins will automatically be used for Wake. This includes TS_INT, ENC_CLK, ENC_DT, ENC_SW, and all BTN_.
+// Inputs assigned to these pins will automatically be used for Wake. This includes TS_INT, and all ENC_*, ENC2_* and all BTN_* inputs.
 // Use this to disable Deep Sleep entirely:
 // #define DEEP_SLEEP_DISABLE
 

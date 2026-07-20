@@ -216,7 +216,7 @@
           <div class="flex-row group group_stnbuttons hidden">
             <div class="inputwrap center">
               <span class="inputtitle" data-i18n="lbl_oneclick">One-click Station Switching</span>
-              <div class="checkbox" id="skipup" data-command="oneclickswitching"><div class="knob"></div></div>
+              <div class="checkbox" id="oneclick" data-command="oneclickswitch"><div class="knob"></div></div>
             </div>
           </div>
           <div class="flex-row group group_encoder hidden">
@@ -256,7 +256,7 @@
               </select>
             </div>
           </div>
-          <div class="flex-row">
+          <div class="flex-row group group_display hidden">
             <div class="inputwrap">
               <span class="inputtitle" data-i18n="lbl_select_tz">Select Time Zone</span>
               <select type="text" id="tz_name" name="tz_name">
@@ -268,7 +268,7 @@
               <input type="text" id="tzposix" name="tzposix" maxlength="69" />
             </div>
           </div>
-          <div class="flex-row">
+          <div class="flex-row group group_display hidden">
             <div class="inputwrap">
               <span class="inputtitle" data-i18n="lbl_ntp1">NTP Server #1</span>
               <span class="inputtitle">[<a href="https://www.ntppool.org/en/zone/@" target="_blank">?</a>]</span>
@@ -279,7 +279,7 @@
               <input type="text" id="sntp2" name="sntp2" value="" maxlength="34" />
             </div>
           </div>
-          <div class="flex-row">
+          <div class="flex-row group group_display hidden">
             <div class="inputwrap pad">
               <span class="inputtitle" data-i18n="lbl_time_interval">Time Sync Interval (hours)</span>
               <span class="inputinfo" id="sltimeintervalinfo">1</span>

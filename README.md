@@ -300,8 +300,9 @@ For that and other major needed changes to the codebase, there is a `code-issues
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
+| 2026.07.20 | Various fixes to inputs, `DSP_DUMMY`, SD metadata, `Controls.md` edit, w/Kle7rx: mute |
 | 2026.07.17 | Various fixes to safe mode, boot screen shows version and mode, `Hardware.md` edit |
-| 2026.07.12 | SD Offline Mode added, `Hardware.md` added, fixes to Deep Sleep, smart start, SD index, SD tags, VS1053 volume curve, PSRAM |
+| 2026.07.12 | SD Offline Mode added, `Hardware.md` added, fixes to Deep Sleep, smart start, SD index, SD metadata, VS1053 volume curve, PSRAM |
 | 2026.07.05 | More fixes to VS1053, Wake from Deep Sleep now works on all RTC-capable pins |
 | 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |
@@ -335,7 +336,7 @@ A full history of ёRadio from v0.4.177 to v0.9.533 can be seen in the [old Read
 
 Thanks to:
 
-  - [kle7rx](https://github.com/kle7rx) - `ru_RU` translation, debugging, VS1053, and amplifier schematics
-  - [Kasperaitis](https://github.com/kasperaitis) - `lt_LT` translation, initiating locales (WebUI and display language) and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
+  - [kle7rx](https://github.com/kle7rx) - `ru_RU` translation, debugging, mute feature, VS1053/I2S fixing, and amplifier schematics
+  - [Kasperaitis](https://github.com/kasperaitis) - `lt_LT` translation, initiating locales and a bunch of work for ES3C28P (including ES8311 decoder, ILI9341 battery widget, FT6336 touchscreen)
   - [e2002](https://github.com/e2002) - for [ёRadio](https://github.com/e2002/yoradio/) without which ehRadio would not be possible
 

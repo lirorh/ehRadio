@@ -243,6 +243,8 @@ def acquire_lock():
         if elapsed == 0:
             print("\n" + "="*70)
             print("WAITING: Another build is in progress. Waiting up to 3 minutes...")
+            print("\t- First, check the www files for problems")
+            print(f"\t- Then, override by deleting {LOCK_FILE}")
             print("="*70)
         time.sleep(wait_interval)
         elapsed += wait_interval
@@ -251,10 +253,8 @@ def acquire_lock():
             print("\n" + "="*70)
             print(f"ERROR: Lock file timeout after {max_wait}s")
             print(f"Another build process appears stuck or is still running.")
-            print(f"Lock file: {LOCK_FILE}")
             print(f"")
-            print(f"If you're certain no other build is running, manually delete:")
-            print(f"  {LOCK_FILE}")
+            print(f"If you're certain no other build is running, manually delete {LOCK_FILE}")
             print("="*70)
             raise SystemExit(1)  # Abort the build completely
     

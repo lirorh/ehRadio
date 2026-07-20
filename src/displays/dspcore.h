@@ -16,8 +16,8 @@
 // ==========================================================================
 
 #if DSP_MODEL==DSP_DUMMY
-  #define DUMMYDISPLAY
   #define DSP_NOT_FLIPPED
+  #define DISPLAY_MODEL_NAME "None"
 
 #elif DSP_MODEL==DSP_ST7735
   #define PSFBUFFER

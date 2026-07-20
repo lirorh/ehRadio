@@ -94,7 +94,7 @@ class Display {
   public:
     uint16_t currentPlItem;
     uint16_t numOfNextStation;
-    displayMode_e _mode;
+    displayMode_e _mode = PLAYER;
   public:
     Display() {};
     void init();

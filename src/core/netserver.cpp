@@ -24,6 +24,7 @@
 #include "../locale/wwwlocale.h"
 #include "../locale/dsplocale.h"
 #include "../displays/dspcore.h"
+#include "../displays/dspfont.h"
 #include "../displays/widgets/widgetsconfig.h" //BitrateFormat
 #if USE_OTA
   #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
@@ -548,7 +549,8 @@ void NetServer::processQueue() {
             if (SHOW_WEATHER || dbgact)                         act += F("\"group_weather\",");
                                                                 act += F("\"group_controls\",");
             if (BTN_UP != 255 || BTN_DOWN != 255 || dbgact)     act += F("\"group_volbuttons\",");
-            if (BTN_NEXT != 255 || BTN_PREV != 255 || dbgact)   act += F("\"group_stnbuttons\",");
+            if ((DSP_MODEL != DSP_DUMMY && (BTN_NEXT != 255 || BTN_PREV != 255)) || dbgact)
+                                                                act += F("\"group_stnbuttons\",");
             if (ENC_DT != 255 || ENC2_DT != 255 || dbgact)      act += F("\"group_encoder\",");
             if (IR_PIN != 255 || dbgact)                        act += F("\"group_ir\",");
                                                               #ifdef UPDATEURL
@@ -642,10 +644,10 @@ void NetServer::processQueue() {
                                   config.store.mqttpass,
                                   config.store.mqtttopic);
                                   break;
-      case GETCONTROLS:   snprintf(wsbuf, sizeof(wsbuf), "{\"enca\":%d,\"irtl\":%d,\"skipup\":%d,\"maxVol\":%d}",
+      case GETCONTROLS:   snprintf(wsbuf, sizeof(wsbuf), "{\"enca\":%d,\"irtl\":%d,\"oneclick\":%d,\"maxVol\":%d}",
                                   config.store.encacc,
                                   config.store.irtlp,
-                                  config.store.skipPlaylistUpDown,
+                                  config.store.oneclickswitch,
                                   VOLUME_SCALE);
                                   break;
       case DSPON:         snprintf(wsbuf, sizeof(wsbuf), "{\"dspontrue\":%d}", 1); break;

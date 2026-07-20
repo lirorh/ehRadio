@@ -128,7 +128,7 @@ struct config_t // specify defaults here (and macros in options.h) (defaults are
   bool      dbgtouch = TOUCH_DEBUG;
   uint8_t   encacc = ROTARY_ACCEL;
   uint16_t  battery_adc_ref_mv = BATTERY_ADC_REF_MV;
-  bool      skipPlaylistUpDown = ONE_CLICK_SWITCH;
+  bool      oneclickswitch = ONE_CLICK_SWITCH;
   uint8_t   irtlp = IR_TOLERANCE;
   char      locale_webui[6] = WEBUI_LOCALE;
   char      locale_display[6] = DSP_LOCALE;

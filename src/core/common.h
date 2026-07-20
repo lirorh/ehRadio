@@ -12,7 +12,7 @@ struct requestParams_t
   int payload;
 };
 
-enum controlEvt_e { EVT_NONE=255, EVT_BTN_DOWN=0, EVT_BTN_PLAY=1, EVT_BTN_UP=2, EVT_ENC_SW=3, EVT_BTNUP=4, EVT_BTN_NEXT=5, EVT_ENC2_SW=6, EVT_BTN_MODE=7 };
+enum controlEvt_e { EVT_NONE=255, EVT_BTN_DOWN=0, EVT_BTN_PLAY=1, EVT_BTN_UP=2, EVT_ENC_SW=3, EVT_BTN_PREV=4, EVT_BTN_NEXT=5, EVT_ENC2_SW=6, EVT_BTN_MODE=7 };
 
 
 

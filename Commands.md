@@ -102,7 +102,7 @@ Order and sections match that file.
 | `fliptouch` | Toggle touchscreen axis flip and apply touch config. |
 | `dbgtouch` | Enable/disable touch debug mode. |
 | `encacc` | Set encoder acceleration value. |
-| `oneclickswitching` | Toggle one-click playlist switching behavior. |
+| `oneclickswitch` | Toggle one-click playlist switching behavior. |
 | `irtlp` | Set IR tolerance value. |
 
 ## Options: Locale

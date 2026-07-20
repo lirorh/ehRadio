@@ -300,8 +300,9 @@ For that and other major needed changes to the codebase, there is a `code-issues
 
 | Date       | Release Notes    |
 | ---------- | ---------------- |
+| 2026.07.20 | Various fixes to inputs, `DSP_DUMMY`, SD metadata, `Controls.md` edit, w/Kle7rx: mute |
 | 2026.07.17 | Various fixes to safe mode, boot screen shows version and mode, `Hardware.md` edit |
-| 2026.07.12 | SD Offline Mode added, `Hardware.md` added, fixes to Deep Sleep, smart start, SD index, SD tags, VS1053 volume curve, PSRAM |
+| 2026.07.12 | SD Offline Mode added, `Hardware.md` added, fixes to Deep Sleep, smart start, SD index, SD metadata, VS1053 volume curve, PSRAM |
 | 2026.07.05 | More fixes to VS1053, Wake from Deep Sleep now works on all RTC-capable pins |
 | 2026.07.01 | 🍁 Minor fixes: WebUI, Display, Locales, VS1053 patch, smart start (last station plays after OTA/flash upgrade) |
 | 2026.06.29 | Unicode 8x6 fonts with full multilingual support, `Share` added to Playlist Editor, Nextion support removed, VS1053 library updated (patch functional) |

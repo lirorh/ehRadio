@@ -32,7 +32,7 @@
 #define ISPUSHBUTTONS BTN_DOWN!=255 || BTN_PLAY!=255 || BTN_UP!=255 || ENC_SW!=255 || BTN_PREV!=255 || BTN_NEXT!=255 || ENC2_SW!=255 || BTN_MODE!=255
 #if ISPUSHBUTTONS
   #include <OneButton.h>
-  OneButton button[] {OneButton(BTN_DOWN, true, BTN_PREV_PULLUP), OneButton(BTN_PLAY, true, BTN_PLAY_PULLUP), OneButton(BTN_UP, true, BTN_NEXT_PULLUP), OneButton(ENC_SW, true, ENC_SW_PULLUP), OneButton(BTN_PREV, true, BTN_UP_PULLUP), OneButton(BTN_NEXT, true, BTN_DOWN_PULLUP), OneButton(ENC2_SW, true, ENC2_SW_PULLUP), OneButton(BTN_MODE, true, BTN_MODE_PULLUP)};
+  OneButton button[] {OneButton(BTN_DOWN, true, BTN_DOWN_PULLUP), OneButton(BTN_PLAY, true, BTN_PLAY_PULLUP), OneButton(BTN_UP, true, BTN_UP_PULLUP), OneButton(ENC_SW, true, ENC_SW_PULLUP), OneButton(BTN_PREV, true, BTN_PREV_PULLUP), OneButton(BTN_NEXT, true, BTN_NEXT_PULLUP), OneButton(ENC2_SW, true, ENC2_SW_PULLUP), OneButton(BTN_MODE, true, BTN_MODE_PULLUP)};
   constexpr uint8_t nrOfButtons = sizeof(button) / sizeof(button[0]);
 #endif
 
@@ -89,7 +89,7 @@ void Controls::init() {
 
   #if ISPUSHBUTTONS
     for (int i = 0; i < nrOfButtons; i++) {
-      if ((i == 0 && BTN_DOWN == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_UP == 255) || (i == 3 && ENC_SW == 255) || (i == 4 && BTN_PREV == 255) || (i == 5 && BTN_NEXT == 255) || (i == 6 && ENC2_SW == 255) || (i == 7 && BTN_MODE == 255)) continue;
+      if ((i == EVT_BTN_DOWN && BTN_DOWN == 255) || (i == EVT_BTN_PLAY && BTN_PLAY == 255) || (i == EVT_BTN_UP && BTN_UP == 255) || (i == EVT_ENC_SW && ENC_SW == 255) || (i == EVT_BTN_PREV && BTN_PREV == 255) || (i == EVT_BTN_NEXT && BTN_NEXT == 255) || (i == EVT_ENC2_SW && ENC2_SW == 255) || (i == EVT_BTN_MODE && BTN_MODE == 255)) continue;
       button[i].attachClick(btnClickCb, (void*)i);
       button[i].attachDoubleClick(btnDoubleClickCb, (void*)i);
       button[i].attachLongPressStart(btnLongPressStartCb, (void*)i);
@@ -125,10 +125,10 @@ void Controls::loop() {
   #endif
   #if ISPUSHBUTTONS
     for (unsigned i = 0; i < nrOfButtons; i++) {
-      if ((i == 0 && BTN_DOWN == 255) || (i == 1 && BTN_PLAY == 255) || (i == 2 && BTN_UP == 255) || (i == 3 && ENC_SW == 255) || (i == 4 && BTN_PREV == 255) || (i == 5 && BTN_NEXT == 255) || (i == 6 && ENC2_SW == 255)) continue;
+      if ((i == EVT_BTN_DOWN && BTN_DOWN == 255) || (i == EVT_BTN_PLAY && BTN_PLAY == 255) || (i == EVT_BTN_UP && BTN_UP == 255) || (i == EVT_ENC_SW && ENC_SW == 255) || (i == EVT_BTN_PREV && BTN_PREV == 255) || (i == EVT_BTN_NEXT && BTN_NEXT == 255) || (i == EVT_ENC2_SW && ENC2_SW == 255) || (i == EVT_BTN_MODE && BTN_MODE == 255)) continue;
       button[i].tick();
       if (lpId >= 0) {
-        if (DSP_MODEL == DSP_DUMMY && (lpId == 4 || lpId == 5)) continue;
+        if (DSP_MODEL == DSP_DUMMY && (lpId == EVT_BTN_PREV || lpId == EVT_BTN_NEXT)) continue;
         onBtnDuringLongPress(lpId);
       }
     }
@@ -148,32 +148,32 @@ void Controls::loop() {
     int8_t encoderDelta = enc->encoderChanged();
     if (encoderDelta!=0) {
       uint8_t encBtnState = digitalRead(first?ENC_SW:ENC2_SW);
-    #if defined(DUMMYDISPLAY)
-      first = first?(first && encBtnState):(!encBtnState);
-      if (first) {
-        int nv = config.store.volume+encoderDelta;
-        if (nv<0) nv=0;
-        if (nv>VOLUME_SCALE) nv=VOLUME_SCALE;
-        player.setVol((uint8_t)nv);
-      } else {
-        if (encoderDelta > 0) player.next(); else player.prev();
-      }
-    #else
-      if (first) {
-        controlsEvent(encoderDelta > 0, encoderDelta);
-      } else {
-        if (encBtnState == HIGH && display.mode() == PLAYER) {
-          if (config.store.skipPlaylistUpDown) {
-            if (encoderDelta > 0) player.next(); else player.prev();
-            return;
-          }
-          display.putRequest(NEWMODE, STATIONS);
-          unsigned long _modeWaitStart = millis();
-          while(display.mode() != STATIONS && millis()-_modeWaitStart<2000) {delay(10);}
+      if (DSP_MODEL == DSP_DUMMY) {
+        first = first?(first && encBtnState):(!encBtnState);
+        if (first) {
+          int nv = config.store.volume+encoderDelta;
+          if (nv<0) nv=0;
+          if (nv>VOLUME_SCALE) nv=VOLUME_SCALE;
+          player.setVol((uint8_t)nv);
+        } else {
+          if (encoderDelta > 0) player.next(); else player.prev();
         }
+      } else {
+        if (first) {
         controlsEvent(encoderDelta > 0, encoderDelta);
+        } else {
+          if (encBtnState == HIGH && display.mode() == PLAYER) {
+            if (config.store.oneclickswitch) {
+              if (encoderDelta > 0) player.next(); else player.prev();
+              return;
+            }
+            display.putRequest(NEWMODE, STATIONS);
+            unsigned long _modeWaitStart = millis();
+            while(display.mode() != STATIONS && millis()-_modeWaitStart<2000) {delay(10);}
+          }
+          controlsEvent(encoderDelta > 0, encoderDelta);
+        }
       }
-    #endif
     }
   }
 #endif //#if (ENC_DT!=255 && ENC_CLK!=255) || (ENC2_DT!=255 && ENC2_CLK!=255)
@@ -344,29 +344,24 @@ void Controls::onBtnLongPressStart(int id) {
   switch ((controlEvt_e)id) {
     case EVT_BTN_DOWN:
     case EVT_BTN_UP:
-    case EVT_BTNUP:
+    case EVT_BTN_PREV:
     case EVT_BTN_NEXT: {
         lpId = id;
         break;
       }
     case EVT_BTN_PLAY:
     case EVT_ENC_SW: {
-        #if defined(DUMMYDISPLAY)
-          break;
-        #endif
+        if (DSP_MODEL == DSP_DUMMY) break;
         display.putRequest(NEWMODE, display.mode() == PLAYER ? STATIONS : PLAYER);
         break;
     }
     case EVT_ENC2_SW: {
-        #if defined(DUMMYDISPLAY)
-          break;
-        #endif
-        if (network.status == SDOFFLINE) break; 
+        if (network.status == SDOFFLINE) break;
         #ifndef DEEP_SLEEP_DISABLE
           display.putRequest(NEWMODE, SLEEPING);
         #endif
         break;
-    }
+      }
     case EVT_BTN_MODE: {
         if (network.status == SDOFFLINE) break;  // no sleep in SD Offline mode
         #ifndef DEEP_SLEEP_DISABLE
@@ -382,7 +377,7 @@ void Controls::onBtnLongPressStop(int id) {
   switch ((controlEvt_e)id) {
     case EVT_BTN_DOWN:
     case EVT_BTN_UP:
-    case EVT_BTNUP:
+    case EVT_BTN_PREV:
     case EVT_BTN_NEXT: {
         lpId = -1;
         break;
@@ -398,9 +393,6 @@ void Controls::onBtnLongPressStop(int id) {
         break;  // do nothing on release
       }
     case EVT_ENC2_SW: {
-        #if defined(DUMMYDISPLAY)
-          break;
-        #endif
         if (network.status == SDOFFLINE) break;  // no sleep in SD Offline mode
         #ifndef DEEP_SLEEP_DISABLE
           utility.doSleepW();
@@ -447,14 +439,28 @@ void Controls::onBtnDuringLongPress(int id) {
           controlsEvent(true);
           break;
         }
-      case EVT_BTNUP:
-      case EVT_BTN_NEXT: {
-          if (!config.store.skipPlaylistUpDown) {
+      case EVT_BTN_PREV: {
+          if (config.store.oneclickswitch) {
+            controlsEvent(false);
+          } else {
             if (display.mode() == PLAYER) {
               display.putRequest(NEWMODE, STATIONS);
             }
             if (display.mode() == STATIONS) {
-              controlsEvent(id == EVT_BTN_NEXT);
+              controlsEvent(false);
+            }
+          }
+          break;
+        }
+      case EVT_BTN_NEXT: {
+          if (config.store.oneclickswitch) {
+            controlsEvent(true);
+          } else {
+            if (display.mode() == PLAYER) {
+              display.putRequest(NEWMODE, STATIONS);
+            }
+            if (display.mode() == STATIONS) {
+              controlsEvent(true);
             }
           }
           break;
@@ -474,9 +480,7 @@ void Controls::controlsEvent(bool toRight, int8_t volDelta) {
     display.putRequest(NEWMODE, PLAYER);
   }
   if (display.mode() != STATIONS) {
-    #if !defined(DUMMYDISPLAY)
-      display.putRequest(NEWMODE, VOL);
-    #endif
+    if (DSP_MODEL != DSP_DUMMY) display.putRequest(NEWMODE, VOL);
     if (volDelta!=0) {
       int nv = config.store.volume+volDelta;
       if (nv<0) nv=0;
@@ -547,29 +551,21 @@ void Controls::onBtnClick(int id) {
         controlsEvent(true);
         break;
       }
-    case EVT_BTNUP:
+    case EVT_BTN_PREV:
     case EVT_BTN_NEXT: {
-        if (DSP_MODEL == DSP_DUMMY) {
-          if (id == EVT_BTNUP) {
-            player.next();
-          } else {
-            player.prev();
-          }
-        } else {
-          if (display.mode() == PLAYER) {
-            if (config.store.skipPlaylistUpDown || ENC2_DT!=255) {
-              if (id == EVT_BTNUP) {
-                player.prev();
-              } else {
-                player.next();
-              }
+        if (display.mode() == PLAYER) {
+          if (config.store.oneclickswitch) {
+            if (id == EVT_BTN_PREV) {
+              player.prev();
             } else {
-              display.putRequest(NEWMODE, STATIONS);
+              player.next();
             }
+          } else {
+            display.putRequest(NEWMODE, STATIONS);
           }
-          if (display.mode() == STATIONS) {
-            controlsEvent(id == EVT_BTN_NEXT);
-          }
+        }
+        if (display.mode() == STATIONS) {
+          controlsEvent(id == EVT_BTN_NEXT);
         }
         break;
       }
@@ -609,9 +605,7 @@ void Controls::onBtnDoubleClick(int id) {
       }
     case EVT_BTN_MODE:
     case EVT_ENC2_SW: {
-        #if defined(DUMMYDISPLAY)
-          break;
-        #endif
+        if (DSP_MODEL == DSP_DUMMY) break;
         static uint8_t savedVolume = 30;  // preserve the last active volume level before muting
         // Dynamic state check based on real-time core volume instead of a blind boolean flag
         if (player.getVolume() == 0) {
@@ -623,6 +617,18 @@ void Controls::onBtnDoubleClick(int id) {
         break;
       }
     case EVT_BTN_UP: {
+        if (display.mode() != PLAYER) return;
+        if (network.status != CONNECTED && network.status!=SDOFFLINE) return;
+        player.next();
+        break;
+      }
+    case EVT_BTN_PREV: {
+        if (display.mode() != PLAYER) return;
+        if (network.status != CONNECTED && network.status!=SDOFFLINE) return;
+        player.prev();
+        break;
+      }
+    case EVT_BTN_NEXT: {
         if (display.mode() != PLAYER) return;
         if (network.status != CONNECTED && network.status!=SDOFFLINE) return;
         player.next();

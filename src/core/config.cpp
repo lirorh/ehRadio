@@ -39,7 +39,7 @@ const size_t Config::dataFilesCount = sizeof(Config::dataFiles) / sizeof(Config:
 #endif
 
 Config config;
-uint8_t _activeLocale = 0;  // default en_US, updated at boot from config.store.locale_display
+uint8_t _activeLocale = 0;  // default is whatever is first (likely be_BY), updated at boot from config.store.locale_display
 
 bool wasUpdated(ESPFileUpdater::UpdateStatus status) { return status == ESPFileUpdater::UPDATED; }
 
@@ -461,7 +461,7 @@ void Config::defaultSettings(const char *val, uint8_t clientId) {
     saveValue(&store.fliptouch, (bool)TOUCH_FLIP);
     controls.flipTS();
     saveValue(&store.dbgtouch, (bool)TOUCH_DEBUG);
-    saveValue(&store.skipPlaylistUpDown, (bool)ONE_CLICK_SWITCH);
+    saveValue(&store.oneclickswitch, (bool)ONE_CLICK_SWITCH);
     controls.setEncAcceleration(ROTARY_ACCEL);
     controls.setIRTolerance(IR_TOLERANCE);
     netserver.requestOnChange(GETCONTROLS, clientId);
@@ -672,7 +672,9 @@ void Config::bootInfo() {
   #if TFT_DC!=255
     BOOTLOG("\t\tTFT SPIA, CS: %d, RST: %d, DC: %d", TFT_CS, TFT_RST, TFT_DC);
   #endif
-  BOOTLOG("\t\tInvert Quirk: %s, Brightness Pin: %d, Dimming Enabled: %s", DSP_INVERT_QUIRK?"true":"false", BRIGHTNESS_PIN, DIMMING_ENABLED?"true":"false");
+  #if DSP_MODEL!=DSP_DUMMY
+    BOOTLOG("\t\tInvert Quirk: %s, Brightness Pin: %d, Dimming Enabled: %s", DSP_INVERT_QUIRK?"true":"false", BRIGHTNESS_PIN, DIMMING_ENABLED?"true":"false");
+  #endif
   #ifdef AUTOBACKLIGHT
     if (LIGHT_SENSOR!=255) BOOTLOG("Autobacklight Enabled: Light Sensor Pin: %d Max: %d Min: %d", LIGHT_SENSOR, AUTOBACKLIGHT_MAX, AUTOBACKLIGHT_MIN);
   #endif
@@ -846,7 +848,7 @@ const configKeyMap Config::keyMap[] = {
   CONFIG_KEY_ENTRY(fliptouch, "fliptouch"),
   CONFIG_KEY_ENTRY(dbgtouch, "dbgtouch"),
   CONFIG_KEY_ENTRY(encacc, "encaccel"),
-  CONFIG_KEY_ENTRY(skipPlaylistUpDown, "skipplupdn"),
+  CONFIG_KEY_ENTRY(oneclickswitch, "skipplupdn"), // var used to be oneclickswitch
   CONFIG_KEY_ENTRY(irtlp, "irtlp"),
   CONFIG_KEY_ENTRY(locale_webui, "localewebui"),
   CONFIG_KEY_ENTRY(locale_display, "localedsp"),

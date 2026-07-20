@@ -193,11 +193,11 @@ bool CommandHandler::exec(const char *command, const char *value, uint8_t cid, C
   if (cmdIs(command, "dimmingtimeout"))            { config.saveValue(&config.store.dimmingTimeout, static_cast<uint16_t>(constrain(atoi(value), 5, 65520))); backlightControls.restart(); return true; }
 
   /* Options: Controls */
-  if (cmdIs(command, "fliptouch"))         { config.saveValue(&config.store.fliptouch, static_cast<bool>(atoi(value))); controls.flipTS(); return true; }
-  if (cmdIs(command, "dbgtouch"))          { config.saveValue(&config.store.dbgtouch, static_cast<bool>(atoi(value))); return true; }
-  if (cmdIs(command, "encacc"))            { int e=atoi(value); controls.setEncAcceleration(static_cast<uint8_t>(e < 0 ? 0 : (e > 7 ? 7 : e))); return true; }
-  if (cmdIs(command, "oneclickswitching")) { config.saveValue(&config.store.skipPlaylistUpDown, static_cast<bool>(atoi(value))); return true; }
-  if (cmdIs(command, "irtlp"))             { controls.setIRTolerance(static_cast<uint8_t>(atoi(value))); return true; }
+  if (cmdIs(command, "fliptouch"))      { config.saveValue(&config.store.fliptouch, static_cast<bool>(atoi(value))); controls.flipTS(); return true; }
+  if (cmdIs(command, "dbgtouch"))       { config.saveValue(&config.store.dbgtouch, static_cast<bool>(atoi(value))); return true; }
+  if (cmdIs(command, "encacc"))         { int e=atoi(value); controls.setEncAcceleration(static_cast<uint8_t>(e < 0 ? 0 : (e > 7 ? 7 : e))); return true; }
+  if (cmdIs(command, "oneclickswitch")) { config.saveValue(&config.store.oneclickswitch, static_cast<bool>(atoi(value))); return true; }
+  if (cmdIs(command, "irtlp"))          { controls.setIRTolerance(static_cast<uint8_t>(atoi(value))); return true; }
 
   /* Options: Locale */
   if (cmdIs(command, "locale_webui")) { config.saveValue(config.store.locale_webui, value); return true; }

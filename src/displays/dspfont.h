@@ -34,7 +34,9 @@
 
 // ── TIME_SIZE ───────────────────────────────────────────────────────────
 // Outlier overrides (checked before generic resolution rules)
-#if DSP_MODEL==DSP_ST7920
+#if DSP_MODEL==DSP_DUMMY
+  #define TIME_SIZE 0
+#elif DSP_MODEL==DSP_ST7920
   #define TIME_SIZE 2
 #elif DSP_MODEL==DSP_SSD1322
   #define TIME_SIZE 35

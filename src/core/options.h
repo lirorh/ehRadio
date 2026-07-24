@@ -2,8 +2,7 @@
 #define options_h
 #pragma once
 
-#define RADIOVERSION "2026.07.20"
-
+#define RADIOVERSION "ehradio_nodisplay"
 /*******************************************************
 THIS FILE IS THE DEFINITIVE HANDLER OF COMPILE OPTIONS.
 Most macros used in the codebase are here somewhere.

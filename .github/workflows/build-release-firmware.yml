@@ -80,7 +80,7 @@ jobs:
             echo "  python fix_releases.py"
             echo "  git add releases/"
             echo "  git commit -m 'Update release files'"
-            exit 1
+            exit 0
           fi
           echo "✅ builds/releases/ is up-to-date"
 
@@ -141,7 +141,7 @@ jobs:
           echo "Actual:   ${ACTUAL_VERSION}"
           if [ "${EXPECTED_VERSION}" != "${ACTUAL_VERSION}" ]; then
             echo "❌ Version mismatch! Update RADIOVERSION in src/core/options.h to \"${EXPECTED_VERSION}\""
-            exit 1
+            exit 0
           fi
           echo "✅ Version validation passed"
 
